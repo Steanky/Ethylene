@@ -24,6 +24,9 @@ import java.util.concurrent.Future;
  * be interpreted accordingly. Conversely, they may also <i>write</i> to one or more files according to the structure
  * of a given FileConfigNode.</p>
  *
+ * <p>AbstractFilesystemBridge implementations must at minimum specify a "root" {@link Path}, which may point to any
+ * file, including directories. All file-related operations will occur relative to this path.</p>
+ *
  * <p>The behavior of this class can be modified easily by overriding one or more of its non-abstract methods, which
  * might involve:</p>
  *
@@ -33,16 +36,28 @@ import java.util.concurrent.Future;
  *     <li>mapping {@link File} objects to their associated string keys</li>
  * </ul>
  *
- * <p>Implementations of this class include {@link AsyncFilesystemBridge} and {@link SyncFilesystemBridge}, which
- * (respectively) read and write asynchronously and synchronously.</p>
+ * <p>Implementations include {@link AsyncFilesystemBridge} and {@link SyncFilesystemBridge}, which respectively read
+ * and write asynchronously and synchronously.</p>
  */
 public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfigNode> {
     private final Path root;
 
-    protected record InputNode(@NotNull File file, @NotNull ConfigNode children) {}
+    /**
+     * Used to keep track of a <i>file</i> (which is a directory) and a FileConfigNode which should contain other nodes
+     * corresponding to the files contained in file's directory.
+     */
+    protected record InputNode(@NotNull File file, @NotNull FileConfigNode children) {}
 
+    /**
+     * Stores a FileConfigNode along with the {@link Path} object it corresponds to (relative to the root path).
+     */
     protected record OutputNode(@NotNull FileConfigNode node, @NotNull Path path) {}
 
+    /**
+     * Constructs a new AbstractFilesystemBridge using the provided {@link Path} as a root.
+     * @param root the root path
+     * @throws NullPointerException if root is null
+     */
     public AbstractFilesystemBridge(@NotNull Path root) {
         this.root = Objects.requireNonNull(root);
     }
@@ -81,7 +96,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
                                 if(subFile.isDirectory()) {
                                     if(visited.add(subFile)) {
                                         //use directory node here as well
-                                        ConfigNode childNode = new FileConfigNode();
+                                        FileConfigNode childNode = new FileConfigNode();
                                         stack.push(new InputNode(subFile, childNode));
                                         currentNode.children.put(getKeyFor(subFile), childNode);
                                     }
@@ -158,7 +173,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
     }
 
     /**
-     * Reads a {@link FileConfigNode} object from a file, which must be non-null
+     * Reads a {@link FileConfigNode} object from a file, which must be non-null and a non-directory.
      * @param file the file to read from
      * @return a FileConfigNode containing configuration data from the file
      * @throws IOException if an IO error occurs
@@ -177,28 +192,61 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
         return codec.decodeNode(new FileInputStream(file), true, () -> new FileConfigNode(codec));
     }
 
+    /**
+     * Writes a {@link FileConfigNode} object to a file. The node and file must be non-null and not representative of a
+     * directory.
+     * @param file the file to write to
+     * @param node the node to write
+     * @throws IOException if an IO error occurs
+     * @throws IllegalArgumentException if file represents a directory
+     * @throws NullPointerException if file or node are null
+     */
     protected void writeFile(@NotNull File file, @NotNull FileConfigNode node) throws IOException {
+        Objects.requireNonNull(file);
+        Objects.requireNonNull(node);
+
         if(!node.isDirectory()) {
-            node.getCodec().encodeNode(node, new FileOutputStream(file), true, LinkedHashMap::new);
+            node.getCodec().encodeNode(node, new FileOutputStream(file), true);
         }
         else {
             throw new IllegalArgumentException("cannot write a FileConfigNode representing a directory");
         }
     }
 
+    /**
+     * <p>Validates a given file to determine if it may be read from, or contains other files. This function is not used
+     * for writing, because it is often the case that a file being written will not actually exist beforehand.</p>
+     *
+     * <p>This function will attempt to look up a {@link ConfigCodec} using the {@link CodecRegistry} instance, with
+     * the file's extension used as a name.</p>
+     * @param file the file to read from
+     * @return true if the file is a directory, or if the file extension can be used to locate a registered codec; false
+     * otherwise
+     */
     protected boolean validateFile(@NotNull File file) {
         if(file.isDirectory()) {
             return true;
         }
         else {
-            return CodecRegistry.INSTANCE.hasCodec(PathUtils.getFileExtension(file.toPath()));
+            return CodecRegistry.INSTANCE.hasCodec(PathUtils.getFileExtension(file.toPath()).toLowerCase(Locale.ROOT));
         }
     }
 
+    /**
+     * Attempts to retrieve a {@link ConfigCodec} for the given file, based off of its extension and using the
+     * {@link CodecRegistry} instance. If a suitable codec cannot be found for any reason, an exception will be thrown.
+     * @param file the file to retrieve a codec for
+     * @return the codec used to decode the file
+     * @throws NullPointerException if file is null
+     * @throws IllegalArgumentException if a codec cannot be found for the file, or the file represents a directory
+     */
     protected @NotNull ConfigCodec getCodecFor(@NotNull File file) {
+        Objects.requireNonNull(file);
+
         if(!file.isDirectory()) {
             //use the file extension to determine what codec to use
-            ConfigCodec codec = CodecRegistry.INSTANCE.getCodec(PathUtils.getFileExtension(file.toPath()));
+            ConfigCodec codec = CodecRegistry.INSTANCE.getCodec(PathUtils.getFileExtension(file.toPath())
+                    .toLowerCase(Locale.ROOT));
             if(codec != null) {
                 return codec;
             }
@@ -211,11 +259,31 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
         throw new IllegalArgumentException("cannot retrieve a codec for a directory");
     }
 
+    /**
+     * Returns the <i>key</i> used to associate the file with a FileConfigNode. By default, this simply uses the name
+     * of the file, minus the extension. For example, the path <b>/tmp/file.txt</b> will be referenced by the key
+     * <b>file</b>.
+     * @param file the file to retrieve the key for
+     * @return the key associated with the file
+     */
     protected @NotNull String getKeyFor(@NotNull File file) {
         return PathUtils.getFileNameWithoutExtension(file.toPath());
     }
 
-    protected abstract Future<FileConfigNode> callRead(@NotNull Callable<FileConfigNode> callable) throws Exception;
+    /**
+     * Performs a read operation by running the specified {@link Callable}. This call may occur on a different thread.
+     * @param callable the callable to invoke
+     * @return A {@link Future} object representing the result of the read operation
+     * @throws IOException if an IOException occurred when the callable was run
+     */
+    protected abstract Future<FileConfigNode> callRead(@NotNull Callable<FileConfigNode> callable) throws IOException;
 
-    protected abstract Future<Void> callWrite(@NotNull Callable<Void> callable) throws Exception;
+    /**
+     * Performs a write operation by executing the specified {@link Callable}. This call may occur on a different
+     * thread.
+     * @param callable the callable to invoke
+     * @return A {@link Future} object representing the result of the write operation
+     * @throws IOException if an IOException occurred when the callable was run
+     */
+    protected abstract Future<Void> callWrite(@NotNull Callable<Void> callable) throws IOException;
 }

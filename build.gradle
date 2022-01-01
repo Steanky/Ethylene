@@ -24,6 +24,10 @@ dependencies {
     testCompileOnly "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
 }
 
+javadoc {
+    source = sourceSets.main.allJava
+}
+
 test {
     useJUnitPlatform()
 }

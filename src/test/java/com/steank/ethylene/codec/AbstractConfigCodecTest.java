@@ -52,7 +52,7 @@ class AbstractConfigCodecTest {
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> subRoot = new HashMap<>();
 
-        AbstractConfigCodec testCodec = new AbstractConfigCodec(List.of("test_codec")) {
+        AbstractConfigCodec testCodec = new AbstractConfigCodec(List.of("test")) {
             @Override
             protected @NotNull Map<String, Object> readMap(@NotNull InputStream input) {
                 return root;

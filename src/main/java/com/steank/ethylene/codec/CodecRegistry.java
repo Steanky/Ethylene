@@ -2,10 +2,7 @@ package com.steank.ethylene.codec;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public final class CodecRegistry {
     public static final CodecRegistry INSTANCE = new CodecRegistry();
@@ -24,13 +21,14 @@ public final class CodecRegistry {
         }
 
         for(String name : codec.getNames()) {
-            Objects.requireNonNull(name, "codecs cannot have any null names");
+            String lowerCase = Objects.requireNonNull(name, "codecs cannot have any null names")
+                    .toLowerCase(Locale.ROOT);
 
-            if(codecMap.containsKey(name)) {
-                throw new IllegalArgumentException("a codec for name " + name + " has already been registered");
+            if(codecMap.containsKey(lowerCase)) {
+                throw new IllegalArgumentException("a codec for name " + lowerCase + " has already been registered");
             }
             else {
-                codecMap.put(name, codec);
+                codecMap.put(lowerCase, codec);
             }
         }
     }

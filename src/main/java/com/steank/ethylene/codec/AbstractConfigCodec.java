@@ -18,19 +18,28 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * This class provides functionality common to most {@link ConfigCodec} implementations. It specifies two abstract
+ * methods: {@link AbstractConfigCodec#readMap(InputStream)} and
+ * {@link AbstractConfigCodec#writeMap(Map, OutputStream)}. For most file formats, subclasses need only implement these
+ * two methods. Other "poorly behaved" formats might necessitate an implementation that overrides more.
+ */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     private final Set<String> names;
 
+    /**
+     * Constructs a new instance of AbstractConfigCodec with the provided {@link Collection} of names.
+     * @param names the names used by this codec
+     */
     public AbstractConfigCodec(@NotNull Collection<String> names) {
         this.names = Set.copyOf(names);
     }
 
     @Override
-    public <TMap extends Map<String, Object>> void encodeNode(@NotNull ConfigNode node, @NotNull OutputStream output,
-                                                              boolean close, @NotNull Supplier<TMap> mapSupplier)
+    public void encodeNode(@NotNull ConfigNode node, @NotNull OutputStream output, boolean close)
             throws IOException {
         try {
-            writeMap(makeMap(node, mapSupplier), output);
+            writeMap(makeMap(node, LinkedHashMap::new), output);
         }
         finally {
             if(close) {
@@ -64,7 +73,12 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      */
     protected record Node<TOut>(@NotNull Object inputContainer, @NotNull BiConsumer<String, TOut> output) {}
 
-    //returns true if parameter subclasses Map, Collection, or is an array; otherwise returns false
+    /**
+     * Determines if the provided object is a "container". An object is considered a container if it is non-null and a
+     * subclass of {@link Map}, {@link Collection}, or is an array type.
+     * @param object the object to test
+     * @return true if the object is not null and subclasses Map, Collection, or is an array type; false otherwise
+     */
     @Contract("null -> false")
     protected boolean isContainer(@Nullable Object object) {
         return object != null && (object instanceof Map<?, ?> || object instanceof Collection<?> ||
