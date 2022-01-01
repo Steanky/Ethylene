@@ -85,18 +85,39 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 object.getClass().isArray());
     }
 
+    /**
+     * <p>Processes a particular value, which is part of some container (map, array, or collection). If the value itself
+     * is a container, a reference to it will be added to the {@link Deque} as a {@link Node}.</p>
+     *
+     * <p>This method is capable of handling recursive or self-referential data structures (for example, a map which
+     * contains itself as a value). The resulting output map will have an equivalent structure.</p>
+     * @param value the input value
+     * @param stack the current stack, used for processing collections
+     * @param visited mappings representing which containers have been visited, and their associated output objects
+     * @param currentNode the current node we are processing
+     * @param keyString the key string, which may be null if we're currently iterating a collection or array
+     * @param mapSupplier a supplier to produce new map objects
+     * @param collectionSupplier a supplier to produce new collection objects
+     * @param converter a function used to convert objects to TOut
+     * @param <TMap> the map type
+     * @param <TCollection> the collection type
+     * @param <TOut> the type of objects which are stored in the output container(s)
+     */
     protected <TMap extends Map<String, TOut>,
             TCollection extends Collection<TOut>,
             TOut> void processValue(@Nullable Object value,
                                     @NotNull Deque<Node<TOut>> stack,
-                                    @NotNull Set<Object> visited,
+                                    @NotNull Map<Object, Object> visited,
                                     @NotNull Node<TOut> currentNode,
                                     @Nullable String keyString,
                                     @NotNull Supplier<TMap> mapSupplier,
                                     @NotNull Supplier<TCollection> collectionSupplier,
                                     @NotNull Function<Object, TOut> converter) {
         if(isContainer(value)) {
-            if(visited.add(value)) {
+            if(!visited.containsKey(value)) {
+                //we found a new container element: we now need to create the correct corresponding output map or
+                //collection, add a mapping from the input container to the output map/collection, push our value onto
+                //the stack so we'll end up processing it later, and finally call our output consumer with our new node
                 BiConsumer<String, TOut> consumer;
                 Object output;
 
@@ -111,11 +132,20 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                     consumer = (k, v) -> newCollection.add(v);
                 }
 
+                visited.put(value, output);
                 stack.push(new Node<>(value, consumer));
                 currentNode.output.accept(keyString, converter.apply(output));
             }
+            else {
+                //if visisted contains the value container as a key, it means we found a circular reference. we must
+                //preserve the same structure in our output, so do that by using the associated mapping for value
+                //but definitely don't push it to the stack! otherwise, any circular references would cause this method
+                //to never return
+                currentNode.output.accept(keyString, converter.apply(visited.get(value)));
+            }
         }
         else {
+            //not a container object, just an ordinary one, so we can add it directly to our output
             currentNode.output.accept(keyString, converter.apply(value));
         }
     }
@@ -133,26 +163,23 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Deque<Node<TOut>> stack = new ArrayDeque<>();
         stack.push(new Node<>(input, topLevel::put));
 
-        Set<Object> visited = Collections.newSetFromMap(new IdentityHashMap<>());
-        visited.add(topLevel);
+        Map<Object, Object> visitedNodes = new IdentityHashMap<>();
+        visitedNodes.put(input, topLevel);
 
         while(!stack.isEmpty()) {
             Node<TOut> node = stack.pop();
 
             if(node.inputContainer instanceof Map<?, ?> inputMap) {
+                //iterate input entries, process each of them
                 for(Map.Entry<?, ?> entry : inputMap.entrySet()) {
-                    if(entry.getKey() instanceof String key) {
-                        processValue(entry.getValue(), stack, visited, node, key, subMapSupplier, collection,
-                                converter);
-                    }
-                    else {
-                        throw new IllegalArgumentException("Map keys may only be strings.");
-                    }
+                    processValue(entry.getValue(), stack, visitedNodes, node, entry.getKey().toString(), subMapSupplier,
+                            collection, converter);
                 }
             }
             else if(node.inputContainer instanceof Collection<?> inputCollection) {
+                //just iterate input elements and process them
                 for(Object value : inputCollection) {
-                    processValue(value, stack, visited, node, null, subMapSupplier, collection, converter);
+                    processValue(value, stack, visitedNodes, node, null, subMapSupplier, collection, converter);
                 }
             }
             else {
@@ -160,8 +187,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 int length = Array.getLength(node.inputContainer);
 
                 for(int i = 0; i < length; i++) {
-                    processValue(Array.get(node.inputContainer, i), stack, visited, node, null, subMapSupplier,
-                            collection, converter);
+                    processValue(Array.get(node.inputContainer, i), stack, visitedNodes, node, null,
+                            subMapSupplier, collection, converter);
                 }
             }
         }
@@ -180,7 +207,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             }
             else {
                 //if value is of a type unrecognized by ConfigPrimitive, a runtime exception may be thrown here which
-                //indicates some unsupported type
+                //indicates an unsupported type that requires a config-format-specific processing method
                 return new ConfigPrimitive(value);
             }
         });

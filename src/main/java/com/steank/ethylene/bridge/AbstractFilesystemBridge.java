@@ -6,6 +6,7 @@ import com.steank.ethylene.codec.CodecRegistry;
 import com.steank.ethylene.codec.ConfigCodec;
 import com.steank.ethylene.collection.ConfigNode;
 import com.steank.ethylene.collection.FileConfigNode;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -46,12 +47,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
      * Used to keep track of a <i>file</i> (which is a directory) and a FileConfigNode which should contain other nodes
      * corresponding to the files contained in file's directory.
      */
-    protected record InputNode(@NotNull File file, @NotNull FileConfigNode children) {}
-
-    /**
-     * Stores a FileConfigNode along with the {@link Path} object it corresponds to (relative to the root path).
-     */
-    protected record OutputNode(@NotNull FileConfigNode node, @NotNull Path path) {}
+    protected record Node(@NotNull Path path, @NotNull FileConfigNode children) {}
 
     /**
      * Constructs a new AbstractFilesystemBridge using the provided {@link Path} as a root.
@@ -70,7 +66,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
 
                 if(!validateFile(rootFile)) {
                     //if the filter excludes rootFile, we can't load anything so just throw an exception
-                    throw new IllegalArgumentException("root file is not valid");
+                    throw new IllegalArgumentException("Root file is not valid");
                 }
                 else if(!rootFile.isDirectory()) {
                     //root isn't a directory, so read only the root and nothing else
@@ -80,25 +76,31 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
                     //root is a directory, so we need to iterate the directory tree
                     FileConfigNode rootConfigNode = new FileConfigNode();
 
-                    Deque<InputNode> stack = new ArrayDeque<>();
-                    stack.push(new InputNode(rootFile, rootConfigNode));
+                    Deque<Node> stack = new ArrayDeque<>();
+                    stack.push(new Node(root, rootConfigNode));
 
                     //handles recursive file structures by only processing each directory once
-                    Set<File> visited = new HashSet<>();
-                    visited.add(rootFile);
+                    Map<File, FileConfigNode> visited = new IdentityHashMap<>();
+                    visited.put(rootFile, rootConfigNode);
 
                     while(!stack.isEmpty()) {
-                        InputNode currentNode = stack.pop();
+                        Node currentNode = stack.pop();
 
-                        File[] subFiles = currentNode.file.listFiles(this::validateFile);
-                        if(subFiles != null) { //subFiles should never be null, currentNode.file must be a directory
+                        File[] subFiles = currentNode.path.toFile().listFiles(this::validateFile);
+                        if(subFiles != null) {
+                            //subFiles should never be null, currentNode.path must be a directory
                             for(File subFile : subFiles) {
                                 if(subFile.isDirectory()) {
-                                    if(visited.add(subFile)) {
+                                    if(!visited.containsKey(subFile)) {
                                         //use directory node here as well
                                         FileConfigNode childNode = new FileConfigNode();
-                                        stack.push(new InputNode(subFile, childNode));
+                                        stack.push(new Node(subFile.toPath(), childNode));
+                                        visited.put(subFile, childNode);
+
                                         currentNode.children.put(getKeyFor(subFile), childNode);
+                                    }
+                                    else {
+                                        currentNode.children.put(getKeyFor(subFile), visited.get(subFile));
                                     }
                                 }
                                 else {
@@ -132,16 +134,16 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
                     writeFile(rootFile, node);
                 }
                 else {
-                    Deque<OutputNode> stack = new ArrayDeque<>();
-                    stack.push(new OutputNode(node, root));
+                    Deque<Node> stack = new ArrayDeque<>();
+                    stack.push(new Node(root, node));
 
                     Set<Object> visited = new HashSet<>();
                     visited.add(node);
 
                     while(!stack.isEmpty()) {
-                        OutputNode currentNode = stack.pop();
+                        Node currentNode = stack.pop();
 
-                        for(Map.Entry<String, ConfigElement> childEntry : currentNode.node.entrySet()) {
+                        for(Map.Entry<String, ConfigElement> childEntry : currentNode.children.entrySet()) {
                             //cast should always succeed: we only push FileConfigNode instances that are DIRECTORIES
                             //onto the stack, and directories are guaranteed to only contain other FileConfigNode
                             //instances as per the additional restrictions placed on put() for that class
@@ -149,11 +151,11 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
 
                             if(childNode.isDirectory() && visited.add(childNode)) {
                                 //node is a directory we haven't visited yet
-                                stack.push(new OutputNode(childNode, root.resolve(childEntry.getKey())));
+                                stack.push(new Node(root.resolve(childEntry.getKey()), childNode));
                             }
                             else {
                                 //not a directory, so write to the filesystem
-                                writeFile(currentNode.path.toFile(), currentNode.node);
+                                writeFile(currentNode.path.toFile(), currentNode.children);
                             }
                         }
                     }
@@ -261,7 +263,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
 
     /**
      * Returns the <i>key</i> used to associate the file with a FileConfigNode. By default, this simply uses the name
-     * of the file, minus the extension. For example, the path <b>/tmp/file.txt</b> will be referenced by the key
+     * of the file, minus the extension. For example, the name <b>file.txt</b> will be referenced by the key
      * <b>file</b>.
      * @param file the file to retrieve the key for
      * @return the key associated with the file
