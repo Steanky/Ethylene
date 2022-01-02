@@ -23,13 +23,13 @@ jobs:
           cache: 'gradle'
           settings-path: ${{ github.workspace }}
       - name: Version
-        run: gradlew -v
+        run: ./gradlew -v
       - name: Build
-        run: gradlew build
+        run: ./gradlew build
       - name: Test
-        run: gradlew test
+        run: ./gradlew test
       - name: Publish
-        run: gradlew publish
+        run: ./gradlew publish
         env:
           CLOUDSMITH_USERNAME: ${{ secrets.CLOUDSMITH_USERNAME }}
           CLOUDSMITH_PASSWORD: ${{ secrets.CLOUDSMITH_PASSWORD }}
