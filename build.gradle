@@ -1,8 +1,10 @@
+//file:noinspection GroovyAssignabilityCheck
 plugins {
     id 'java'
+    id 'maven-publish'
 }
 
-group 'com.steank'
+group 'com.github.steank'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -24,10 +26,32 @@ dependencies {
     testCompileOnly "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
 }
 
-javadoc {
-    source = sourceSets.main.allJava
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
 test {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        myPublication(MavenPublication) {
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            name = "ethylene"
+            url = "https://maven.cloudsmith.io/steank-f1g/ethylene/"
+
+            credentials {
+                //used to publish locally
+                username = System.getenv("CLOUDSMITH_USERNAME")
+                password = System.getenv("CLOUDSMITH_PASSWORD")
+            }
+        }
+    }
 }

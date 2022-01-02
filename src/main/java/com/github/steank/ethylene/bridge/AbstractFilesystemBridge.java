@@ -1,11 +1,11 @@
-package com.steank.ethylene.bridge;
+package com.github.steank.ethylene.bridge;
 
-import com.steank.ethylene.ConfigElement;
-import com.steank.ethylene.PathUtils;
-import com.steank.ethylene.codec.CodecRegistry;
-import com.steank.ethylene.codec.ConfigCodec;
-import com.steank.ethylene.collection.ConfigNode;
-import com.steank.ethylene.collection.FileConfigNode;
+import com.github.steank.ethylene.PathUtils;
+import com.github.steank.ethylene.codec.ConfigCodec;
+import com.github.steank.ethylene.ConfigElement;
+import com.github.steank.ethylene.codec.CodecRegistry;
+import com.github.steank.ethylene.collection.ConfigNode;
+import com.github.steank.ethylene.collection.FileConfigNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

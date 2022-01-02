@@ -1,6 +1,6 @@
-package com.steank.ethylene.codec;
+package com.github.steank.ethylene.codec;
 
-import com.steank.ethylene.collection.ConfigNode;
+import com.github.steank.ethylene.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

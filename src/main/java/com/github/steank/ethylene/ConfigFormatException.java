@@ -1,4 +1,4 @@
-package com.steank.ethylene;
+package com.github.steank.ethylene;
 
 import java.io.IOException;
 

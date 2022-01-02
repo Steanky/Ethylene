@@ -1,7 +1,7 @@
-package com.steank.ethylene.collection;
+package com.github.steank.ethylene.collection;
 
-import com.steank.ethylene.ConfigElement;
-import com.steank.ethylene.ElementType;
+import com.github.steank.ethylene.ConfigElement;
+import com.github.steank.ethylene.ElementType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

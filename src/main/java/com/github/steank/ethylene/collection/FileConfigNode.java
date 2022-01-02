@@ -1,8 +1,8 @@
-package com.steank.ethylene.collection;
+package com.github.steank.ethylene.collection;
 
-import com.steank.ethylene.ConfigElement;
-import com.steank.ethylene.bridge.ConfigBridge;
-import com.steank.ethylene.codec.ConfigCodec;
+import com.github.steank.ethylene.codec.ConfigCodec;
+import com.github.steank.ethylene.ConfigElement;
+import com.github.steank.ethylene.bridge.ConfigBridge;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

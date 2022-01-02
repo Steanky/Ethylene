@@ -1,6 +1,6 @@
-package com.steank.ethylene.bridge;
+package com.github.steank.ethylene.bridge;
 
-import com.steank.ethylene.collection.FileConfigNode;
+import com.github.steank.ethylene.collection.FileConfigNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

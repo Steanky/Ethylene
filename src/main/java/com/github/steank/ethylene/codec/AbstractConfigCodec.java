@@ -1,10 +1,10 @@
-package com.steank.ethylene.codec;
+package com.github.steank.ethylene.codec;
 
-import com.steank.ethylene.ConfigElement;
-import com.steank.ethylene.ConfigPrimitive;
-import com.steank.ethylene.collection.ArrayConfigList;
-import com.steank.ethylene.collection.ConfigNode;
-import com.steank.ethylene.collection.LinkedConfigNode;
+import com.github.steank.ethylene.collection.ArrayConfigList;
+import com.github.steank.ethylene.ConfigElement;
+import com.github.steank.ethylene.ConfigPrimitive;
+import com.github.steank.ethylene.collection.ConfigNode;
+import com.github.steank.ethylene.collection.LinkedConfigNode;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

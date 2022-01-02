@@ -1,7 +1,7 @@
-package com.steank.ethylene;
+package com.github.steank.ethylene;
 
-import com.steank.ethylene.collection.ConfigNode;
-import com.steank.ethylene.collection.ConfigList;
+import com.github.steank.ethylene.collection.ConfigList;
+import com.github.steank.ethylene.collection.ConfigNode;
 
 /**
  * Used to indicate what type a {@link ConfigElement} is.

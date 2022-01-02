@@ -1,4 +1,4 @@
-package com.steank.ethylene.codec;
+package com.github.steank.ethylene.codec;
 
 import org.jetbrains.annotations.NotNull;
 

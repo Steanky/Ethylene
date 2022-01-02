@@ -1,10 +1,10 @@
-package com.steank.ethylene.codec;
+package com.github.steank.ethylene.codec;
 
-import com.steank.ethylene.ConfigElement;
-import com.steank.ethylene.ElementType;
-import com.steank.ethylene.collection.ConfigList;
-import com.steank.ethylene.collection.ConfigNode;
-import com.steank.ethylene.collection.LinkedConfigNode;
+import com.github.steank.ethylene.ElementType;
+import com.github.steank.ethylene.collection.ConfigList;
+import com.github.steank.ethylene.collection.ConfigNode;
+import com.github.steank.ethylene.collection.LinkedConfigNode;
+import com.github.steank.ethylene.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

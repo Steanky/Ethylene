@@ -1,4 +1,4 @@
-package com.steank.ethylene;
+package com.github.steank.ethylene;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
