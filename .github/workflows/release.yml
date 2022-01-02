@@ -30,3 +30,6 @@ jobs:
         run: gradlew test
       - name: Publish
         run: gradlew publish -PcloudsmithUsername=steank -PcloudsmithPassword=${{ secrets.CLOUDSMITH_API_KEY }}
+        env:
+          CLOUDSMITH_USERNAME: ${{ secrets.CLOUDSMITH_USERNAME }}
+          CLOUDSMITH_PASSWORD: ${{ secrets.CLOUDSMITH_PASSWORD }}
