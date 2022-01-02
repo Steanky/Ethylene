@@ -1,0 +1,35 @@
+name: Publish release version
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 16
+        uses: actions/setup-java@v2
+        with:
+          java-version: '16'
+          distribution: 'adopt'
+          server-id: github
+          cache: 'gradle'
+          settings-path: ${{ github.workspace }}
+      - name: Version
+        run: gradlew -v
+      - name: Build
+        run: gradlew build
+      - name: Test
+        run: gradlew test
+      - name: Publish
+        run: gradlew publish
+        env:
+          CLOUDSMITH_USERNAME: ${{ secrets.CLOUDSMITH_USERNAME }}
+          CLOUDSMITH_PASSWORD: ${{ secrets.CLOUDSMITH_PASSWORD }}
