@@ -22,9 +22,9 @@ jobs:
           server-id: github
           cache: 'gradle'
           settings-path: ${{ github.workspace }}
-      - name: Gradle build
+      - name: Build
         run: gradle build
-      - name: Gradle test
+      - name: Test
         run: gradle test
-      - name: Publish to GitHub Packages
+      - name: Publish
         run: gradle publish
