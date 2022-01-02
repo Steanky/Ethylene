@@ -16,8 +16,16 @@ import java.util.function.Supplier;
  * {@link LinkedConfigNode} and {@link FileConfigNode} for examples of how to properly inherit this class.</p>
  */
 public abstract class AbstractConfigNode extends AbstractMap<String, ConfigElement> implements ConfigNode {
+    /**
+     * The backing map for this AbstractConfigNode
+     */
     protected final Map<String, ConfigElement> mappings;
 
+    /**
+     * Construct a new AbstractConfigNode using the provided mappings.
+     * @param mappings the mappings to use
+     * @throws NullPointerException if mappings is null
+     */
     protected AbstractConfigNode(@NotNull Map<String, ConfigElement> mappings) {
         this.mappings = Objects.requireNonNull(mappings);
     }
@@ -94,6 +102,15 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         return Optional.empty();
     }
 
+    /**
+     * This helper method can be used to construct a map with the same elements as another map. If the given map
+     * contains any null keys or values, a {@link NullPointerException} will be thrown.
+     * @param map the map whose elements will be added to the returned map
+     * @param mapSupplier The supplier used to create the map
+     * @param <T> the type of the map to construct
+     * @return a new map, constructed by the supplier, and containing the same elements as map
+     * @throws NullPointerException if map contains any null keys or values
+     */
     protected static <T extends Map<String, ConfigElement>> T constructMap(@NotNull Map<String, ConfigElement> map,
                                                                            @NotNull Supplier<T> mapSupplier) {
         Objects.requireNonNull(map);

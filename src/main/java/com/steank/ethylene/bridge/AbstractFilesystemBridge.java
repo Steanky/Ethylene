@@ -6,7 +6,6 @@ import com.steank.ethylene.codec.CodecRegistry;
 import com.steank.ethylene.codec.ConfigCodec;
 import com.steank.ethylene.collection.ConfigNode;
 import com.steank.ethylene.collection.FileConfigNode;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

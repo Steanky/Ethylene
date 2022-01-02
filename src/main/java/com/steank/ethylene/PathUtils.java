@@ -13,6 +13,10 @@ public final class PathUtils {
     private static final char EXTENSION_SEPARATOR = '.';
     private static final int NOT_FOUND = -1;
 
+    private PathUtils() {
+        throw new AssertionError("Why would you try to do this?");
+    }
+
     private static String getFileNameInternal(Path path) {
         Path filePath = path.getFileName();
 
@@ -24,10 +28,24 @@ public final class PathUtils {
         }
     }
 
+    /**
+     * Returns the <i>filename</i> of a {@link Path}. This will be the name of the file or directory furthest from the
+     * root, including the file extension if present. If the path has no elements, an empty string will be returned.
+     * @param path the path
+     * @return the name of the file or directory represented by the path, or an empty string if the path contains no
+     * elements
+     */
     public static @NotNull String getFileName(@NotNull Path path) {
         return getFileNameInternal(Objects.requireNonNull(path));
     }
 
+    /**
+     * Returns the filename of the file referred to by the given {@link Path}, with the file extension removed if it is
+     * present, or an empty string if the path has no elements.
+     * @param path the path
+     * @return the name of the file or directory represented by the path, without any file extension, or an empty string
+     * if the path contains no elements
+     */
     public static @NotNull String getFileNameWithoutExtension(@NotNull Path path) {
         Objects.requireNonNull(path);
 
@@ -42,6 +60,12 @@ public final class PathUtils {
         }
     }
 
+    /**
+     * Returns the file extension of the file referred to by the given {@link Path}, or an empty string if the path does
+     * not have an extension.
+     * @param path the path
+     * @return the file extension of the file, if present, or an empty string if it is not present
+     */
     public static @NotNull String getFileExtension(@NotNull Path path) {
         Objects.requireNonNull(path);
 

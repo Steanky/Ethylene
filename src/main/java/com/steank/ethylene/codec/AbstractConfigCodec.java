@@ -102,6 +102,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param <TMap> the map type
      * @param <TCollection> the collection type
      * @param <TOut> the type of objects which are stored in the output container(s)
+     * @throws IllegalArgumentException if the provided object cannot be converted into TOut by the converter function
      */
     protected <TMap extends Map<String, TOut>,
             TCollection extends Collection<TOut>,
@@ -150,13 +151,36 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         }
     }
 
+    /**
+     * <p>Deeply processes a map, iterating all of its elements (and the elements of any "container" objects it may
+     * contain, recursively). Each element will be "converted" into another object by the provided conversion function.
+     * If the input object is an array or a collection, the output object will be constructed by the provided
+     * collection supplier. If the input object is a map, the output object will be constructed by the provided map
+     * supplier.</p>
+     *
+     * <p>This function is capable of handling self-referential maps. The output map will have an identical structure,
+     * but with different objects.</p>
+     * @param input the input map
+     * @param rootMapSupplier the supplier which produces the <i>root</i> map which is returned
+     * @param subMapSupplier the supplier to produce nested maps
+     * @param collectionSupplier the supplier to produce collections
+     * @param converter the converter used to convert each object
+     * @param <TRootMap> the type of root map (the returned type)
+     * @param <TSubMap> the type of sub map
+     * @param <TCollection> the type of collection
+     * @param <TOut> the output value type
+     * @return the new map, which will contain all the elements of the input map after they have been converted to
+     * appropriate types
+     * @throws NullPointerException if rootMapSupplier supplies a null map
+     * @throws IllegalArgumentException if any of the input values cannot be converted to TOut
+     */
     protected <TRootMap extends Map<String, TOut>,
             TSubMap extends Map<String, TOut>,
             TCollection extends Collection<TOut>,
             TOut> @NotNull TRootMap processMap(@NotNull Map<String, ?> input,
                                                @NotNull Supplier<TRootMap> rootMapSupplier,
                                                @NotNull Supplier<TSubMap> subMapSupplier,
-                                               @NotNull Supplier<TCollection> collection,
+                                               @NotNull Supplier<TCollection> collectionSupplier,
                                                @NotNull Function<Object, TOut> converter) {
         TRootMap topLevel = Objects.requireNonNull(rootMapSupplier.get(), "root map cannot be null");
 
@@ -173,13 +197,14 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 //iterate input entries, process each of them
                 for(Map.Entry<?, ?> entry : inputMap.entrySet()) {
                     processValue(entry.getValue(), stack, visitedNodes, node, entry.getKey().toString(), subMapSupplier,
-                            collection, converter);
+                            collectionSupplier, converter);
                 }
             }
             else if(node.inputContainer instanceof Collection<?> inputCollection) {
                 //just iterate input elements and process them
                 for(Object value : inputCollection) {
-                    processValue(value, stack, visitedNodes, node, null, subMapSupplier, collection, converter);
+                    processValue(value, stack, visitedNodes, node, null, subMapSupplier, collectionSupplier,
+                            converter);
                 }
             }
             else {
@@ -188,7 +213,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
                 for(int i = 0; i < length; i++) {
                     processValue(Array.get(node.inputContainer, i), stack, visitedNodes, node, null,
-                            subMapSupplier, collection, converter);
+                            subMapSupplier, collectionSupplier, converter);
                 }
             }
         }
@@ -196,6 +221,15 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         return topLevel;
     }
 
+    /**
+     * Produces a {@link ConfigNode} from the provided mappings.
+     * @param mappings the mappings to use to produce this ConfigNode
+     * @param nodeSupplier the supplier used to construct the node which is returned
+     * @param <TNode> the type of ConfigNode to return
+     * @return a ConfigNode, containing the same entries as mappings, after converting them to ConfigElement instances
+     * @throws NullPointerException if mappings or nodeSupplier are null
+     * @throws IllegalArgumentException if mappings contains a value which cannot be converted into a ConfigElement
+     */
     protected <TNode extends ConfigNode> @NotNull TNode makeNode(@NotNull Map<String, Object> mappings,
                                                                  @NotNull Supplier<TNode> nodeSupplier) {
         Objects.requireNonNull(mappings);
@@ -213,6 +247,18 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         });
     }
 
+    /**
+     * Produces a map from the provided {@link ConfigNode}. The returned map will contain the same entries as the
+     * ConfigNode, with all ConfigElement instances converted to their equivalent values. ConfigNode instances will be
+     * converted to {@link LinkedHashMap}, ConfigList instances to {@link ArrayList}, and {@link ConfigPrimitive}
+     * instances to the value that they wrap.
+     * @param node the node to convert to a map
+     * @param mapSupplier the supplier which produces the <i>top level</i> map which is returned
+     * @param <TMap> the type of top-level map
+     * @return a map, constructed by mapSupplier, containing the same mappings as node, after deeply converting every
+     * element to an equivalent value
+     * @throws NullPointerException if node or mapSupplier are null
+     */
     protected <TMap extends Map<String, Object>> @NotNull TMap makeMap(@NotNull ConfigNode node,
                                                                        @NotNull Supplier<TMap> mapSupplier) {
         Objects.requireNonNull(node);
@@ -228,8 +274,20 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         });
     }
 
+    /**
+     * Reads some mappings from an InputStream. This method should not close the stream.
+     * @param input an InputStream to read from
+     * @return a map of strings to objects
+     * @throws IOException if an IO error occurs
+     */
     protected abstract @NotNull Map<String, Object> readMap(@NotNull InputStream input) throws IOException;
 
+    /**
+     * Writes some mappings to an OutputStream. This method should not close the stream.
+     * @param mappings the mappings to write
+     * @param output the stream to write to
+     * @throws IOException if an IO error occurs
+     */
     protected abstract void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output)
             throws IOException;
 }

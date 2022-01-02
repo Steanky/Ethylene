@@ -16,6 +16,6 @@ public interface ConfigList extends ConfigElement, List<ConfigElement> {
     }
 
     default @NotNull ElementType getType() {
-        return ElementType.ARRAY;
+        return ElementType.LIST;
     }
 }
