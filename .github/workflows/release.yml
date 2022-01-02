@@ -22,6 +22,8 @@ jobs:
           server-id: github
           cache: 'gradle'
           settings-path: ${{ github.workspace }}
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
       - name: Version
         run: ./gradlew -v
       - name: Build
