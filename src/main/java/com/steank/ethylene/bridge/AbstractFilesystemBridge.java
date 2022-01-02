@@ -186,7 +186,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
 
         //directories are handled specially, not by this function
         if(file.isDirectory()) {
-            throw new IllegalArgumentException("cannot read a directory");
+            throw new IllegalArgumentException("Cannot read a directory");
         }
 
         ConfigCodec codec = getCodecFor(file);
@@ -210,7 +210,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
             node.getCodec().encodeNode(node, new FileOutputStream(file), true);
         }
         else {
-            throw new IllegalArgumentException("cannot write a FileConfigNode representing a directory");
+            throw new IllegalArgumentException("Cannot write a FileConfigNode representing a directory");
         }
     }
 
@@ -252,12 +252,12 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
                 return codec;
             }
 
-            throw new IllegalArgumentException("unable to find a codec for file " + file + "; it may use an " +
+            throw new IllegalArgumentException("Unable to find a codec for file " + file + "; it may use an " +
                     "unsupported format");
         }
 
         //no codec for directories
-        throw new IllegalArgumentException("cannot retrieve a codec for a directory");
+        throw new IllegalArgumentException("Cannot retrieve a codec for a directory");
     }
 
     /**
