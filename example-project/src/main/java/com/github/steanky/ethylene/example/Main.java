@@ -54,7 +54,7 @@ public class Main {
         ConfigNode node = ConfigBridge.read(JSON_STRING, JsonCodec.INSTANCE);
 
         /*
-        everything below here looks exactly the same regardless of what kind of file format you're using!
+        everything below here works exactly the same regardless of what kind of file format you're using!
         */
 
         //prints "some json" without quotes

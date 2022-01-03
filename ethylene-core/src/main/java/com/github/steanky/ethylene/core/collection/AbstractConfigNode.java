@@ -70,8 +70,12 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     public ConfigElement getElement(@NotNull String... keys) {
         Objects.requireNonNull(keys);
 
+        for(String key : keys) {
+            Objects.requireNonNull(key);
+        }
+
         if(keys.length == 0) {
-            throw new IllegalArgumentException("keys was empty");
+            throw new IllegalArgumentException("keys array cannot be empty");
         }
         else if(keys.length == 1) { //simplest case, just return directly from our map
             return mappings.get(keys[0]);

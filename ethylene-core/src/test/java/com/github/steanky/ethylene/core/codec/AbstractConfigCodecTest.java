@@ -117,18 +117,60 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedPrimitives() {
-        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY).asNode()
-                .getElement(SUB_STRING_KEY).asString());
+        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY)
+                .asString());
     }
 
     @Test
     void validNestedArrayNodes() {
-        ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).asNode()
-                .getElement(SUB_LIST_NODES_KEY).asList();
+        ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_NODES_KEY)
+                .asList();
 
         for(int i = 0; i < SUB_NODE_COUNT; i++) {
             ConfigNode element = subNodes.get(i).asNode();
             assertEquals(i, element.getElement(SUB_NODE_KEY_PREFIX + i).asNumber().intValue());
         }
+    }
+
+    @Test
+    void pathNestedAccess() {
+        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY, SUB_STRING_KEY).asString());
+    }
+
+    @Test
+    void pathThrowsWhenEmpty() {
+        assertThrows(IllegalArgumentException.class, resultingElement::getElement);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    void pathThrowsWhenNullKey() {
+        assertThrows(NullPointerException.class, () -> resultingElement.getElement(SUB_ROOT_KEY, null));
+        assertThrows(NullPointerException.class, () -> resultingElement.getElement(null, SUB_STRING_KEY));
+        assertThrows(NullPointerException.class, () -> resultingElement.getElement((String) null));
+    }
+
+    @Test
+    void validTypes() {
+        assertTrue(resultingElement.isNode());
+        assertFalse(resultingElement.isBoolean());
+        assertFalse(resultingElement.isString());
+        assertFalse(resultingElement.isList());
+        assertFalse(resultingElement.isNumber());
+        assertFalse(resultingElement.isObject());
+    }
+
+    @Test
+    void throwsOnConvertToInvalidType() {
+        assertThrows(IllegalStateException.class, resultingElement::asBoolean);
+        assertThrows(IllegalStateException.class, resultingElement::asString);
+        assertThrows(IllegalStateException.class, resultingElement::asList);
+        assertThrows(IllegalStateException.class, resultingElement::asNumber);
+        assertThrows(IllegalStateException.class, resultingElement::asObject);
+    }
+
+    @Test
+    void asNodeReturnsSameObject() {
+        assertSame(resultingElement, resultingElement.asNode());
     }
 }

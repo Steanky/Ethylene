@@ -7,6 +7,11 @@ version '1.0.0'
 
 repositories {
     mavenCentral()
+
+    //real projects would also need to add the Cloudsmith repository where Ethylene artifacts are hosted:
+    //maven {
+    //    url "https://dl.cloudsmith.io/public/steank-f1g/ethylene/maven/"
+    //}
 }
 
 dependencies {
@@ -14,4 +19,11 @@ dependencies {
 
     implementation project(':ethylene-json')
     implementation project(':ethylene-toml')
+
+
+    //a real project would want to declare dependencies on ethylene-json and ethylene-toml like this, assuming the
+    //desired version is 1.0.0:
+
+    //implementation 'com.github.steank:ethylene-json:1.0.0'
+    //implementation 'com.github.steank:ethylene-toml:1.0.0'
 }
