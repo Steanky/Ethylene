@@ -1,0 +1,16 @@
+plugins {
+    id 'java'
+}
+
+group 'com.github.steanky'
+version '1.0.0'
+
+repositories {
+    maven {
+        url "https://dl.cloudsmith.io/public/steank-f1g/ethylene/maven/"
+    }
+}
+
+dependencies {
+    implementation 'com.github.steanky:ethylene-json:1.0-SNAPSHOT'
+}
