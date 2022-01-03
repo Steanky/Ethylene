@@ -53,6 +53,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
     /**
      * Constructs a new AbstractFilesystemBridge using the provided {@link Path} as a root and the provided
      * {@link CodecRegistry} as a source of {@link ConfigCodec} objects.
+     * @param codecRegistry the codec registry
      * @param root the root path
      * @throws NullPointerException if root or codecRegistry are null
      */

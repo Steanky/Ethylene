@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.codec.json;
 
+import com.github.steanky.ethylene.core.ConfigFormatException;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
@@ -29,7 +30,7 @@ public class JsonCodec extends AbstractConfigCodec {
             return gson.fromJson(reader, MAP_TYPE);
         }
         catch (JsonIOException | JsonSyntaxException exception) {
-            throw new IOException(exception);
+            throw new ConfigFormatException(exception);
         }
     }
 
@@ -39,7 +40,7 @@ public class JsonCodec extends AbstractConfigCodec {
             gson.toJson(mappings, writer);
         }
         catch (JsonIOException exception) {
-            throw new IOException(exception);
+            throw new ConfigFormatException(exception);
         }
     }
 }

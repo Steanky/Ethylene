@@ -106,8 +106,7 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedFlatStringList() {
-        ConfigList array = resultingElement.getElement(SUB_ROOT_KEY).asNode()
-                .getElement(SUB_LIST_KEY).asList();
+        ConfigList array = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_KEY).asList();
         List<String> equivalent = new ArrayList<>();
         for(ConfigElement element : array) {
             equivalent.add(element.asString());

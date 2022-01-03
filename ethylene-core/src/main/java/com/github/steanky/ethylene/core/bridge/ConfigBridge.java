@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.bridge;
 
+import com.github.steanky.ethylene.core.ConfigFormatException;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
@@ -73,14 +74,29 @@ public interface ConfigBridge<T extends ConfigNode> {
         };
     }
 
+    /**
+     * Utility method that produces a read-only ConfigBridge instance using the given {@link InputStream} and
+     * {@link ConfigCodec}. The InputStream will be read from once, and the result cached for subsequent calls to
+     * {@link ConfigBridge#read()}. The InputStream will be closed the first time it is read from.
+     * @param inputStream the InputStream to read from
+     * @param codec the ConfigCodec to use
+     * @throws NullPointerException if inputStream or codec are null
+     * @return a read-only ConfigBridge which can read from the given InputStream, using the given ConfigCodec
+     */
     static @NotNull ConfigBridge<ConfigNode> fromInput(@NotNull InputStream inputStream, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(inputStream);
         Objects.requireNonNull(codec);
 
         return new ConfigBridge<>() {
+            private Future<ConfigNode> node;
+
             @Override
             public @NotNull Future<ConfigNode> read() throws IOException {
-                return CompletableFuture.completedFuture(codec.decodeNode(inputStream, LinkedConfigNode::new));
+                if(node != null) {
+                    return node;
+                }
+
+                return node = CompletableFuture.completedFuture(codec.decodeNode(inputStream, LinkedConfigNode::new));
             }
 
             @Override
@@ -95,15 +111,31 @@ public interface ConfigBridge<T extends ConfigNode> {
         };
     }
 
+    /**
+     * Utility method to read a {@link ConfigNode} from an InputStream, using the given {@link ConfigCodec} for
+     * decoding.
+     * @param inputStream the InputStream to read from
+     * @param codec the ConfigCodec which will be used to decode the input data
+     * @return a ConfigNode object representing the decoded configuration data
+     * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
+     */
     static @NotNull ConfigNode read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec) throws IOException {
         try {
             return fromInput(inputStream, codec).read().get();
         }
         catch (ExecutionException | InterruptedException exception) {
-            throw new IOException(exception);
+            throw new ConfigFormatException(exception.getCause());
         }
     }
 
+    /**
+     * Same as {@link ConfigBridge#read(InputStream, ConfigCodec)}, but reads directly from a string rather than an
+     * InputStream.
+     * @param inputString the string to read from
+     * @param codec the ConfigCodec which will be used to decode the input string
+     * @return a ConfigNode object representing the decoded configuration data
+     * @throws IOException if the string does not contain valid data for the codec
+     */
     static @NotNull ConfigNode read(@NotNull String inputString, @NotNull ConfigCodec codec) throws IOException {
         Objects.requireNonNull(inputString);
 
