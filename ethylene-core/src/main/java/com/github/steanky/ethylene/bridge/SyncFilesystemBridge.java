@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.bridge;
 
+import com.github.steanky.ethylene.codec.CodecRegistry;
 import com.github.steanky.ethylene.collection.FileConfigNode;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,11 +16,12 @@ import java.util.concurrent.Future;
  */
 public class SyncFilesystemBridge extends AbstractFilesystemBridge {
     /**
-     * Constructs a new SyncFilesystemBridge based off of the specified root {@link Path}.
+     * Constructs a new SyncFilesystemBridge based off of the specified {@link CodecRegistry} and root {@link Path}.
+     * @param codecRegistry the CodecRegistry
      * @param root the root path
      */
-    public SyncFilesystemBridge(@NotNull Path root) {
-        super(root);
+    public SyncFilesystemBridge(@NotNull CodecRegistry codecRegistry, @NotNull Path root) {
+        super(codecRegistry, root);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.bridge;
 
+import com.github.steanky.ethylene.codec.CodecRegistry;
 import com.github.steanky.ethylene.collection.FileConfigNode;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,13 +19,15 @@ public class AsyncFilesystemBridge extends AbstractFilesystemBridge {
     private final ExecutorService executorService;
 
     /**
-     * Constructs a new AsyncFilesystemBridge based off of the specified root {@link Path} and using the provided
-     * {@link ExecutorService} to perform read and write operations asynchronously.
+     * Constructs a new AsyncFilesystemBridge based off of the specified {@link CodecRegistry} and root {@link Path},
+     * and using the provided {@link ExecutorService} to perform read and write operations asynchronously.
+     * @param codecRegistry the codec registry
      * @param root the root path
      * @param executorService the ExecutorService to use for read and write tasks
      */
-    public AsyncFilesystemBridge(@NotNull Path root, @NotNull ExecutorService executorService) {
-        super(root);
+    public AsyncFilesystemBridge(@NotNull CodecRegistry codecRegistry, @NotNull Path root,
+                                 @NotNull ExecutorService executorService) {
+        super(codecRegistry, root);
         this.executorService = Objects.requireNonNull(executorService);
     }
 

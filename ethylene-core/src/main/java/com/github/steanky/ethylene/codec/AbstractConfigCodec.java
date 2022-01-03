@@ -21,8 +21,9 @@ import java.util.function.Supplier;
 /**
  * This class provides functionality common to most {@link ConfigCodec} implementations. It specifies two abstract
  * methods: {@link AbstractConfigCodec#readMap(InputStream)} and
- * {@link AbstractConfigCodec#writeMap(Map, OutputStream)}. For most file formats, subclasses need only implement these
- * two methods. Other "poorly behaved" formats might necessitate an implementation that overrides more.
+ * {@link AbstractConfigCodec#writeMap(Map, OutputStream)}. For some file formats, subclasses need only implement these
+ * two methods. Other formats, especially those that provide support for different types of objects, might need to
+ * override more.
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**

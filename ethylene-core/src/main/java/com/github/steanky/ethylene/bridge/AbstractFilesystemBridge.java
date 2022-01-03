@@ -1,9 +1,10 @@
 package com.github.steanky.ethylene.bridge;
 
 import com.github.steanky.ethylene.PathUtils;
+import com.github.steanky.ethylene.codec.CodecRegistry;
 import com.github.steanky.ethylene.codec.ConfigCodec;
 import com.github.steanky.ethylene.ConfigElement;
-import com.github.steanky.ethylene.codec.CodecRegistry;
+import com.github.steanky.ethylene.codec.BasicCodecRegistry;
 import com.github.steanky.ethylene.collection.ConfigNode;
 import com.github.steanky.ethylene.collection.FileConfigNode;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +41,7 @@ import java.util.concurrent.Future;
  * and write asynchronously and synchronously.</p>
  */
 public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfigNode> {
+    private final CodecRegistry codecRegistry;
     private final Path root;
 
     /**
@@ -49,11 +51,13 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
     protected record Node(@NotNull Path path, @NotNull FileConfigNode children) {}
 
     /**
-     * Constructs a new AbstractFilesystemBridge using the provided {@link Path} as a root.
+     * Constructs a new AbstractFilesystemBridge using the provided {@link Path} as a root and the provided
+     * {@link CodecRegistry} as a source of {@link ConfigCodec} objects.
      * @param root the root path
-     * @throws NullPointerException if root is null
+     * @throws NullPointerException if root or codecRegistry are null
      */
-    public AbstractFilesystemBridge(@NotNull Path root) {
+    public AbstractFilesystemBridge(@NotNull CodecRegistry codecRegistry, @NotNull Path root) {
+        this.codecRegistry = Objects.requireNonNull(codecRegistry);
         this.root = Objects.requireNonNull(root);
     }
 
@@ -218,7 +222,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
      * <p>Validates a given file to determine if it may be read from, or contains other files. This function is not used
      * for writing, because it is often the case that a file being written will not actually exist beforehand.</p>
      *
-     * <p>This function will attempt to look up a {@link ConfigCodec} using the {@link CodecRegistry} instance, with
+     * <p>This function will attempt to look up a {@link ConfigCodec} using the {@link BasicCodecRegistry} instance, with
      * the file's extension used as a name.</p>
      * @param file the file to read from
      * @return true if the file is a directory, or if the file extension can be used to locate a registered codec; false
@@ -229,13 +233,13 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
             return true;
         }
         else {
-            return CodecRegistry.INSTANCE.hasCodec(PathUtils.getFileExtension(file.toPath()).toLowerCase(Locale.ROOT));
+            return codecRegistry.hasCodec(PathUtils.getFileExtension(file.toPath()).toLowerCase(Locale.ROOT));
         }
     }
 
     /**
      * Attempts to retrieve a {@link ConfigCodec} for the given file, based off of its extension and using the
-     * {@link CodecRegistry} instance. If a suitable codec cannot be found for any reason, an exception will be thrown.
+     * {@link BasicCodecRegistry} instance. If a suitable codec cannot be found for any reason, an exception will be thrown.
      * @param file the file to retrieve a codec for
      * @return the codec used to decode the file
      * @throws NullPointerException if file is null
@@ -246,7 +250,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
 
         if(!file.isDirectory()) {
             //use the file extension to determine what codec to use
-            ConfigCodec codec = CodecRegistry.INSTANCE.getCodec(PathUtils.getFileExtension(file.toPath())
+            ConfigCodec codec = codecRegistry.getCodec(PathUtils.getFileExtension(file.toPath())
                     .toLowerCase(Locale.ROOT));
             if(codec != null) {
                 return codec;
