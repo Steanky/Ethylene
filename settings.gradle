@@ -1,5 +1,5 @@
 rootProject.name = 'ethylene'
 include 'ethylene-core'
 include 'ethylene-toml'
-
+include 'ethylene-json'
 

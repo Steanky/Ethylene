@@ -11,6 +11,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/ethylene-core" />
+            <option value="$PROJECT_DIR$/ethylene-json" />
             <option value="$PROJECT_DIR$/ethylene-toml" />
           </set>
         </option>

@@ -44,7 +44,7 @@ publishing {
 
     repositories {
         maven {
-            name = "ethylene"
+            name = "ethylene-core"
             url = "https://maven.cloudsmith.io/steank-f1g/ethylene/"
 
             credentials {

@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
