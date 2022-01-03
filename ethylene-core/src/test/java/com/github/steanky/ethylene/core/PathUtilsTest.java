@@ -41,4 +41,10 @@ class PathUtilsTest {
     void simpleFileNameWithoutExtension() {
         assertEquals(SIMPLE_FILE_NAME_WITHOUT_EXTENSION, PathUtils.getFileNameWithoutExtension(SIMPLE_FILE_PATH));
     }
+
+    @Test
+    void simpleFileNameWithoutExtensionOnExtensionlessPath() {
+        assertEquals(SIMPLE_FILE_NAME_WITHOUT_EXTENSION,
+                PathUtils.getFileNameWithoutExtension(SIMPLE_EXTENSIONLESS_FILE_PATH));
+    }
 }
