@@ -94,6 +94,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param outClass the value class for the output map
      * @param <TMap> the map type
      * @param <TCollection> the collection type
+     * @param <TIn> the type of objects stored in the input container
      * @param <TOut> the type of objects which are stored in the output container(s)
      * @throws IllegalArgumentException if the provided object cannot be converted into TOut by the converter function
      */
@@ -170,6 +171,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param <TRootMap> the type of root map (the returned type)
      * @param <TSubMap> the type of sub map
      * @param <TCollection> the type of collection
+     * @param <TIn> the input value type
      * @param <TOut> the output value type
      * @return the new map, which will contain all the elements of the input map after they have been converted to
      * appropriate types
@@ -265,17 +267,33 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 Object.class);
     }
 
+    /**
+     * Converts the provided object to a ConfigElement. The input object will typically not be a container.
+     * Implementations that override this method will most often also need to override
+     * {@link AbstractConfigCodec#toObject(ConfigElement)}.
+     * @param raw the object to convert
+     * @return a ConfigElement representing the given object
+     * @throws IllegalArgumentException if the provided object cannot be converted
+     */
     protected @NotNull ConfigElement toElement(@Nullable Object raw) {
         return new ConfigPrimitive(raw);
     }
 
-    protected @Nullable Object toObject(@NotNull ConfigElement raw) {
-        if(raw.isObject()) {
-            return raw.asObject();
+    /**
+     * Converts the provided ConfigElement to an object. The input ConfigElement will typically not be a container.
+     * Implementations that override this method will most often also need to override
+     * {@link AbstractConfigCodec#toElement(Object)}.
+     * @param element the element to convert
+     * @return an object representing the given ConfigElement
+     * @throws IllegalArgumentException if the provided object cannot be converted
+     */
+    protected @Nullable Object toObject(@NotNull ConfigElement element) {
+        if(element.isObject()) {
+            return element.asObject();
         }
         else {
             throw new IllegalArgumentException("Cannot convert ConfigElement subclass of type " +
-                    raw.getClass().getName());
+                    element.getClass().getName());
         }
     }
 

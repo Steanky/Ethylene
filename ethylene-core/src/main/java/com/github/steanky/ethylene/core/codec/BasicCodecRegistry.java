@@ -10,6 +10,9 @@ import java.util.*;
 public class BasicCodecRegistry implements CodecRegistry {
     private final Map<String, ConfigCodec> codecMap = new HashMap<>();
 
+    /**
+     * Constructs a new, empty instance of BasicCodecRegistry.
+     */
     public BasicCodecRegistry() {}
 
     public void registerCodec(@NotNull ConfigCodec codec) {

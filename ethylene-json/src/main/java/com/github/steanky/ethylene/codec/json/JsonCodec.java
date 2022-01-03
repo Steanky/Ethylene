@@ -13,7 +13,13 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Provides support for the JSON format.
+ */
 public class JsonCodec extends AbstractConfigCodec {
+    /**
+     * The JsonCodec singleton instance.
+     */
     public static final JsonCodec INSTANCE = new JsonCodec();
 
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
