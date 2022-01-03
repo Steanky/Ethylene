@@ -28,13 +28,18 @@ dependencies {
     testCompileOnly "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 test {
     useJUnitPlatform()
 }
 
 publishing {
     publications {
-        myPublication(MavenPublication) {
+        maven(MavenPublication) {
             from components.java
         }
     }

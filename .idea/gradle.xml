@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/ethylene-core" />
             <option value="$PROJECT_DIR$/ethylene-json" />
             <option value="$PROJECT_DIR$/ethylene-toml" />
+            <option value="$PROJECT_DIR$/example-project" />
           </set>
         </option>
       </GradleProjectSettings>
