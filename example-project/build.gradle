@@ -7,13 +7,11 @@ version '1.0.0'
 
 repositories {
     mavenCentral()
-    //maven {
-    //    url "https://dl.cloudsmith.io/public/steank-f1g/ethylene/maven/"
-    //}
 }
 
 dependencies {
     compileOnly "org.jetbrains:annotations:22.0.0"
+
     implementation project(':ethylene-json')
-    //implementation 'com.github.steanky:ethylene-json:1.0-SNAPSHOT'
+    implementation project(':ethylene-toml')
 }
