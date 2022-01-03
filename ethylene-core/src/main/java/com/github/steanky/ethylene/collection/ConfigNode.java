@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.collection;
 import com.github.steanky.ethylene.ConfigPrimitive;
 import com.github.steanky.ethylene.ConfigElement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Optional;
@@ -17,15 +18,14 @@ import java.util.Optional;
 public interface ConfigNode extends ConfigElement, Map<String, ConfigElement> {
     /**
      * Obtains a {@link ConfigElement} from this node, possibly from a nested node (if multiple keys are provided). If
-     * the "path" represented by the array of keys is not valid (one or more elements does not exist), an empty
-     * {@link Optional} will be returned. Otherwise, the Optional will contain the element referred to by the path.
+     * the "path" represented by the array of keys does not point to an element that exists, this method will return
+     * null.
      * @throws NullPointerException if one or more keys are null
      * @throws IllegalArgumentException if the keys array is empty
      * @param keys The array of keys which represents a "path" leading to a specific ConfigElement
-     * @return An Optional, which will be empty if one or more of the provided elements does not exist; otherwise,
-     * it will contain the ConfigElement pointed to by the path
+     * @return null if the path is not valid; otherwise, the ConfigElement pointed to by the path
      */
-    @NotNull Optional<ConfigElement> getElement(@NotNull String... keys);
+    ConfigElement getElement(@NotNull String... keys);
 
     @Override
     default boolean isNode() {

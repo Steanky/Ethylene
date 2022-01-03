@@ -86,16 +86,16 @@ class AbstractConfigCodecTest {
 
     @Test
     void validTopLevelPrimitives() {
-        assertEquals(INTEGER_VALUE, resultingElement.getElement(INTEGER_KEY).orElseThrow().asNumber().intValue());
-        assertEquals(FLOAT_VALUE, resultingElement.getElement(FLOAT_KEY).orElseThrow().asNumber().floatValue());
-        assertEquals(DOUBLE_VALUE, resultingElement.getElement(DOUBLE_KEY).orElseThrow().asNumber().doubleValue());
-        assertEquals(BOOLEAN_VALUE, resultingElement.getElement(BOOLEAN_KEY).orElseThrow().asBoolean());
-        assertEquals(STRING_VALUE, resultingElement.getElement(STRING_KEY).orElseThrow().asString());
+        assertEquals(INTEGER_VALUE, resultingElement.getElement(INTEGER_KEY).asNumber().intValue());
+        assertEquals(FLOAT_VALUE, resultingElement.getElement(FLOAT_KEY).asNumber().floatValue());
+        assertEquals(DOUBLE_VALUE, resultingElement.getElement(DOUBLE_KEY).asNumber().doubleValue());
+        assertEquals(BOOLEAN_VALUE, resultingElement.getElement(BOOLEAN_KEY).asBoolean());
+        assertEquals(STRING_VALUE, resultingElement.getElement(STRING_KEY).asString());
     }
 
     @Test
     void validTopLevelFlatStringList() {
-        ConfigList array = resultingElement.getElement(LIST_KEY).orElseThrow().asList();
+        ConfigList array = resultingElement.getElement(LIST_KEY).asList();
         List<String> equivalent = new ArrayList<>();
         for(ConfigElement element : array) {
             equivalent.add(element.asString());
@@ -106,8 +106,8 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedFlatStringList() {
-        ConfigList array = resultingElement.getElement(SUB_ROOT_KEY).orElseThrow().asNode()
-                .getElement(SUB_LIST_KEY).orElseThrow().asList();
+        ConfigList array = resultingElement.getElement(SUB_ROOT_KEY).asNode()
+                .getElement(SUB_LIST_KEY).asList();
         List<String> equivalent = new ArrayList<>();
         for(ConfigElement element : array) {
             equivalent.add(element.asString());
@@ -118,18 +118,18 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedPrimitives() {
-        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY).orElseThrow().asNode()
-                .getElement(SUB_STRING_KEY).orElseThrow().asString());
+        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY).asNode()
+                .getElement(SUB_STRING_KEY).asString());
     }
 
     @Test
     void validNestedArrayNodes() {
-        ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).orElseThrow().asNode()
-                .getElement(SUB_LIST_NODES_KEY).orElseThrow().asList();
+        ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).asNode()
+                .getElement(SUB_LIST_NODES_KEY).asList();
 
         for(int i = 0; i < SUB_NODE_COUNT; i++) {
             ConfigNode element = subNodes.get(i).asNode();
-            assertEquals(i, element.getElement(SUB_NODE_KEY_PREFIX + i).orElseThrow().asNumber().intValue());
+            assertEquals(i, element.getElement(SUB_NODE_KEY_PREFIX + i).asNumber().intValue());
         }
     }
 }

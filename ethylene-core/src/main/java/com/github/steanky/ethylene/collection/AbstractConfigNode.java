@@ -67,39 +67,44 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     }
 
     @Override
-    public @NotNull Optional<ConfigElement> getElement(@NotNull String... keys) {
+    public ConfigElement getElement(@NotNull String... keys) {
         Objects.requireNonNull(keys);
+
         if(keys.length == 0) {
             throw new IllegalArgumentException("keys was empty");
         }
         else if(keys.length == 1) { //simplest case, just return directly from our map
-            return Optional.ofNullable(mappings.get(keys[0]));
+            return mappings.get(keys[0]);
         }
-        else { //iterate through the provided keys
+        else { //iterate through the provided keys, since length > 1
             ConfigNode current = this;
             int lastIndex = keys.length - 1;
             for(int i = 0; i < keys.length; i++) {
-                Optional<ConfigElement> childOptional = current.getElement(keys[i]);
+                ConfigElement child = current.getElement(keys[i]);
 
-                if(i == lastIndex) { //we got to the last key, so return whatever we find
-                    return childOptional;
+                if(child == null) {
+                    //we failed to find something for this key, so return null
+                    return null;
                 }
-                else if(childOptional.isPresent()) {
-                    ConfigElement childElement = childOptional.get();
-                    if(childElement.isNode()) { //continue traversing nodes...
-                        current = childElement.asNode();
-                    }
-                    else { //if we still have nodes to traverse, but ran into something that's NOT a node, return
-                        return Optional.empty();
-                    }
+                else if(i == lastIndex) {
+                    //we got to the last key, so return now
+                    return child;
                 }
-                else { //there is no element here, return
-                    return Optional.empty();
+                else  {
+                    if(child.isNode()) {
+                        //continue traversing nodes...
+                        current = child.asNode();
+                    }
+                    else {
+                        //we still have nodes to traverse, but ran into something that's not a node, so return
+                        return null;
+                    }
                 }
             }
-        }
 
-        return Optional.empty();
+            //can't actually happen
+            return null;
+        }
     }
 
     /**

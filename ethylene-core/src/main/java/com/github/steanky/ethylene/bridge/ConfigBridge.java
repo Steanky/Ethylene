@@ -1,9 +1,17 @@
 package com.github.steanky.ethylene.bridge;
 
+import com.github.steanky.ethylene.codec.ConfigCodec;
 import com.github.steanky.ethylene.collection.ConfigNode;
+import com.github.steanky.ethylene.collection.LinkedConfigNode;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
@@ -63,5 +71,42 @@ public interface ConfigBridge<T extends ConfigNode> {
                 return true;
             }
         };
+    }
+
+    static @NotNull ConfigBridge<ConfigNode> fromInput(@NotNull InputStream inputStream, @NotNull ConfigCodec codec) {
+        Objects.requireNonNull(inputStream);
+        Objects.requireNonNull(codec);
+
+        return new ConfigBridge<>() {
+            @Override
+            public @NotNull Future<ConfigNode> read() throws IOException {
+                return CompletableFuture.completedFuture(codec.decodeNode(inputStream, LinkedConfigNode::new));
+            }
+
+            @Override
+            public @NotNull Future<Void> write(@NotNull ConfigNode node) {
+                throw new IllegalStateException();
+            }
+
+            @Override
+            public boolean readOnly() {
+                return true;
+            }
+        };
+    }
+
+    static @NotNull ConfigNode read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec) throws IOException {
+        try {
+            return fromInput(inputStream, codec).read().get();
+        }
+        catch (ExecutionException | InterruptedException exception) {
+            throw new IOException(exception);
+        }
+    }
+
+    static @NotNull ConfigNode read(@NotNull String inputString, @NotNull ConfigCodec codec) throws IOException {
+        Objects.requireNonNull(inputString);
+
+        return read(new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8)), codec);
     }
 }
