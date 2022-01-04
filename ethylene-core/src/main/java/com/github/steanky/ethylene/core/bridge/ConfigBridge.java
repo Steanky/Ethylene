@@ -1,19 +1,19 @@
 package com.github.steanky.ethylene.core.bridge;
 
-import com.github.steanky.ethylene.core.ConfigFormatException;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.collection.FileConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.Supplier;
 
 /**
  * Reads and writes ConfigNode objects to and from an implementation-defined source. This source may be the network,
@@ -75,28 +75,39 @@ public interface ConfigBridge<T extends ConfigNode> {
     }
 
     /**
-     * Utility method that produces a read-only ConfigBridge instance using the given {@link InputStream} and
-     * {@link ConfigCodec}. The InputStream will be read from once, and the result cached for subsequent calls to
-     * {@link ConfigBridge#read()}. The InputStream will be closed the first time it is read from.
-     * @param inputStream the InputStream to read from
+     * Utility method that produces a read-only ConfigBridge instance that reads {@link ConfigNode} instances using
+     * {@link InputStream} objects produced by the given supplier. Each InputStream will be closed after it is read
+     * from.
+     * @param inputStreamCallable the supplier which generates InputStream objects to read from
      * @param codec the ConfigCodec to use
+     * @param nodeSupplier the supplier used to construct nodes
      * @throws NullPointerException if inputStream or codec are null
-     * @return a read-only ConfigBridge which can read from the given InputStream, using the given ConfigCodec
+     * @return a read-only ConfigBridge
      */
-    static @NotNull ConfigBridge<ConfigNode> fromInput(@NotNull InputStream inputStream, @NotNull ConfigCodec codec) {
-        Objects.requireNonNull(inputStream);
+    static <T extends ConfigNode> @NotNull ConfigBridge<T> fromInput(@NotNull Callable<InputStream> inputStreamCallable,
+                                                                     @NotNull ConfigCodec codec,
+                                                                     @NotNull Supplier<T> nodeSupplier) {
+        Objects.requireNonNull(inputStreamCallable);
         Objects.requireNonNull(codec);
+        Objects.requireNonNull(nodeSupplier);
 
         return new ConfigBridge<>() {
-            private Future<ConfigNode> node;
-
             @Override
-            public @NotNull Future<ConfigNode> read() throws IOException {
-                if(node != null) {
-                    return node;
+            public @NotNull Future<T> read() throws IOException {
+                InputStream inputStream;
+                try {
+                    inputStream = inputStreamCallable.call();
+                }
+                catch (Exception exception) {
+                    if(exception instanceof IOException ioException) {
+                        throw ioException;
+                    }
+                    else {
+                        throw new IOException(exception);
+                    }
                 }
 
-                return node = CompletableFuture.completedFuture(codec.decodeNode(inputStream, LinkedConfigNode::new));
+                return CompletableFuture.completedFuture(codec.decodeNode(inputStream, nodeSupplier));
             }
 
             @Override
@@ -118,27 +129,63 @@ public interface ConfigBridge<T extends ConfigNode> {
      * @param codec the ConfigCodec which will be used to decode the input data
      * @return a ConfigNode object representing the decoded configuration data
      * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
+     * @throws NullPointerException if any parameters are null
      */
     static @NotNull ConfigNode read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec) throws IOException {
+        Objects.requireNonNull(inputStream);
+
         try {
-            return fromInput(inputStream, codec).read().get();
+            return fromInput(() -> inputStream, codec, LinkedConfigNode::new).read().get();
         }
         catch (ExecutionException | InterruptedException exception) {
-            throw new ConfigFormatException(exception.getCause());
+            Throwable cause = exception.getCause();
+            if(cause instanceof IOException ioException) {
+                throw ioException;
+            }
+            else {
+                throw new IOException(cause);
+            }
         }
     }
 
     /**
      * Same as {@link ConfigBridge#read(InputStream, ConfigCodec)}, but reads directly from a string rather than an
      * InputStream.
-     * @param inputString the string to read from
+     * @param input the string to read from
      * @param codec the ConfigCodec which will be used to decode the input string
      * @return a ConfigNode object representing the decoded configuration data
      * @throws IOException if the string does not contain valid data for the codec
      */
-    static @NotNull ConfigNode read(@NotNull String inputString, @NotNull ConfigCodec codec) throws IOException {
-        Objects.requireNonNull(inputString);
+    static @NotNull ConfigNode read(@NotNull String input, @NotNull ConfigCodec codec) throws IOException {
+        return read(new ByteArrayInputStream(Objects.requireNonNull(input).getBytes(StandardCharsets.UTF_8)), codec);
+    }
 
-        return read(new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8)), codec);
+    /**
+     * Reads a {@link FileConfigNode} from the given file, using the provided {@link ConfigCodec}.
+     * @param file the file to read from
+     * @param codec the codec to use to decode the file
+     * @return a FileConfigNode representing the file's configuration data
+     * @throws IOException if the config data contained in the file is invalid or if an IO error occurred
+     * @throws NullPointerException if file or codec are null
+     */
+    static @NotNull FileConfigNode read(@NotNull File file, @NotNull ConfigCodec codec) throws IOException {
+        Objects.requireNonNull(file);
+
+        ConfigBridge<FileConfigNode> bridge = fromInput(() -> new FileInputStream(file), codec, FileConfigNode::new);
+
+        try {
+            return bridge.read().get();
+        }
+        catch (ExecutionException | InterruptedException exception) {
+            if(exception.getCause() instanceof IOException ioException) {
+                //if the cause is an IOException, rethrow here
+                throw ioException;
+            }
+            else {
+                //...if we're not an IOException, wrap the exception in one
+                //this is not necessary for properly written bridges and codecs
+                throw new IOException(exception);
+            }
+        }
     }
 }
