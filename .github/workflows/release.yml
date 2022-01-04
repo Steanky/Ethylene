@@ -1,11 +1,10 @@
-name: Publish release version
+name: Publish release versions for all Ethylene modules
 
 on:
   workflow_dispatch:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
-
 jobs:
   build:
     runs-on: ubuntu-latest
