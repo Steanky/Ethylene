@@ -66,7 +66,7 @@ public class Main {
         //prints "json" without quotes
         System.out.println(more.get("some more").asString());
 
-        //you can also use getElement access nested elements more conveniently
+        //you can also use getElement to access nested elements more conveniently
         //prints "json" without quotes
         System.out.println(node.getElement("oh look here is", "some more").asString());
 
@@ -91,11 +91,11 @@ public class Main {
         System.out.println(node.get("string").asString());
 
         //TOML has first-class support for dates, and Ethylene can take advantage of that too
-        //this functionality (ConfigDate) is specific to the ethylene-toml module
-        //the output of this is locale-dependent
+        //this functionality (ConfigDate) is specific to the ethylene-toml module (use with caution!)
+        //the output of this differs depending on your locale
         System.out.println(((ConfigDate)node.get("date")).getDate());
 
-        //you can also call asObject and cast, as long as you know what the type is
+        //you can also call asObject and cast
         //this will print the same as the previous example
         Date date = (Date)node.get("date").asObject();
         System.out.println(date);

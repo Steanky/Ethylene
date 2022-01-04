@@ -64,64 +64,58 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
 
     @Override
     public @NotNull Future<FileConfigNode> read() throws IOException {
-        try {
-            return callRead(() -> {
-                File rootFile = root.toFile();
+        return callRead(() -> {
+            File rootFile = root.toFile();
 
-                if(!validateFile(rootFile)) {
-                    //if the filter excludes rootFile, we can't load anything so just throw an exception
-                    throw new IllegalArgumentException("Root file is not valid");
-                }
-                else if(!rootFile.isDirectory()) {
-                    //root isn't a directory, so read only the root and nothing else
-                    return readFile(rootFile);
-                }
-                else {
-                    //root is a directory, so we need to iterate the directory tree
-                    FileConfigNode rootConfigNode = new FileConfigNode();
+            if(!validateFile(rootFile)) {
+                //if the filter excludes rootFile, we can't load anything so just throw an exception
+                throw new IllegalArgumentException("Root file is not valid");
+            }
+            else if(!rootFile.isDirectory()) {
+                //root isn't a directory, so read only the root and nothing else
+                return readFile(rootFile);
+            }
+            else {
+                //root is a directory, so we need to iterate the directory tree
+                FileConfigNode rootConfigNode = new FileConfigNode();
 
-                    Deque<Node> stack = new ArrayDeque<>();
-                    stack.push(new Node(root, rootConfigNode));
+                Deque<Node> stack = new ArrayDeque<>();
+                stack.push(new Node(root, rootConfigNode));
 
-                    //handles recursive file structures by only processing each directory once
-                    Map<File, FileConfigNode> visited = new IdentityHashMap<>();
-                    visited.put(rootFile, rootConfigNode);
+                //handles recursive file structures by only processing each directory once
+                Map<File, FileConfigNode> visited = new IdentityHashMap<>();
+                visited.put(rootFile, rootConfigNode);
 
-                    while(!stack.isEmpty()) {
-                        Node currentNode = stack.pop();
+                while(!stack.isEmpty()) {
+                    Node currentNode = stack.pop();
 
-                        File[] subFiles = currentNode.path.toFile().listFiles(this::validateFile);
-                        if(subFiles != null) {
-                            //subFiles should never be null, currentNode.path must be a directory
-                            for(File subFile : subFiles) {
-                                if(subFile.isDirectory()) {
-                                    if(!visited.containsKey(subFile)) {
-                                        //use directory node here as well
-                                        FileConfigNode childNode = new FileConfigNode();
-                                        stack.push(new Node(subFile.toPath(), childNode));
-                                        visited.put(subFile, childNode);
+                    File[] subFiles = currentNode.path.toFile().listFiles(this::validateFile);
+                    if(subFiles != null) {
+                        //subFiles should never be null, currentNode.path must be a directory
+                        for(File subFile : subFiles) {
+                            if(subFile.isDirectory()) {
+                                if(!visited.containsKey(subFile)) {
+                                    //use directory node here as well
+                                    FileConfigNode childNode = new FileConfigNode();
+                                    stack.push(new Node(subFile.toPath(), childNode));
+                                    visited.put(subFile, childNode);
 
-                                        currentNode.children.put(getKeyFor(subFile), childNode);
-                                    }
-                                    else {
-                                        currentNode.children.put(getKeyFor(subFile), visited.get(subFile));
-                                    }
+                                    currentNode.children.put(getKeyFor(subFile), childNode);
                                 }
                                 else {
-                                    currentNode.children.put(getKeyFor(subFile), readFile(subFile));
+                                    currentNode.children.put(getKeyFor(subFile), visited.get(subFile));
                                 }
+                            }
+                            else {
+                                currentNode.children.put(getKeyFor(subFile), readFile(subFile));
                             }
                         }
                     }
-
-                    return rootConfigNode;
                 }
-            });
-        }
-        catch (Exception exception) {
-            //rethrow any exceptions as IOException
-            throw new IOException(exception);
-        }
+
+                return rootConfigNode;
+            }
+        });
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -129,55 +123,50 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
     public @NotNull Future<Void> write(@NotNull FileConfigNode node) throws IOException {
         Objects.requireNonNull(node);
 
-        try {
-            return callWrite(() -> {
-                File rootFile = root.toFile();
-                rootFile.mkdirs();
+        return callWrite(() -> {
+            File rootFile = root.toFile();
+            rootFile.mkdirs();
 
-                if(!node.isDirectory()) {
-                    //assume rootFile is a non-directory since node is not a directory either
-                    //an exception will be thrown here if this is not the case, indicating user error
-                    writeFile(rootFile, node);
-                }
-                else {
-                    Deque<Node> stack = new ArrayDeque<>();
-                    stack.push(new Node(root, node));
+            if(!node.isDirectory()) {
+                //assume rootFile is a non-directory since node is not a directory either
+                //an exception will be thrown here if this is not the case, indicating user error
+                writeFile(rootFile, node);
+            }
+            else {
+                Deque<Node> stack = new ArrayDeque<>();
+                stack.push(new Node(root, node));
 
-                    Set<Object> visited = new HashSet<>();
-                    visited.add(node);
+                Set<Object> visited = new HashSet<>();
+                visited.add(node);
 
-                    while(!stack.isEmpty()) {
-                        Node currentNode = stack.pop();
+                while(!stack.isEmpty()) {
+                    Node currentNode = stack.pop();
 
-                        File currentFile = currentNode.path.toFile();
-                        if(currentFile.isDirectory()) {
-                            currentFile.mkdir();
+                    File currentFile = currentNode.path.toFile();
+                    if(currentFile.isDirectory()) {
+                        currentFile.mkdir();
+                    }
+
+                    for(Map.Entry<String, ConfigElement> childEntry : currentNode.children.entrySet()) {
+                        //cast should always succeed: we only push FileConfigNode instances that are DIRECTORIES
+                        //onto the stack, and directories are guaranteed to only contain other FileConfigNode
+                        //instances as per the additional restrictions placed on put() for that class
+                        FileConfigNode childNode = (FileConfigNode)childEntry.getValue().asNode();
+
+                        if(childNode.isDirectory() && visited.add(childNode)) {
+                            //node is a directory we haven't visited yet
+                            stack.push(new Node(root.resolve(childEntry.getKey()), childNode));
                         }
-
-                        for(Map.Entry<String, ConfigElement> childEntry : currentNode.children.entrySet()) {
-                            //cast should always succeed: we only push FileConfigNode instances that are DIRECTORIES
-                            //onto the stack, and directories are guaranteed to only contain other FileConfigNode
-                            //instances as per the additional restrictions placed on put() for that class
-                            FileConfigNode childNode = (FileConfigNode)childEntry.getValue().asNode();
-
-                            if(childNode.isDirectory() && visited.add(childNode)) {
-                                //node is a directory we haven't visited yet
-                                stack.push(new Node(root.resolve(childEntry.getKey()), childNode));
-                            }
-                            else {
-                                //not a directory, so write to the filesystem
-                                writeFile(currentNode.path.toFile(), currentNode.children);
-                            }
+                        else {
+                            //not a directory, so write to the filesystem
+                            writeFile(currentNode.path.toFile(), currentNode.children);
                         }
                     }
                 }
+            }
 
-                return null;
-            });
-        }
-        catch (Exception exception) {
-            throw new IOException(exception);
-        }
+            return null;
+        });
     }
 
     /**

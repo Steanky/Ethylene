@@ -3,4 +3,3 @@ include 'ethylene-core'
 include 'ethylene-toml'
 include 'ethylene-json'
 include 'example-project'
-
