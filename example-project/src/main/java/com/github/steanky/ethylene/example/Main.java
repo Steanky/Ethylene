@@ -99,5 +99,11 @@ public class Main {
         //this will print the same as the previous example
         Date date = (Date)node.get("date").asObject();
         System.out.println(date);
+
+        //however, it is important to note that using format-specific features like ConfigDate directly limits
+        //flexibility. the point of Ethylene is to allow for a clean separation between config file format and the code
+        //that is actually using the data. for example, if you rely on something TOML specific like ConfigDate, and you
+        //decide to change your format later to something that does not have native support for dates, your code will
+        //break
     }
 }
