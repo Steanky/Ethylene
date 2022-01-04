@@ -180,11 +180,6 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
         }
     }
 
-    @Override
-    public boolean readOnly() {
-        return false;
-    }
-
     /**
      * Reads a {@link FileConfigNode} object from a file, which must be non-null and a non-directory.
      * @param file the file to read from

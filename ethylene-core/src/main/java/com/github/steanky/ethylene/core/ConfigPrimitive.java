@@ -32,7 +32,7 @@ public class ConfigPrimitive implements ConfigElement {
         return object;
     }
 
-    private <T> T convert(Class<T> classType) {
+    private static <T> T convert(Object object, Class<T> classType) {
         if(object != null && classType.isAssignableFrom(object.getClass())) {
             return classType.cast(object);
         }
@@ -47,7 +47,7 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public @NotNull String asString() {
-        return convert(String.class);
+        return convert(object, String.class);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public @NotNull Number asNumber() {
-        return convert(Number.class);
+        return convert(object, Number.class);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean asBoolean() {
-        return convert(Boolean.class);
+        return convert(object, Boolean.class);
     }
 
     @Override

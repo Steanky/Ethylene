@@ -96,9 +96,9 @@ public interface ConfigElement {
     }
 
     /**
-     * Determines if this ConfigElement represents an POJO. This is true for {@link ConfigPrimitive} and should be true
-     * for specialized, direct implementations of this interface. It should be false for {@link ConfigNode} and
-     * {@link ConfigList}.
+     * Determines if this ConfigElement represents an object. This is true for {@link ConfigPrimitive} and should be
+     * true for specialized, direct implementations of this interface that do not, themselves, hold on to ConfigElement
+     * instances. It should be false for {@link ConfigNode} and {@link ConfigList}.
      * @return true if {@link ConfigElement#asObject()} will succeed without throwing an exception; false otherwise
      */
     default boolean isObject() {

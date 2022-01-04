@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.bridge;
 
+import com.github.steanky.ethylene.core.CallableUtils;
 import com.github.steanky.ethylene.core.codec.CodecRegistry;
 import com.github.steanky.ethylene.core.collection.FileConfigNode;
 import org.jetbrains.annotations.NotNull;
@@ -26,21 +27,13 @@ public class SyncFilesystemBridge extends AbstractFilesystemBridge {
 
     @Override
     protected Future<FileConfigNode> callRead(@NotNull Callable<FileConfigNode> callable) throws IOException {
-        try {
-            return CompletableFuture.completedFuture(callable.call());
-        }
-        catch (Exception exception) {
-            throw new IOException(exception);
-        }
+        return CompletableFuture.completedFuture(CallableUtils.wrapException(callable, IOException.class,
+                IOException::new));
     }
 
     @Override
     protected Future<Void> callWrite(@NotNull Callable<Void> callable) throws IOException {
-        try {
-            return CompletableFuture.completedFuture(callable.call());
-        }
-        catch (Exception exception) {
-            throw new IOException(exception);
-        }
+        return CompletableFuture.completedFuture(CallableUtils.wrapException(callable, IOException.class,
+                IOException::new));
     }
 }
