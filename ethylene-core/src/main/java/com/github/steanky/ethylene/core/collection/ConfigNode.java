@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
-import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigPrimitive;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;

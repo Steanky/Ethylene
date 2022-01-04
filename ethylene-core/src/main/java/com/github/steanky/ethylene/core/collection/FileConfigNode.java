@@ -1,8 +1,8 @@
 package com.github.steanky.ethylene.core.collection;
 
-import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.bridge.ConfigBridge;
+import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

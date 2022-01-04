@@ -17,13 +17,14 @@ repositories {
 dependencies {
     compileOnly "org.jetbrains:annotations:22.0.0"
 
+    //since this module is a direct part of Ethylene, we can just depend directly on the other modules like this:
+    //(note that ethylene-core is a transitive dependency for both of these)
     implementation project(':ethylene-json')
     implementation project(':ethylene-toml')
 
+    //...however, a real project would want to declare dependencies on ethylene-json and ethylene-toml like this,
+    //assuming the desired version is 1.0.0:
 
-    //a real project would want to declare dependencies on ethylene-json and ethylene-toml like this, assuming the
-    //desired version is 1.0.0:
-
-    //implementation 'com.github.steank:ethylene-json:1.0.0'
-    //implementation 'com.github.steank:ethylene-toml:1.0.0'
+    //implementation 'com.github.steanky:ethylene-json:1.0.0'
+    //implementation 'com.github.steanky:ethylene-toml:1.0.0'
 }

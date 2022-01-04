@@ -1,13 +1,13 @@
 package com.github.steanky.ethylene.example;
 
+import com.github.steanky.ethylene.codec.json.JsonCodec;
+import com.github.steanky.ethylene.codec.toml.ConfigDate;
+import com.github.steanky.ethylene.codec.toml.TomlCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.bridge.ConfigBridge;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
-import com.github.steanky.ethylene.codec.json.JsonCodec;
-import com.github.steanky.ethylene.codec.toml.ConfigDate;
-import com.github.steanky.ethylene.codec.toml.TomlCodec;
 
 import java.io.IOException;
 import java.util.Date;

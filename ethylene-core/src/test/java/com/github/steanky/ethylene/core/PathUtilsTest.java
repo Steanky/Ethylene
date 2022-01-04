@@ -1,12 +1,12 @@
 package com.github.steanky.ethylene.core;
 
-import com.github.steanky.ethylene.core.PathUtils;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PathUtilsTest {
     private static final Path SIMPLE_FILE_PATH = Path.of(URI.create("file:///C:/Users/User/test_file.txt"));
