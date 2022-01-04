@@ -71,7 +71,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         Objects.requireNonNull(keys);
 
         if(keys.length == 0) {
-            throw new IllegalArgumentException("keys array cannot be empty");
+            throw new IllegalArgumentException("Array cannot be empty");
         }
         else if(keys.length == 1) { //simplest case, just return directly from our map
             return mappings.get(Objects.requireNonNull(keys[0]));
@@ -114,7 +114,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      * @param mapSupplier The supplier used to create the map
      * @param <T> the type of the map to construct
      * @return a new map, constructed by the supplier, and containing the same elements as map
-     * @throws NullPointerException if map contains any null keys or values
+     * @throws NullPointerException if any of the arguments are null, or map contains any null keys or values
      */
     protected static <T extends Map<String, ConfigElement>> T constructMap(@NotNull Map<String, ConfigElement> map,
                                                                            @NotNull Supplier<T> mapSupplier) {

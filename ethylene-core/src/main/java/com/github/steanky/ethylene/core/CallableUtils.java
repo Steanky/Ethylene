@@ -27,7 +27,7 @@ public final class CallableUtils {
      * @param <E> the type of exception to wrap
      * @return the object returned by the callable
      * @throws E if the callable throws an exception when its {@link Callable#call()} method is invoked
-     * @throws NullPointerException if any parameters are null
+     * @throws NullPointerException if any of the arguments are null
      */
     public static <R, E extends Exception> @NotNull R wrapException(@NotNull Callable<R> callable,
                                                                     @NotNull Class<E> exceptionClass,

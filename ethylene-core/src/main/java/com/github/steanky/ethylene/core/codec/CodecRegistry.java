@@ -12,7 +12,7 @@ public interface CodecRegistry {
      * @param codec the codec to register
      * @throws IllegalArgumentException if the codec does not supply any names, or if another codec has already been
      * registered under one of the names it supplies
-     * @throws NullPointerException if the codec supplies any null names
+     * @throws NullPointerException if codec is null or supplies any null names
      */
     void registerCodec(@NotNull ConfigCodec codec);
 

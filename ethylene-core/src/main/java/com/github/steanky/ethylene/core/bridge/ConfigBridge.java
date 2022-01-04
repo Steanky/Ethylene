@@ -36,6 +36,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * implementations, in which case this method should return immediately.
      * @param node The node to write to the source
      * @return A {@link Future} object, which may be used to query or await the completion of the write task
+     * @throws NullPointerException if node is null
      * @throws IOException if an IO error occurs
      */
     @NotNull Future<Void> write(@NotNull T node) throws IOException;
@@ -57,6 +58,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * @param nodeSupplier a supplier used to construct the ConfigNode instances used by the returned ConfigBridge
      * @param <T> the type of {@link ConfigNode} which is returned from the bridge
      * @return a ConfigBridge implementation which reads/writes from the given input/output streams
+     * @throws NullPointerException if any of the arguments are null
      */
     static <T extends ConfigNode> @NotNull ConfigBridge<T> fromStreams(@NotNull Callable<InputStream> inputCallable,
                                                                        @NotNull Callable<OutputStream> outputCallable,
@@ -99,6 +101,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * @param file the file read from and written to
      * @param codec the codec used to read/write from this file
      * @return a ConfigBridge implementation which can read/write FileConfigNode objects from and to the given file
+     * @throws NullPointerException if any of the arguments are null
      */
     static @NotNull ConfigBridge<FileConfigNode> fromFile(@NotNull File file, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(file);
@@ -117,7 +120,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * @param <T> the returned type of ConfigNode
      * @return a ConfigNode object representing the decoded configuration data
      * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
-     * @throws NullPointerException if any parameters are null
+     * @throws NullPointerException if any arguments are null
      */
     static <T extends ConfigNode> @NotNull T read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec,
                                                   @NotNull Supplier<T> nodeSupplier) throws IOException {
@@ -144,7 +147,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * @param codec the ConfigCodec which will be used to decode the input string
      * @return a ConfigNode object representing the decoded configuration data
      * @throws IOException if the string does not contain valid data for the codec
-     * @throws NullPointerException if any parameters are null
+     * @throws NullPointerException if any of the arguments are null
      */
     static @NotNull ConfigNode read(@NotNull String input, @NotNull ConfigCodec codec) throws IOException {
         return read(new ByteArrayInputStream(Objects.requireNonNull(input).getBytes(StandardCharsets.UTF_8)), codec,
@@ -158,7 +161,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * @param codec the codec to use to decode the file
      * @return a FileConfigNode representing the file's configuration data
      * @throws IOException if the config data contained in the file is invalid or if an IO error occurred
-     * @throws NullPointerException if any parameters are null
+     * @throws NullPointerException if any of the arguments are null
      */
     static @NotNull FileConfigNode read(@NotNull File file, @NotNull ConfigCodec codec) throws IOException {
         return read(new FileInputStream(Objects.requireNonNull(file)), codec, () -> new FileConfigNode(codec));

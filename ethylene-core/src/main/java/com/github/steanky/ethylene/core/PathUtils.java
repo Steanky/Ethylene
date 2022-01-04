@@ -34,6 +34,7 @@ public final class PathUtils {
      * @param path the path
      * @return the name of the file or directory represented by the path, or an empty string if the path contains no
      * elements
+     * @throws NullPointerException if path is null
      */
     public static @NotNull String getFileName(@NotNull Path path) {
         return getFileNameInternal(Objects.requireNonNull(path));
@@ -45,6 +46,7 @@ public final class PathUtils {
      * @param path the path
      * @return the name of the file or directory represented by the path, without any file extension, or an empty string
      * if the path contains no elements
+     * @throws NullPointerException if path is null
      */
     public static @NotNull String getFileNameWithoutExtension(@NotNull Path path) {
         Objects.requireNonNull(path);
@@ -65,6 +67,7 @@ public final class PathUtils {
      * not have an extension.
      * @param path the path
      * @return the file extension of the file, if present, or an empty string if it is not present
+     * @throws NullPointerException if path is null
      */
     public static @NotNull String getFileExtension(@NotNull Path path) {
         Objects.requireNonNull(path);

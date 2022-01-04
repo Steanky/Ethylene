@@ -20,6 +20,7 @@ public class LinkedConfigNode extends AbstractConfigNode {
     /**
      * Constructs a new LinkedConfigNode with the same entries as the provided map, backed by a {@link LinkedHashMap}.
      * @param mappings the mappings to initialize this object with
+     * @throws NullPointerException if mappings is null or contains any null keys or values
      */
     public LinkedConfigNode(@NotNull Map<String, ConfigElement> mappings) {
         super(constructMap(mappings, LinkedHashMap::new));

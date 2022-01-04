@@ -1,5 +1,7 @@
 package com.github.steanky.ethylene.core;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 
 /**
@@ -11,9 +13,17 @@ public class ConfigFormatException extends IOException {
     /**
      * Creates a new ConfigParseException with the specified cause. This cause should typically be some sort of
      * format-specific exception.
-     * @param throwable The {@link Throwable} that caused this exception
+     * @param throwable The {@link Throwable} that caused this exception, which can be null
      */
-    public ConfigFormatException(Throwable throwable) {
+    public ConfigFormatException(@Nullable Throwable throwable) {
         super(throwable);
+    }
+
+    /**
+     * Constructs a new ConfigFormatException with the provided detail message.
+     * @param message a description of this exception
+     */
+    public ConfigFormatException(String message) {
+        super(message);
     }
 }

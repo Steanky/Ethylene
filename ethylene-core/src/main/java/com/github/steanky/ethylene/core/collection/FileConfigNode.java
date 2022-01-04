@@ -39,19 +39,40 @@ public class FileConfigNode extends AbstractConfigNode {
     /**
      * Constructs a new FileConfigNode based off of the provided mappings and representing a directory.
      * @param mappings the mappings to construct this instance from
+     * @throws NullPointerException if mappings is null or contains any null keys or values
      */
     public FileConfigNode(@NotNull Map<String, ConfigElement> mappings) {
         this(constructMap(mappings, HashMap::new), true, null);
     }
 
     /**
-     * Constructs a new FileConfigNode with the provided codec. It should be interpreted as a file.
+     * Constructs a new FileConfigNode with the provided codec. It should be interpreted as a <i>non-directory</i> file.
      * @param codec the codec used to encode file data
+     * @throws NullPointerException if codec is null
      */
     public FileConfigNode(@NotNull ConfigCodec codec) {
         this(new LinkedHashMap<>(), false, Objects.requireNonNull(codec));
     }
 
+    /**
+     * Adds a key-value pair to this FileConfigNode. This method places additional constraints on the value type:
+     *
+     * <ul>
+     *     <li>If this FileConfigNode instance is a directory, and the value is not an instance of
+     *     {@link FileConfigNode}, an {@link IllegalArgumentException} will be thrown and the map will remain
+     *     unchanged.</li>
+     *     <li>Otherwise, if this FileConfigNode is NOT a directory, and the provided value is an instance of
+     *     {@link FileConfigNode}, an {@link IllegalArgumentException} will be thrown and the map will remain
+     *     unchanged.</li>
+     * </ul>
+     *
+     * Otherwise, this method behaves exactly as {@link ConfigNode#put(Object, Object)}.
+     * @param key the key to be associated with value
+     * @param value the value to store
+     * @return the previously-present ConfigElement
+     * @throws NullPointerException if any of the arguments are null
+     * @throws IllegalArgumentException if the value is not of a valid type for this FileConfigNode
+     */
     @Override
     public ConfigElement put(@NotNull String key, @NotNull ConfigElement value) {
         Objects.requireNonNull(key);
@@ -59,11 +80,11 @@ public class FileConfigNode extends AbstractConfigNode {
 
         if(isDirectory) {
             if(!(value instanceof FileConfigNode)) {
-                throw new IllegalArgumentException("directories may only contain FileConfigNode instances");
+                throw new IllegalArgumentException("Directories may only contain FileConfigNode instances");
             }
         }
         else if(value instanceof FileConfigNode) {
-            throw new IllegalArgumentException("non-directories cannot contain other FileConfigNode instances");
+            throw new IllegalArgumentException("Non-directories cannot contain other FileConfigNode instances");
         }
 
         return mappings.put(key, value);
@@ -85,7 +106,7 @@ public class FileConfigNode extends AbstractConfigNode {
      */
     public @NotNull ConfigCodec getCodec() {
         if(isDirectory) {
-            throw new IllegalStateException("this FileConfigNode represents a directory and therefore has no codec");
+            throw new IllegalStateException("This FileConfigNode represents a directory and therefore has no codec");
         }
         else {
             return codec;

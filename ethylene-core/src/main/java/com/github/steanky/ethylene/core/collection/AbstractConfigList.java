@@ -67,14 +67,15 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      * @param listSupplier The supplier used to create the list
      * @param <T> the type of the list to construct
      * @return a list, constructed by the supplier, and containing the same elements as collection
-     * @throws NullPointerException if collection contains any null elements
+     * @throws NullPointerException if any of the arguments are null, collection contains any null elements, or
+     * listSupplier returns null
      */
     protected static <T extends List<ConfigElement>> T constructList(@NotNull Collection<ConfigElement> collection,
                                                                      @NotNull Supplier<T> listSupplier) {
         Objects.requireNonNull(collection);
         Objects.requireNonNull(listSupplier);
 
-        T newList = listSupplier.get();
+        T newList = Objects.requireNonNull(listSupplier.get());
         for(ConfigElement element : collection) {
             newList.add(Objects.requireNonNull(element, "input collection must not contain null elements"));
         }

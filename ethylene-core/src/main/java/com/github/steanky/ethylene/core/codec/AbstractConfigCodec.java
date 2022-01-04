@@ -45,6 +45,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     @Override
     public void encodeNode(@NotNull ConfigNode node, @NotNull OutputStream output)
             throws IOException {
+        Objects.requireNonNull(node);
+        Objects.requireNonNull(output);
+
         try (output) {
             writeMap(makeMap(node, LinkedHashMap::new), output);
         }
@@ -54,6 +57,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     public <TNode extends ConfigNode> @NotNull TNode decodeNode(@NotNull InputStream input,
                                                                 @NotNull Supplier<TNode> nodeSupplier)
             throws IOException {
+        Objects.requireNonNull(input);
+        Objects.requireNonNull(nodeSupplier);
+
         try (input) {
             return makeNode(readMap(input), nodeSupplier);
         }
@@ -234,14 +240,10 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param nodeSupplier the supplier used to construct the node which is returned
      * @param <TNode> the type of ConfigNode to return
      * @return a ConfigNode, containing the same entries as mappings, after converting them to ConfigElement instances
-     * @throws NullPointerException if mappings or nodeSupplier are null
      * @throws IllegalArgumentException if mappings contains a value which cannot be converted into a ConfigElement
      */
     protected <TNode extends ConfigNode> @NotNull TNode makeNode(@NotNull Map<String, Object> mappings,
                                                                  @NotNull Supplier<TNode> nodeSupplier) {
-        Objects.requireNonNull(mappings);
-        Objects.requireNonNull(nodeSupplier);
-
         return processMap(mappings, nodeSupplier, LinkedConfigNode::new, ArrayConfigList::new, this::toElement,
                 Object.class, ConfigElement.class);
     }
@@ -256,13 +258,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param <TMap> the type of top-level map
      * @return a map, constructed by mapSupplier, containing the same mappings as node, after deeply converting every
      * element to an equivalent value
-     * @throws NullPointerException if node or mapSupplier are null
      */
     protected <TMap extends Map<String, Object>> @NotNull TMap makeMap(@NotNull ConfigNode node,
                                                                        @NotNull Supplier<TMap> mapSupplier) {
-        Objects.requireNonNull(node);
-        Objects.requireNonNull(mapSupplier);
-
         return processMap(node, mapSupplier, LinkedHashMap::new, ArrayList::new, this::toObject, ConfigElement.class,
                 Object.class);
     }
@@ -302,6 +300,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param input an InputStream to read from
      * @return a map of strings to objects
      * @throws IOException if an IO error occurs
+     * @throws NullPointerException if input is null
      */
     protected abstract @NotNull Map<String, Object> readMap(@NotNull InputStream input) throws IOException;
 
@@ -310,6 +309,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param mappings the mappings to write
      * @param output the stream to write to
      * @throws IOException if an IO error occurs
+     * @throws NullPointerException if any of the arguments are null
      */
     protected abstract void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output)
             throws IOException;

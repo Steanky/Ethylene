@@ -20,6 +20,7 @@ public class SyncFilesystemBridge extends AbstractFilesystemBridge {
      * Constructs a new SyncFilesystemBridge based off of the specified {@link CodecRegistry} and root {@link Path}.
      * @param codecRegistry the CodecRegistry
      * @param root the root path
+     * @throws NullPointerException if any of the arguments are null
      */
     public SyncFilesystemBridge(@NotNull CodecRegistry codecRegistry, @NotNull Path root) {
         super(codecRegistry, root);

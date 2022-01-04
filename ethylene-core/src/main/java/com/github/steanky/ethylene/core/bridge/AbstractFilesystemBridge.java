@@ -55,7 +55,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
      * {@link CodecRegistry} as a source of {@link ConfigCodec} objects.
      * @param codecRegistry the codec registry
      * @param root the root path
-     * @throws NullPointerException if root or codecRegistry are null
+     * @throws NullPointerException if any of the arguments are null
      */
     public AbstractFilesystemBridge(@NotNull CodecRegistry codecRegistry, @NotNull Path root) {
         this.codecRegistry = Objects.requireNonNull(codecRegistry);
@@ -207,7 +207,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
      * @param node the node to write
      * @throws IOException if an IO error occurs
      * @throws IllegalArgumentException if file represents a directory
-     * @throws NullPointerException if file or node are null
+     * @throws NullPointerException if any of the arguments are null
      */
     protected void writeFile(@NotNull File file, @NotNull FileConfigNode node) throws IOException {
         Objects.requireNonNull(file);
@@ -230,8 +230,11 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
      * @param file the file to read from
      * @return true if the file is a directory, or if the file extension can be used to locate a registered codec; false
      * otherwise
+     * @throws NullPointerException if file is null
      */
     protected boolean validateFile(@NotNull File file) {
+        Objects.requireNonNull(file);
+
         if(file.isDirectory()) {
             return true;
         }
@@ -273,8 +276,10 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
      * <b>file</b>.
      * @param file the file to retrieve the key for
      * @return the key associated with the file
+     * @throws NullPointerException if file is null
      */
     protected @NotNull String getKeyFor(@NotNull File file) {
+        Objects.requireNonNull(file);
         return PathUtils.getFileNameWithoutExtension(file.toPath());
     }
 
@@ -283,6 +288,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
      * @param callable the callable to invoke
      * @return A {@link Future} object representing the result of the read operation
      * @throws IOException if an IOException occurred when the callable was run
+     * @throws NullPointerException if callable is null
      */
     protected abstract Future<FileConfigNode> callRead(@NotNull Callable<FileConfigNode> callable) throws IOException;
 
@@ -292,6 +298,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
      * @param callable the callable to invoke
      * @return A {@link Future} object representing the result of the write operation
      * @throws IOException if an IOException occurred when the callable was run
+     * @throws NullPointerException if callable is null
      */
     protected abstract Future<Void> callWrite(@NotNull Callable<Void> callable) throws IOException;
 }

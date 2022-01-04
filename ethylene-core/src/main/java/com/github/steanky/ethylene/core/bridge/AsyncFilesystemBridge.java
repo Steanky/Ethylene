@@ -24,6 +24,7 @@ public class AsyncFilesystemBridge extends AbstractFilesystemBridge {
      * @param codecRegistry the codec registry
      * @param root the root path
      * @param executorService the ExecutorService to use for read and write tasks
+     * @throws NullPointerException if any of the arguments are null
      */
     public AsyncFilesystemBridge(@NotNull CodecRegistry codecRegistry, @NotNull Path root,
                                  @NotNull ExecutorService executorService) {
