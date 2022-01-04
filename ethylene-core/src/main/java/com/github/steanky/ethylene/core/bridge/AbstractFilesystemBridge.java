@@ -124,6 +124,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public @NotNull Future<Void> write(@NotNull FileConfigNode node) throws IOException {
         Objects.requireNonNull(node);
@@ -131,6 +132,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
         try {
             return callWrite(() -> {
                 File rootFile = root.toFile();
+                rootFile.mkdirs();
 
                 if(!node.isDirectory()) {
                     //assume rootFile is a non-directory since node is not a directory either
@@ -146,6 +148,11 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
 
                     while(!stack.isEmpty()) {
                         Node currentNode = stack.pop();
+
+                        File currentFile = currentNode.path.toFile();
+                        if(currentFile.isDirectory()) {
+                            currentFile.mkdir();
+                        }
 
                         for(Map.Entry<String, ConfigElement> childEntry : currentNode.children.entrySet()) {
                             //cast should always succeed: we only push FileConfigNode instances that are DIRECTORIES

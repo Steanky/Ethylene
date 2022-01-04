@@ -6,14 +6,12 @@ import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,22 +42,21 @@ class AbstractConfigCodecTest {
     private static final List<String> LIST_VALUE = List.of("first", "second", "third");
     private static final List<String> SUB_LIST_VALUE = List.of("first_sub", "second_sub", "third_sub");
 
+    private final AbstractConfigCodec testCodec;
     private final ConfigNode resultingElement;
 
     AbstractConfigCodecTest() throws IOException {
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> subRoot = new HashMap<>();
 
-        AbstractConfigCodec testCodec = new AbstractConfigCodec(List.of("test")) {
+        testCodec = new AbstractConfigCodec(List.of("test")) {
             @Override
             protected @NotNull Map<String, Object> readMap(@NotNull InputStream input) {
                 return root;
             }
 
             @Override
-            protected void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output) {
-                throw new IllegalStateException();
-            }
+            protected void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output) {}
         };
 
         root.put(INTEGER_KEY, INTEGER_VALUE);
@@ -172,5 +169,71 @@ class AbstractConfigCodecTest {
     @Test
     void asNodeReturnsSameObject() {
         assertSame(resultingElement, resultingElement.asNode());
+    }
+
+    @Test
+    void missingTopLevelNode() {
+        assertNull(resultingElement.get("not found"));
+        assertNull(resultingElement.getElement("not found"));
+    }
+
+    @Test
+    void missingNestedNode() {
+        assertNull(resultingElement.getElement(SUB_ROOT_KEY, "not found"));
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    void decodeClosesStream() throws IOException {
+        InputStream stream = InputStream.nullInputStream();
+        testCodec.decodeNode(stream, LinkedConfigNode::new);
+
+        assertThrows(IOException.class, stream::read);
+    }
+
+    @Test
+    void encodeClosesStream() throws IOException {
+        OutputStream stream = OutputStream.nullOutputStream();
+        testCodec.encodeNode(Mockito.mock(ConfigNode.class), stream);
+
+        assertThrows(IOException.class, () -> stream.write(0));
+    }
+
+    @Test
+    void validNames() {
+        assertEquals(testCodec.getNames(), Set.of("test"));
+    }
+
+    @Test
+    void objectConversion() {
+        Object test = new Object();
+
+        ConfigElement mockObject = Mockito.mock(ConfigElement.class);
+        Mockito.when(mockObject.isObject()).thenReturn(true);
+        Mockito.when(mockObject.asObject()).thenReturn(test);
+
+        Object result = testCodec.toObject(mockObject);
+        assertSame(test, result);
+
+        ConfigElement mockNonObject = Mockito.mock(ConfigElement.class);
+        assertThrows(IllegalArgumentException.class, () -> testCodec.toObject(mockNonObject));
+    }
+
+    @Test
+    void validSelfReferentialParsing() {
+        Map<String, Object> root = new HashMap<>();
+
+        Object[] array = new Object[2];
+        array[0] = "string";
+        array[1] = root;
+
+        root.put("array", array);
+
+        ConfigNode node = testCodec.makeNode(root, LinkedConfigNode::new);
+        ConfigList list = node.get("array").asList();
+
+        assertSame(2, list.size());
+        assertEquals("string", list.get(0).asString());
+        assertSame(node, list.get(1).asNode());
     }
 }
