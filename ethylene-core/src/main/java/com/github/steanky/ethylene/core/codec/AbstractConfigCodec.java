@@ -195,7 +195,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                                                @NotNull Function<TIn, TOut> converter,
                                                @NotNull Class<TIn> inClass,
                                                @NotNull Class<TOut> outClass) {
-        TRootMap topLevel = Objects.requireNonNull(rootMapSupplier.get(), "root map cannot be null");
+        TRootMap topLevel = Objects.requireNonNull(rootMapSupplier.get(), "Root map cannot be null");
 
         Deque<Node<TOut>> stack = new ArrayDeque<>();
         stack.push(new Node<>(input, topLevel::put));
