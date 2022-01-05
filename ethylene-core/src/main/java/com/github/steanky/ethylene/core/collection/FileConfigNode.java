@@ -59,17 +59,16 @@ public class FileConfigNode extends AbstractConfigNode {
      *
      * <ul>
      *     <li>If this FileConfigNode instance is a directory, and the value is not an instance of
-     *     {@link FileConfigNode}, an {@link IllegalArgumentException} will be thrown and the map will remain
+     *     FileConfigNode, an {@link IllegalArgumentException} will be thrown and the map will remain
      *     unchanged.</li>
      *     <li>Otherwise, if this FileConfigNode is NOT a directory, and the provided value is an instance of
-     *     {@link FileConfigNode}, an {@link IllegalArgumentException} will be thrown and the map will remain
-     *     unchanged.</li>
+     *     an {@link IllegalArgumentException} will be thrown and the map will remain unchanged.</li>
      * </ul>
      *
      * Otherwise, this method behaves exactly as {@link ConfigNode#put(Object, Object)}.
      * @param key the key to be associated with value
      * @param value the value to store
-     * @return the previously-present ConfigElement
+     * @return the previously-present {@link ConfigElement}
      * @throws NullPointerException if any of the arguments are null
      * @throws IllegalArgumentException if the value is not of a valid type for this FileConfigNode
      */
@@ -101,7 +100,7 @@ public class FileConfigNode extends AbstractConfigNode {
     /**
      * Obtains the codec which should be used to encode this instance. If this FileConfigNode represents a directory,
      * an {@link IllegalStateException} will be thrown.
-     * @return The {@link ConfigCodec} used to encode and decode this node
+     * @return the {@link ConfigCodec} used to encode and decode this node
      * @throws IllegalStateException if this FileConfigNode represents a directory
      */
     public @NotNull ConfigCodec getCodec() {

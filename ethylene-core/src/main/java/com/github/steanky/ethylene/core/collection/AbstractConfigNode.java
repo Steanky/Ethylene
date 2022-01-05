@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractConfigNode extends AbstractMap<String, ConfigElement> implements ConfigNode {
     /**
-     * The backing map for this AbstractConfigNode
+     * The backing map for this AbstractConfigNode.
      */
     protected final Map<String, ConfigElement> mappings;
 
@@ -114,7 +114,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      * This helper method can be used to construct a map with the same elements as another map. If the given map
      * contains any null keys or values, a {@link NullPointerException} will be thrown.
      * @param map the map whose elements will be added to the returned map
-     * @param mapSupplier The supplier used to create the map
+     * @param mapSupplier the supplier used to create the map
      * @param <T> the type of the map to construct
      * @return a new map, constructed by the supplier, and containing the same elements as map
      * @throws NullPointerException if any of the arguments are null, or map contains any null keys or values
@@ -126,8 +126,8 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
         T newMap = mapSupplier.get();
         for(Map.Entry<String, ConfigElement> entry : map.entrySet()) {
-            newMap.put(Objects.requireNonNull(entry.getKey(), "input map must not contain null keys"),
-                    Objects.requireNonNull(entry.getValue(), "input map must not contain null values"));
+            newMap.put(Objects.requireNonNull(entry.getKey(), "Input map must not contain null keys"),
+                    Objects.requireNonNull(entry.getValue(), "Input map must not contain null values"));
         }
 
         return newMap;

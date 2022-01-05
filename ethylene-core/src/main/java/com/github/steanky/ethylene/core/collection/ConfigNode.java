@@ -20,7 +20,7 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement> {
      * null.
      * @throws NullPointerException if one or more keys are null
      * @throws IllegalArgumentException if the keys array is empty
-     * @param keys The array of keys which represents a "path" leading to a specific ConfigElement
+     * @param keys the array of keys which represents a "path" leading to a specific ConfigElement
      * @return null if the path is not valid; otherwise, the ConfigElement pointed to by the path
      */
     ConfigElement getElement(@NotNull String... keys);

@@ -63,8 +63,8 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
     /**
      * This helper method can be used to construct a list with the same elements as a collection. If the collection
      * contains any null values, a {@link NullPointerException} will be thrown.
-     * @param collection The collection whose elements will be added to the new list
-     * @param listSupplier The supplier used to create the list
+     * @param collection the collection whose elements will be added to the new list
+     * @param listSupplier the supplier used to create the list
      * @param <T> the type of the list to construct
      * @return a list, constructed by the supplier, and containing the same elements as collection
      * @throws NullPointerException if any of the arguments are null, collection contains any null elements, or
@@ -77,7 +77,7 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
 
         T newList = Objects.requireNonNull(listSupplier.get());
         for(ConfigElement element : collection) {
-            newList.add(Objects.requireNonNull(element, "input collection must not contain null elements"));
+            newList.add(Objects.requireNonNull(element, "Input collection must not contain null elements"));
         }
 
         return newList;

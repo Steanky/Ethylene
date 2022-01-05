@@ -45,7 +45,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
     private final Path root;
 
     /**
-     * Used to keep track of a <i>file</i> (which is a directory) and a FileConfigNode which should contain other nodes
+     * Used to keep track of a <i>file</i> (which is a directory) and a {@link FileConfigNode} which should contain other nodes
      * corresponding to the files contained in file's directory.
      */
     protected record Node(@NotNull Path path, @NotNull FileConfigNode children) {}
@@ -260,7 +260,7 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
     }
 
     /**
-     * Returns the <i>key</i> used to associate the file with a FileConfigNode. By default, this simply uses the name of
+     * Returns the <i>key</i> used to associate the file with a {@link FileConfigNode}. By default, this simply uses the name of
      * the file, minus the extension. For example, the name <b>file.txt</b> will be referenced by the key
      * <b>file</b>.
      * @param file the file to retrieve the key for
@@ -274,20 +274,20 @@ public abstract class AbstractFilesystemBridge implements ConfigBridge<FileConfi
 
     /**
      * Performs a read operation by running the specified {@link Callable}. This call may occur on a different thread.
-     * @param callable the callable to invoke
-     * @return A {@link Future} object representing the result of the read operation
-     * @throws IOException if an IOException occurred when the callable was run
-     * @throws NullPointerException if callable is null
+     * @param callable the Callable to invoke
+     * @return a {@link Future} object representing the result of the read operation
+     * @throws IOException if an IOException occurred when the Callable was run
+     * @throws NullPointerException if Callable is null
      */
     protected abstract Future<FileConfigNode> callRead(@NotNull Callable<FileConfigNode> callable) throws IOException;
 
     /**
      * Performs a write operation by executing the specified {@link Callable}. This call may occur on a different
      * thread.
-     * @param callable the callable to invoke
-     * @return A {@link Future} object representing the result of the write operation
-     * @throws IOException if an IOException occurred when the callable was run
-     * @throws NullPointerException if callable is null
+     * @param callable the Callable to invoke
+     * @return a {@link Future} object representing the result of the write operation
+     * @throws IOException if an IOException occurred when the Callable was run
+     * @throws NullPointerException if Callable is null
      */
     protected abstract Future<Void> callWrite(@NotNull Callable<Void> callable) throws IOException;
 }

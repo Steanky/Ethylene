@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
 /**
- * Reads and writes ConfigNode objects to and from an implementation-defined source. This source may be the network,
+ * Reads and writes {@link ConfigNode} objects to and from an implementation-defined source. This source may be the network,
  * file IO, memory, a database, etc. Synchronicity is also implementation-specific: {@link Future} is used to provide
  * a common interface between synchronous and non-synchronous usage.
  */
@@ -25,7 +25,7 @@ public interface ConfigBridge<T extends ConfigNode> {
     /**
      * Loads a {@link ConfigNode} object from this loader's source. Asynchronous implementations may choose to load
      * ConfigNode objects on another thread; in which case this method should return immediately.
-     * @return A {@link Future} object which will contain a ConfigNode object when it has finished loading, and can be
+     * @return a {@link Future} object which will contain a ConfigNode object when it has finished loading, and can be
      * used to query or await the completion of the read task
      * @throws IOException if an IO error occurs
      */
@@ -34,8 +34,8 @@ public interface ConfigBridge<T extends ConfigNode> {
     /**
      * Writes a {@link ConfigNode} object to this loader's source. This operation may occur asynchronously in some
      * implementations, in which case this method should return immediately.
-     * @param node The node to write to the source
-     * @return A {@link Future} object, which may be used to query or await the completion of the write task
+     * @param node the node to write to the source
+     * @return a {@link Future} object, which may be used to query or await the completion of the write task
      * @throws NullPointerException if node is null
      * @throws IOException if an IO error occurs
      */
@@ -43,10 +43,10 @@ public interface ConfigBridge<T extends ConfigNode> {
 
     /**
      * <p>Produces a ConfigBridge implementation which will use input/output streams generated from the provided
-     * {@link Callable}s, using the provided {@link ConfigCodec} to read/write to these streams. Each callable will be
+     * {@link Callable}s, using the provided {@link ConfigCodec} to read/write to these streams. Each Callable will be
      * invoked once per read/write attempt, and the returned stream will be closed after the operation completes.</p>
      *
-     * <p>If either callable throws an {@link IOException} when it is called (by an invocation to
+     * <p>If either Callable throws an {@link IOException} when it is called (by an invocation to
      * {@link ConfigBridge#read()} or {@link ConfigBridge#write(ConfigNode)} on the returned ConfigBridge), it will be
      * rethrown when {@link Future#get()} is called. If the exception thrown is any other type, a new IOException
      * instance will be created with the actual exception set as the cause, then thrown.</p>
@@ -55,8 +55,8 @@ public interface ConfigBridge<T extends ConfigNode> {
      * @param inputCallable the callable which produces {@link InputStream} instances for reading
      * @param outputCallable the callable which produces {@link OutputStream} instances for writing
      * @param codec the codec used to encode/decode from the streams
-     * @param nodeSupplier a supplier used to construct the ConfigNode instances used by the returned ConfigBridge
-     * @param <T> the type of {@link ConfigNode} which is returned from the bridge
+     * @param nodeSupplier a supplier used to construct the {@link ConfigNode} instances used by the returned ConfigBridge
+     * @param <T> the type of ConfigNode which is returned from the bridge
      * @return a ConfigBridge implementation which reads/writes from the given input/output streams
      * @throws NullPointerException if any of the arguments are null
      */
@@ -100,7 +100,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * ConfigBridge implementation.</p>
      * @param file the file read from and written to
      * @param codec the codec used to read/write from this file
-     * @return a ConfigBridge implementation which can read/write FileConfigNode objects from and to the given file
+     * @return a ConfigBridge implementation which can read/write {@link FileConfigNode} objects from and to the given file
      * @throws NullPointerException if any of the arguments are null
      */
     static @NotNull ConfigBridge<FileConfigNode> fromFile(@NotNull File file, @NotNull ConfigCodec codec) {
@@ -111,7 +111,7 @@ public interface ConfigBridge<T extends ConfigNode> {
     }
 
     /**
-     * Utility method to read a {@link ConfigNode} from an InputStream, using the given {@link ConfigCodec} for
+     * Utility method to read a {@link ConfigNode} from an {@link InputStream}, using the given {@link ConfigCodec} for
      * decoding. This method uses {@link ConfigBridge#fromStreams(Callable, Callable, ConfigCodec, Supplier)} to produce
      * a ConfigBridge implementation that is immediately read from.
      * @param inputStream the InputStream to read from
@@ -145,7 +145,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * constructed from the provided string, assuming a UTF-8 encoded string.
      * @param input the string to read from
      * @param codec the ConfigCodec which will be used to decode the input string
-     * @return a ConfigNode object representing the decoded configuration data
+     * @return a {@link ConfigNode} object representing the decoded configuration data
      * @throws IOException if the string does not contain valid data for the codec
      * @throws NullPointerException if any of the arguments are null
      */
@@ -159,7 +159,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * constructed from the provided file.
      * @param file the file to read from
      * @param codec the codec to use to decode the file
-     * @return a FileConfigNode representing the file's configuration data
+     * @return a {@link FileConfigNode} representing the file's configuration data
      * @throws IOException if the config data contained in the file is invalid or if an IO error occurred
      * @throws NullPointerException if any of the arguments are null
      */

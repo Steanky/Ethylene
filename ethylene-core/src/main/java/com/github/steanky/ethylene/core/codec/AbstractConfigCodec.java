@@ -239,7 +239,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param mappings the mappings to use to produce this ConfigNode
      * @param nodeSupplier the supplier used to construct the node which is returned
      * @param <TNode> the type of ConfigNode to return
-     * @return a ConfigNode, containing the same entries as mappings, after converting them to ConfigElement instances
+     * @return a ConfigNode, containing the same entries as mappings, after converting them to {@link ConfigElement} instances
      * @throws IllegalArgumentException if mappings contains a value which cannot be converted into a ConfigElement
      */
     protected <TNode extends ConfigNode> @NotNull TNode makeNode(@NotNull Map<String, Object> mappings,
@@ -250,7 +250,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     /**
      * Produces a map from the provided {@link ConfigNode}. The returned map will contain the same entries as the
-     * ConfigNode, with all ConfigElement instances converted to their equivalent values. ConfigNode instances will be
+     * ConfigNode, with all {@link ConfigElement} instances converted to their equivalent values. ConfigNode instances will be
      * converted to {@link LinkedHashMap}, ConfigList instances to {@link ArrayList}, and {@link ConfigPrimitive}
      * instances to the value that they wrap.
      * @param node the node to convert to a map
@@ -266,7 +266,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     /**
-     * Converts the provided object to a ConfigElement. The input object will typically not be a container.
+     * Converts the provided object to a {@link ConfigElement}. The input object will typically not be a container.
      * Implementations that override this method will most often also need to override
      * {@link AbstractConfigCodec#toObject(ConfigElement)}.
      * @param raw the object to convert
@@ -278,7 +278,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     /**
-     * Converts the provided ConfigElement to an object. The input ConfigElement will typically not be a container.
+     * Converts the provided {@link ConfigElement} to an object. The input ConfigElement will typically not be a container.
      * Implementations that override this method will most often also need to override
      * {@link AbstractConfigCodec#toElement(Object)}.
      * @param element the element to convert
@@ -296,7 +296,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     /**
-     * Reads some mappings from an InputStream. This method need not ensure that the stream closes.
+     * Reads some mappings from an {@link InputStream}. This method need not ensure that the stream closes.
      * @param input an InputStream to read from
      * @return a map of strings to objects
      * @throws IOException if an IO error occurs
@@ -305,7 +305,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     protected abstract @NotNull Map<String, Object> readMap(@NotNull InputStream input) throws IOException;
 
     /**
-     * Writes some mappings to an OutputStream. This method need not ensure that the stream closes.
+     * Writes some mappings to an {@link OutputStream}. This method need not ensure that the stream closes.
      * @param mappings the mappings to write
      * @param output the stream to write to
      * @throws IOException if an IO error occurs

@@ -22,7 +22,7 @@ public final class CallableUtils {
      * old exception).
      * @param callable the callable to call
      * @param exceptionClass the type of exception to catch/wrap
-     * @param wrapperException a function producing a wrapper exception from a generic Throwable
+     * @param wrapperException a function producing a wrapper exception from a generic {@link Throwable}
      * @param <R> the type object returned by the callable
      * @param <E> the type of exception to wrap
      * @return the object returned by the callable
