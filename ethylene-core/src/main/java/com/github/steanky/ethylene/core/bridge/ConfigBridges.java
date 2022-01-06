@@ -66,8 +66,8 @@ public final class ConfigBridges {
     }
 
     private static void writeInternal(@NotNull OutputStream outputStream,
-                                      @NotNull ConfigCodec codec,
-                                      @NotNull ConfigNode node)
+                                      @NotNull ConfigNode node,
+                                      @NotNull ConfigCodec codec)
             throws IOException {
         fromStreamsInternal(InputStream::nullInputStream, () -> outputStream, codec, () -> node).write(node);
     }
@@ -101,6 +101,7 @@ public final class ConfigBridges {
         Objects.requireNonNull(outputCallable);
         Objects.requireNonNull(codec);
         Objects.requireNonNull(nodeSupplier);
+
         return fromStreamsInternal(inputCallable, outputCallable, codec, nodeSupplier);
     }
 
@@ -161,7 +162,7 @@ public final class ConfigBridges {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(node);
 
-        writeInternal(outputStream, codec, node);
+        writeInternal(outputStream, node, codec);
     }
 
     /**
@@ -197,7 +198,7 @@ public final class ConfigBridges {
         Objects.requireNonNull(codec);
 
         OutputStream outputStream = new ByteArrayOutputStream();
-        writeInternal(outputStream, codec, node);
+        writeInternal(outputStream, node, codec);
         return outputStream.toString();
     }
 
@@ -229,6 +230,21 @@ public final class ConfigBridges {
         Objects.requireNonNull(file);
         Objects.requireNonNull(node);
 
-        writeInternal(new FileOutputStream(file), node.getCodec(), node);
+        writeInternal(new FileOutputStream(file), node, node.getCodec());
+    }
+
+    /**
+     * Writes a {@link FileConfigNode} to the file. The provided codec will be used to encode the node's data.
+     * @param file the file to write to
+     * @param node the node to write
+     * @throws IOException if an IO error occurred
+     */
+    public static void write(@NotNull File file, @NotNull ConfigNode node, @NotNull ConfigCodec codec)
+            throws IOException {
+        Objects.requireNonNull(file);
+        Objects.requireNonNull(node);
+        Objects.requireNonNull(codec);
+
+        writeInternal(new FileOutputStream(file), node, codec);
     }
 }
