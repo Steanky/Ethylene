@@ -22,36 +22,54 @@ public class FileConfigNode extends AbstractConfigNode {
     private final boolean isDirectory;
     private final ConfigCodec codec;
 
-    private FileConfigNode(@NotNull Map<String, ConfigElement> mappings, boolean isDirectory,
-                           @Nullable ConfigCodec codec) {
-        super(Objects.requireNonNull(mappings));
+    public FileConfigNode(@NotNull Map<String, ConfigElement> mappings, boolean isDirectory, ConfigCodec codec) {
+        super(constructMap(mappings, LinkedHashMap::new, element -> isElementValid(element, isDirectory)));
+        validateDirectoryCodecState(isDirectory, codec);
+
         this.isDirectory = isDirectory;
         this.codec = codec;
     }
 
-    /**
-     * Constructs a new {@link HashMap} based FileConfigNode which represents a directory.
-     */
-    public FileConfigNode() {
-        this(new HashMap<>(), true, null);
+    public FileConfigNode(boolean isDirectory, ConfigCodec codec) {
+        super(new LinkedHashMap<>());
+        validateDirectoryCodecState(isDirectory, codec);
+
+        this.isDirectory = isDirectory;
+        this.codec = codec;
     }
 
-    /**
-     * Constructs a new FileConfigNode based off of the provided mappings and representing a directory.
-     * @param mappings the mappings to construct this instance from
-     * @throws NullPointerException if mappings is null or contains any null keys or values
-     */
     public FileConfigNode(@NotNull Map<String, ConfigElement> mappings) {
-        this(constructMap(mappings, HashMap::new), true, null);
+        this(mappings, true, null);
     }
 
-    /**
-     * Constructs a new FileConfigNode with the provided codec. It should be interpreted as a <i>non-directory</i> file.
-     * @param codec the codec used to encode file data
-     * @throws NullPointerException if codec is null
-     */
-    public FileConfigNode(@NotNull ConfigCodec codec) {
-        this(new LinkedHashMap<>(), false, Objects.requireNonNull(codec));
+    public FileConfigNode(ConfigCodec codec) {
+        this(false, codec);
+    }
+
+    public FileConfigNode() {
+        this(true, null);
+    }
+
+    private static void validateDirectoryCodecState(boolean isDirectory, ConfigCodec codec) {
+        if(isDirectory) {
+            if(codec != null) {
+                throw new IllegalArgumentException("Directories may not specify a codec");
+            }
+        }
+        else  {
+            if(codec == null) {
+                throw new IllegalArgumentException("Non-directories must specify a codec");
+            }
+        }
+    }
+
+    private static boolean isElementValid(@NotNull ConfigElement element, boolean isDirectory) {
+        if(isDirectory) {
+            return element instanceof FileConfigNode;
+        }
+        else {
+            return !(element instanceof FileConfigNode);
+        }
     }
 
     /**
@@ -77,13 +95,8 @@ public class FileConfigNode extends AbstractConfigNode {
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);
 
-        if(isDirectory) {
-            if(!(value instanceof FileConfigNode)) {
-                throw new IllegalArgumentException("Directories may only contain FileConfigNode instances");
-            }
-        }
-        else if(value instanceof FileConfigNode) {
-            throw new IllegalArgumentException("Non-directories cannot contain other FileConfigNode instances");
+        if(!isElementValid(value, isDirectory)) {
+            throw new IllegalStateException("Invalid element type for this FileConfigNode");
         }
 
         return mappings.put(key, value);

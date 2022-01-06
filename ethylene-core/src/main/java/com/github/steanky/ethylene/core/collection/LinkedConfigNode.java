@@ -23,6 +23,6 @@ public class LinkedConfigNode extends AbstractConfigNode {
      * @throws NullPointerException if mappings is null or contains any null keys or values
      */
     public LinkedConfigNode(@NotNull Map<String, ConfigElement> mappings) {
-        super(constructMap(mappings, LinkedHashMap::new));
+        super(constructMap(mappings, LinkedHashMap::new, ignored -> true));
     }
 }

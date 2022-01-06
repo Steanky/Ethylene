@@ -7,6 +7,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -114,22 +115,34 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
     /**
      * This helper method can be used to construct a map with the same elements as another map. If the given map
-     * contains any null keys or values, a {@link NullPointerException} will be thrown.
+     * contains any null keys or values, a {@link NullPointerException} will be thrown. Furthermore, each value will
+     * be tested against the provided {@link Predicate}. If it returns false, an {@link IllegalArgumentException} will
+     * be thrown.
      * @param map the map whose elements will be added to the returned map
      * @param mapSupplier the supplier used to create the map
+     * @param valuePredicate the predicate to use to validate each element against some condition
      * @param <T> the type of the map to construct
      * @return a new map, constructed by the supplier, and containing the same elements as map
      * @throws NullPointerException if any of the arguments are null, or map contains any null keys or values
+     * @throws IllegalArgumentException if the given predicate fails for any of the map's values
      */
     protected static <T extends Map<String, ConfigElement>> T constructMap(@NotNull Map<String, ConfigElement> map,
-                                                                           @NotNull Supplier<T> mapSupplier) {
+                                                                           @NotNull Supplier<T> mapSupplier,
+                                                                           @NotNull Predicate<ConfigElement>
+                                                                                   valuePredicate) {
         Objects.requireNonNull(map);
         Objects.requireNonNull(mapSupplier);
+        Objects.requireNonNull(valuePredicate);
 
         T newMap = mapSupplier.get();
         for(Map.Entry<String, ConfigElement> entry : map.entrySet()) {
-            newMap.put(Objects.requireNonNull(entry.getKey(), "Input map must not contain null keys"),
-                    Objects.requireNonNull(entry.getValue(), "Input map must not contain null values"));
+            if(!valuePredicate.test(entry.getValue())) {
+                throw new IllegalArgumentException("Value predicate failed");
+            }
+            else {
+                newMap.put(Objects.requireNonNull(entry.getKey(), "Input map must not contain null keys"),
+                        Objects.requireNonNull(entry.getValue(), "Input map must not contain null values"));
+            }
         }
 
         return newMap;
