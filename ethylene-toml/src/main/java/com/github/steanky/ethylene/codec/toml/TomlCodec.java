@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.codec.toml;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigFormatException;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
-import com.google.gson.Gson;
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
 import org.jetbrains.annotations.NotNull;

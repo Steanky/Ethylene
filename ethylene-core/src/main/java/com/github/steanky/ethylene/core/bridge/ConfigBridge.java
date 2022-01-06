@@ -3,7 +3,7 @@ package com.github.steanky.ethylene.core.bridge;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.concurrent.Future;
 
 /**
