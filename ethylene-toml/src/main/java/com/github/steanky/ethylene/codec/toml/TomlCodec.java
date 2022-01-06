@@ -41,7 +41,7 @@ public class TomlCodec extends AbstractConfigCodec {
      * write data.
      */
     public TomlCodec() {
-        this(DEFAULT_TOML_WRITER);
+        this.writer = DEFAULT_TOML_WRITER;
     }
 
     @Override

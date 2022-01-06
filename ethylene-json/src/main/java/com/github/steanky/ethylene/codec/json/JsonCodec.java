@@ -39,7 +39,7 @@ public class JsonCodec extends AbstractConfigCodec {
      * Creates a new JsonCodec using the default {@link Gson} ({@link JsonCodec#DEFAULT_GSON}) to read and write data.
      */
     public JsonCodec() {
-        this(DEFAULT_GSON);
+        this.gson = DEFAULT_GSON;
     }
 
     @Override
