@@ -11,8 +11,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FileConfigNodeTest {
-    private static final String KEY = "key";
-
     private final FileConfigNode directory;
     private final ConfigCodec mockCodec;
     private final FileConfigNode file;
@@ -30,16 +28,16 @@ class FileConfigNodeTest {
 
     @Test
     void directoryThrowsOnNonFileElement() {
-        assertThrows(IllegalArgumentException.class, () -> directory.put(KEY, Mockito.mock(ConfigElement.class)));
+        assertThrows(IllegalArgumentException.class, () -> directory.put("key", Mockito.mock(ConfigElement.class)));
         assertTrue(directory.isEmpty());
     }
 
     @Test
     void directoryAcceptsFileElement() {
         FileConfigNode node = new FileConfigNode();
-        directory.put(KEY, node);
+        directory.put("key", node);
 
-        assertSame(node, directory.get(KEY));
+        assertSame(node, directory.get("key"));
     }
 
     @Test
@@ -55,7 +53,7 @@ class FileConfigNodeTest {
 
     @Test
     void fileThrowsOnFileElement() {
-        assertThrows(IllegalArgumentException.class, () -> file.put(KEY, new FileConfigNode()));
+        assertThrows(IllegalArgumentException.class, () -> file.put("key", new FileConfigNode()));
     }
 
     @Test

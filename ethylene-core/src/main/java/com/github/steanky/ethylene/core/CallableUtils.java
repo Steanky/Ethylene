@@ -22,20 +22,20 @@ public final class CallableUtils {
      * old exception).
      * @param callable the callable to call
      * @param exceptionClass the type of exception to catch/wrap
-     * @param wrapperException a function producing a wrapper exception from a generic {@link Throwable}
-     * @param <R> the type object returned by the callable
-     * @param <E> the type of exception to wrap
-     * @return the object returned by the callable
-     * @throws E if the callable throws an exception when its {@link Callable#call()} method is invoked
+     * @param wrapperFunction a function producing a wrapper exception from a generic {@link Throwable}
+     * @param <TCall> the type object returned by the callable
+     * @param <TErr> the type of exception to wrap
+     * @return the value returned by the callable
+     * @throws TErr if the callable throws an exception when its {@link Callable#call()} method is invoked
      * @throws NullPointerException if any of the arguments are null
      */
-    public static <R, E extends Exception> @NotNull R wrapException(@NotNull Callable<R> callable,
-                                                                    @NotNull Class<E> exceptionClass,
-                                                                    @NotNull Function<Throwable, E> wrapperException)
-            throws E {
+    public static <TCall, TErr extends Exception> TCall wrapException(@NotNull Callable<TCall> callable,
+                                                                      @NotNull Class<TErr> exceptionClass,
+                                                                      @NotNull Function<Throwable, TErr>
+                                                                              wrapperFunction) throws TErr {
         Objects.requireNonNull(callable);
         Objects.requireNonNull(exceptionClass);
-        Objects.requireNonNull(wrapperException);
+        Objects.requireNonNull(wrapperFunction);
 
         try {
             return callable.call();
@@ -45,7 +45,7 @@ public final class CallableUtils {
                 throw exceptionClass.cast(exception);
             }
             else {
-                throw wrapperException.apply(exception);
+                throw wrapperFunction.apply(exception);
             }
         }
     }

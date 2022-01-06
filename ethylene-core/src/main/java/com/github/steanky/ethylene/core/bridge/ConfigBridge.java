@@ -11,7 +11,7 @@ import java.util.concurrent.Future;
  * file IO, memory, a database, etc. Synchronicity is also implementation-specific: {@link Future} is used to provide
  * a common interface between synchronous and non-synchronous usage.
  */
-public interface ConfigBridge<T extends ConfigNode> {
+public interface ConfigBridge<TNode extends ConfigNode> {
     /**
      * Loads a {@link ConfigNode} object from this loader's source. Asynchronous implementations may choose to load
      * ConfigNode objects on another thread; in which case this method should return immediately.
@@ -19,7 +19,7 @@ public interface ConfigBridge<T extends ConfigNode> {
      * used to query or await the completion of the read task
      * @throws IOException if an IO error occurs
      */
-    @NotNull Future<T> read() throws IOException;
+    @NotNull Future<TNode> read() throws IOException;
 
     /**
      * Writes a {@link ConfigNode} object to this loader's source. This operation may occur asynchronously in some
@@ -29,5 +29,5 @@ public interface ConfigBridge<T extends ConfigNode> {
      * @throws NullPointerException if node is null
      * @throws IOException if an IO error occurs
      */
-    @NotNull Future<Void> write(@NotNull T node) throws IOException;
+    @NotNull Future<Void> write(@NotNull TNode node) throws IOException;
 }

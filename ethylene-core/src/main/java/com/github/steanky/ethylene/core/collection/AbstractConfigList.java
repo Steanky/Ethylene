@@ -68,20 +68,21 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      * @param collection the collection whose elements will be added to the new list
      * @param listSupplier the supplier used to create the list
      * @param valuePredicate the predicate to use to validate each element against some condition
-     * @param <T> the type of the list to construct
+     * @param <TList> the type of the list to construct
      * @return a list, constructed by the supplier, and containing the same elements as collection
      * @throws NullPointerException if any of the arguments are null, collection contains any null elements, or
      * listSupplier returns null
      * @throws IllegalArgumentException if the given predicate fails for any of the collection's values
      */
-    protected static <T extends List<ConfigElement>> T constructList(@NotNull Collection<ConfigElement> collection,
-                                                                     @NotNull Supplier<T> listSupplier,
-                                                                     @NotNull Predicate<ConfigElement> valuePredicate) {
+    protected static <TList extends List<ConfigElement>> @NotNull TList constructList(
+            @NotNull Collection<ConfigElement> collection,
+            @NotNull Supplier<TList> listSupplier,
+            @NotNull Predicate<ConfigElement> valuePredicate) {
         Objects.requireNonNull(collection);
         Objects.requireNonNull(listSupplier);
         Objects.requireNonNull(valuePredicate);
 
-        T newList = Objects.requireNonNull(listSupplier.get());
+        TList newList = Objects.requireNonNull(listSupplier.get());
         for(ConfigElement element : collection) {
             if(!valuePredicate.test(element)) {
                 throw new IllegalArgumentException("Value predicate failed");

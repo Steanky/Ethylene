@@ -25,20 +25,20 @@ public final class ConfigBridges {
         throw new AssertionError("Why would you try to do this?");
     }
 
-    private static <T extends ConfigNode> @NotNull ConfigBridge<T> fromStreamsInternal(
+    private static <TNode extends ConfigNode> @NotNull ConfigBridge<TNode> fromStreamsInternal(
             @NotNull Callable<InputStream> inputCallable,
             @NotNull Callable<OutputStream> outputCallable,
             @NotNull ConfigCodec codec,
-            @NotNull Supplier<T> nodeSupplier) {
+            @NotNull Supplier<TNode> nodeSupplier) {
         return new ConfigBridge<>() {
             @Override
-            public @NotNull Future<T> read() throws IOException {
+            public @NotNull Future<TNode> read() throws IOException {
                 return CompletableFuture.completedFuture(codec.decodeNode(CallableUtils.wrapException(inputCallable,
                         IOException.class, IOException::new), nodeSupplier));
             }
 
             @Override
-            public @NotNull Future<Void> write(@NotNull T node) throws IOException {
+            public @NotNull Future<Void> write(@NotNull TNode node) throws IOException {
                 codec.encodeNode(node, CallableUtils.wrapException(outputCallable, IOException.class,
                         IOException::new));
                 return CompletableFuture.completedFuture(null);
@@ -46,9 +46,9 @@ public final class ConfigBridges {
         };
     }
 
-    private static <T extends ConfigNode> @NotNull T readInternal(@NotNull InputStream inputStream,
-                                                                  @NotNull ConfigCodec codec,
-                                                                  @NotNull Supplier<T> nodeSupplier)
+    private static <TNode extends ConfigNode> @NotNull TNode readInternal(@NotNull InputStream inputStream,
+                                                                          @NotNull ConfigCodec codec,
+                                                                          @NotNull Supplier<TNode> nodeSupplier)
             throws IOException {
         try {
             return fromStreamsInternal(() -> inputStream, OutputStream::nullOutputStream, codec, nodeSupplier).read()
@@ -88,15 +88,15 @@ public final class ConfigBridges {
      * @param codec the codec used to encode/decode from the streams
      * @param nodeSupplier a supplier used to construct the {@link ConfigNode} instances used by the returned
      *                     ConfigBridge
-     * @param <T> the type of ConfigNode which is returned from the bridge
+     * @param <TNode> the type of ConfigNode which is returned from the bridge
      * @return a ConfigBridge implementation which reads/writes from the given input/output streams
      * @throws NullPointerException if any of the arguments are null
      */
-    public static <T extends ConfigNode> @NotNull ConfigBridge<T> fromStreams(
+    public static <TNode extends ConfigNode> @NotNull ConfigBridge<TNode> fromStreams(
             @NotNull Callable<InputStream> inputCallable,
             @NotNull Callable<OutputStream> outputCallable,
             @NotNull ConfigCodec codec,
-            @NotNull Supplier<T> nodeSupplier) {
+            @NotNull Supplier<TNode> nodeSupplier) {
         Objects.requireNonNull(inputCallable);
         Objects.requireNonNull(outputCallable);
         Objects.requireNonNull(codec);
@@ -134,13 +134,15 @@ public final class ConfigBridges {
      * @param inputStream the InputStream to read from
      * @param codec the ConfigCodec which will be used to decode the input data
      * @param nodeSupplier the supplier used to generate the returned ConfigNode object
-     * @param <T> the returned type of ConfigNode
+     * @param <TNode> the returned type of ConfigNode
      * @return a ConfigNode object representing the decoded configuration data
      * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
      * @throws NullPointerException if any arguments are null
      */
-    public static <T extends ConfigNode> @NotNull T read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec,
-                                                         @NotNull Supplier<T> nodeSupplier) throws IOException {
+    public static <TNode extends ConfigNode> @NotNull TNode read(@NotNull InputStream inputStream,
+                                                                 @NotNull ConfigCodec codec,
+                                                                 @NotNull Supplier<TNode> nodeSupplier)
+            throws IOException {
         Objects.requireNonNull(inputStream);
         Objects.requireNonNull(codec);
         Objects.requireNonNull(nodeSupplier);

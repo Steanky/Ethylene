@@ -121,20 +121,20 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      * @param map the map whose elements will be added to the returned map
      * @param mapSupplier the supplier used to create the map
      * @param valuePredicate the predicate to use to validate each element against some condition
-     * @param <T> the type of the map to construct
+     * @param <TMap> the type of the map to construct
      * @return a new map, constructed by the supplier, and containing the same elements as map
      * @throws NullPointerException if any of the arguments are null, or map contains any null keys or values
      * @throws IllegalArgumentException if the given predicate fails for any of the map's values
      */
-    protected static <T extends Map<String, ConfigElement>> T constructMap(@NotNull Map<String, ConfigElement> map,
-                                                                           @NotNull Supplier<T> mapSupplier,
-                                                                           @NotNull Predicate<ConfigElement>
-                                                                                   valuePredicate) {
+    protected static <TMap extends Map<String, ConfigElement>> @NotNull TMap constructMap(
+            @NotNull Map<String, ConfigElement> map,
+            @NotNull Supplier<TMap> mapSupplier,
+            @NotNull Predicate<ConfigElement> valuePredicate) {
         Objects.requireNonNull(map);
         Objects.requireNonNull(mapSupplier);
         Objects.requireNonNull(valuePredicate);
 
-        T newMap = mapSupplier.get();
+        TMap newMap = mapSupplier.get();
         for(Map.Entry<String, ConfigElement> entry : map.entrySet()) {
             if(!valuePredicate.test(entry.getValue())) {
                 throw new IllegalArgumentException("Value predicate failed");
