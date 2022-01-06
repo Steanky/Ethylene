@@ -1,10 +1,10 @@
 package com.github.steanky.ethylene.codec.json;
 
-import com.github.steanky.ethylene.core.ConfigFormatException;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,7 +16,7 @@ class JsonCodecTest {
 
     @Test
     void throwsFormatErrorOnBadJson() {
-        assertThrows(ConfigFormatException.class, () -> codec.decodeNode(
+        assertThrows(IOException.class, () -> codec.decodeNode(
                 new ByteArrayInputStream(BAD_JSON.getBytes(StandardCharsets.UTF_8)), LinkedConfigNode::new));
     }
 }

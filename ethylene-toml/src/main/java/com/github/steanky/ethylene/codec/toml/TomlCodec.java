@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.codec.toml;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ConfigFormatException;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
@@ -50,7 +49,7 @@ public class TomlCodec extends AbstractConfigCodec {
             return new Toml().read(input).toMap();
         }
         catch (IllegalStateException exception) {
-            throw new ConfigFormatException(exception);
+            throw new IOException(exception);
         }
     }
 
@@ -60,7 +59,7 @@ public class TomlCodec extends AbstractConfigCodec {
             writer.write(mappings, output);
         }
         catch (IllegalArgumentException exception) {
-            throw new ConfigFormatException(exception);
+            throw new IOException(exception);
         }
     }
 
