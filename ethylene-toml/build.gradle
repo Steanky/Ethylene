@@ -15,7 +15,7 @@ dependencies {
     api project(':ethylene-core')
 
     //toml parser
-    implementation 'com.moandjiezana.toml:toml4j:0.7.2'
+    api 'com.moandjiezana.toml:toml4j:0.7.2'
 
     //use junit for unit testing
     testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"

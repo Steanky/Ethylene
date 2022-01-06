@@ -22,8 +22,7 @@ dependencies {
     implementation project(':ethylene-json')
     implementation project(':ethylene-toml')
 
-    //...however, a real project would want to declare dependencies on ethylene-json and ethylene-toml like this,
-    //assuming the desired version is 1.0.0:
+    //...however, a real project would want to declare dependencies like this, assuming the desired version is 1.0.0:
 
     //implementation 'com.github.steanky:ethylene-json:1.0.0'
     //implementation 'com.github.steanky:ethylene-toml:1.0.0'

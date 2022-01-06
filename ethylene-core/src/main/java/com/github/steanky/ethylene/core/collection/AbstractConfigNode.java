@@ -81,32 +81,34 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         }
         else { //iterate through the provided keys, since length > 1
             ConfigNode current = this;
-            int lastIndex = keys.length - 1;
-            for(int i = 0; i < keys.length; i++) {
-                ConfigElement child = current.getElement(keys[i]);
+            ConfigElement value = null;
 
-                if(child == null) {
-                    //we failed to find something for this key, so return null
+            for (String key : keys) {
+                if(current == null) {
                     return null;
                 }
-                else if(i == lastIndex) {
-                    //we got to the last key, so return now
-                    return child;
-                }
-                else  {
-                    if(child.isNode()) {
-                        //continue traversing nodes...
-                        current = child.asNode();
+                else {
+                    value = current.getElement(key);
+
+                    if (value == null) {
+                        //we failed to find something for this key, so return null
+                        return null;
                     }
                     else {
-                        //we still have nodes to traverse, but ran into something that's not a node, so return
-                        return null;
+                        if (value.isNode()) {
+                            //continue traversing nodes...
+                            current = value.asNode();
+                        } else {
+                            //we still have nodes to traverse, but ran into something that's not a node — set current to
+                            //null. if we're on the last node, we will return when this loop finishes anyway. if we're
+                            //NOT on the last node, we'll return null as we still have keys, indicating an invalid path
+                            current = null;
+                        }
                     }
                 }
             }
 
-            //can't actually happen
-            return null;
+            return value;
         }
     }
 

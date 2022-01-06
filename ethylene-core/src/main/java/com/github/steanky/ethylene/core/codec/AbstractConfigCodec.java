@@ -32,15 +32,10 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      */
     protected record Node<TOut>(@NotNull Object inputContainer, @NotNull BiConsumer<String, TOut> output) {}
 
-    private final Set<String> names;
-
     /**
-     * Constructs a new instance of AbstractConfigCodec with the provided {@link Collection} of names.
-     * @param names the names used by this codec
+     * Constructs a new instance of this class.
      */
-    public AbstractConfigCodec(@NotNull Collection<String> names) {
-        this.names = Set.copyOf(names);
-    }
+    protected AbstractConfigCodec() {}
 
     @Override
     public void encodeNode(@NotNull ConfigNode node, @NotNull OutputStream output)
@@ -63,11 +58,6 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         try (input) {
             return makeNode(readMap(input), nodeSupplier);
         }
-    }
-
-    @Override
-    public @NotNull Set<String> getNames() {
-        return names;
     }
 
     /**
@@ -118,35 +108,15 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                                     @NotNull Class<TIn> inClass,
                                     @NotNull Class<TOut> outClass) {
         if(isContainer(value)) {
+            //we are a container, so do container-specific processing
+
             TOut output;
-
             if(!visited.containsKey(value)) {
-                //we found a new container element: we now need to create the correct corresponding output map or
-                //collection, add a mapping from the input container to the output map/collection, push our value onto
-                //the stack so we'll end up processing it later, and finally call our output consumer with our new node
-                BiConsumer<String, TOut> consumer;
-                Object outputContainer;
-
-                if(value instanceof Map<?, ?>) {
-                    TMap newMap = mapSupplier.get();
-                    outputContainer = newMap;
-                    consumer = newMap::put;
-                }
-                else  {
-                    TCollection newCollection = collectionSupplier.get();
-                    outputContainer = newCollection;
-                    consumer = (k, v) -> newCollection.add(v);
-                }
-
-                output = outClass.cast(outputContainer);
-                stack.push(new Node<>(value, consumer));
+                output = makeOutput(value, stack, mapSupplier, collectionSupplier, outClass);
                 visited.put(value, output);
             }
             else {
-                //if visisted contains the value container as a key, it means we found a circular reference. we must
-                //preserve the same structure in our output, so do that by using the associated mapping for value but
-                //definitely don't push it to the stack! otherwise, any circular references would cause this method to
-                //never return
+                //handles self-referential data
                 output = visited.get(value);
             }
 
@@ -156,6 +126,48 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             //not a container object, just an ordinary one, so we can add it directly to our output
             currentNode.output.accept(keyString, converter.apply(inClass.cast(value)));
         }
+    }
+
+    /**
+     * Processes a <i>container</i> (subclass of {@link Map}, {@link Collection} or an array); or more generally any
+     * object for which {@link AbstractConfigCodec#isContainer(Object)} returns true. This method is not responsible
+     * for handling the contents of any such container. It simply creates an "output" container (supplied by either
+     * mapSupplier or collectionSupplier) and a {@link BiConsumer} capable of writing to that output. Then, it
+     * constructs a {@link Node} object using the input container and the output BiConsumer. The returned value will be
+     * the <i>output</i> container after it is cast to TOut.
+     * @param container the container to process
+     * @param stack a {@link Deque} of Node objects used
+     * @param mapSupplier a {@link Supplier} that produces output maps
+     * @param collectionSupplier  a Supplier that produces output collections
+     * @param outClass the return type class
+     * @param <TMap> the map type
+     * @param <TCollection> the collection type
+     * @param <TOut> the return type
+     * @return the output container, produced by either mapSupplier or collectionSupplier
+     */
+    protected <TMap extends Map<String, TOut>,
+            TCollection extends Collection<TOut>,
+            TOut> @NotNull TOut makeOutput(@NotNull Object container,
+                                           @NotNull Deque<Node<TOut>> stack,
+                                           @NotNull Supplier<TMap> mapSupplier,
+                                           @NotNull Supplier<TCollection> collectionSupplier,
+                                           @NotNull Class<TOut> outClass) {
+        BiConsumer<String, TOut> consumer;
+        Object outputContainer;
+
+        if(container instanceof Map<?, ?>) {
+            TMap newMap = mapSupplier.get();
+            outputContainer = newMap;
+            consumer = newMap::put;
+        }
+        else  {
+            TCollection newCollection = collectionSupplier.get();
+            outputContainer = newCollection;
+            consumer = (k, v) -> newCollection.add(v);
+        }
+
+        stack.push(new Node<>(container, consumer));
+        return outClass.cast(outputContainer);
     }
 
     /**
@@ -250,9 +262,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     /**
      * Produces a map from the provided {@link ConfigNode}. The returned map will contain the same entries as the
-     * ConfigNode, with all {@link ConfigElement} instances converted to their equivalent values. ConfigNode instances will be
-     * converted to {@link LinkedHashMap}, ConfigList instances to {@link ArrayList}, and {@link ConfigPrimitive}
-     * instances to the value that they wrap.
+     * ConfigNode, with all {@link ConfigElement} instances converted to their equivalent values. ConfigNode instances
+     * will be converted to {@link LinkedHashMap}, ConfigList instances to {@link ArrayList}, and
+     * {@link ConfigPrimitive} instances to the value that they wrap.
      * @param node the node to convert to a map
      * @param mapSupplier the supplier which produces the <i>top level</i> map which is returned
      * @param <TMap> the type of top-level map

@@ -49,7 +49,7 @@ class AbstractConfigCodecTest {
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> subRoot = new HashMap<>();
 
-        testCodec = new AbstractConfigCodec(List.of("test")) {
+        testCodec = new AbstractConfigCodec() {
             @Override
             protected @NotNull Map<String, Object> readMap(@NotNull InputStream input) {
                 return root;
@@ -197,11 +197,6 @@ class AbstractConfigCodecTest {
         testCodec.encodeNode(Mockito.mock(ConfigNode.class), stream);
 
         assertThrows(IOException.class, () -> stream.write(0));
-    }
-
-    @Test
-    void validNames() {
-        assertEquals(testCodec.getNames(), Set.of("test"));
     }
 
     @Test

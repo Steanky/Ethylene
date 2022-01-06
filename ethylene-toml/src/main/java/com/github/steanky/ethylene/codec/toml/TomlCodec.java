@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.codec.toml;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigFormatException;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
+import com.google.gson.Gson;
 import com.moandjiezana.toml.Toml;
 import com.moandjiezana.toml.TomlWriter;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 /**
  * Provides support for the TOML format. This class overrides {@link AbstractConfigCodec#toElement(Object)} and
@@ -21,15 +22,27 @@ import java.util.Set;
  */
 public class TomlCodec extends AbstractConfigCodec {
     /**
-     * The TomlCodec singleton instance.
+     * The default {@link TomlWriter} instance used to read and write data.
      */
-    public static final TomlCodec INSTANCE = new TomlCodec();
+    public static final TomlWriter DEFAULT_TOML_WRITER = new TomlWriter();
 
-    private final TomlWriter tomlWriter;
+    private final TomlWriter writer;
 
-    private TomlCodec() {
-        super(Set.of("toml"));
-        tomlWriter = new TomlWriter();
+    /**
+     * Creates a new TomlCodec using the provided {@link TomlWriter} to read and write data.
+     * @param writer the TomlWriter instance to use
+     * @throws NullPointerException if writer is null
+     */
+    public TomlCodec(@NotNull TomlWriter writer) {
+        this.writer = Objects.requireNonNull(writer);
+    }
+
+    /**
+     * Creates a new TomlCodec using the default {@link TomlWriter} ({@link TomlCodec#DEFAULT_TOML_WRITER}) to read and
+     * write data.
+     */
+    public TomlCodec() {
+        this(DEFAULT_TOML_WRITER);
     }
 
     @Override
@@ -45,7 +58,7 @@ public class TomlCodec extends AbstractConfigCodec {
     @Override
     protected void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output) throws IOException {
         try {
-            tomlWriter.write(mappings, output);
+            writer.write(mappings, output);
         }
         catch (IllegalArgumentException exception) {
             throw new ConfigFormatException(exception);

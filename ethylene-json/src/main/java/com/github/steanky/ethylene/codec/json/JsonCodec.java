@@ -11,23 +11,35 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 /**
  * Provides support for the JSON format.
  */
 public class JsonCodec extends AbstractConfigCodec {
     /**
-     * The JsonCodec singleton instance.
+     * The default {@link Gson} instance used to read and write data.
      */
-    public static final JsonCodec INSTANCE = new JsonCodec();
+    public static final Gson DEFAULT_GSON = new Gson();
 
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
+
     private final Gson gson;
 
-    private JsonCodec() {
-        super(Set.of("json"));
-        this.gson = new Gson();
+    /**
+     * Creates a new JsonCodec using the provided {@link Gson} to read and write data.
+     * @param gson the Gson instance to use
+     * @throws NullPointerException if gson is null
+     */
+    public JsonCodec(@NotNull Gson gson) {
+        this.gson = Objects.requireNonNull(gson);
+    }
+
+    /**
+     * Creates a new JsonCodec using the default {@link Gson} ({@link JsonCodec#DEFAULT_GSON}) to read and write data.
+     */
+    public JsonCodec() {
+        this(DEFAULT_GSON);
     }
 
     @Override
