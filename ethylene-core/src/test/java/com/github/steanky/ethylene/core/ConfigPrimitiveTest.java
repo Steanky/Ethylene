@@ -15,10 +15,19 @@ class ConfigPrimitiveTest {
         ConfigPrimitive primitiveShort = new ConfigPrimitive((short)10);
         ConfigPrimitive primitiveByte = new ConfigPrimitive((byte)10);
         ConfigPrimitive primitiveBoolean = new ConfigPrimitive(true);
+        ConfigPrimitive primitiveChar = new ConfigPrimitive('a');
     }
 
     @Test
     void failsOnUnrecognizedType() {
         assertThrows(IllegalArgumentException.class, () -> new ConfigPrimitive(new Object()));
+    }
+
+    @Test
+    void charCoercionToString() {
+        ConfigPrimitive character = new ConfigPrimitive('a');
+
+        assertTrue(character.asObject() instanceof Character);
+        assertEquals("a", character.asString());
     }
 }
