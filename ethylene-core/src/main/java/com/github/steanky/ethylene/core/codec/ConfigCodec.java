@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 
 /**
  * This interface represents the primary compatibility layer between any specific configuration format and a
- * {@link ConfigNode} object.
+ * {@link ConfigNode} object. As a general rule of thumb, ConfigCodec implementations should be immutable.
  */
 public interface ConfigCodec {
     /**

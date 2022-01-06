@@ -4,9 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.bridge.ConfigBridge;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -22,6 +20,20 @@ public class FileConfigNode extends AbstractConfigNode {
     private final boolean isDirectory;
     private final ConfigCodec codec;
 
+    /**
+     * <p>Constructs a new FileConfigNode from the provided mappings, which may or may not represent a directory
+     * depending on what is passed to isDirectory.</p>
+     *
+     * <p>If isDirectory is true, the input map may <b>only</b> contain FileConfigNode instances, and it <b>must</b>
+     * pass in null to the codec parameter. If isDirectory is false, the input map must <b>not</b> contain any
+     * FileConfigNode instances and it <b>must</b> provide a non-null {@link ConfigCodec}.</p>
+     * @param mappings the mappings to create this FileConfigNode from
+     * @param isDirectory whether this node should represent a directory
+     * @param codec the codec to use, which must be null if isDirectory is true and non-null if it's false
+     * @throws NullPointerException if mappings is null
+     * @throws IllegalArgumentException if mappings contains any illegal values, as detailed above, or if codec is
+     * expected to be non-null when it isn't and vice versa
+     */
     public FileConfigNode(@NotNull Map<String, ConfigElement> mappings, boolean isDirectory, ConfigCodec codec) {
         super(constructMap(mappings, LinkedHashMap::new, element -> isElementValid(element, isDirectory)));
         validateDirectoryCodecState(isDirectory, codec);
@@ -30,6 +42,14 @@ public class FileConfigNode extends AbstractConfigNode {
         this.codec = codec;
     }
 
+    /**
+     * Constructs a new, empty FileConfigNode. This constructor operates similarly to
+     * {@link FileConfigNode#FileConfigNode(Map, boolean, ConfigCodec)} in that it has the same semantics regarding
+     * correct values for isDirectory and codec.
+     * @param isDirectory whether this node should represent a directory
+     * @param codec the codec to use, which must be null if isDirectory is true and non-null if it's false
+     * @throws IllegalArgumentException if codec is null when it shouldn't be, or non-null when it shouldn't be
+     */
     public FileConfigNode(boolean isDirectory, ConfigCodec codec) {
         super(new LinkedHashMap<>());
         validateDirectoryCodecState(isDirectory, codec);
@@ -38,28 +58,37 @@ public class FileConfigNode extends AbstractConfigNode {
         this.codec = codec;
     }
 
+    /**
+     * Constructs a new FileConfigNode from the provided mappings. The node will represent a directory.
+     * @param mappings the mappings to create this FileConfigNode from
+     * @throws NullPointerException if mappings is null
+     */
     public FileConfigNode(@NotNull Map<String, ConfigElement> mappings) {
         this(mappings, true, null);
     }
 
-    public FileConfigNode(ConfigCodec codec) {
-        this(false, codec);
+    /**
+     * Constructs a new FileConfigNode from the provided codec. The node will not represent a directory.
+     * @param codec the codec to use
+     * @throws NullPointerException if codec is null
+     */
+    public FileConfigNode(@NotNull ConfigCodec codec) {
+        this(false, Objects.requireNonNull(codec));
     }
 
+    /**
+     * Constructs a new FileConfigNode that represents a directory.
+     */
     public FileConfigNode() {
         this(true, null);
     }
 
     private static void validateDirectoryCodecState(boolean isDirectory, ConfigCodec codec) {
-        if(isDirectory) {
-            if(codec != null) {
-                throw new IllegalArgumentException("Directories may not specify a codec");
-            }
+        if(isDirectory && codec != null) {
+            throw new IllegalArgumentException("Directories may not specify a codec");
         }
-        else  {
-            if(codec == null) {
-                throw new IllegalArgumentException("Non-directories must specify a codec");
-            }
+        else if(!isDirectory && codec == null)  {
+            throw new IllegalArgumentException("Non-directories must specify a codec");
         }
     }
 
