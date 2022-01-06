@@ -30,4 +30,38 @@ class ConfigPrimitiveTest {
         assertTrue(character.asObject() instanceof Character);
         assertEquals("a", character.asString());
     }
+
+    @Test
+    void failsOnInvalidTypes() {
+        ConfigPrimitive string = new ConfigPrimitive("this is a string");
+        assertTrue(string.isString());
+        assertTrue(string.isObject());
+
+        assertFalse(string.isBoolean());
+        assertFalse(string.isNumber());
+        assertFalse(string.isList());
+        assertFalse(string.isNode());
+        assertFalse(string.isNull());
+
+        assertThrows(IllegalStateException.class, string::asBoolean);
+        assertThrows(IllegalStateException.class, string::asNumber);
+        assertThrows(IllegalStateException.class, string::asList);
+        assertThrows(IllegalStateException.class, string::asNode);
+    }
+
+    @Test
+    void setObjectChangesType() {
+        ConfigPrimitive string = new ConfigPrimitive("this is a string");
+        string.setObject(null);
+
+        assertTrue(string.isNull());
+
+        assertSame(null, string.asObject());
+
+        assertThrows(IllegalStateException.class, string::asString);
+        assertThrows(IllegalStateException.class, string::asBoolean);
+        assertThrows(IllegalStateException.class, string::asNumber);
+        assertThrows(IllegalStateException.class, string::asList);
+        assertThrows(IllegalStateException.class, string::asNode);
+    }
 }

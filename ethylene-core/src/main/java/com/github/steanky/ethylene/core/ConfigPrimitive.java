@@ -32,7 +32,7 @@ public class ConfigPrimitive implements ConfigElement {
     }
 
     private static <T> T convert(Object object, Class<T> classType) {
-        if(object != null && classType.isAssignableFrom(object.getClass())) {
+        if(classType.isInstance(object)) {
             return classType.cast(object);
         }
 
@@ -77,6 +77,11 @@ public class ConfigPrimitive implements ConfigElement {
     @Override
     public boolean isObject() {
         return true;
+    }
+
+    @Override
+    public boolean isNull() {
+        return object == null;
     }
 
     @Override

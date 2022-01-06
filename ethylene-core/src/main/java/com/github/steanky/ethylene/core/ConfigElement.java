@@ -96,6 +96,14 @@ public interface ConfigElement {
     }
 
     /**
+     * Determines if this ConfigElement represents a null value.
+     * @return true if this ConfigElement represents null, false otherwise
+     */
+    default boolean isNull() {
+        return false;
+    }
+
+    /**
      * Determines if this ConfigElement represents an object. This is true for {@link ConfigPrimitive} and should be
      * true for specialized, direct implementations of this interface that do not, themselves, hold on to ConfigElement
      * instances. It should be false for {@link ConfigNode} and {@link ConfigList}.
