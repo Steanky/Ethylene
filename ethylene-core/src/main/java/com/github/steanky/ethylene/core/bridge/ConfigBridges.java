@@ -239,6 +239,7 @@ public final class ConfigBridges {
      * Writes a {@link FileConfigNode} to the file. The provided codec will be used to encode the node's data.
      * @param file the file to write to
      * @param node the node to write
+     * @param codec the codec to use
      * @throws IOException if an IO error occurred
      */
     public static void write(@NotNull File file, @NotNull ConfigNode node, @NotNull ConfigCodec codec)
