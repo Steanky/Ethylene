@@ -31,7 +31,7 @@ public class ConfigPrimitive implements ConfigElement {
         return object;
     }
 
-    private static <T> T convert(Object object, Class<T> classType) {
+    private static <TReturn> TReturn convert(Object object, Class<TReturn> classType) {
         if(classType.isInstance(object)) {
             return classType.cast(object);
         }

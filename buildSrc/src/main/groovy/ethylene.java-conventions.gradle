@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+test {
+    useJUnitPlatform()
+}
+
+dependencies {
+    //annotations for tests
+    compileOnly "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
+    testCompileOnly "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
+
+    //use junit for unit testing
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${project.junit_version}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${project.junit_version}"
+
+    //use mockito for mocking
+    testImplementation "org.mockito:mockito-core:${project.mockito_version}"
+}
