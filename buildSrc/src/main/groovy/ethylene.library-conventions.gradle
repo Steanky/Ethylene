@@ -18,6 +18,7 @@ publishing {
             name project.name
             url 'https://maven.cloudsmith.io/steank-f1g/ethylene/'
 
+            //credentials are provided through environment variables
             credentials {
                 username System.getenv("CLOUDSMITH_USERNAME")
                 password System.getenv("CLOUDSMITH_PASSWORD")

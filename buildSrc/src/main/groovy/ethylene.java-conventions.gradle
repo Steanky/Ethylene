@@ -16,7 +16,7 @@ test {
 }
 
 dependencies {
-    //annotations for tests
+    //annotations
     compileOnly "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
     testCompileOnly "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
 
