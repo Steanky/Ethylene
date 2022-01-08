@@ -15,6 +15,7 @@ publishing {
 
     repositories {
         maven {
+            //use project name for package name; such as ethylene-core
             name project.name
             url 'https://maven.cloudsmith.io/steank-f1g/ethylene/'
 
