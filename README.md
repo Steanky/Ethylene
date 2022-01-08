@@ -135,12 +135,11 @@ For additional examples, check out the `example-project` module.
 
 Building Ethylene is simple! Just clone this repository and run `gradlew build` in the root directory. 
 
-Ethylene uses a few custom Gradle plugins to simplify build logic. These can be found in the `buildSrc/src/main/groovy` folder. If you're creating addons, like support for a specific configuration format, take a look at the `build.gradle` file for an existing module.
+Ethylene uses a few custom Gradle plugins to simplify build logic. These can be found in the `buildSrc/src/main/groovy` folder. If you're creating addons, like support for a specific configuration format, take a look at the `build.gradle` file for an existing module, and use the same structure.
 
 # Contributing
 
-(WIP)
-
+See `CONTRIBUTING.md` for more information on making contributions.
 
 # Hosting
 
