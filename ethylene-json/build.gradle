@@ -6,10 +6,6 @@ plugins {
 group 'com.github.steanky'
 version '1.0.0'
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     api project(':ethylene-core')
     api 'com.google.code.gson:gson:2.8.9'
