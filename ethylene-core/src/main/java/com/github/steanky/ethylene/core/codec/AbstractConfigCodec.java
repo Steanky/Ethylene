@@ -1,8 +1,8 @@
 package com.github.steanky.ethylene.core.codec;
 
-import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
+import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.Contract;
@@ -32,19 +32,17 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      */
     protected record Node<TOut>(@NotNull Object inputContainer, @NotNull BiConsumer<String, TOut> output) {}
 
-    private final Set<String> names;
-
     /**
-     * Constructs a new instance of AbstractConfigCodec with the provided {@link Collection} of names.
-     * @param names the names used by this codec
+     * Constructs a new instance of this class.
      */
-    public AbstractConfigCodec(@NotNull Collection<String> names) {
-        this.names = Set.copyOf(names);
-    }
+    protected AbstractConfigCodec() {}
 
     @Override
     public void encodeNode(@NotNull ConfigNode node, @NotNull OutputStream output)
             throws IOException {
+        Objects.requireNonNull(node);
+        Objects.requireNonNull(output);
+
         try (output) {
             writeMap(makeMap(node, LinkedHashMap::new), output);
         }
@@ -54,14 +52,12 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     public <TNode extends ConfigNode> @NotNull TNode decodeNode(@NotNull InputStream input,
                                                                 @NotNull Supplier<TNode> nodeSupplier)
             throws IOException {
+        Objects.requireNonNull(input);
+        Objects.requireNonNull(nodeSupplier);
+
         try (input) {
             return makeNode(readMap(input), nodeSupplier);
         }
-    }
-
-    @Override
-    public @NotNull Set<String> getNames() {
-        return names;
     }
 
     /**
@@ -112,35 +108,15 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                                     @NotNull Class<TIn> inClass,
                                     @NotNull Class<TOut> outClass) {
         if(isContainer(value)) {
+            //we are a container, so do container-specific processing
+
             TOut output;
-
             if(!visited.containsKey(value)) {
-                //we found a new container element: we now need to create the correct corresponding output map or
-                //collection, add a mapping from the input container to the output map/collection, push our value onto
-                //the stack so we'll end up processing it later, and finally call our output consumer with our new node
-                BiConsumer<String, TOut> consumer;
-                Object outputContainer;
-
-                if(value instanceof Map<?, ?>) {
-                    TMap newMap = mapSupplier.get();
-                    outputContainer = newMap;
-                    consumer = newMap::put;
-                }
-                else  {
-                    TCollection newCollection = collectionSupplier.get();
-                    outputContainer = newCollection;
-                    consumer = (k, v) -> newCollection.add(v);
-                }
-
-                output = outClass.cast(outputContainer);
-                stack.push(new Node<>(value, consumer));
+                output = makeOutput(value, stack, mapSupplier, collectionSupplier, outClass);
                 visited.put(value, output);
             }
             else {
-                //if visisted contains the value container as a key, it means we found a circular reference. we must
-                //preserve the same structure in our output, so do that by using the associated mapping for value but
-                //definitely don't push it to the stack! otherwise, any circular references would cause this method to
-                //never return
+                //handles self-referential data
                 output = visited.get(value);
             }
 
@@ -150,6 +126,48 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             //not a container object, just an ordinary one, so we can add it directly to our output
             currentNode.output.accept(keyString, converter.apply(inClass.cast(value)));
         }
+    }
+
+    /**
+     * Processes a <i>container</i> (subclass of {@link Map}, {@link Collection} or an array); or more generally any
+     * object for which {@link AbstractConfigCodec#isContainer(Object)} returns true. This method is not responsible
+     * for handling the contents of any such container. It simply creates an "output" container (supplied by either
+     * mapSupplier or collectionSupplier) and a {@link BiConsumer} capable of writing to that output. Then, it
+     * constructs a {@link Node} object using the input container and the output BiConsumer. The returned value will be
+     * the <i>output</i> container after it is cast to TOut.
+     * @param container the container to process
+     * @param stack a {@link Deque} of Node objects used
+     * @param mapSupplier a {@link Supplier} that produces output maps
+     * @param collectionSupplier  a Supplier that produces output collections
+     * @param outClass the return type class
+     * @param <TMap> the map type
+     * @param <TCollection> the collection type
+     * @param <TOut> the return type
+     * @return the output container, produced by either mapSupplier or collectionSupplier
+     */
+    protected <TMap extends Map<String, TOut>,
+            TCollection extends Collection<TOut>,
+            TOut> @NotNull TOut makeOutput(@NotNull Object container,
+                                           @NotNull Deque<Node<TOut>> stack,
+                                           @NotNull Supplier<TMap> mapSupplier,
+                                           @NotNull Supplier<TCollection> collectionSupplier,
+                                           @NotNull Class<TOut> outClass) {
+        BiConsumer<String, TOut> consumer;
+        Object outputContainer;
+
+        if(container instanceof Map<?, ?>) {
+            TMap newMap = mapSupplier.get();
+            outputContainer = newMap;
+            consumer = newMap::put;
+        }
+        else  {
+            TCollection newCollection = collectionSupplier.get();
+            outputContainer = newCollection;
+            consumer = (k, v) -> newCollection.add(v);
+        }
+
+        stack.push(new Node<>(container, consumer));
+        return outClass.cast(outputContainer);
     }
 
     /**
@@ -189,7 +207,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                                                @NotNull Function<TIn, TOut> converter,
                                                @NotNull Class<TIn> inClass,
                                                @NotNull Class<TOut> outClass) {
-        TRootMap topLevel = Objects.requireNonNull(rootMapSupplier.get(), "root map cannot be null");
+        TRootMap topLevel = Objects.requireNonNull(rootMapSupplier.get(), "Root map cannot be null");
 
         Deque<Node<TOut>> stack = new ArrayDeque<>();
         stack.push(new Node<>(input, topLevel::put));
@@ -233,42 +251,34 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param mappings the mappings to use to produce this ConfigNode
      * @param nodeSupplier the supplier used to construct the node which is returned
      * @param <TNode> the type of ConfigNode to return
-     * @return a ConfigNode, containing the same entries as mappings, after converting them to ConfigElement instances
-     * @throws NullPointerException if mappings or nodeSupplier are null
+     * @return a ConfigNode, containing the same entries as mappings, after converting them to {@link ConfigElement} instances
      * @throws IllegalArgumentException if mappings contains a value which cannot be converted into a ConfigElement
      */
     protected <TNode extends ConfigNode> @NotNull TNode makeNode(@NotNull Map<String, Object> mappings,
                                                                  @NotNull Supplier<TNode> nodeSupplier) {
-        Objects.requireNonNull(mappings);
-        Objects.requireNonNull(nodeSupplier);
-
         return processMap(mappings, nodeSupplier, LinkedConfigNode::new, ArrayConfigList::new, this::toElement,
                 Object.class, ConfigElement.class);
     }
 
     /**
      * Produces a map from the provided {@link ConfigNode}. The returned map will contain the same entries as the
-     * ConfigNode, with all ConfigElement instances converted to their equivalent values. ConfigNode instances will be
-     * converted to {@link LinkedHashMap}, ConfigList instances to {@link ArrayList}, and {@link ConfigPrimitive}
-     * instances to the value that they wrap.
+     * ConfigNode, with all {@link ConfigElement} instances converted to their equivalent values. ConfigNode instances
+     * will be converted to {@link LinkedHashMap}, ConfigList instances to {@link ArrayList}, and
+     * {@link ConfigPrimitive} instances to the value that they wrap.
      * @param node the node to convert to a map
      * @param mapSupplier the supplier which produces the <i>top level</i> map which is returned
      * @param <TMap> the type of top-level map
      * @return a map, constructed by mapSupplier, containing the same mappings as node, after deeply converting every
      * element to an equivalent value
-     * @throws NullPointerException if node or mapSupplier are null
      */
     protected <TMap extends Map<String, Object>> @NotNull TMap makeMap(@NotNull ConfigNode node,
                                                                        @NotNull Supplier<TMap> mapSupplier) {
-        Objects.requireNonNull(node);
-        Objects.requireNonNull(mapSupplier);
-
         return processMap(node, mapSupplier, LinkedHashMap::new, ArrayList::new, this::toObject, ConfigElement.class,
                 Object.class);
     }
 
     /**
-     * Converts the provided object to a ConfigElement. The input object will typically not be a container.
+     * Converts the provided object to a {@link ConfigElement}. The input object will typically not be a container.
      * Implementations that override this method will most often also need to override
      * {@link AbstractConfigCodec#toObject(ConfigElement)}.
      * @param raw the object to convert
@@ -280,7 +290,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     /**
-     * Converts the provided ConfigElement to an object. The input ConfigElement will typically not be a container.
+     * Converts the provided {@link ConfigElement} to an object. The input ConfigElement will typically not be a container.
      * Implementations that override this method will most often also need to override
      * {@link AbstractConfigCodec#toElement(Object)}.
      * @param element the element to convert
@@ -298,18 +308,20 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     /**
-     * Reads some mappings from an InputStream. This method need not ensure that the stream closes.
+     * Reads some mappings from an {@link InputStream}. This method need not ensure that the stream closes.
      * @param input an InputStream to read from
      * @return a map of strings to objects
      * @throws IOException if an IO error occurs
+     * @throws NullPointerException if input is null
      */
     protected abstract @NotNull Map<String, Object> readMap(@NotNull InputStream input) throws IOException;
 
     /**
-     * Writes some mappings to an OutputStream. This method need not ensure that the stream closes.
+     * Writes some mappings to an {@link OutputStream}. This method need not ensure that the stream closes.
      * @param mappings the mappings to write
      * @param output the stream to write to
      * @throws IOException if an IO error occurs
+     * @throws NullPointerException if any of the arguments are null
      */
     protected abstract void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output)
             throws IOException;

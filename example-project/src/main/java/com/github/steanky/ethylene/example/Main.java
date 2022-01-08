@@ -1,13 +1,15 @@
 package com.github.steanky.ethylene.example;
 
-import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.bridge.ConfigBridge;
-import com.github.steanky.ethylene.core.collection.ArrayConfigList;
-import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.codec.json.JsonCodec;
 import com.github.steanky.ethylene.codec.toml.ConfigDate;
 import com.github.steanky.ethylene.codec.toml.TomlCodec;
+import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.bridge.ConfigBridges;
+import com.github.steanky.ethylene.core.codec.ConfigCodec;
+import com.github.steanky.ethylene.core.collection.ArrayConfigList;
+import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.util.Date;
@@ -51,11 +53,9 @@ public class Main {
      */
     public static void json() throws IOException {
         //interprets JSON_STRING as json
-        ConfigNode node = ConfigBridge.read(JSON_STRING, JsonCodec.INSTANCE);
+        ConfigNode node = ConfigBridges.read(JSON_STRING, new JsonCodec());
 
-        /*
-        everything below here looks exactly the same regardless of what kind of file format you're using!
-        */
+        //everything below here works exactly the same regardless of what kind of file format you're using!
 
         //prints "some json" without quotes
         System.out.println(node.get("this is").asString());
@@ -66,7 +66,7 @@ public class Main {
         //prints "json" without quotes
         System.out.println(more.get("some more").asString());
 
-        //you can also use getElement access nested elements more conveniently
+        //you can also use getElement to access nested elements more conveniently
         //prints "json" without quotes
         System.out.println(node.getElement("oh look here is", "some more").asString());
 
@@ -77,6 +77,14 @@ public class Main {
         for(ConfigElement element : node.get("array").asList()) {
             System.out.println(element.asString());
         }
+
+        /*
+        want more customization? most implementations of ConfigCodec will allow you to customize the serializer it uses
+        under the hood.
+
+        here's an example with JsonCodec:
+         */
+        ConfigCodec prettyPrintingCodec = new JsonCodec(new GsonBuilder().setPrettyPrinting().create());
     }
 
     /**
@@ -85,19 +93,28 @@ public class Main {
      */
     public static void toml() throws IOException {
         //interprets TOML_STRING as toml
-        ConfigNode node = ConfigBridge.read(TOML_STRING, TomlCodec.INSTANCE);
+        ConfigNode node = ConfigBridges.read(TOML_STRING, new TomlCodec());
 
         //prints "toml string" without quotes
         System.out.println(node.get("string").asString());
 
         //TOML has first-class support for dates, and Ethylene can take advantage of that too
-        //this functionality (ConfigDate) is specific to the ethylene-toml module
-        //the output of this is locale-dependent
+        //this functionality (ConfigDate) is specific to the ethylene-toml module (use with caution!)
+        //the output of this differs depending on your locale
         System.out.println(((ConfigDate)node.get("date")).getDate());
 
-        //you can also call asObject and cast, as long as you know what the type is
+        //you can also call asObject and cast
         //this will print the same as the previous example
         Date date = (Date)node.get("date").asObject();
         System.out.println(date);
+
+        /*
+        however, it is important to note that using format-specific features like ConfigDate directly limits
+        flexibility. the point of Ethylene is to allow for a clean separation between config file format and the code
+        that is actually using the data. for example, if you rely on something TOML specific like ConfigDate, and you
+        decide to change your format later to something that does not have native support for dates, your code will
+        break
+         */
+
     }
 }

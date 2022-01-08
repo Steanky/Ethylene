@@ -5,10 +5,8 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * This class represents a "primitive" type. A type is considered "primitive" if and only if it subclasses
- * {@link String}, {@link Number}, {@link Boolean}, or is a null value. Therefore, all Java primitives except for
- * char (and with the addition of String) are compatible. The exclusion of char is due to the inconsistent support for
- * primitive characters in some file formats; for example, some use single-character strings and have no concept of a
- * "character" type as it exists in Java.
+ * {@link String}, {@link Number}, {@link Boolean}, {@link Character}, or is a null value. Therefore, all Java
+ * primitives as well as String are compatible.
  */
 public class ConfigPrimitive implements ConfigElement {
     private Object object;
@@ -25,15 +23,16 @@ public class ConfigPrimitive implements ConfigElement {
     }
 
     private static Object validateType(Object object) {
-        if(!(object == null || object instanceof String || object instanceof Number || object instanceof Boolean)) {
+        if(!(object == null || object instanceof String || object instanceof Number || object instanceof Boolean
+                || object instanceof Character)) {
             throw new IllegalArgumentException("Object " + object + " not a valid type for ConfigPrimitive");
         }
 
         return object;
     }
 
-    private <T> T convert(Class<T> classType) {
-        if(object != null && classType.isAssignableFrom(object.getClass())) {
+    private static <TReturn> TReturn convert(Object object, Class<TReturn> classType) {
+        if(classType.isInstance(object)) {
             return classType.cast(object);
         }
 
@@ -42,12 +41,17 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean isString() {
-        return object instanceof String;
+        return object instanceof String || object instanceof Character;
     }
 
     @Override
     public @NotNull String asString() {
-        return convert(String.class);
+        if(object instanceof Character character) {
+            //don't distinguish between char and string
+            return character.toString();
+        }
+
+        return convert(object, String.class);
     }
 
     @Override
@@ -57,7 +61,7 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public @NotNull Number asNumber() {
-        return convert(Number.class);
+        return convert(object, Number.class);
     }
 
     @Override
@@ -67,12 +71,17 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean asBoolean() {
-        return convert(Boolean.class);
+        return convert(object, Boolean.class);
     }
 
     @Override
     public boolean isObject() {
         return true;
+    }
+
+    @Override
+    public boolean isNull() {
+        return object == null;
     }
 
     @Override

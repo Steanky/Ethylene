@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.codec.json;
 
-import com.github.steanky.ethylene.core.ConfigFormatException;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
@@ -11,23 +10,35 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 /**
  * Provides support for the JSON format.
  */
 public class JsonCodec extends AbstractConfigCodec {
     /**
-     * The JsonCodec singleton instance.
+     * The default {@link Gson} instance used to read and write data.
      */
-    public static final JsonCodec INSTANCE = new JsonCodec();
+    public static final Gson DEFAULT_GSON = new Gson();
 
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
+
     private final Gson gson;
 
-    private JsonCodec() {
-        super(Set.of("json"));
-        this.gson = new Gson();
+    /**
+     * Creates a new JsonCodec using the provided {@link Gson} to read and write data.
+     * @param gson the Gson instance to use
+     * @throws NullPointerException if gson is null
+     */
+    public JsonCodec(@NotNull Gson gson) {
+        this.gson = Objects.requireNonNull(gson);
+    }
+
+    /**
+     * Creates a new JsonCodec using the default {@link Gson} ({@link JsonCodec#DEFAULT_GSON}) to read and write data.
+     */
+    public JsonCodec() {
+        this.gson = DEFAULT_GSON;
     }
 
     @Override
@@ -36,7 +47,7 @@ public class JsonCodec extends AbstractConfigCodec {
             return gson.fromJson(reader, MAP_TYPE);
         }
         catch (JsonIOException | JsonSyntaxException exception) {
-            throw new ConfigFormatException(exception);
+            throw new IOException(exception);
         }
     }
 
@@ -46,7 +57,7 @@ public class JsonCodec extends AbstractConfigCodec {
             gson.toJson(mappings, writer);
         }
         catch (JsonIOException exception) {
-            throw new ConfigFormatException(exception);
+            throw new IOException(exception);
         }
     }
 }

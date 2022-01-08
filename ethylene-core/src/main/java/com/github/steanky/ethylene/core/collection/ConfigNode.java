@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
-import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigPrimitive;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -15,12 +15,15 @@ import java.util.Map;
  */
 public interface ConfigNode extends ConfigElement, Map<String, ConfigElement> {
     /**
-     * Obtains a {@link ConfigElement} from this node, possibly from a nested node (if multiple keys are provided). If
+     * <p>Obtains a {@link ConfigElement} from this node, possibly from a nested node (if multiple keys are provided). If
      * the "path" represented by the array of keys does not point to an element that exists, this method will return
-     * null.
+     * null.</p>
+     *
+     * <p>When called with a single argument, this function should behave identically to
+     * {@link ConfigNode#get(Object)}.</p>
      * @throws NullPointerException if one or more keys are null
      * @throws IllegalArgumentException if the keys array is empty
-     * @param keys The array of keys which represents a "path" leading to a specific ConfigElement
+     * @param keys the array of keys which represents a "path" leading to a specific ConfigElement
      * @return null if the path is not valid; otherwise, the ConfigElement pointed to by the path
      */
     ConfigElement getElement(@NotNull String... keys);

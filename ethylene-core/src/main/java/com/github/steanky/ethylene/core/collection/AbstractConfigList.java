@@ -7,6 +7,7 @@ import java.util.AbstractList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -62,21 +63,33 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
 
     /**
      * This helper method can be used to construct a list with the same elements as a collection. If the collection
-     * contains any null values, a {@link NullPointerException} will be thrown.
-     * @param collection The collection whose elements will be added to the new list
-     * @param listSupplier The supplier used to create the list
-     * @param <T> the type of the list to construct
+     * contains any null values, a {@link NullPointerException} will be thrown. Furthermore, each value will be tested
+     * against the provided {@link Predicate}. If it returns false, an {@link IllegalArgumentException} will be thrown.
+     * @param collection the collection whose elements will be added to the new list
+     * @param listSupplier the supplier used to create the list
+     * @param valuePredicate the predicate to use to validate each element against some condition
+     * @param <TList> the type of the list to construct
      * @return a list, constructed by the supplier, and containing the same elements as collection
-     * @throws NullPointerException if collection contains any null elements
+     * @throws NullPointerException if any of the arguments are null, collection contains any null elements, or
+     * listSupplier returns null
+     * @throws IllegalArgumentException if the given predicate fails for any of the collection's values
      */
-    protected static <T extends List<ConfigElement>> T constructList(@NotNull Collection<ConfigElement> collection,
-                                                                     @NotNull Supplier<T> listSupplier) {
+    protected static <TList extends List<ConfigElement>> @NotNull TList constructList(
+            @NotNull Collection<ConfigElement> collection,
+            @NotNull Supplier<TList> listSupplier,
+            @NotNull Predicate<ConfigElement> valuePredicate) {
         Objects.requireNonNull(collection);
         Objects.requireNonNull(listSupplier);
+        Objects.requireNonNull(valuePredicate);
 
-        T newList = listSupplier.get();
+        TList newList = Objects.requireNonNull(listSupplier.get());
         for(ConfigElement element : collection) {
-            newList.add(Objects.requireNonNull(element, "input collection must not contain null elements"));
+            if(!valuePredicate.test(element)) {
+                throw new IllegalArgumentException("Value predicate failed");
+            }
+            else {
+                newList.add(Objects.requireNonNull(element, "Input collection must not contain null elements"));
+            }
         }
 
         return newList;

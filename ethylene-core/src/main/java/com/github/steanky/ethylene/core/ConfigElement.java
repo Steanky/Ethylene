@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Represents a particular value from a configuration file. Specialized sub-interfaces include {@link ConfigNode} and
  * {@link ConfigList}. A direct implementation is {@link ConfigPrimitive}. This interface specifies methods to easily
- * convert to implementations as needed, which will all throw {@link IllegalStateException} by default.
+ * convert to implementations as needed, which will all throw {@link IllegalStateException} by default.t
  */
 public interface ConfigElement {
     /**
@@ -20,7 +20,7 @@ public interface ConfigElement {
 
     /**
      * Converts this ConfigElement into a {@link ConfigNode}.
-     * @return This element as a ConfigNode object
+     * @return this element as a ConfigNode object
      * @throws IllegalStateException if this element is not a ConfigNode
      */
     default @NotNull ConfigNode asNode() {
@@ -37,7 +37,7 @@ public interface ConfigElement {
 
     /**
      * Converts this ConfigElement into a {@link ConfigList}.
-     * @return This element as a ConfigList object
+     * @return this element as a ConfigList object
      * @throws IllegalStateException if this element is not a ConfigList
      */
     default @NotNull ConfigList asList() {
@@ -54,7 +54,7 @@ public interface ConfigElement {
 
     /**
      * Converts this ConfigElement into a string.
-     * @return This element as a string
+     * @return this element as a string
      * @throws IllegalStateException if this element is not a {@link ConfigPrimitive} containing a string
      */
     default @NotNull String asString() {
@@ -71,7 +71,7 @@ public interface ConfigElement {
 
     /**
      * Converts this ConfigElement into a Number.
-     * @return This element as a Number
+     * @return this element as a Number
      * @throws IllegalStateException if this element cannot be converted into a Number
      */
     default @NotNull Number asNumber() {
@@ -88,7 +88,7 @@ public interface ConfigElement {
 
     /**
      * Converts this ConfigElement into a boolean.
-     * @return This element as a boolean
+     * @return this element as a boolean
      * @throws IllegalStateException if this element cannot be converted into a boolean
      */
     default boolean asBoolean() {
@@ -96,9 +96,17 @@ public interface ConfigElement {
     }
 
     /**
-     * Determines if this ConfigElement represents an POJO. This is true for {@link ConfigPrimitive} and should be true
-     * for specialized, direct implementations of this interface. It should be false for {@link ConfigNode} and
-     * {@link ConfigList}.
+     * Determines if this ConfigElement represents a null value.
+     * @return true if this ConfigElement represents null, false otherwise
+     */
+    default boolean isNull() {
+        return false;
+    }
+
+    /**
+     * Determines if this ConfigElement represents an object. This is true for {@link ConfigPrimitive} and should be
+     * true for specialized, direct implementations of this interface that do not, themselves, hold on to ConfigElement
+     * instances. It should be false for {@link ConfigNode} and {@link ConfigList}.
      * @return true if {@link ConfigElement#asObject()} will succeed without throwing an exception; false otherwise
      */
     default boolean isObject() {
@@ -107,7 +115,7 @@ public interface ConfigElement {
 
     /**
      * Converts this ConfigElement into an object.
-     * @return This element as an object
+     * @return this element as an object
      * @throws IllegalStateException if this element cannot be converted into an object
      */
     default Object asObject() { throw new IllegalStateException("Element may not be converted to Object"); }

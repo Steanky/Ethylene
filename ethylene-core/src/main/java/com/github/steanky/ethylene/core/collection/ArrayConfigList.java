@@ -22,9 +22,9 @@ public class ArrayConfigList extends AbstractConfigList implements RandomAccess 
     /**
      * Constructs a new ArrayConfigList backed an {@link ArrayList} containing the same elements as the provided
      * {@link Collection}.
-     * @param collection The collection to copy elements from
+     * @param collection the collection to copy elements from
      */
     public ArrayConfigList(@NotNull Collection<ConfigElement> collection) {
-        super(constructList(collection, ArrayList::new));
+        super(constructList(collection, ArrayList::new, ignored -> true));
     }
 }

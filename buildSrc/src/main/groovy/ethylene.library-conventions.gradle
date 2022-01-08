@@ -1,0 +1,29 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'ethylene.java-conventions'
+}
+
+group 'com.example'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            //use project name for package name; such as ethylene-core
+            name project.name
+            url 'https://maven.cloudsmith.io/steank-f1g/ethylene/'
+
+            //credentials are provided through environment variables
+            credentials {
+                username System.getenv("CLOUDSMITH_USERNAME")
+                password System.getenv("CLOUDSMITH_PASSWORD")
+            }
+        }
+    }
+}

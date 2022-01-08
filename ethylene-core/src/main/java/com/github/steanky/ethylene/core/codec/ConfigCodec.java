@@ -6,12 +6,11 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Set;
 import java.util.function.Supplier;
 
 /**
  * This interface represents the primary compatibility layer between any specific configuration format and a
- * {@link ConfigNode} object.
+ * {@link ConfigNode} object. As a general rule of thumb, ConfigCodec implementations should be immutable.
  */
 public interface ConfigCodec {
     /**
@@ -25,7 +24,7 @@ public interface ConfigCodec {
     void encodeNode(@NotNull ConfigNode node, @NotNull OutputStream output) throws IOException;
 
     /**
-     * <i>Decodes</i> a {@link ConfigNode} object (reads it from an {@link InputStream}). The format used it interpret
+     * <i>Decodes</i> a {@link ConfigNode} object (reads it from an {@link InputStream}). The format used to interpret
      * the data is implementation dependent.
      * @param input the InputStream to read from
      * @param nodeSupplier the {@link Supplier} used to construct the returned node
@@ -36,12 +35,4 @@ public interface ConfigCodec {
      */
     <TNode extends ConfigNode> @NotNull TNode decodeNode(@NotNull InputStream input,
                                                          @NotNull Supplier<TNode> nodeSupplier) throws IOException;
-
-    /**
-     * Provides a set of strings used to identify this codec. It should be non-empty and contain no null elements. It is
-     * acceptable in most cases for codecs to only provide a single name. For example, a ConfigCodec for JSON format
-     * might simply return <b>Set.of("json")</b>.
-     * @return a set of strings which are used to identify this codec
-     */
-    @NotNull Set<String> getNames();
 }

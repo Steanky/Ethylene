@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,22 +45,21 @@ class AbstractConfigCodecTest {
     private static final List<String> LIST_VALUE = List.of("first", "second", "third");
     private static final List<String> SUB_LIST_VALUE = List.of("first_sub", "second_sub", "third_sub");
 
+    private final AbstractConfigCodec testCodec;
     private final ConfigNode resultingElement;
 
     AbstractConfigCodecTest() throws IOException {
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> subRoot = new HashMap<>();
 
-        AbstractConfigCodec testCodec = new AbstractConfigCodec(List.of("test")) {
+        testCodec = new AbstractConfigCodec() {
             @Override
             protected @NotNull Map<String, Object> readMap(@NotNull InputStream input) {
                 return root;
             }
 
             @Override
-            protected void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output) {
-                throw new IllegalStateException();
-            }
+            protected void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output) {}
         };
 
         root.put(INTEGER_KEY, INTEGER_VALUE);
@@ -117,18 +117,121 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedPrimitives() {
-        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY).asNode()
-                .getElement(SUB_STRING_KEY).asString());
+        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY)
+                .asString());
     }
 
     @Test
     void validNestedArrayNodes() {
-        ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).asNode()
-                .getElement(SUB_LIST_NODES_KEY).asList();
+        ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_NODES_KEY)
+                .asList();
 
         for(int i = 0; i < SUB_NODE_COUNT; i++) {
             ConfigNode element = subNodes.get(i).asNode();
             assertEquals(i, element.getElement(SUB_NODE_KEY_PREFIX + i).asNumber().intValue());
         }
+    }
+
+    @Test
+    void pathNestedAccess() {
+        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY, SUB_STRING_KEY).asString());
+    }
+
+    @Test
+    void pathThrowsWhenEmpty() {
+        assertThrows(IllegalArgumentException.class, resultingElement::getElement);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    void pathThrowsWhenNullKey() {
+        assertThrows(NullPointerException.class, () -> resultingElement.getElement(SUB_ROOT_KEY, null));
+        assertThrows(NullPointerException.class, () -> resultingElement.getElement(null, SUB_STRING_KEY));
+        assertThrows(NullPointerException.class, () -> resultingElement.getElement((String) null));
+    }
+
+    @Test
+    void validTypes() {
+        assertTrue(resultingElement.isNode());
+        assertFalse(resultingElement.isBoolean());
+        assertFalse(resultingElement.isString());
+        assertFalse(resultingElement.isList());
+        assertFalse(resultingElement.isNumber());
+        assertFalse(resultingElement.isObject());
+    }
+
+    @Test
+    void throwsOnConvertToInvalidType() {
+        assertThrows(IllegalStateException.class, resultingElement::asBoolean);
+        assertThrows(IllegalStateException.class, resultingElement::asString);
+        assertThrows(IllegalStateException.class, resultingElement::asList);
+        assertThrows(IllegalStateException.class, resultingElement::asNumber);
+        assertThrows(IllegalStateException.class, resultingElement::asObject);
+    }
+
+    @Test
+    void asNodeReturnsSameObject() {
+        assertSame(resultingElement, resultingElement.asNode());
+    }
+
+    @Test
+    void missingTopLevelNode() {
+        assertNull(resultingElement.get("not found"));
+        assertNull(resultingElement.getElement("not found"));
+    }
+
+    @Test
+    void missingNestedNode() {
+        assertNull(resultingElement.getElement(SUB_ROOT_KEY, "not found"));
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    void decodeClosesStream() throws IOException {
+        InputStream stream = InputStream.nullInputStream();
+        testCodec.decodeNode(stream, LinkedConfigNode::new);
+
+        assertThrows(IOException.class, stream::read);
+    }
+
+    @Test
+    void encodeClosesStream() throws IOException {
+        OutputStream stream = OutputStream.nullOutputStream();
+        testCodec.encodeNode(Mockito.mock(ConfigNode.class), stream);
+
+        assertThrows(IOException.class, () -> stream.write(0));
+    }
+
+    @Test
+    void objectConversion() {
+        Object test = new Object();
+
+        ConfigElement mockObject = Mockito.mock(ConfigElement.class);
+        Mockito.when(mockObject.isObject()).thenReturn(true);
+        Mockito.when(mockObject.asObject()).thenReturn(test);
+
+        Object result = testCodec.toObject(mockObject);
+        assertSame(test, result);
+
+        ConfigElement mockNonObject = Mockito.mock(ConfigElement.class);
+        assertThrows(IllegalArgumentException.class, () -> testCodec.toObject(mockNonObject));
+    }
+
+    @Test
+    void validSelfReferentialParsing() {
+        Map<String, Object> root = new HashMap<>();
+
+        Object[] array = new Object[2];
+        array[0] = "string";
+        array[1] = root;
+
+        root.put("array", array);
+
+        ConfigNode node = testCodec.makeNode(root, LinkedConfigNode::new);
+        ConfigList list = node.get("array").asList();
+
+        assertSame(2, list.size());
+        assertEquals("string", list.get(0).asString());
+        assertSame(node, list.get(1).asNode());
     }
 }

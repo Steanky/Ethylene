@@ -3,7 +3,11 @@ package com.github.steanky.ethylene.core.collection;
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -17,7 +21,7 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractConfigNode extends AbstractMap<String, ConfigElement> implements ConfigNode {
     /**
-     * The backing map for this AbstractConfigNode
+     * The backing map for this AbstractConfigNode.
      */
     protected final Map<String, ConfigElement> mappings;
 
@@ -71,60 +75,74 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         Objects.requireNonNull(keys);
 
         if(keys.length == 0) {
-            throw new IllegalArgumentException("keys was empty");
+            throw new IllegalArgumentException("Array cannot be empty");
         }
         else if(keys.length == 1) { //simplest case, just return directly from our map
-            return mappings.get(keys[0]);
+            return mappings.get(Objects.requireNonNull(keys[0]));
         }
         else { //iterate through the provided keys, since length > 1
             ConfigNode current = this;
-            int lastIndex = keys.length - 1;
-            for(int i = 0; i < keys.length; i++) {
-                ConfigElement child = current.getElement(keys[i]);
+            ConfigElement value = null;
 
-                if(child == null) {
-                    //we failed to find something for this key, so return null
+            for (String key : keys) {
+                if(current == null) {
                     return null;
                 }
-                else if(i == lastIndex) {
-                    //we got to the last key, so return now
-                    return child;
-                }
-                else  {
-                    if(child.isNode()) {
-                        //continue traversing nodes...
-                        current = child.asNode();
+                else {
+                    value = current.getElement(key);
+
+                    if (value == null) {
+                        //we failed to find something for this key, so return null
+                        return null;
                     }
                     else {
-                        //we still have nodes to traverse, but ran into something that's not a node, so return
-                        return null;
+                        if (value.isNode()) {
+                            //continue traversing nodes...
+                            current = value.asNode();
+                        } else {
+                            //we still have nodes to traverse, but ran into something that's not a node — set current to
+                            //null. if we're on the last node, we will return when this loop finishes anyway. if we're
+                            //NOT on the last node, we'll return null as we still have keys, indicating an invalid path
+                            current = null;
+                        }
                     }
                 }
             }
 
-            //can't actually happen
-            return null;
+            return value;
         }
     }
 
     /**
      * This helper method can be used to construct a map with the same elements as another map. If the given map
-     * contains any null keys or values, a {@link NullPointerException} will be thrown.
+     * contains any null keys or values, a {@link NullPointerException} will be thrown. Furthermore, each value will
+     * be tested against the provided {@link Predicate}. If it returns false, an {@link IllegalArgumentException} will
+     * be thrown.
      * @param map the map whose elements will be added to the returned map
-     * @param mapSupplier The supplier used to create the map
-     * @param <T> the type of the map to construct
+     * @param mapSupplier the supplier used to create the map
+     * @param valuePredicate the predicate to use to validate each element against some condition
+     * @param <TMap> the type of the map to construct
      * @return a new map, constructed by the supplier, and containing the same elements as map
-     * @throws NullPointerException if map contains any null keys or values
+     * @throws NullPointerException if any of the arguments are null, or map contains any null keys or values
+     * @throws IllegalArgumentException if the given predicate fails for any of the map's values
      */
-    protected static <T extends Map<String, ConfigElement>> T constructMap(@NotNull Map<String, ConfigElement> map,
-                                                                           @NotNull Supplier<T> mapSupplier) {
+    protected static <TMap extends Map<String, ConfigElement>> @NotNull TMap constructMap(
+            @NotNull Map<String, ConfigElement> map,
+            @NotNull Supplier<TMap> mapSupplier,
+            @NotNull Predicate<ConfigElement> valuePredicate) {
         Objects.requireNonNull(map);
         Objects.requireNonNull(mapSupplier);
+        Objects.requireNonNull(valuePredicate);
 
-        T newMap = mapSupplier.get();
+        TMap newMap = mapSupplier.get();
         for(Map.Entry<String, ConfigElement> entry : map.entrySet()) {
-            newMap.put(Objects.requireNonNull(entry.getKey(), "input map must not contain null keys"),
-                    Objects.requireNonNull(entry.getValue(), "input map must not contain null values"));
+            if(!valuePredicate.test(entry.getValue())) {
+                throw new IllegalArgumentException("Value predicate failed");
+            }
+            else {
+                newMap.put(Objects.requireNonNull(entry.getKey(), "Input map must not contain null keys"),
+                        Objects.requireNonNull(entry.getValue(), "Input map must not contain null values"));
+            }
         }
 
         return newMap;

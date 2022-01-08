@@ -18,11 +18,11 @@ class ConfigDateTest {
     @Test
     void correctType() {
         assertTrue(testDate.isObject());
+        assertTrue(testDate.isString());
         assertFalse(testDate.isBoolean());
         assertFalse(testDate.isList());
         assertFalse(testDate.isNode());
         assertFalse(testDate.isNumber());
-        assertFalse(testDate.isString());
     }
 
     @Test

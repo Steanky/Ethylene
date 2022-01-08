@@ -27,6 +27,17 @@ public class ConfigDate implements ConfigElement {
     }
 
     @Override
+    public boolean isString() {
+        return true;
+    }
+
+    @Override
+    public @NotNull String asString() {
+        //override asString to avoid requiring the user to handle Date objects directly and thus depend directly on TOML
+        return date.toString();
+    }
+
+    @Override
     public @NotNull Object asObject() {
         return date;
     }
