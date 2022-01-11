@@ -29,7 +29,7 @@ If you try to pull request something questionable, I might outright deny it. If 
 
 Code style isn't hugely important. However, contributions should follow some basic rules:
 
-* Follow standard, generally accepted Java style (`camelCase` for local variables and instance variables, `SHOUTY_SNAKE_CASE` for `static final` fields, `CamelCase` for classnames, [recommended package naming conventions](https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html), ...
+* Follow standard, generally accepted Java style (`camelCase` for local variables and instance variables, `SHOUTY_SNAKE_CASE` for `static final` fields, `PascalCase` for classnames, [recommended package naming conventions](https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html), ...
 * Use Java 16 language features where appropriate.
   * However, don't use `var`. This might be controversial, but I made the decision to not use `var` in any of the Ethylene modules I've made, and that should remain consistent.
 * Include lots of comments, particularly whenever methods or classes get complicated. You don't _need_ to add comments for code that's super self-explanatory, but it doesn't hurt either.
@@ -37,7 +37,7 @@ Code style isn't hugely important. However, contributions should follow some bas
 * Use `Objects#requireNonNull(Object)` to null-check arguments in public constructors and methods, where reasonable. 
 * In general, try to make sure your code is _fail-fast_ — validate input where it is reasonable to do so, and throw an appropriate exception if it fails validation.
 * Include correct, complete, and descriptive Javadoc for all _non-private_ members. Running the command `gradlew clean javadoc` should complete successfully with no warnings or errors.
-  * Javadoc should be written in proper English, without major typos or grammatical issues.
+  * Javadoc should be written in formal American English, without major typos or grammatical issues.
   * When mentioning other classes in Javadoc, use @link the first time it is mentioned. You don't have to do this for "common" classes like `String` or `Object`. 
   * Methods should, within reason, use @throws to describe all of the exceptions that can be thrown.
 * Avoid duplicating code.
