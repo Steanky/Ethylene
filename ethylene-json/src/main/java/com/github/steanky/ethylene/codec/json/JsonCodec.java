@@ -42,7 +42,7 @@ public class JsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull Map<String, Object> readMap(@NotNull InputStream input) throws IOException {
+    protected @NotNull Map<String, Object> readObject(@NotNull InputStream input) throws IOException {
         try(InputStreamReader reader = new InputStreamReader(input)) {
             return gson.fromJson(reader, MAP_TYPE);
         }
@@ -52,9 +52,9 @@ public class JsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output) throws IOException {
+    protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
         try(OutputStreamWriter writer = new OutputStreamWriter(output)) {
-            gson.toJson(mappings, writer);
+            gson.toJson(object, writer);
         }
         catch (JsonIOException exception) {
             throw new IOException(exception);
