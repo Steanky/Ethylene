@@ -72,7 +72,7 @@ Note that in most cases you'll actually want to depend on a bunch of different E
 Using Ethylene is simple. To read some configuration data from a source (let's say a file, `/tmp/config.json`), you can do something like this:
 
 ```java
-ConfigNode node = ConfigBridges.read(new File("/tmp/config.json"), new JsonCodec());
+ConfigNode node = ConfigBridges.read(new File("/tmp/config.json"), new JsonCodec()).asNode();
 ```
 
 The `node` object will contain the data stored in the file we just read from. Ethylene knew how to interpret that data because the codec we supplied, `JsonCodec`, is designed for that purpose.
