@@ -70,49 +70,6 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         return mappings.entrySet();
     }
 
-    @Override
-    public ConfigElement getElement(@NotNull String... keys) {
-        Objects.requireNonNull(keys);
-
-        if(keys.length == 0) {
-            throw new IllegalArgumentException("Array cannot be empty");
-        }
-        else if(keys.length == 1) { //simplest case, just return directly from our map
-            return mappings.get(Objects.requireNonNull(keys[0]));
-        }
-        else { //iterate through the provided keys, since length > 1
-            ConfigNode current = this;
-            ConfigElement value = null;
-
-            for (String key : keys) {
-                if(current == null) {
-                    return null;
-                }
-                else {
-                    value = current.getElement(key);
-
-                    if (value == null) {
-                        //we failed to find something for this key, so return null
-                        return null;
-                    }
-                    else {
-                        if (value.isNode()) {
-                            //continue traversing nodes...
-                            current = value.asNode();
-                        } else {
-                            //we still have nodes to traverse, but ran into something that's not a node — set current to
-                            //null. if we're on the last node, we will return when this loop finishes anyway. if we're
-                            //NOT on the last node, we'll return null as we still have keys, indicating an invalid path
-                            current = null;
-                        }
-                    }
-                }
-            }
-
-            return value;
-        }
-    }
-
     /**
      * This helper method can be used to construct a map with the same elements as another map. If the given map
      * contains any null keys or values, a {@link NullPointerException} will be thrown. Furthermore, each value will

@@ -136,8 +136,8 @@ class AbstractConfigCodecTest {
     }
 
     @Test
-    void pathThrowsWhenEmpty() {
-        assertThrows(IllegalArgumentException.class, resultingElement::getElement);
+    void sameWhenEmpty() {
+        assertSame(resultingElement, resultingElement.getElement());
     }
 
     @SuppressWarnings("ConstantConditions")
