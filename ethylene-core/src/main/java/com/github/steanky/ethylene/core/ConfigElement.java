@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Represents a particular value from a configuration file. Specialized sub-interfaces include {@link ConfigNode} and
  * {@link ConfigList}. A direct implementation is {@link ConfigPrimitive}. This interface specifies methods to easily
- * convert to implementations as needed, which will all throw {@link IllegalStateException} by default.t
+ * convert to implementations as needed, which will all throw {@link IllegalStateException} by default.
  */
 public interface ConfigElement {
     /**
