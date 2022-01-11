@@ -53,7 +53,7 @@ public class Main {
      */
     public static void json() throws IOException {
         //interprets JSON_STRING as json
-        ConfigNode node = ConfigBridges.read(JSON_STRING, new JsonCodec());
+        ConfigNode node = ConfigBridges.read(JSON_STRING, new JsonCodec()).asNode();
 
         //everything below here works exactly the same regardless of what kind of file format you're using!
 
@@ -93,7 +93,7 @@ public class Main {
      */
     public static void toml() throws IOException {
         //interprets TOML_STRING as toml
-        ConfigNode node = ConfigBridges.read(TOML_STRING, new TomlCodec());
+        ConfigNode node = ConfigBridges.read(TOML_STRING, new TomlCodec()).asNode();
 
         //prints "toml string" without quotes
         System.out.println(node.get("string").asString());

@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.codec;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
@@ -11,10 +12,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -54,12 +52,12 @@ class AbstractConfigCodecTest {
 
         testCodec = new AbstractConfigCodec() {
             @Override
-            protected @NotNull Map<String, Object> readMap(@NotNull InputStream input) {
+            protected @NotNull Object readObject(@NotNull InputStream input)  {
                 return root;
             }
 
             @Override
-            protected void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output) {}
+            protected void writeObject(@NotNull Object object, @NotNull OutputStream output) {}
         };
 
         root.put(INTEGER_KEY, INTEGER_VALUE);
@@ -81,7 +79,7 @@ class AbstractConfigCodecTest {
             subListNodes.add(subNode);
         }
 
-        resultingElement = testCodec.decodeNode(InputStream.nullInputStream(), LinkedConfigNode::new);
+        resultingElement = testCodec.decode(InputStream.nullInputStream()).asNode();
     }
 
     @Test
@@ -189,7 +187,7 @@ class AbstractConfigCodecTest {
     @Test
     void decodeClosesStream() throws IOException {
         InputStream stream = InputStream.nullInputStream();
-        testCodec.decodeNode(stream, LinkedConfigNode::new);
+        testCodec.decode(stream);
 
         assertThrows(IOException.class, stream::read);
     }
@@ -197,41 +195,23 @@ class AbstractConfigCodecTest {
     @Test
     void encodeClosesStream() throws IOException {
         OutputStream stream = OutputStream.nullOutputStream();
-        testCodec.encodeNode(Mockito.mock(ConfigNode.class), stream);
+        testCodec.encode(Mockito.mock(ConfigNode.class), stream);
 
         assertThrows(IOException.class, () -> stream.write(0));
     }
 
     @Test
-    void objectConversion() {
-        Object test = new Object();
+    void correctSelfReferentialMapping() {
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("number", 69);
+        root.put("string", "this is a string");
 
-        ConfigElement mockObject = Mockito.mock(ConfigElement.class);
-        Mockito.when(mockObject.isObject()).thenReturn(true);
-        Mockito.when(mockObject.asObject()).thenReturn(test);
+        //noinspection CollectionAddedToSelf
+        root.put("selfReference", root);
 
-        Object result = testCodec.toObject(mockObject);
-        assertSame(test, result);
-
-        ConfigElement mockNonObject = Mockito.mock(ConfigElement.class);
-        assertThrows(IllegalArgumentException.class, () -> testCodec.toObject(mockNonObject));
-    }
-
-    @Test
-    void validSelfReferentialParsing() {
-        Map<String, Object> root = new HashMap<>();
-
-        Object[] array = new Object[2];
-        array[0] = "string";
-        array[1] = root;
-
-        root.put("array", array);
-
-        ConfigNode node = testCodec.makeNode(root, LinkedConfigNode::new);
-        ConfigList list = node.get("array").asList();
-
-        assertSame(2, list.size());
-        assertEquals("string", list.get(0).asString());
-        assertSame(node, list.get(1).asNode());
+        ConfigElement element = testCodec.mapInput(root, testCodec::deserializeObject, LinkedConfigNode::new,
+                ArrayConfigList::new, Object.class, ConfigElement.class);
+        assertTrue(element.isNode());
+        assertSame(element.asNode().get("selfReference"), element);
     }
 }

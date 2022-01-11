@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.core.codec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
-import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -19,310 +18,241 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * This class provides functionality common to most {@link ConfigCodec} implementations. It specifies two abstract
- * methods: {@link AbstractConfigCodec#readMap(InputStream)} and
- * {@link AbstractConfigCodec#writeMap(Map, OutputStream)}. For some file formats, subclasses need only implement these
- * two methods. Other formats, especially those that provide support for different types of objects, might need to
- * override more.
+ * This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
+ * designed to deeply iterate hierarchical data structures.
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
-     * Used to keep track of the parent container when traversing a nested hierarchy.
-     * @param <TOut> the type of object we are outputting
+     * Represents a <i>tuple</i> (a pair of distinct, loosely related values).
+     * @param <TFirst> the type of the first element
+     * @param <TSecond> the type of the second element
      */
-    protected record Node<TOut>(@NotNull Object inputContainer, @NotNull BiConsumer<String, TOut> output) {}
+    protected record Entry<TFirst, TSecond>(TFirst first, TSecond second) {}
 
     /**
-     * Constructs a new instance of this class.
+     * Represents a specific input <i>container</i> object, and its equivalent output container. A container is a map,
+     * array, or collection.
+     * @param <TOut> the object held in the output container
+     */
+    protected record Node<TOut>(@NotNull Object input,
+                                @NotNull Object output,
+                                @NotNull Iterator<? extends Entry<String, ?>> inputIterator,
+                                @NotNull BiConsumer<String, TOut> outputConsumer) {}
+
+    /**
+     * Empty constructor, for subclasses.
      */
     protected AbstractConfigCodec() {}
 
     @Override
-    public void encodeNode(@NotNull ConfigNode node, @NotNull OutputStream output)
-            throws IOException {
-        Objects.requireNonNull(node);
+    public void encode(@NotNull ConfigElement element, @NotNull OutputStream output) throws IOException {
+        Objects.requireNonNull(element);
         Objects.requireNonNull(output);
 
-        try (output) {
-            writeMap(makeMap(node, LinkedHashMap::new), output);
+        try(output) {
+            writeObject(mapInput(element, this::serializeElement, LinkedHashMap::new, ArrayList::new,
+                    ConfigElement.class, Object.class), output);
         }
     }
 
     @Override
-    public <TNode extends ConfigNode> @NotNull TNode decodeNode(@NotNull InputStream input,
-                                                                @NotNull Supplier<TNode> nodeSupplier)
-            throws IOException {
+    public @NotNull ConfigElement decode(@NotNull InputStream input) throws IOException {
         Objects.requireNonNull(input);
-        Objects.requireNonNull(nodeSupplier);
 
         try (input) {
-            return makeNode(readMap(input), nodeSupplier);
+            return mapInput(readObject(input), this::deserializeObject, LinkedConfigNode::new, ArrayConfigList::new,
+                    Object.class, ConfigElement.class);
         }
     }
 
     /**
-     * Determines if the provided object is a "container". An object is considered a container if it is non-null and a
-     * subclass of {@link Map}, {@link Collection}, or is an array type.
-     * @param object the object to test
-     * @return true if the object is not null and subclasses Map, Collection, or is an array type; false otherwise
+     * Returns true if this object is non-null and a container (subclass of {@link Collection}, {@link Map}, or an
+     * array type).
+     * @param input the input object
+     * @return true if input is a container and non-null, false if it is not a container or is null
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     @Contract("null -> false")
-    protected boolean isContainer(@Nullable Object object) {
-        return object != null && (object instanceof Map<?, ?> || object instanceof Collection<?> ||
-                object.getClass().isArray());
+    protected boolean isContainer(@Nullable Object input) {
+        return input != null && (input instanceof Collection<?> || input instanceof Map<?, ?> ||
+                input.getClass().isArray());
     }
 
     /**
-     * <p>Processes a particular value, which is part of some container (map, array, or collection). If the value itself
-     * is a container, a reference to it will be added to the {@link Deque} as a {@link Node}.</p>
-     *
-     * <p>This method is capable of handling recursive or self-referential data structures (for example, a map which
-     * contains itself as a value). The resulting output map will have an equivalent structure.</p>
-     * @param value the input value
-     * @param stack the current stack, used for processing collections
-     * @param visited mappings representing which containers have been visited, and their associated output objects
-     * @param currentNode the current node we are processing
-     * @param keyString the key string, which may be null if we're currently iterating a collection or array
-     * @param mapSupplier a supplier to produce new map objects
-     * @param collectionSupplier a supplier to produce new collection objects
-     * @param converter a function used to convert objects to TOut
-     * @param inClass the value class for the input map
-     * @param outClass the value class for the output map
-     * @param <TMap> the map type
-     * @param <TCollection> the collection type
-     * @param <TIn> the type of objects stored in the input container
-     * @param <TOut> the type of objects which are stored in the output container(s)
-     * @throws IllegalArgumentException if the provided object cannot be converted into TOut by the converter function
+     * Serializes a {@link ConfigElement} object (converts it into an object which should be interpreted by a particular
+     * format serializer). This function only applies to <i>scalars</i> (i.e. objects that are not containers; such as
+     * Number or String).
+     * @param element the ConfigElement to convert
+     * @return the serialized object
+     * @throws IllegalStateException if element cannot be converted using {@link ConfigElement#asObject()}
      */
-    protected <TMap extends Map<String, TOut>,
-            TCollection extends Collection<TOut>,
-            TIn,
-            TOut> void processValue(@Nullable Object value,
-                                    @NotNull Deque<Node<TOut>> stack,
-                                    @NotNull Map<Object, TOut> visited,
-                                    @NotNull Node<TOut> currentNode,
-                                    @Nullable String keyString,
-                                    @NotNull Supplier<TMap> mapSupplier,
-                                    @NotNull Supplier<TCollection> collectionSupplier,
-                                    @NotNull Function<TIn, TOut> converter,
-                                    @NotNull Class<TIn> inClass,
-                                    @NotNull Class<TOut> outClass) {
-        if(isContainer(value)) {
-            //we are a container, so do container-specific processing
+    protected @Nullable Object serializeElement(@NotNull ConfigElement element) {
+        return element.asObject();
+    }
 
-            TOut output;
-            if(!visited.containsKey(value)) {
-                output = makeOutput(value, stack, mapSupplier, collectionSupplier, outClass);
-                visited.put(value, output);
-            }
-            else {
-                //handles self-referential data
-                output = visited.get(value);
-            }
+    /**
+     * Deserializes a given object, as it is typically produced by a particular format deserializer.
+     * @param object the object to deserialize
+     * @return the resulting ConfigElement
+     * @throws IllegalArgumentException if object is not a valid type for {@link ConfigPrimitive}
+     */
+    protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
+        return new ConfigPrimitive(object);
+    }
 
-            currentNode.output.accept(keyString, output);
+    /**
+     * Constructs a {@link Node} object from an input container object, and using the given suppliers to create an
+     * equivalent output {@link Map} or {@link Collection}.
+     * @param inputContainer the input object, for which {@link AbstractConfigCodec#isContainer(Object)} should return
+     *                       true
+     * @param mapSupplier the supplier used to produce the output map
+     * @param collectionSupplier the supplier used to produce the output collection
+     * @param <TOut> the type of object contained in the output map or collection
+     * @return a new node containing the input, output, and a {@link BiConsumer} used to add elements
+     * @throws IllegalArgumentException if inputContainer is not a valid container (map, collection, or array)
+     */
+    protected <TOut> @NotNull Node<TOut> makeNode(@NotNull Object inputContainer,
+                                                  @NotNull Supplier<Map<String, TOut>> mapSupplier,
+                                                  @NotNull Supplier<Collection<TOut>> collectionSupplier) {
+        if(inputContainer instanceof Map<?, ?> inputMap) {
+            Map<String, TOut> map = mapSupplier.get();
+            return new Node<>(inputContainer, map, inputMap.entrySet().stream().map(entry ->
+                    new Entry<>(entry.getKey().toString(), entry.getValue())).iterator(), map::put);
+        }
+        else if(inputContainer instanceof Collection<?> inputCollection) {
+            Collection<TOut> collection = collectionSupplier.get();
+            return new Node<>(inputContainer, collection, inputCollection.stream().map(entry ->
+                    new Entry<>((String)null, entry)).iterator(), (k, v) -> collection.add(v));
+        }
+        else if(inputContainer.getClass().isArray()) {
+            int length = Array.getLength(inputContainer);
+
+            Iterator<? extends Entry<String, ?>> iterator = new Iterator<>() {
+                private int index = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return index < length;
+                }
+
+                @Override
+                public Entry<String, ?> next() {
+                    return new Entry<>(null, Array.get(inputContainer, index++));
+                }
+            };
+
+            Collection<TOut> collection = collectionSupplier.get();
+            return new Node<>(inputContainer, collection, iterator, (k, v) -> collection.add(v));
         }
         else {
-            //not a container object, just an ordinary one, so we can add it directly to our output
-            currentNode.output.accept(keyString, converter.apply(inClass.cast(value)));
+            throw new IllegalArgumentException("Invalid input type " + inputContainer.getClass().getName());
         }
     }
 
     /**
-     * Processes a <i>container</i> (subclass of {@link Map}, {@link Collection} or an array); or more generally any
-     * object for which {@link AbstractConfigCodec#isContainer(Object)} returns true. This method is not responsible
-     * for handling the contents of any such container. It simply creates an "output" container (supplied by either
-     * mapSupplier or collectionSupplier) and a {@link BiConsumer} capable of writing to that output. Then, it
-     * constructs a {@link Node} object using the input container and the output BiConsumer. The returned value will be
-     * the <i>output</i> container after it is cast to TOut.
-     * @param container the container to process
-     * @param stack a {@link Deque} of Node objects used
-     * @param mapSupplier a {@link Supplier} that produces output maps
-     * @param collectionSupplier  a Supplier that produces output collections
-     * @param outClass the return type class
-     * @param <TMap> the map type
-     * @param <TCollection> the collection type
-     * @param <TOut> the return type
-     * @return the output container, produced by either mapSupplier or collectionSupplier
+     * Processes a particular {@link Node}. The node's input container will be iterated. New Node objects will be
+     * created for every container object contained in this one, if applicable. All objects will be added to the current
+     * node's output. Any objects contained in the input container that are not containers will be converted to the
+     * output type using the provided {@link Function} scalarMapper.
+     * @param node the node to process
+     * @param stack the current node stack
+     * @param visited a map of the containers visited so far
+     * @param scalarMapper the mapping function used to convert scalars
+     * @param mapSupplier the {@link Supplier} used to construct new output maps
+     * @param collectionSupplier the supplier used to construct new output collections
+     * @param inClass the superclass of all input objects
+     * @param outClass the superclass of all output objects
+     * @param <TIn> the type of input object
+     * @param <TOut> the type of output object
      */
-    protected <TMap extends Map<String, TOut>,
-            TCollection extends Collection<TOut>,
-            TOut> @NotNull TOut makeOutput(@NotNull Object container,
+    protected <TIn, TOut> void processNode(@NotNull Node<TOut> node,
                                            @NotNull Deque<Node<TOut>> stack,
-                                           @NotNull Supplier<TMap> mapSupplier,
-                                           @NotNull Supplier<TCollection> collectionSupplier,
+                                           @NotNull Map<Object, TOut> visited,
+                                           @NotNull Function<TIn, TOut> scalarMapper,
+                                           @NotNull Supplier<Map<String, TOut>> mapSupplier,
+                                           @NotNull Supplier<Collection<TOut>> collectionSupplier,
+                                           @NotNull Class<TIn> inClass,
                                            @NotNull Class<TOut> outClass) {
-        BiConsumer<String, TOut> consumer;
-        Object outputContainer;
+        Iterator<? extends Entry<String, ?>> iterator = node.inputIterator;
 
-        if(container instanceof Map<?, ?>) {
-            TMap newMap = mapSupplier.get();
-            outputContainer = newMap;
-            consumer = newMap::put;
-        }
-        else  {
-            TCollection newCollection = collectionSupplier.get();
-            outputContainer = newCollection;
-            consumer = (k, v) -> newCollection.add(v);
-        }
+        while(iterator.hasNext()) {
+            Entry<String, ?> pair = iterator.next();
 
-        stack.push(new Node<>(container, consumer));
-        return outClass.cast(outputContainer);
-    }
-
-    /**
-     * <p>Deeply processes a map, iterating all of its elements (and the elements of any "container" objects it may
-     * contain, recursively). Each element will be "converted" into another object by the provided conversion function.
-     * If the input object is an array or a collection, the output object will be constructed by the provided
-     * collection supplier. If the input object is a map, the output object will be constructed by the provided map
-     * supplier.</p>
-     *
-     * <p>This function is capable of handling self-referential maps. The output map will have an identical structure,
-     * but with different objects.</p>
-     * @param input the input map
-     * @param rootMapSupplier the supplier which produces the <i>root</i> map which is returned
-     * @param subMapSupplier the supplier to produce nested maps
-     * @param collectionSupplier the supplier to produce collections
-     * @param converter the converter used to convert each object
-     * @param inClass the value class for the input map
-     * @param outClass the value class for the output map
-     * @param <TRootMap> the type of root map (the returned type)
-     * @param <TSubMap> the type of sub map
-     * @param <TCollection> the type of collection
-     * @param <TIn> the input value type
-     * @param <TOut> the output value type
-     * @return the new map, which will contain all the elements of the input map after they have been converted to
-     * appropriate types
-     * @throws NullPointerException if rootMapSupplier supplies a null map
-     * @throws IllegalArgumentException if any of the input values cannot be converted to TOut
-     */
-    protected <TRootMap extends Map<String, TOut>,
-            TSubMap extends Map<String, TOut>,
-            TCollection extends Collection<TOut>,
-            TIn,
-            TOut> @NotNull TRootMap processMap(@NotNull Map<String, TIn> input,
-                                               @NotNull Supplier<TRootMap> rootMapSupplier,
-                                               @NotNull Supplier<TSubMap> subMapSupplier,
-                                               @NotNull Supplier<TCollection> collectionSupplier,
-                                               @NotNull Function<TIn, TOut> converter,
-                                               @NotNull Class<TIn> inClass,
-                                               @NotNull Class<TOut> outClass) {
-        TRootMap topLevel = Objects.requireNonNull(rootMapSupplier.get(), "Root map cannot be null");
-
-        Deque<Node<TOut>> stack = new ArrayDeque<>();
-        stack.push(new Node<>(input, topLevel::put));
-
-        Map<Object, TOut> visitedNodes = new IdentityHashMap<>();
-        visitedNodes.put(input, outClass.cast(topLevel));
-
-        while(!stack.isEmpty()) {
-            Node<TOut> node = stack.pop();
-
-            if(node.inputContainer instanceof Map<?, ?> inputMap) {
-                //iterate input entries, process each of them
-                for(Map.Entry<?, ?> entry : inputMap.entrySet()) {
-                    processValue(entry.getValue(), stack, visitedNodes, node, entry.getKey().toString(), subMapSupplier,
-                            collectionSupplier, converter, inClass, outClass);
-                }
-            }
-            else if(node.inputContainer instanceof Collection<?> inputCollection) {
-                //just iterate input elements and process them
-                for(Object value : inputCollection) {
-                    processValue(value, stack, visitedNodes, node, null, subMapSupplier, collectionSupplier,
-                            converter, inClass, outClass);
-                }
+            if(!isContainer(pair.second)) {
+                node.outputConsumer.accept(pair.first, scalarMapper.apply(inClass.cast(pair.second)));
             }
             else {
-                //inputContainer must be an array
-                int length = Array.getLength(node.inputContainer);
+                if(visited.containsKey(pair.second)) {
+                    node.outputConsumer.accept(pair.first, visited.get(pair.second));
+                }
+                else {
+                    Node<TOut> newNode = makeNode(pair.second, mapSupplier, collectionSupplier);
+                    TOut newOut = outClass.cast(newNode.output);
 
-                for(int i = 0; i < length; i++) {
-                    processValue(Array.get(node.inputContainer, i), stack, visitedNodes, node, null,
-                            subMapSupplier, collectionSupplier, converter, inClass, outClass);
+                    stack.push(newNode);
+                    visited.put(pair.first, newOut);
+
+                    node.outputConsumer.accept(pair.first, newOut);
                 }
             }
         }
-
-        return topLevel;
     }
 
     /**
-     * Produces a {@link ConfigNode} from the provided mappings.
-     * @param mappings the mappings to use to produce this ConfigNode
-     * @param nodeSupplier the supplier used to construct the node which is returned
-     * @param <TNode> the type of ConfigNode to return
-     * @return a ConfigNode, containing the same entries as mappings, after converting them to {@link ConfigElement} instances
-     * @throws IllegalArgumentException if mappings contains a value which cannot be converted into a ConfigElement
+     * Maps a provided input, deeply iterating all elements and converting them according to a provided {@link Function}
+     * used to map scalars (non-containers). Container objects will be converted to {@link Map} or {@link Collection},
+     * provided by the given {@link Supplier}s.
+     * @param input the input object
+     * @param scalarMapper the function used to map non-containers
+     * @param mapSupplier the supplier used to produce output maps
+     * @param collectionSupplier the supplier used to produce output collections
+     * @param inClass the superclass of the input object
+     * @param outClass the superclass of the output object
+     * @param <TIn> the input type
+     * @param <TOut> the output type
+     * @return the output object, containing converted elements from the input object
      */
-    protected <TNode extends ConfigNode> @NotNull TNode makeNode(@NotNull Map<String, Object> mappings,
-                                                                 @NotNull Supplier<TNode> nodeSupplier) {
-        return processMap(mappings, nodeSupplier, LinkedConfigNode::new, ArrayConfigList::new, this::toElement,
-                Object.class, ConfigElement.class);
-    }
-
-    /**
-     * Produces a map from the provided {@link ConfigNode}. The returned map will contain the same entries as the
-     * ConfigNode, with all {@link ConfigElement} instances converted to their equivalent values. ConfigNode instances
-     * will be converted to {@link LinkedHashMap}, ConfigList instances to {@link ArrayList}, and
-     * {@link ConfigPrimitive} instances to the value that they wrap.
-     * @param node the node to convert to a map
-     * @param mapSupplier the supplier which produces the <i>top level</i> map which is returned
-     * @param <TMap> the type of top-level map
-     * @return a map, constructed by mapSupplier, containing the same mappings as node, after deeply converting every
-     * element to an equivalent value
-     */
-    protected <TMap extends Map<String, Object>> @NotNull TMap makeMap(@NotNull ConfigNode node,
-                                                                       @NotNull Supplier<TMap> mapSupplier) {
-        return processMap(node, mapSupplier, LinkedHashMap::new, ArrayList::new, this::toObject, ConfigElement.class,
-                Object.class);
-    }
-
-    /**
-     * Converts the provided object to a {@link ConfigElement}. The input object will typically not be a container.
-     * Implementations that override this method will most often also need to override
-     * {@link AbstractConfigCodec#toObject(ConfigElement)}.
-     * @param raw the object to convert
-     * @return a ConfigElement representing the given object
-     * @throws IllegalArgumentException if the provided object cannot be converted
-     */
-    protected @NotNull ConfigElement toElement(@Nullable Object raw) {
-        return new ConfigPrimitive(raw);
-    }
-
-    /**
-     * Converts the provided {@link ConfigElement} to an object. The input ConfigElement will typically not be a container.
-     * Implementations that override this method will most often also need to override
-     * {@link AbstractConfigCodec#toElement(Object)}.
-     * @param element the element to convert
-     * @return an object representing the given ConfigElement
-     * @throws IllegalArgumentException if the provided object cannot be converted
-     */
-    protected @Nullable Object toObject(@NotNull ConfigElement element) {
-        if(element.isObject()) {
-            return element.asObject();
+    protected <TIn, TOut> TOut mapInput(@NotNull Object input,
+                                        @NotNull Function<TIn, TOut> scalarMapper,
+                                        @NotNull Supplier<Map<String, TOut>> mapSupplier,
+                                        @NotNull Supplier<Collection<TOut>> collectionSupplier,
+                                        @NotNull Class<TIn> inClass,
+                                        @NotNull Class<TOut> outClass) {
+        if(!isContainer(input)) {
+            return scalarMapper.apply(inClass.cast(input));
         }
         else {
-            throw new IllegalArgumentException("Cannot convert ConfigElement subclass of type " +
-                    element.getClass().getName());
+            Deque<Node<TOut>> stack = new ArrayDeque<>();
+            Node<TOut> node = makeNode(input, mapSupplier, collectionSupplier);
+            TOut rootOut = outClass.cast(node.output);
+            stack.push(node);
+
+            Map<Object, TOut> visited = new IdentityHashMap<>();
+            visited.put(input, rootOut);
+
+            while(!stack.isEmpty()) {
+                processNode(stack.pop(), stack, visited, scalarMapper, mapSupplier, collectionSupplier, inClass, outClass);
+            }
+
+            return rootOut;
         }
     }
 
     /**
-     * Reads some mappings from an {@link InputStream}. This method need not ensure that the stream closes.
-     * @param input an InputStream to read from
-     * @return a map of strings to objects
+     * Reads an object from the given {@link InputStream}, which should contain configuration data in a particular
+     * format.
+     * @param input the InputStream to read from
+     * @return an object
      * @throws IOException if an IO error occurs
-     * @throws NullPointerException if input is null
      */
-    protected abstract @NotNull Map<String, Object> readMap(@NotNull InputStream input) throws IOException;
+    protected abstract @NotNull Object readObject(@NotNull InputStream input) throws IOException;
 
     /**
-     * Writes some mappings to an {@link OutputStream}. This method need not ensure that the stream closes.
-     * @param mappings the mappings to write
-     * @param output the stream to write to
+     * Writes an object to the given {@link OutputStream}, which will then contain configuration data in some particular
+     * format.
+     * @param object the object to write
+     * @param output the OutputStream to write to
      * @throws IOException if an IO error occurs
-     * @throws NullPointerException if any of the arguments are null
      */
-    protected abstract void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output)
-            throws IOException;
+    protected abstract void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException;
 }

@@ -11,12 +11,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
-import java.util.Map;
 import java.util.Objects;
 
 /**
- * Provides support for the TOML format. This class overrides {@link AbstractConfigCodec#toElement(Object)} and
- * {@link AbstractConfigCodec#toObject(ConfigElement)} in order to provide proper support for dates.
+ * Provides support for the TOML format. This class overrides {@link AbstractConfigCodec#serializeElement(ConfigElement)} and
+ * {@link AbstractConfigCodec#deserializeObject(Object)} in order to provide proper support for dates.
  */
 public class TomlCodec extends AbstractConfigCodec {
     /**
@@ -44,7 +43,7 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull Map<String, Object> readMap(@NotNull InputStream input) throws IOException {
+    protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
         try {
             return new Toml().read(input).toMap();
         }
@@ -54,9 +53,9 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected void writeMap(@NotNull Map<String, Object> mappings, @NotNull OutputStream output) throws IOException {
+    protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
         try {
-            writer.write(mappings, output);
+            writer.write(object, output);
         }
         catch (IllegalArgumentException exception) {
             throw new IOException(exception);
@@ -64,20 +63,20 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull ConfigElement toElement(@Nullable Object raw) {
-        if(raw instanceof Date date) {
-            return new ConfigDate(date);
-        }
-
-        return super.toElement(raw);
-    }
-
-    @Override
-    protected @Nullable Object toObject(@NotNull ConfigElement raw) {
-        if(raw instanceof ConfigDate configDate) {
+    protected @Nullable Object serializeElement(@NotNull ConfigElement element) {
+        if(element instanceof ConfigDate configDate) {
             return configDate.getDate();
         }
 
-        return super.toObject(raw);
+        return super.serializeElement(element);
+    }
+
+    @Override
+    protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
+        if(object instanceof Date date) {
+            return new ConfigDate(date);
+        }
+
+        return super.deserializeObject(object);
     }
 }
