@@ -38,7 +38,7 @@ repositories {
 }
 ```
 
-Then, in your dependencies section:
+Then, in your dependencies section (this example assumes version 1.0.0; check the repository for the latest):
 
 ```
 dependencies {
