@@ -209,7 +209,9 @@ class AbstractConfigCodecTest {
         //noinspection CollectionAddedToSelf
         root.put("selfReference", root);
 
-        testCodec.mapInput(root, testCodec::deserializeObject, LinkedConfigNode::new, ArrayConfigList::new,
-                Object.class, ConfigElement.class);
+        ConfigElement element = testCodec.mapInput(root, testCodec::deserializeObject, LinkedConfigNode::new,
+                ArrayConfigList::new, Object.class, ConfigElement.class);
+        assertTrue(element.isNode());
+        assertSame(element.asNode().get("selfReference"), element);
     }
 }
