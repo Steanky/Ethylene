@@ -214,4 +214,9 @@ class AbstractConfigCodecTest {
         assertTrue(element.isNode());
         assertSame(element.asNode().get("selfReference"), element);
     }
+
+    @Test
+    void pathAccess() {
+        assertSame(SUB_LIST_VALUE.get(2), resultingElement.getElement(SUB_ROOT_KEY, SUB_LIST_KEY, 2).asString());
+    }
 }
