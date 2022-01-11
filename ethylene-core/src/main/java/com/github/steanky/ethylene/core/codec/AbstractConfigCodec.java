@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
-     * Represents a <i>tuple</i> (a pair of distinct, loosely related values).
+     * Represents a <i>tuple</i> (a pair of distinct, unrelated values that may be of different types).
      * @param <TFirst> the type of the first element
      * @param <TSecond> the type of the second element
      */
@@ -173,10 +173,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                                            @NotNull Supplier<Collection<TOut>> collectionSupplier,
                                            @NotNull Class<TIn> inClass,
                                            @NotNull Class<TOut> outClass) {
-        Iterator<? extends Entry<String, ?>> iterator = node.inputIterator;
-
-        while(iterator.hasNext()) {
-            Entry<String, ?> pair = iterator.next();
+        while(node.inputIterator.hasNext()) {
+            Entry<String, ?> pair = node.inputIterator.next();
 
             if(!isContainer(pair.second)) {
                 node.outputConsumer.accept(pair.first, scalarMapper.apply(inClass.cast(pair.second)));
