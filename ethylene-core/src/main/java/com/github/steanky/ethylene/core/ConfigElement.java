@@ -4,10 +4,12 @@ import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 /**
  * Represents a particular value from a configuration file. Specialized sub-interfaces include {@link ConfigNode} and
  * {@link ConfigList}. A direct implementation is {@link ConfigPrimitive}. This interface specifies methods to easily
- * convert to implementations as needed, which will all throw {@link IllegalStateException} by default.t
+ * convert to implementations as needed, which will all throw {@link IllegalStateException} by default.
  */
 public interface ConfigElement {
     /**
@@ -119,4 +121,73 @@ public interface ConfigElement {
      * @throws IllegalStateException if this element cannot be converted into an object
      */
     default Object asObject() { throw new IllegalStateException("Element may not be converted to Object"); }
+
+    /**
+     * Obtains a child ConfigElement from this one by following the specified path. Path objects may be either string
+     * keys (corresponding to {@link ConfigNode}s) or integers (for accessing {@link ConfigList}s). Other types will
+     * result in an {@link IllegalArgumentException}. If the given array is empty, this object will be returned. The
+     * path may contain a mix of integers and strings, so long as each ConfigElement at that point in the path matches.
+     * @param path the path used to access this element
+     * @return the ConfigElement at the specified path, or null if it could not be found
+     * @throws IllegalArgumentException if path contains any objects other than strings and integers, or has null values
+     * @throws NullPointerException if path is null
+     */
+    default ConfigElement getElement(@NotNull Object... path) {
+        Objects.requireNonNull(path);
+
+        if(path.length == 0) {
+            return this;
+        }
+        else {
+            //validate the path first
+            for(Object key : path) {
+                if(!(key instanceof String || key instanceof Integer)) {
+                    throw new IllegalArgumentException("Invalid key type: " + key.getClass().getName());
+                }
+            }
+
+            ConfigElement current = this;
+            boolean currentNonContainer = false;
+
+            for(Object key : path) {
+                if(currentNonContainer) {
+                    return null;
+                }
+
+                if(current.isNode()) {
+                    if(key instanceof String string) {
+                        ConfigNode currentNode = current.asNode();
+                        if(currentNode.containsKey(string)) {
+                            current = currentNode.get(string);
+                        }
+                        else {
+                            return null;
+                        }
+                    }
+                    else {
+                        return null;
+                    }
+                }
+                else if(current.isList()) {
+                    if(key instanceof Integer integer) {
+                        ConfigList currentList = current.asList();
+                        if(integer >= 0 && integer < currentList.size()) {
+                            current = currentList.get(integer);
+                        }
+                        else {
+                            return null;
+                        }
+                    }
+                    else {
+                        return null;
+                    }
+                }
+                else {
+                    currentNonContainer = true;
+                }
+            }
+
+            return current;
+        }
+    }
 }

@@ -7,5 +7,5 @@ version '1.0.0'
 
 dependencies {
     api project(':ethylene-core')
-    api 'com.google.code.gson:gson:2.8.9'
+    api 'org.snakeyaml:snakeyaml-engine:2.3'
 }

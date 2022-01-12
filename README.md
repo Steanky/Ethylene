@@ -24,8 +24,17 @@ Ethylene binaries are available from a publicly hosted [Cloudsmith repository](h
         ethylene-toml <br/> <a href="https://cloudsmith.io/~steank-f1g/repos/ethylene/packages/detail/maven/ethylene-toml/latest/a=noarch;xg=com.github.steanky/"><img src="https://api-prd.cloudsmith.io/v1/badges/version/steank-f1g/ethylene/maven/ethylene-toml/latest/a=noarch;xg=com.github.steanky/?render=true&show_latest=true" alt="Latest version of 'ethylene-toml' @ Cloudsmith" /></a>
       </b>
     </li>
+    <li>
+      <b>
+        ethylene-hjson <br/> <a href="https://cloudsmith.io/~steank-f1g/repos/ethylene/packages/detail/maven/ethylene-hjson/latest/a=noarch;xg=com.github.steanky/"><img src="https://api-prd.cloudsmith.io/v1/badges/version/steank-f1g/ethylene/maven/ethylene-hjson/latest/a=noarch;xg=com.github.steanky/?render=true&show_latest=true" alt="Latest version of 'ethylene-hjson' @ Cloudsmith" /></a>
+      </b>
+    </li>
+    <li>
+      <b>
+        ethylene-yaml <br/> <a href="https://cloudsmith.io/~steank-f1g/repos/ethylene/packages/detail/maven/ethylene-yaml/latest/a=noarch;xg=com.github.steanky/"><img src="https://api-prd.cloudsmith.io/v1/badges/version/steank-f1g/ethylene/maven/ethylene-yaml/latest/a=noarch;xg=com.github.steanky/?render=true&show_latest=true" alt="Latest version of 'ethylene-yaml' @ Cloudsmith" /></a>
+      </b>
+    </li>
   </ul>
-  
 </details>
 
 For Gradle, add the Cloudsmith URL to the repositories block like this:

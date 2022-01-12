@@ -3,6 +3,8 @@ package com.github.steanky.ethylene.core.codec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
+import com.github.steanky.ethylene.core.collection.ConfigList;
+import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -18,29 +20,44 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
- * designed to deeply iterate hierarchical data structures.
+ * <p>This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
+ * designed to deeply iterate hierarchical data structures.</p>
+ *
+ * <p>In addition to the two abstract methods, {@link AbstractConfigCodec#readObject(InputStream)} and
+ * {@link AbstractConfigCodec#writeObject(Object, OutputStream)}, almost every method is designed to be readily
+ * subclassed by implementations. In particular, specialized codecs may enable processing of custom objects that are
+ * not natively supported by this class.</p>
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
-     * Represents a <i>tuple</i> (a pair of distinct, loosely related values).
+     * Represents a <i>tuple</i> (a pair of distinct, unrelated values that may be of different types).
      * @param <TFirst> the type of the first element
      * @param <TSecond> the type of the second element
      */
-    protected record Entry<TFirst, TSecond>(TFirst first, TSecond second) {}
+    public record Entry<TFirst, TSecond>(TFirst first, TSecond second) {}
 
     /**
      * Represents a specific input <i>container</i> object, and its equivalent output container. A container is a map,
      * array, or collection.
      * @param <TOut> the object held in the output container
      */
-    protected record Node<TOut>(@NotNull Object input,
-                                @NotNull Object output,
+    public record Node<TOut>(@NotNull Object input,
                                 @NotNull Iterator<? extends Entry<String, ?>> inputIterator,
-                                @NotNull BiConsumer<String, TOut> outputConsumer) {}
+                                @NotNull Output<TOut> output) {}
 
     /**
-     * Empty constructor, for subclasses.
+     * Represents an <i>output</i> object, which we convert to from an <i>input</i> object (when serializing or
+     * deserializing). This record holds a reference to the raw object itself (which may be a map, collection, or some
+     * other arbitrary class) as well as a {@link BiConsumer} used to add new elements to the output. If output is a map
+     * (or any type that requires a key), the first parameter of the BiConsumer should be used. If it is a collection,
+     * array, or some other type that has no concept of a "key", the first parameter may be ignored (it should be null).
+     * @param <TOut> the output type
+     */
+    public record Output<TOut>(@NotNull Object output,
+                                  @NotNull BiConsumer<String, TOut> consumer) {}
+
+    /**
+     * Empty constructor, for use by subclasses.
      */
     protected AbstractConfigCodec() {}
 
@@ -50,7 +67,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(output);
 
         try(output) {
-            writeObject(mapInput(element, this::serializeElement, LinkedHashMap::new, ArrayList::new,
+            writeObject(mapInput(element, this::serializeElement, this::makeEncodeMap, this::makeEncodeCollection,
                     ConfigElement.class, Object.class), output);
         }
     }
@@ -60,9 +77,49 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(input);
 
         try (input) {
-            return mapInput(readObject(input), this::deserializeObject, LinkedConfigNode::new, ArrayConfigList::new,
+            return mapInput(readObject(input), this::deserializeObject, this::makeDecodeMap, this::makeDecodeCollection,
                     Object.class, ConfigElement.class);
         }
+    }
+
+    /**
+     * Produces a {@link Output} object used to hold a reference to the <i>output map</i> used during encoding.
+     * @param <TOut> the output type
+     * @return an Output object containing a reference to an output map
+     */
+    protected <TOut> @NotNull Output<TOut> makeEncodeMap() {
+        Map<String, Object> map = new LinkedHashMap<>();
+        return new Output<>(map, map::put);
+    }
+
+    /**
+     * Produces a {@link Output} object used to hold a reference to the <i>output collection</i> used during encoding.
+     * @param <TOut> the output type
+     * @return an Output object containing a reference to an output collection
+     */
+    protected <TOut> @NotNull Output<TOut> makeEncodeCollection() {
+        Collection<Object> collection = new ArrayList<>();
+        return new Output<>(collection, (k, v) -> collection.add(v));
+    }
+
+    /**
+     * Produces a {@link Output} object used to hold a reference to the <i>output map</i> used during decoding.
+     * @param <TOut> the output type
+     * @return an Output object containing a reference to an output map
+     */
+    protected <TOut extends ConfigElement> @NotNull Output<TOut> makeDecodeMap() {
+        ConfigNode node = new LinkedConfigNode();
+        return new Output<>(node, node::put);
+    }
+
+    /**
+     * Produces a {@link Output} object used to hold a reference to the <i>output collection</i> used during decoding.
+     * @param <TOut> the output type
+     * @return an Output object containing a reference to an output collection
+     */
+    protected <TOut extends ConfigElement> @NotNull Output<TOut> makeDecodeCollection() {
+        ConfigList list = new ArrayConfigList();
+        return new Output<>(list, (k, v) -> list.add(v));
     }
 
     /**
@@ -112,22 +169,20 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @throws IllegalArgumentException if inputContainer is not a valid container (map, collection, or array)
      */
     protected <TOut> @NotNull Node<TOut> makeNode(@NotNull Object inputContainer,
-                                                  @NotNull Supplier<Map<String, TOut>> mapSupplier,
-                                                  @NotNull Supplier<Collection<TOut>> collectionSupplier) {
+                                                  @NotNull Supplier<Output<TOut>> mapSupplier,
+                                                  @NotNull Supplier<Output<TOut>> collectionSupplier) {
         if(inputContainer instanceof Map<?, ?> inputMap) {
-            Map<String, TOut> map = mapSupplier.get();
-            return new Node<>(inputContainer, map, inputMap.entrySet().stream().map(entry ->
-                    new Entry<>(entry.getKey().toString(), entry.getValue())).iterator(), map::put);
+            return new Node<>(inputContainer, inputMap.entrySet().stream().map(entry -> new Entry<>(entry.getKey()
+                    .toString(), entry.getValue())).iterator(), mapSupplier.get());
         }
         else if(inputContainer instanceof Collection<?> inputCollection) {
-            Collection<TOut> collection = collectionSupplier.get();
-            return new Node<>(inputContainer, collection, inputCollection.stream().map(entry ->
-                    new Entry<>((String)null, entry)).iterator(), (k, v) -> collection.add(v));
+            return new Node<>(inputContainer, inputCollection.stream().map(entry -> new Entry<>((String)null, entry))
+                    .iterator(), collectionSupplier.get());
         }
         else if(inputContainer.getClass().isArray()) {
             int length = Array.getLength(inputContainer);
 
-            Iterator<? extends Entry<String, ?>> iterator = new Iterator<>() {
+            Iterator<? extends Entry<String, ?>> arrayIterator = new Iterator<>() {
                 private int index = 0;
 
                 @Override
@@ -141,8 +196,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
             };
 
-            Collection<TOut> collection = collectionSupplier.get();
-            return new Node<>(inputContainer, collection, iterator, (k, v) -> collection.add(v));
+            return new Node<>(inputContainer, arrayIterator, collectionSupplier.get());
         }
         else {
             throw new IllegalArgumentException("Invalid input type " + inputContainer.getClass().getName());
@@ -169,30 +223,28 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                                            @NotNull Deque<Node<TOut>> stack,
                                            @NotNull Map<Object, TOut> visited,
                                            @NotNull Function<TIn, TOut> scalarMapper,
-                                           @NotNull Supplier<Map<String, TOut>> mapSupplier,
-                                           @NotNull Supplier<Collection<TOut>> collectionSupplier,
+                                           @NotNull Supplier<Output<TOut>> mapSupplier,
+                                           @NotNull Supplier<Output<TOut>> collectionSupplier,
                                            @NotNull Class<TIn> inClass,
                                            @NotNull Class<TOut> outClass) {
-        Iterator<? extends Entry<String, ?>> iterator = node.inputIterator;
-
-        while(iterator.hasNext()) {
-            Entry<String, ?> pair = iterator.next();
+        while(node.inputIterator.hasNext()) {
+            Entry<String, ?> pair = node.inputIterator.next();
 
             if(!isContainer(pair.second)) {
-                node.outputConsumer.accept(pair.first, scalarMapper.apply(inClass.cast(pair.second)));
+                node.output.consumer.accept(pair.first, scalarMapper.apply(inClass.cast(pair.second)));
             }
             else {
                 if(visited.containsKey(pair.second)) {
-                    node.outputConsumer.accept(pair.first, visited.get(pair.second));
+                    node.output.consumer.accept(pair.first, visited.get(pair.second));
                 }
                 else {
                     Node<TOut> newNode = makeNode(pair.second, mapSupplier, collectionSupplier);
-                    TOut newOut = outClass.cast(newNode.output);
+                    TOut newOut = outClass.cast(newNode.output.output);
 
                     stack.push(newNode);
                     visited.put(pair.first, newOut);
 
-                    node.outputConsumer.accept(pair.first, newOut);
+                    node.output.consumer.accept(pair.first, newOut);
                 }
             }
         }
@@ -214,8 +266,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      */
     protected <TIn, TOut> TOut mapInput(@NotNull Object input,
                                         @NotNull Function<TIn, TOut> scalarMapper,
-                                        @NotNull Supplier<Map<String, TOut>> mapSupplier,
-                                        @NotNull Supplier<Collection<TOut>> collectionSupplier,
+                                        @NotNull Supplier<Output<TOut>> mapSupplier,
+                                        @NotNull Supplier<Output<TOut>> collectionSupplier,
                                         @NotNull Class<TIn> inClass,
                                         @NotNull Class<TOut> outClass) {
         if(!isContainer(input)) {
@@ -224,7 +276,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         else {
             Deque<Node<TOut>> stack = new ArrayDeque<>();
             Node<TOut> node = makeNode(input, mapSupplier, collectionSupplier);
-            TOut rootOut = outClass.cast(node.output);
+            TOut rootOut = outClass.cast(node.output.output);
             stack.push(node);
 
             Map<Object, TOut> visited = new IdentityHashMap<>();
