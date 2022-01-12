@@ -125,7 +125,8 @@ public interface ConfigElement {
     /**
      * Obtains a child ConfigElement from this one by following the specified path. Path objects may be either string
      * keys (corresponding to {@link ConfigNode}s) or integers (for accessing {@link ConfigList}s). Other types will
-     * result in an {@link IllegalArgumentException}. If the given array is empty, this object will be returned.
+     * result in an {@link IllegalArgumentException}. If the given array is empty, this object will be returned. The
+     * path may contain a mix of integers and strings, so long as each ConfigElement at that point in the path matches.
      * @param path the path used to access this element
      * @return the ConfigElement at the specified path, or null if it could not be found
      * @throws IllegalArgumentException if path contains any objects other than strings and integers, or has null values
