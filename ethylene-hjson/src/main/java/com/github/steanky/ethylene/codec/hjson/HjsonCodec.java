@@ -3,22 +3,43 @@ package com.github.steanky.ethylene.codec.hjson;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
-import org.hjson.JsonArray;
-import org.hjson.JsonObject;
-import org.hjson.JsonValue;
-import org.hjson.ParseException;
+import org.hjson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
+/**
+ * Provides support for HJSON.
+ */
 public class HjsonCodec extends AbstractConfigCodec {
+    private final HjsonOptions readOptions;
+    private final HjsonOptions writeOptions;
+
+    /**
+     * Creates a new HjsonCodec instance using the given {@link HjsonOptions} for reading and writing.
+     * @param readOptions the options used when reading
+     * @param writeOptions the options used when writing
+     */
+    public HjsonCodec(@NotNull HjsonOptions readOptions, @NotNull HjsonOptions writeOptions) {
+        this.readOptions = Objects.requireNonNull(readOptions);
+        this.writeOptions = Objects.requireNonNull(writeOptions);
+    }
+
+    /**
+     * Creates a new HjsonCodec using default values.
+     */
+    public HjsonCodec() {
+        this(new HjsonOptions(), new HjsonOptions());
+    }
+
     @Override
     protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
         try {
-            return JsonValue.readHjson(new BufferedReader(new InputStreamReader(input)));
+            return JsonValue.readHjson(new BufferedReader(new InputStreamReader(input)), readOptions);
         }
         catch (ParseException exception) {
             throw new IOException(exception);
@@ -27,7 +48,7 @@ public class HjsonCodec extends AbstractConfigCodec {
 
     @Override
     protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
-        ((JsonObject) object).writeTo(new BufferedWriter(new OutputStreamWriter(output)));
+        ((JsonObject) object).writeTo(new BufferedWriter(new OutputStreamWriter(output)), writeOptions);
     }
 
     @Override
@@ -59,7 +80,7 @@ public class HjsonCodec extends AbstractConfigCodec {
             }
         }
 
-        throw new IllegalArgumentException("Invalid element type: " + element.getClass().getName());
+        throw new IllegalArgumentException("Invalid element: " + element.getClass().getName());
     }
 
     @Override

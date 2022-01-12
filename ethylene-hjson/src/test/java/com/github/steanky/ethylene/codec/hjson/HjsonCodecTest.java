@@ -22,6 +22,7 @@ class HjsonCodecTest {
             }""";
 
     private final HjsonCodec codec = new HjsonCodec();
+
     @Test
     void parsesHjson() throws IOException {
         ConfigElement element = codec.decode(new ByteArrayInputStream(TEST_HJSON.getBytes(StandardCharsets.UTF_8)));
