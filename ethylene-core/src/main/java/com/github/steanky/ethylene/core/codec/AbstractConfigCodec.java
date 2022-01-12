@@ -34,14 +34,14 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param <TFirst> the type of the first element
      * @param <TSecond> the type of the second element
      */
-    protected record Entry<TFirst, TSecond>(TFirst first, TSecond second) {}
+    public record Entry<TFirst, TSecond>(TFirst first, TSecond second) {}
 
     /**
      * Represents a specific input <i>container</i> object, and its equivalent output container. A container is a map,
      * array, or collection.
      * @param <TOut> the object held in the output container
      */
-    protected record Node<TOut>(@NotNull Object input,
+    public record Node<TOut>(@NotNull Object input,
                                 @NotNull Iterator<? extends Entry<String, ?>> inputIterator,
                                 @NotNull Output<TOut> output) {}
 
@@ -53,7 +53,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * array, or some other type that has no concept of a "key", the first parameter may be ignored (it should be null).
      * @param <TOut> the output type
      */
-    protected record Output<TOut>(@NotNull Object output,
+    public record Output<TOut>(@NotNull Object output,
                                   @NotNull BiConsumer<String, TOut> consumer) {}
 
     /**
