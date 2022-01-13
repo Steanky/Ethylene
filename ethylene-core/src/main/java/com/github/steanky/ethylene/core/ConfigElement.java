@@ -116,7 +116,10 @@ public interface ConfigElement {
     }
 
     /**
-     * Converts this ConfigElement into an object.
+     * Converts this ConfigElement into an object. For elements whose purpose it is to "wrap" Java types, this method
+     * should return the wrapped object. Although it may seem counterintuitive, this method <i>should</i> throw an
+     * exception for {@link ConfigList} and {@link ConfigNode} implementations — because these types are not meant to be
+     * simple wrappers.
      * @return this element as an object
      * @throws IllegalStateException if this element cannot be converted into an object
      */
@@ -188,6 +191,26 @@ public interface ConfigElement {
             }
 
             return current;
+        }
+    }
+
+    /**
+     * Functionally the same as {@link ConfigElement#getElement(Object...)}, but will return a fallback value if the
+     * given path does not exist.
+     * @param fallback the object to return if the path does not exist (i.e. if getElement would return null)
+     * @param objects the path
+     * @return the ConfigElement located at the given path, or fallback if it does not exist
+     * @throws IllegalArgumentException if objects contains null values or objects not subclassing String or Integer
+     * @throws NullPointerException if objects is null
+     */
+    default ConfigElement getElementOrDefault(ConfigElement fallback, @NotNull Object ... objects) {
+        ConfigElement element = getElement(objects);
+
+        if(element == null) {
+            return fallback;
+        }
+        else {
+            return element;
         }
     }
 }
