@@ -18,7 +18,7 @@ dependencies {
     compileOnly "org.jetbrains:annotations:22.0.0"
 
     //since this module is a direct part of Ethylene, we can just depend directly on the other modules like this:
-    //(note that ethylene-core is a transitive dependency for both of these)
+    //(note that ethylene-core is a transitive dependency here)
     implementation project(':ethylene-json')
     implementation project(':ethylene-toml')
 
