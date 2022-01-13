@@ -23,13 +23,36 @@ public class Main {
     /**
      * Some made-up JSON data.
      */
-    public static final String JSON_STRING = "{ \"this is\" : \"some json\", \"oh look here is\" : " +
-            "{ \"some more\" : \"json\" }, \"and here is a number\" : 69, \"array\" : [ \"first\", \"second\" ] }";
+    public static final String JSON_STRING = """
+            {
+                "this is" : "some json",
+                "oh look here is" : {
+                    "some more" : "json",
+                    "array containing objects" : [
+                        {
+                            "key" : "value",
+                            "another_key" : "another_value"
+                        },
+                        {
+                            "name" : "Steanky"
+                        }
+                    ]
+                },
+                "and here is a number" : 69,
+                "array" : [
+                    "first",
+                    "second"
+                ]
+            }
+            """;
 
     /**
      * Some made-up TOML data.
      */
-    public static final String TOML_STRING = "string = \"toml string\"\ndate = 1979-05-27T07:32:00-08:00";
+    public static final String TOML_STRING = """
+            string = "toml string"
+            date = 1979-05-27T07:32:00-08:00
+            """;
 
     /**
      * Entrypoint for contrived example program.
@@ -77,6 +100,11 @@ public class Main {
         for(ConfigElement element : node.get("array").asList()) {
             System.out.println(element.asString());
         }
+
+        //you can also use getElement to index list elements
+        //prints "Steanky"
+        String name = node.getElement("oh look here is", "array containing objects", 1, "name").asString();
+        System.out.println(name);
 
         /*
         want more customization? most implementations of ConfigCodec will allow you to customize the serializer it uses

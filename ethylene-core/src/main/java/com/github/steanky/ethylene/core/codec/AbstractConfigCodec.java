@@ -42,8 +42,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param <TOut> the object held in the output container
      */
     public record Node<TOut>(@NotNull Object input,
-                                @NotNull Iterator<? extends Entry<String, ?>> inputIterator,
-                                @NotNull Output<TOut> output) {}
+                             @NotNull Iterator<? extends Entry<String, ?>> inputIterator,
+                             @NotNull Output<TOut> output) {}
 
     /**
      * Represents an <i>output</i> object, which we convert to from an <i>input</i> object (when serializing or
@@ -54,7 +54,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param <TOut> the output type
      */
     public record Output<TOut>(@NotNull Object output,
-                                  @NotNull BiConsumer<String, TOut> consumer) {}
+                               @NotNull BiConsumer<String, TOut> consumer) {}
 
     /**
      * Empty constructor, for use by subclasses.
@@ -283,7 +283,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             visited.put(input, rootOut);
 
             while(!stack.isEmpty()) {
-                processNode(stack.pop(), stack, visited, scalarMapper, mapSupplier, collectionSupplier, inClass, outClass);
+                processNode(stack.pop(), stack, visited, scalarMapper, mapSupplier, collectionSupplier, inClass,
+                        outClass);
             }
 
             return rootOut;

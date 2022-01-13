@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.codec.json;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
