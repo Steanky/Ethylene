@@ -2,6 +2,8 @@
 
 Ethylene is a open-source, lightweight, general-purpose compatibility layer standing between the developer and the chaotic world of configuration file formats. The purpose of this library is simple: decouple any specific configuration format (TOML, JSON, YML, ...) from the code that actually uses it. Ideally, with minimal work by the developer, you should even be able to change or mix different formats without needing to modify lots of code. 
 
+**Ethylene is currently in early development; the public API should be considered unstable and liable to change over time.**
+
 # Get Ethylene
 
 Ethylene binaries are available from a publicly hosted [Cloudsmith repository](https://cloudsmith.io/~steank-f1g/repos/ethylene/packages/).
@@ -110,39 +112,44 @@ String string = node.get("string").asString();
 Here are some of the other ways you can access data:
 
 ```java
+//number == 100
 int number = node.get("number").asNumber().intValue();
 
 //nested objects, like developer, are themselves ConfigNode objects
 ConfigNode developer = node.get("developer").asNode();
 
-//name is "Steanky"
+//name.equals("Steanky")
 String name = developer.get("name");
 
 //support for lists
 ConfigList list = developer.get("repositories").asList();
 
-//repository is "Polymer"
+//repository.equals("Polymer")
 String repository = list.get(1).asString();
 
-//you can also directly access nested elements using getElement and providing a "path" of keys
-//name is "Steanky"
+//you can also directly access nested elements using getElement and providing a "path array" representing member names:
+//name.equals("Steanky")
 String name = node.getElement("developer", "name").asString();
 
-//ConfigNode and ConfigList objects are fully integrated into Java's type system:
-List<ConfigElement> exampleList = list;
-Map<String, ConfigElement> exampleMap = developer;
+//you can freely mix string keys and indices to access elements in lists using a path array:
+//polymer.equals("Polymer")
+String polymer = node.getElement("developer", "repositories", 1).asString();
 
-//they're also fully mutable:
+//ConfigNode and ConfigList objects are fully integrated into Java's type system. they implement Map<String, ConfigElement> and List<ConfigElement>, respectively:
+Map<String, ConfigElement> exampleMap = developer;
+List<ConfigElement> exampleList = list;
+
+//they're also mutable:
 list.remove(0); //removes "Ethylene"
 developer.put("age", 69); //adds an age field
-developer.clear(); //removes all values from developer
+developer.clear(); //clears all entries from developer
 ```
 
 For additional examples, check out the `example-project` module.
 
 # Build Ethylene
 
-Building Ethylene is simple! Just clone this repository and run `gradlew build` in the root directory. 
+Building Ethylene is simple! Just clone this repository and run `gradlew build` in the root directory. Build outputs are located in the `[module]/build` directory, replacing `[module]` with any specific Ethylene module (such as `ethylene-core`).
 
 Ethylene uses a few custom Gradle plugins to simplify build logic. These can be found in the `buildSrc/src/main/groovy` folder. If you're creating addons, like support for a specific configuration format, take a look at the `build.gradle` file for an existing module, and use the same structure.
 
