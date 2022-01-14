@@ -126,7 +126,7 @@ String repository = list.get(1).asString();
 
 //you can also directly access nested elements using getElement and providing a "path" of keys
 //name is "Steanky"
-String name = node.get("developer", "name").asString();
+String name = node.getElement("developer", "name").asString();
 
 //ConfigNode and ConfigList objects are fully integrated into Java's type system:
 List<ConfigElement> exampleList = list;
