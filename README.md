@@ -141,7 +141,7 @@ List<ConfigElement> exampleList = list;
 
 //they're also mutable:
 list.remove(0); //removes "Ethylene"
-developer.put("age", 69); //adds an age field
+developer.put("age", new ConfigPrimitive(69)); //adds an age field
 developer.clear(); //clears all entries from developer
 ```
 
