@@ -149,9 +149,9 @@ For additional examples, check out the `example-project` module.
 
 # Build Ethylene
 
-Building Ethylene is simple! Just clone this repository and run `gradlew build` in the root directory. Build outputs are located in the `[module]/build` directory, replacing `[module]` with any specific Ethylene module (such as `ethylene-core`).
+Building Ethylene is simple! Just clone this repository and run `gradlew build` in the root directory. Build outputs are located in the `[module]/build` directory, replacing `[module]` with the name of the Ethylene module (such as `ethylene-core`) for which you want to find the build output for.
 
-Ethylene uses a few custom Gradle plugins to simplify build logic. These can be found in the `buildSrc/src/main/groovy` folder. If you're creating addons, like support for a specific configuration format, take a look at the `build.gradle` file for an existing module, and use the same structure.
+Ethylene uses a few custom Gradle plugins to simplify build logic. These can be found in the `buildSrc/src/main/groovy` folder. If you're creating addons, like support for a specific configuration format, take a look at the `build.gradle` file for an existing module, and use the same structure. Generally, you'll want to apply `ethylene.library-conventions` for most cases.
 
 # Contributing
 
