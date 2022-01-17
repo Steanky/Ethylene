@@ -162,28 +162,22 @@ public interface ConfigElement {
                         ConfigNode currentNode = current.asNode();
                         if(currentNode.containsKey(string)) {
                             current = currentNode.get(string);
-                        }
-                        else {
-                            return null;
+                            continue;
                         }
                     }
-                    else {
-                        return null;
-                    }
+
+                    return null;
                 }
                 else if(current.isList()) {
                     if(key instanceof Integer integer) {
                         ConfigList currentList = current.asList();
                         if(integer >= 0 && integer < currentList.size()) {
                             current = currentList.get(integer);
-                        }
-                        else {
-                            return null;
+                            continue;
                         }
                     }
-                    else {
-                        return null;
-                    }
+
+                    return null;
                 }
                 else {
                     currentNonContainer = true;
