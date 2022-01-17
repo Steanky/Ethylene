@@ -1,10 +1,10 @@
 package com.github.steanky.ethylene.core.bridge;
 
-import com.github.steanky.ethylene.core.util.CallableUtils;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.FileConfigNode;
+import com.github.steanky.ethylene.core.util.CallableUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
