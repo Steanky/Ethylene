@@ -1,12 +1,12 @@
-package com.github.steanky.ethylene.core;
+package com.github.steanky.ethylene.core.util;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -16,6 +16,8 @@ import java.util.function.Supplier;
  * use.
  */
 public final class ConfigElementUtils {
+    private ConfigElementUtils() { throw new AssertionError("Don't do this."); }
+
     private static String toStringInternal(ConfigElement input, IdentityHashMap<Object, Integer> identities) {
         if(input.isContainer()) {
             ConfigContainer configContainer = input.asContainer();
@@ -53,7 +55,7 @@ public final class ConfigElementUtils {
             }
         }
         else {
-            return input.toString();
+            return "[" + input + "]";
         }
     }
 
@@ -70,7 +72,7 @@ public final class ConfigElementUtils {
      * @param <TReturn> the generic return value type
      * @return the value stored in element at path, or the default value produced by the supplier
      * @throws NullPointerException if any of the arguments are null
-     * @throws IllegalArgumentException if path contains invalid types (any besides int or String)
+     * @throws IllegalArgumentException if path contains invalid types (any besides Integer or String)
      */
     public static <TReturn> @NotNull TReturn getOrDefault(@NotNull ConfigElement element,
                                                           @NotNull Supplier<TReturn> returnSupplier,

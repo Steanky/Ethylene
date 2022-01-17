@@ -19,6 +19,7 @@ class ConfigElementTest {
         assertFalse(defaultElement.isNode());
         assertFalse(defaultElement.isNumber());
         assertFalse(defaultElement.isString());
+        assertFalse(defaultElement.isContainer());
     }
 
     @Test
@@ -29,6 +30,7 @@ class ConfigElementTest {
         assertThrows(IllegalStateException.class, defaultElement::asString);
         assertThrows(IllegalStateException.class, defaultElement::asNode);
         assertThrows(IllegalStateException.class, defaultElement::asNumber);
+        assertThrows(IllegalStateException.class, defaultElement::asContainer);
     }
 
     @Test

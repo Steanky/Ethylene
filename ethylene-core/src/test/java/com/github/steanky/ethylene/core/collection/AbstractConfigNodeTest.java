@@ -66,6 +66,6 @@ class AbstractConfigNodeTest {
 
         list.add(new ConfigPrimitive(10));
 
-        assertEquals("$0{self=$0, list=$1{$1, $0, 10}}", node.toString());
+        assertEquals("$0{self=$0, list=$1{$1, $0, [10]}}", node.toString());
     }
 }

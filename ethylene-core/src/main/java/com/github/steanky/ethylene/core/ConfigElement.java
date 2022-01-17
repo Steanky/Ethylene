@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.core;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.util.ConfigElementUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -54,6 +55,11 @@ public interface ConfigElement {
      */
     default boolean isContainer() { return isNode() || isList(); }
 
+    /**
+     * Converts this ConfigElement into a {@link ConfigContainer}.
+     * @return this element as a ConfigContainer object
+     * @throws IllegalStateException if this element is not a ConfigContainer
+     */
     default @NotNull ConfigContainer asContainer() {
         throw new IllegalStateException("Element may not be converted to ConfigContainer");
     }
@@ -200,65 +206,163 @@ public interface ConfigElement {
         }
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param elementSupplier the supplier used to produce the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default ConfigElement getElementOrDefault(@NotNull Supplier<ConfigElement> elementSupplier,
                                               @NotNull Object ... path) {
         return ConfigElementUtils.getOrDefault(this, elementSupplier, element -> true, element -> element, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param defaultElement the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default ConfigElement getElementOrDefault(ConfigElement defaultElement, @NotNull Object ... path) {
         return getElementOrDefault(() -> defaultElement, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param booleanSupplier the supplier used to produce the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default boolean getBooleanOrDefault(@NotNull Supplier<Boolean> booleanSupplier, @NotNull Object ... path) {
         return ConfigElementUtils.getOrDefault(this, booleanSupplier, ConfigElement::isBoolean,
                 ConfigElement::asBoolean, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param defaultBoolean the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default boolean getBooleanOrDefault(boolean defaultBoolean, @NotNull Object ... path) {
         return getBooleanOrDefault(() -> defaultBoolean, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param numberSupplier the supplier used to produce the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default Number getNumberOrDefault(@NotNull Supplier<Number> numberSupplier, @NotNull Object ... path) {
         return ConfigElementUtils.getOrDefault(this, numberSupplier, ConfigElement::isNumber,
                 ConfigElement::asNumber, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param defaultNumber the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default Number getNumberOrDefault(Number defaultNumber, @NotNull Object ... path) {
         return getNumberOrDefault(() -> defaultNumber, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param stringSupplier the supplier used to produce the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default String getStringOrDefault(@NotNull Supplier<String> stringSupplier, @NotNull Object ... path) {
         return ConfigElementUtils.getOrDefault(this, stringSupplier, ConfigElement::isString,
                 ConfigElement::asString, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param defaultString the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default String getStringOrDefault(String defaultString, @NotNull Object ... path) {
         return getStringOrDefault(() -> defaultString, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param listSupplier the supplier used to produce the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default ConfigList getListOrDefault(@NotNull Supplier<ConfigList> listSupplier, @NotNull Object ... path) {
         return ConfigElementUtils.getOrDefault(this, listSupplier, ConfigElement::isList, ConfigElement::asList,
                 path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param defaultList the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default ConfigList getListOrDefault(ConfigList defaultList, @NotNull Object ... path) {
         return getListOrDefault(() -> defaultList, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param nodeSupplier the supplier used to produce the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default ConfigNode getNodeOrDefault(@NotNull Supplier<ConfigNode> nodeSupplier, @NotNull Object ... path) {
         return ConfigElementUtils.getOrDefault(this, nodeSupplier, ConfigElement::isNode, ConfigElement::asNode,
                 path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param defaultNode the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default ConfigNode getNodeOrDefault(ConfigNode defaultNode, @NotNull Object ... path) {
         return getNodeOrDefault(() -> defaultNode, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param objectSupplier the supplier used to produce the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default Object getObjectOrDefault(@NotNull Supplier<Object> objectSupplier, @NotNull Object ... path) {
         return ConfigElementUtils.getOrDefault(this, objectSupplier, ConfigElement::isObject,
                 ConfigElement::asObject, path);
     }
 
+    /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
+     * the value pointed to by the path is not the right type.
+     * @param defaultObject the default value
+     * @param path the object path
+     * @return the value located at the path, or the default value
+     */
     default Object getObjectOrDefault(@NotNull Object defaultObject, @NotNull Object ... path) {
         return getObjectOrDefault(() -> defaultObject, path);
     }
