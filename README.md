@@ -2,7 +2,7 @@
 
 Ethylene is a open-source, lightweight, general-purpose compatibility layer standing between the developer and the chaotic world of configuration file formats. The purpose of this library is simple: decouple any specific configuration format (TOML, JSON, YML, ...) from the code that actually uses it. Ideally, with minimal work by the developer, you should even be able to change or mix different formats without needing to modify lots of code. 
 
-**Ethylene is currently in early development; the public API should be considered unstable and liable to change over time.**
+**Ethylene is currently in early development; the public API should be considered unstable and liable to change over time. Version 1.0.0 will mark the first "stable" release.**
 
 # Get Ethylene
 
