@@ -1,4 +1,4 @@
-package com.github.steanky.ethylene.core;
+package com.github.steanky.ethylene.core.util;
 
 import org.jetbrains.annotations.NotNull;
 

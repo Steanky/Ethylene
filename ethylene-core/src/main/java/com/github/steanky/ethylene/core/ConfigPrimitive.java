@@ -15,8 +15,8 @@ public class ConfigPrimitive implements ConfigElement {
      * Creates a new ConfigPrimitive instance wrapping the provided {@link Object}. The object may only subclass one of
      * a number of restricted types; otherwise, an {@link IllegalArgumentException} will be thrown.
      * @param object the object to wrap
-     * @throws IllegalArgumentException if the provided object is a type other than a String, Number, or Boolean, and is
-     * not null
+     * @throws IllegalArgumentException if the provided object is a type other than a String, Number, Boolean, or
+     * Character and is not null
      */
     public ConfigPrimitive(@Nullable Object object) {
         this.object = validateType(object);
@@ -96,5 +96,10 @@ public class ConfigPrimitive implements ConfigElement {
      */
     public void setObject(@Nullable Object object) {
         this.object = validateType(object);
+    }
+
+    @Override
+    public String toString() {
+        return object == null ? "null" : object.toString();
     }
 }

@@ -1,31 +1,77 @@
 package com.github.steanky.ethylene.core;
 
+import com.github.steanky.ethylene.core.collection.ConfigList;
+import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigElementTest {
-    private final ConfigElement element = new ConfigElement() {};
+    private final ConfigElement defaultElement = new ConfigElement() {};
 
     @Test
-    void checkDefaults() {
-        assertFalse(element.isObject());
-        assertFalse(element.isNull());
-        assertFalse(element.isBoolean());
-        assertFalse(element.isList());
-        assertFalse(element.isNode());
-        assertFalse(element.isNumber());
-        assertFalse(element.isString());
+    void defaults() {
+        assertFalse(defaultElement.isObject());
+        assertFalse(defaultElement.isNull());
+        assertFalse(defaultElement.isBoolean());
+        assertFalse(defaultElement.isList());
+        assertFalse(defaultElement.isNode());
+        assertFalse(defaultElement.isNumber());
+        assertFalse(defaultElement.isString());
+        assertFalse(defaultElement.isContainer());
     }
 
     @Test
-    void checkDefaultThrows() {
-        assertThrows(IllegalStateException.class, element::asObject);
-        assertThrows(IllegalStateException.class, element::asBoolean);
-        assertThrows(IllegalStateException.class, element::asList);
-        assertThrows(IllegalStateException.class, element::asString);
-        assertThrows(IllegalStateException.class, element::asNode);
-        assertThrows(IllegalStateException.class, element::asNumber);
+    void defaultThrows() {
+        assertThrows(IllegalStateException.class, defaultElement::asObject);
+        assertThrows(IllegalStateException.class, defaultElement::asBoolean);
+        assertThrows(IllegalStateException.class, defaultElement::asList);
+        assertThrows(IllegalStateException.class, defaultElement::asString);
+        assertThrows(IllegalStateException.class, defaultElement::asNode);
+        assertThrows(IllegalStateException.class, defaultElement::asNumber);
+        assertThrows(IllegalStateException.class, defaultElement::asContainer);
+    }
+
+    @Test
+    void defaultAccessNoSupplier() {
+        ConfigNode mockNode = Mockito.mock(ConfigNode.class);
+        ConfigList mockList = Mockito.mock(ConfigList.class);
+        String pathstring = "invalid path";
+        Object object = new Object();
+
+        assertNull(defaultElement.getElementOrDefault((ConfigElement) null, pathstring));
+        assertTrue(defaultElement.getBooleanOrDefault(true, pathstring));
+        assertEquals(69, defaultElement.getNumberOrDefault(69, pathstring));
+        assertEquals("succ", defaultElement.getStringOrDefault("succ", pathstring));
+        assertSame(mockNode, defaultElement.getNodeOrDefault(mockNode, pathstring));
+        assertSame(mockList, defaultElement.getListOrDefault(mockList, pathstring));
+        assertSame(object, defaultElement.getObjectOrDefault(object, pathstring));
+    }
+
+    @Test
+    void defaultAccessWithSupplier() {
+        ConfigNode mockNode = Mockito.mock(ConfigNode.class);
+        ConfigList mockList = Mockito.mock(ConfigList.class);
+        Object object = new Object();
+
+        String pathstring = "invalid path";
+
+        assertNull(defaultElement.getElementOrDefault(() -> null, pathstring));
+        assertTrue(defaultElement.getBooleanOrDefault(() -> true, pathstring));
+        assertEquals(69, defaultElement.getNumberOrDefault(() -> 69, pathstring));
+        assertEquals("succ", defaultElement.getStringOrDefault(() -> "succ", pathstring));
+        assertSame(mockNode, defaultElement.getNodeOrDefault(() -> mockNode, pathstring));
+        assertSame(mockList, defaultElement.getListOrDefault(() -> mockList, pathstring));
+        assertSame(object, defaultElement.getObjectOrDefault(() -> object, pathstring));
+    }
+
+    @Test
+    void getElementSpec() {
+        assertSame(defaultElement, defaultElement.getElement());
+        assertNull(defaultElement.getElement("invalid", "path", 420, "that doesn't exist"));
+        assertNull(defaultElement.getElement(""));
+        assertNull(defaultElement.getElement(0));
+        assertNull(defaultElement.getElement(0, "110"));
     }
 }

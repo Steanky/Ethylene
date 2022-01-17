@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core;
 
+import com.github.steanky.ethylene.core.util.CallableUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

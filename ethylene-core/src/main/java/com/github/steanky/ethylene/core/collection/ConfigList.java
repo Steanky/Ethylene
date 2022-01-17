@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Represents an ordered collection of {@link ConfigElement} objects. ConfigList does not support null values.
  */
-public interface ConfigList extends ConfigElement, List<ConfigElement> {
+public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigContainer {
     @Override
     default boolean isList() {
         return true;
