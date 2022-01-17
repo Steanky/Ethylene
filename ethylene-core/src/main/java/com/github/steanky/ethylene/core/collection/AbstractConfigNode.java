@@ -1,11 +1,13 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigElementUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * <p>Contains functionality and methods common to {@link ConfigNode} implementations. This abstract class does not
@@ -21,6 +23,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      * The backing map for this AbstractConfigNode.
      */
     protected final Map<String, ConfigElement> mappings;
+    private Collection<ConfigEntry> containerCollection;
 
     /**
      * Construct a new AbstractConfigNode using the provided mappings.
@@ -67,28 +70,42 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         return mappings.entrySet();
     }
 
-    @NotNull
     @Override
-    public Iterator<ConfigEntry> iterator() {
-        return new Iterator<>() {
-            private final Iterator<Map.Entry<String, ConfigElement>> iterator = mappings.entrySet().iterator();
+    public @NotNull Collection<ConfigEntry> entryCollection() {
+        if(containerCollection != null) {
+            return containerCollection;
+        }
 
+        return containerCollection = new AbstractCollection<>() {
             @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
+            public Iterator<ConfigEntry> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<Map.Entry<String, ConfigElement>> entryIterator = mappings.entrySet()
+                            .iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return entryIterator.hasNext();
+                    }
+
+                    @Override
+                    public ConfigEntry next() {
+                        Entry<String, ConfigElement> next = entryIterator.next();
+                        return new ConfigEntry(next.getKey(), next.getValue());
+                    }
+                };
             }
 
             @Override
-            public ConfigEntry next() {
-                Map.Entry<String, ConfigElement> entry = iterator.next();
-                return new ConfigEntry(entry.getKey(), entry.getValue());
-            }
-
-            @Override
-            public void remove() {
-                iterator.remove();
+            public int size() {
+                return mappings.size();
             }
         };
+    }
+
+    @Override
+    public String toString() {
+        return ConfigElementUtils.toString(this);
     }
 
     /**

@@ -97,4 +97,9 @@ public class ConfigPrimitive implements ConfigElement {
     public void setObject(@Nullable Object object) {
         this.object = validateType(object);
     }
+
+    @Override
+    public String toString() {
+        return object == null ? "null" : object.toString();
+    }
 }

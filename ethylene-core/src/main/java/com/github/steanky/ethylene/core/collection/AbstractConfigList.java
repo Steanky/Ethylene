@@ -1,15 +1,12 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigElementUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.AbstractList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
 /**
  * <p>Contains functionality and methods common to many {@link ConfigList} implementations. This abstract class does not
  * define any abstract methods. Its main use is to enable concrete implementations to specify what kind of backing list
@@ -21,6 +18,7 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractConfigList extends AbstractList<ConfigElement> implements ConfigList {
     private final List<ConfigElement> list;
+    private Collection<ConfigEntry> containerCollection;
 
     /**
      * Construct a new AbstractConfigList using the provided list to store its elements.
@@ -59,6 +57,42 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
     @Override
     public int size() {
         return list.size();
+    }
+
+    @Override
+    public @NotNull Collection<ConfigEntry> entryCollection() {
+        if(containerCollection != null) {
+            return containerCollection;
+        }
+
+        return containerCollection = new AbstractCollection<>() {
+            @Override
+            public Iterator<ConfigEntry> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<ConfigElement> elementIterator = list.iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return elementIterator.hasNext();
+                    }
+
+                    @Override
+                    public ConfigEntry next() {
+                        return new ConfigEntry(null, elementIterator.next());
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return list.size();
+            }
+        };
+    }
+
+    @Override
+    public String toString() {
+        return ConfigElementUtils.toString(this);
     }
 
     /**

@@ -1,10 +1,12 @@
 package com.github.steanky.ethylene.core;
 
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Represents a particular value from a configuration file. Specialized sub-interfaces include {@link ConfigNode} and
@@ -44,6 +46,16 @@ public interface ConfigElement {
      */
     default @NotNull ConfigList asList() {
         throw new IllegalStateException("Element may not be converted to ConfigArray");
+    }
+
+    /**
+     * Determines if this ConfigElement represents a container (holds other ConfigElements).
+     * @return true if {@link ConfigElement#isNode()} or {@link ConfigElement#isList()} return true, false otherwise
+     */
+    default boolean isContainer() { return isNode() || isList(); }
+
+    default @NotNull ConfigContainer asContainer() {
+        throw new IllegalStateException("Element may not be converted to ConfigContainer");
     }
 
     /**
@@ -150,7 +162,7 @@ public interface ConfigElement {
             }
 
             ConfigElement current = this;
-            boolean currentNonContainer = false;
+            boolean currentNonContainer = !current.isContainer();
 
             for(Object key : path) {
                 if(currentNonContainer) {
@@ -188,23 +200,66 @@ public interface ConfigElement {
         }
     }
 
-    /**
-     * Functionally the same as {@link ConfigElement#getElement(Object...)}, but will return a fallback value if the
-     * given path does not exist.
-     * @param fallback the object to return if the path does not exist (i.e. if getElement would return null)
-     * @param objects the path
-     * @return the ConfigElement located at the given path, or fallback if it does not exist
-     * @throws IllegalArgumentException if objects contains null values or objects not subclassing String or Integer
-     * @throws NullPointerException if objects is null
-     */
-    default ConfigElement getElementOrDefault(ConfigElement fallback, @NotNull Object ... objects) {
-        ConfigElement element = getElement(objects);
+    default ConfigElement getElementOrDefault(@NotNull Supplier<ConfigElement> elementSupplier,
+                                              @NotNull Object ... path) {
+        return ConfigElementUtils.getOrDefault(this, elementSupplier, element -> true, element -> element, path);
+    }
 
-        if(element == null) {
-            return fallback;
-        }
-        else {
-            return element;
-        }
+    default ConfigElement getElementOrDefault(ConfigElement defaultElement, @NotNull Object ... path) {
+        return getElementOrDefault(() -> defaultElement, path);
+    }
+
+    default boolean getBooleanOrDefault(@NotNull Supplier<Boolean> booleanSupplier, @NotNull Object ... path) {
+        return ConfigElementUtils.getOrDefault(this, booleanSupplier, ConfigElement::isBoolean,
+                ConfigElement::asBoolean, path);
+    }
+
+    default boolean getBooleanOrDefault(boolean defaultBoolean, @NotNull Object ... path) {
+        return getBooleanOrDefault(() -> defaultBoolean, path);
+    }
+
+    default Number getNumberOrDefault(@NotNull Supplier<Number> numberSupplier, @NotNull Object ... path) {
+        return ConfigElementUtils.getOrDefault(this, numberSupplier, ConfigElement::isNumber,
+                ConfigElement::asNumber, path);
+    }
+
+    default Number getNumberOrDefault(Number defaultNumber, @NotNull Object ... path) {
+        return getNumberOrDefault(() -> defaultNumber, path);
+    }
+
+    default String getStringOrDefault(@NotNull Supplier<String> stringSupplier, @NotNull Object ... path) {
+        return ConfigElementUtils.getOrDefault(this, stringSupplier, ConfigElement::isString,
+                ConfigElement::asString, path);
+    }
+
+    default String getStringOrDefault(String defaultString, @NotNull Object ... path) {
+        return getStringOrDefault(() -> defaultString, path);
+    }
+
+    default ConfigList getListOrDefault(@NotNull Supplier<ConfigList> listSupplier, @NotNull Object ... path) {
+        return ConfigElementUtils.getOrDefault(this, listSupplier, ConfigElement::isList, ConfigElement::asList,
+                path);
+    }
+
+    default ConfigList getListOrDefault(ConfigList defaultList, @NotNull Object ... path) {
+        return getListOrDefault(() -> defaultList, path);
+    }
+
+    default ConfigNode getNodeOrDefault(@NotNull Supplier<ConfigNode> nodeSupplier, @NotNull Object ... path) {
+        return ConfigElementUtils.getOrDefault(this, nodeSupplier, ConfigElement::isNode, ConfigElement::asNode,
+                path);
+    }
+
+    default ConfigNode getNodeOrDefault(ConfigNode defaultNode, @NotNull Object ... path) {
+        return getNodeOrDefault(() -> defaultNode, path);
+    }
+
+    default Object getObjectOrDefault(@NotNull Supplier<Object> objectSupplier, @NotNull Object ... path) {
+        return ConfigElementUtils.getOrDefault(this, objectSupplier, ConfigElement::isObject,
+                ConfigElement::asObject, path);
+    }
+
+    default Object getObjectOrDefault(@NotNull Object defaultObject, @NotNull Object ... path) {
+        return getObjectOrDefault(() -> defaultObject, path);
     }
 }

@@ -13,7 +13,7 @@ import java.util.Map;
  * <p>ConfigNode objects do not permit null keys or values. The absence of a value can be represented with a
  * {@link ConfigPrimitive} instance containing null.</p>
  */
-public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, Iterable<ConfigEntry> {
+public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, ConfigContainer {
     @Override
     default boolean isNode() {
         return true;
