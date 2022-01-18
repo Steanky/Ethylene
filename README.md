@@ -80,13 +80,13 @@ Note that in most cases you'll actually want to depend on a bunch of different E
 
 # Examples
 
-Using Ethylene is simple. To read some configuration data from a source (let's say a file, `/tmp/config.json`), you can do something like this:
+To read some configuration data from a source (let's say a file, `/tmp/config.json`), you can do something like this:
 
 ```java
 ConfigNode node = ConfigBridges.read(new File("/tmp/config.json"), new JsonCodec()).asNode();
 ```
 
-The `node` object will contain the data stored in the file we just read from. Ethylene knew how to interpret that data because the codec we supplied, `JsonCodec`, is designed for that purpose.
+The `node` object will contain the data stored in the file we just read from. Ethylene knew how to interpret that data because the codec we supplied, `JsonCodec`, is designed for that purpose. If the file contained some other kind of format — say, YAML — you'd want to use a `YamlCodec` instance from the `ethylene-yaml` module.
 
 Now, let's assume that our file contains the following json:
 
