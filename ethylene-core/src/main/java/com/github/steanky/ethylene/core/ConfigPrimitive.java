@@ -102,4 +102,21 @@ public class ConfigPrimitive implements ConfigElement {
     public String toString() {
         return object == null ? "null" : object.toString();
     }
+
+    @Override
+    public int hashCode() {
+        return object.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(object == null) {
+            return obj == null;
+        }
+        else if(obj instanceof ConfigPrimitive primitive) {
+            return object.equals(primitive.object);
+        }
+
+        return false;
+    }
 }

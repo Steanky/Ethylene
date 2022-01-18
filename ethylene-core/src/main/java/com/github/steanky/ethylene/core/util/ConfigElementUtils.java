@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Objects;
@@ -96,7 +97,7 @@ public final class ConfigElementUtils {
     /**
      * <p>Specialized helper method used by {@link ConfigContainer} implementations that need to override
      * {@link Object#toString()}. Supports circular and self-referential ConfigElement constructions by use of a "tag"
-     * syntax: collections are associated with a <i>name</i>, and if a container occurs twice, it will be referred to by
+     * syntax: containers are associated with a <i>name</i>, and if a container occurs twice, it will be referred to by
      * the name the second time rather than showing its entire contents again.</p>
      * @param input the input {@link ConfigElement} to show
      * @return the ConfigElement, represented as a string
