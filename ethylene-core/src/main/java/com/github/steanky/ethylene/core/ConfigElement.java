@@ -149,7 +149,8 @@ public interface ConfigElement {
      * result in an {@link IllegalArgumentException}. If the given array is empty, this object will be returned. The
      * path may contain a mix of integers and strings, so long as each ConfigElement at that point in the path matches.
      * @param path the path used to access this element
-     * @return the ConfigElement at the specified path, or null if it could not be found
+     * @return the ConfigElement at the specified path, or null if it could not be found. If the path array is empty,
+     * this element will be returned
      * @throws IllegalArgumentException if path contains any objects other than strings and integers, or has null values
      * @throws NullPointerException if path is null
      */
