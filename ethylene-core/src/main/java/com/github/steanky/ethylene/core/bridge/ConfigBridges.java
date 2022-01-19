@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.core.bridge;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.collection.FileConfigNode;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -102,7 +101,7 @@ public final class ConfigBridges {
      * ConfigBridge implementation.</p>
      * @param path a path pointing to the file read from and written to
      * @param codec the codec used to read/write from this file
-     * @return a ConfigBridge implementation which can read/write {@link FileConfigNode} objects from and to the given
+     * @return a ConfigBridge implementation which can read/write {@link ConfigElement} objects from and to the given
      * file
      * @throws NullPointerException if any of the arguments are null
      */
@@ -191,7 +190,7 @@ public final class ConfigBridges {
      * the provided {@link Path}.
      * @param path the path pointing to the file to read from
      * @param codec the codec to use to decode the file
-     * @return a {@link FileConfigNode} representing the file's configuration data
+     * @return a {@link ConfigElement} representing the file's configuration data
      * @throws IOException if the config data contained in the file is invalid or if an IO error occurred
      * @throws NullPointerException if any of the arguments are null
      */
@@ -203,22 +202,7 @@ public final class ConfigBridges {
     }
 
     /**
-     * Writes a {@link FileConfigNode} to the file. The node's codec will be used to encode the data. The node must not
-     * represent a directory.
-     * @param path a {@link Path} pointing to the file to write to
-     * @param node the node to write
-     * @throws IOException if an IO error occurred
-     * @throws IllegalArgumentException if node represents a directory
-     */
-    public static void write(@NotNull Path path, @NotNull FileConfigNode node) throws IOException {
-        Objects.requireNonNull(path);
-        Objects.requireNonNull(node);
-
-        writeInternal(Files.newOutputStream(path), node, node.getCodec());
-    }
-
-    /**
-     * Writes a {@link FileConfigNode} to the filesystem. The provided codec will be used to encode the node's data.
+     * Writes a {@link ConfigNode} to the filesystem. The provided codec will be used to encode the node's data.
      * @param path a path pointing to the file to write to
      * @param node the node to write
      * @param codec the codec to use
