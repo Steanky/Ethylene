@@ -7,7 +7,7 @@ import java.io.IOException;
  */
 public class ConfigProcessException extends IOException {
     /**
-     * Constructs a new ConfigParseException with the provided message.
+     * Constructs a new ConfigProcessException with the provided message.
      * @param message a descriptive message
      */
     public ConfigProcessException(String message) {
@@ -15,7 +15,7 @@ public class ConfigProcessException extends IOException {
     }
 
     /**
-     * Constructs a new ConfigParseException with the provided cause.
+     * Constructs a new ConfigProcessException with the provided cause.
      * @param cause the {@link Throwable} responsible for this exception
      */
     public ConfigProcessException(Throwable cause) {
