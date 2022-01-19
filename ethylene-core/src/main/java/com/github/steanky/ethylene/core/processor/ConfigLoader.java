@@ -21,7 +21,7 @@ public interface ConfigLoader<TData> {
 
     /**
      * Loads some data from the source. If an exception occurs during this operation, it will be thrown when
-     * {@link Future#get()} is called.
+     * {@link CompletableFuture#get()} is called.
      * @return a {@link CompletableFuture} that may be used to wait on the read operation
      */
     @NotNull CompletableFuture<TData> load();

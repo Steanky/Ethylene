@@ -16,9 +16,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * <p>Synchronous filesystem-source specialization of ProcessingConfigLoader. The source is considered <i>absent</i> if the
- * given {@link Path} does not exist (see {@link ProcessingConfigLoader} for more information on how an absent source
- * changes behavior).</p>
+ * <p>Filesystem-source specialization of ProcessingConfigLoader. The source is considered <i>absent</i> if the given
+ * {@link Path} does not exist (see {@link ProcessingConfigLoader} for more information on how an absent source changes
+ * behavior).</p>
  *
  * <p>This class does not require a specific codec. Rather, implementations may choose how the codec is loaded by
  * overriding the {@link FileConfigLoader#codecForPath(Path)} method.</p>
