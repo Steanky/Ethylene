@@ -119,7 +119,7 @@ public final class ConfigBridges {
      * ConfigBridge implementation that is immediately read from.
      * @param inputStream the InputStream to read from
      * @param codec the ConfigCodec which will be used to decode the input data
-     * @return a ConfigNode object representing the decoded configuration data
+     * @return a {@link ConfigNode} object representing the decoded configuration data
      * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
      * @throws NullPointerException if any arguments are null
      */
@@ -154,7 +154,7 @@ public final class ConfigBridges {
      * Same as {@link ConfigBridges#read(InputStream, ConfigCodec)}, but uses a {@link ByteArrayInputStream}
      * constructed from the provided string, assuming a UTF-8 encoding.
      * @param input the string to read from
-     * @param codec the ConfigCodec which will be used to decode the input string
+     * @param codec the {@link ConfigCodec} which will be used to decode the input string
      * @return a {@link ConfigNode} object representing the decoded configuration data
      * @throws IOException if the string does not contain valid data for the codec
      * @throws NullPointerException if any of the arguments are null
