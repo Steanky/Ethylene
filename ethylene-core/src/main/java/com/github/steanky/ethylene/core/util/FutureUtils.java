@@ -21,15 +21,15 @@ public final class FutureUtils {
      * using the provided {@link Executor}.
      * @param callable the callable to invoke
      * @param executor the executor used to run the callable asynchronously
-     * @param <T> the object returned by the callable
+     * @param <TCall> the object type returned by the callable
      * @return a {@link CompletableFuture} from the given Callable
      */
-    public static <T> CompletableFuture<T> callableToFuture(@NotNull Callable<? extends T> callable,
-                                                            @NotNull Executor executor) {
+    public static <TCall> CompletableFuture<TCall> callableToFuture(@NotNull Callable<? extends TCall> callable,
+                                                                    @NotNull Executor executor) {
         Objects.requireNonNull(callable);
         Objects.requireNonNull(executor);
 
-        CompletableFuture<T> future = new CompletableFuture<>();
+        CompletableFuture<TCall> future = new CompletableFuture<>();
         executor.execute(() -> {
             try {
                 future.complete(callable.call());
@@ -45,13 +45,13 @@ public final class FutureUtils {
      * Works functionally the same as {@link FutureUtils#callableToFuture(Callable, Executor)}, but the given
      * {@link Callable} is run synchronously.
      * @param callable the callable to invoke
-     * @param <T> the object returned by the callable
+     * @param <TCall> the object returned by the callable
      * @return a {@link CompletableFuture} from the given Callable
      */
-    public static <T> CompletableFuture<T> callableToCompletedFuture(@NotNull Callable<? extends T> callable) {
+    public static <TCall> CompletableFuture<TCall> callableToCompletedFuture(@NotNull Callable<? extends TCall> callable) {
         Objects.requireNonNull(callable);
 
-        CompletableFuture<T> future = new CompletableFuture<>();
+        CompletableFuture<TCall> future = new CompletableFuture<>();
         try {
             future.complete(callable.call());
         } catch (Exception exception) {
