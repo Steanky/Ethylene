@@ -61,9 +61,7 @@ public final class ConfigBridges {
         }
     }
 
-    private static void writeInternal(OutputStream outputStream,
-                                      ConfigElement element,
-                                      ConfigCodec codec) {
+    private static void writeInternal(OutputStream outputStream, ConfigElement element, ConfigCodec codec) {
         fromStreamsInternal(InputStream::nullInputStream, () -> outputStream, codec).write(element);
     }
 
