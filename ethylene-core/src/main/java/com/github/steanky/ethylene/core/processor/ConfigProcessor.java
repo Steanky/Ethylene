@@ -13,15 +13,15 @@ public interface ConfigProcessor<TData> {
      * Produces some data from a provided {@link ConfigElement}.
      * @param element the element to process
      * @return the data object
-     * @throws ConfigParseException if the provided {@link ConfigElement} does not contain valid data
+     * @throws ConfigProcessException if the provided {@link ConfigElement} does not contain valid data
      */
-    @NotNull TData dataFromElement(@NotNull ConfigElement element) throws ConfigParseException;
+    @NotNull TData dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException;
 
     /**
      * Produces a {@link ConfigElement} from the provided data object.
      * @param data the data object
      * @return a {@link ConfigElement} representing the given data
-     * @throws ConfigParseException if the data is invalid
+     * @throws ConfigProcessException if the data is invalid
      */
-    @NotNull ConfigElement elementFromData(@NotNull TData data) throws ConfigParseException;
+    @NotNull ConfigElement elementFromData(@NotNull TData data) throws ConfigProcessException;
 }
