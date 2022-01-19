@@ -9,9 +9,9 @@ import java.util.concurrent.CompletableFuture;
 import com.github.steanky.ethylene.core.ConfigElement;
 
 /**
- * Further specialization of {@link ConfigLoader} that uses a {@link ConfigProcessor} instance to marshal
- * {@link ConfigElement} instances to and from arbitrary data types. It stores a default type, which will be written
- * if implementations specify that their data source is currently <i>absent</i> (say, in case of a missing file).
+ * {@link ConfigLoader} implementation that uses a {@link ConfigProcessor} instance to marshal {@link ConfigElement}s
+ * to and from arbitrary data types. It stores a default type, which will be written if implementations specify that
+ * their data source is currently <i>absent</i> (say, in case of a missing file).
  * @param <TData> the type of data to convert to and from
  */
 public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TData> {
