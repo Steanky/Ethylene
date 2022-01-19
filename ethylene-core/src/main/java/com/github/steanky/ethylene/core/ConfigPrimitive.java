@@ -105,15 +105,12 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public int hashCode() {
-        return object.hashCode();
+        return object == null ? 0 : object.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(object == null) {
-            return obj == null;
-        }
-        else if(obj instanceof ConfigPrimitive primitive) {
+        if(obj instanceof ConfigPrimitive primitive) {
             return object.equals(primitive.object);
         }
 
