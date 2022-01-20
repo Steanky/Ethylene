@@ -3,12 +3,14 @@ package com.github.steanky.ethylene.core;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * This class represents a "primitive" type. A type is considered "primitive" if and only if it subclasses
  * {@link String}, {@link Number}, {@link Boolean}, {@link Character}, or is a null value. Therefore, all Java
  * primitives as well as String are compatible.
  */
-public class ConfigPrimitive implements ConfigElement {
+public final class ConfigPrimitive implements ConfigElement {
     private Object object;
 
     /**
@@ -101,5 +103,23 @@ public class ConfigPrimitive implements ConfigElement {
     @Override
     public String toString() {
         return object == null ? "null" : object.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(object);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+
+        if(obj instanceof ConfigPrimitive primitive) {
+            return Objects.equals(object, primitive.object);
+        }
+
+        return false;
     }
 }

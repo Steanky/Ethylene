@@ -15,7 +15,7 @@ import java.util.function.Supplier;
  *
  * <p>Subclasses must take care to ensure that the map used to construct this object does not contain null keys or
  * values at any point. Therefore, the backing map should not be exposed anywhere where it may be accidentally used. See
- * {@link LinkedConfigNode} and {@link FileConfigNode} for examples of how to properly inherit this class.</p>
+ * {@link LinkedConfigNode} for an example of how to properly inherit this class.</p>
  */
 public abstract class AbstractConfigNode extends AbstractMap<String, ConfigElement> implements ConfigNode {
     /**

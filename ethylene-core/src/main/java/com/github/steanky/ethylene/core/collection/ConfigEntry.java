@@ -42,18 +42,4 @@ public final class ConfigEntry {
     public @NotNull ConfigElement getValue() {
         return element;
     }
-
-    @Override
-    public int hashCode() {
-        return ((key == null) ? 0 : key.hashCode()) ^ (element.hashCode());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if(obj instanceof ConfigEntry entry) {
-            return key.equals(entry.key) && element.equals(entry.element);
-        }
-
-        return false;
-    }
 }
