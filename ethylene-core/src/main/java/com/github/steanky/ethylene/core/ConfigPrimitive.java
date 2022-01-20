@@ -3,6 +3,8 @@ package com.github.steanky.ethylene.core;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 /**
  * This class represents a "primitive" type. A type is considered "primitive" if and only if it subclasses
  * {@link String}, {@link Number}, {@link Boolean}, {@link Character}, or is a null value. Therefore, all Java
@@ -105,7 +107,7 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public int hashCode() {
-        return object == null ? 0 : object.hashCode();
+        return Objects.hashCode(object);
     }
 
     @Override
