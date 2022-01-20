@@ -117,7 +117,7 @@ public final class ConfigPrimitive implements ConfigElement {
         }
 
         if(obj instanceof ConfigPrimitive primitive) {
-            return object.equals(primitive.object);
+            return Objects.equals(object, primitive.object);
         }
 
         return false;
