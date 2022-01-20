@@ -14,7 +14,7 @@ import java.util.concurrent.Future;
  *
  * <p>For consistent behavior between synchronous and non-synchronous implementations, simply calling
  * {@link ConfigBridge#read()} or {@link ConfigBridge#write(ConfigElement)} should not throw any {@link IOException}s,
- * even if one occurred. This exception will be raised when {@link Future#get()} is invoked later.</p>
+ * even if one occurred. This exception will be raised when {@link CompletableFuture#get()} is invoked later.</p>
  */
 public interface ConfigBridge {
     /**
