@@ -38,7 +38,7 @@ public class AsyncFileConfigLoader<TData> extends FileConfigLoader<TData> {
         this.bridge = new CodecConfigBridge(codec) {
             @Override
             protected @NotNull <TReturn> CompletableFuture<TReturn> makeFuture(@NotNull Callable<TReturn> callable) {
-                return FutureUtils.callableToFuture(callable, executor);
+                return FutureUtils.completeCallableAsync(callable, executor);
             }
         };
     }

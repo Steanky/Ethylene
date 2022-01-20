@@ -24,8 +24,8 @@ public final class FutureUtils {
      * @param <TCall> the object type returned by the callable
      * @return a {@link CompletableFuture} from the given Callable
      */
-    public static <TCall> CompletableFuture<TCall> callableToFuture(@NotNull Callable<? extends TCall> callable,
-                                                                    @NotNull Executor executor) {
+    public static <TCall> CompletableFuture<TCall> completeCallableAsync(@NotNull Callable<? extends TCall> callable,
+                                                                         @NotNull Executor executor) {
         Objects.requireNonNull(callable);
         Objects.requireNonNull(executor);
 
@@ -42,13 +42,13 @@ public final class FutureUtils {
     }
 
     /**
-     * Works functionally the same as {@link FutureUtils#callableToFuture(Callable, Executor)}, but the given
+     * Works functionally the same as {@link FutureUtils#completeCallableAsync(Callable, Executor)}, but the given
      * {@link Callable} is run synchronously.
      * @param callable the callable to invoke
      * @param <TCall> the object returned by the callable
      * @return a {@link CompletableFuture} from the given Callable
      */
-    public static <TCall> CompletableFuture<TCall> callableToCompletedFuture(@NotNull Callable<? extends TCall> callable) {
+    public static <TCall> CompletableFuture<TCall> completeCallableSync(@NotNull Callable<? extends TCall> callable) {
         Objects.requireNonNull(callable);
 
         CompletableFuture<TCall> future = new CompletableFuture<>();

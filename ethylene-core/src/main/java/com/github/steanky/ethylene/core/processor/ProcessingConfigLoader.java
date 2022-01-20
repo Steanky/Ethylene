@@ -1,12 +1,12 @@
 package com.github.steanky.ethylene.core.processor;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.bridge.ConfigBridge;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import com.github.steanky.ethylene.core.ConfigElement;
 
 /**
  * {@link ConfigLoader} implementation that uses a {@link ConfigProcessor} instance to marshal {@link ConfigElement}s
@@ -31,7 +31,7 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
 
     @Override
     public @NotNull CompletableFuture<Void> writeDefaultIfAbsent() {
-        return FutureUtils.callableToCompletedFuture(() -> {
+        return FutureUtils.completeCallableSync(() -> {
             if(isAbsent()) {
                 getBridge().write(processor.elementFromData(defaultData));
             }
@@ -43,7 +43,7 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
     @Override
     public @NotNull CompletableFuture<TData> load() {
         return getBridge().read().thenCompose(element ->
-                FutureUtils.callableToCompletedFuture(() -> processor.dataFromElement(element)));
+                FutureUtils.completeCallableSync(() -> processor.dataFromElement(element)));
     }
 
     /**

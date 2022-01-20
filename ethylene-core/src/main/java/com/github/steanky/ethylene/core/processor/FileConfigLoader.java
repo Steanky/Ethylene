@@ -43,10 +43,7 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
 
         @Override
         public @NotNull CompletableFuture<ConfigElement> read() {
-            return makeFuture(() -> {
-                codec.decode(Files.newInputStream(path));
-                return null;
-            });
+            return makeFuture(() -> codec.decode(Files.newInputStream(path)));
         }
 
         @Override
@@ -86,7 +83,7 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
         this.bridge = new CodecConfigBridge(codec) {
             @Override
             protected <TReturn> @NotNull CompletableFuture<TReturn> makeFuture(@NotNull Callable<TReturn> callable) {
-                return FutureUtils.callableToCompletedFuture(callable);
+                return FutureUtils.completeCallableSync(callable);
             }
         };
     }

@@ -31,12 +31,12 @@ public final class ConfigBridges {
         return new ConfigBridge() {
             @Override
             public @NotNull CompletableFuture<ConfigElement> read() {
-                return FutureUtils.callableToCompletedFuture(() -> codec.decode(inputCallable.call()));
+                return FutureUtils.completeCallableSync(() -> codec.decode(inputCallable.call()));
             }
 
             @Override
             public @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element) {
-                return FutureUtils.callableToCompletedFuture(() -> {
+                return FutureUtils.completeCallableSync(() -> {
                     codec.encode(element, outputCallable.call());
                     return null;
                 });
