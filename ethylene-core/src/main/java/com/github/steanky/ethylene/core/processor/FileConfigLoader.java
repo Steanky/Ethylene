@@ -12,12 +12,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Filesystem-source specialization of ProcessingConfigLoader. The source is considered <i>absent</i> if the given
+ * <p>Filesystem-source specialization of ProcessingConfigLoader. The source is considered <i>absent</i> if the given
  * {@link Path} does not exist (see {@link ProcessingConfigLoader} for more information on how an absent source changes
- * behavior).
+ * behavior).</p>
+ *
+ * <p>This class is only used internally because there is some potential for misuse; i.e. it is possible for a user to
+ * provide a {@link ConfigBridge} implementation that is not at all related to the given Path.</p>
  * @param <TData> the type of data object
  */
-public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
+class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
     private final Path path;
 
     /**
@@ -28,12 +31,11 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
      * @param path the path to read data from and write defaults to
      * @param bridge the ConfigBridge used to read/write data
      */
-    public FileConfigLoader(@NotNull ConfigProcessor<TData> processor,
-                            @NotNull TData defaultData,
-                            @NotNull ConfigBridge bridge,
-                            @NotNull Path path) {
+    FileConfigLoader(@NotNull ConfigProcessor<TData> processor,
+                     @NotNull TData defaultData,
+                     @NotNull ConfigBridge bridge,
+                     @NotNull Path path) {
         super(processor, defaultData, bridge);
-
         this.path = Objects.requireNonNull(path);
     }
 
