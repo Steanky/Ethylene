@@ -10,7 +10,7 @@ import java.util.Objects;
  * {@link String}, {@link Number}, {@link Boolean}, {@link Character}, or is a null value. Therefore, all Java
  * primitives as well as String are compatible.
  */
-public class ConfigPrimitive implements ConfigElement {
+public final class ConfigPrimitive implements ConfigElement {
     private Object object;
 
     /**
