@@ -14,7 +14,7 @@ public final class FutureUtils {
     private FutureUtils() { throw new AssertionError("No."); }
 
     /**
-     * Constructs a new {@link CompletableFuture} instance from the provided {@link Callable}. If the Callable throw an
+     * Constructs a new {@link CompletableFuture} instance from the provided {@link Callable}. If the Callable throws an
      * exception, the CompletableFuture will be completed <i>exceptionally</i> through its
      * {@link CompletableFuture#completeExceptionally(Throwable)} method. Otherwise, it will complete normally with the
      * result of invoking {@link Callable#call()} on the provided Callable. The Callable will be executed asynchronously

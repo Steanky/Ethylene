@@ -16,7 +16,7 @@ import java.util.concurrent.Executor;
  * @param <TData> the type of data object
  */
 public class AsyncFileConfigLoader<TData> extends FileConfigLoader<TData> {
-    private final ConfigBridge bridge;
+    private final Executor executor;
 
     /**
      * Constructs a new AsyncFileConfigLoader instance from the given {@link ConfigProcessor}, data object,
@@ -33,18 +33,16 @@ public class AsyncFileConfigLoader<TData> extends FileConfigLoader<TData> {
                                  @NotNull ConfigCodec codec,
                                  @NotNull Executor executor) {
         super(processor, defaultData, path, codec);
+        this.executor = Objects.requireNonNull(executor);
+    }
 
-        Objects.requireNonNull(executor);
-        this.bridge = new CodecConfigBridge(codec) {
+    @Override
+    protected @NotNull ConfigBridge getBridge() {
+        return new CodecConfigBridge() {
             @Override
             protected @NotNull <TReturn> CompletableFuture<TReturn> makeFuture(@NotNull Callable<TReturn> callable) {
                 return FutureUtils.completeCallableAsync(callable, executor);
             }
         };
-    }
-
-    @Override
-    protected @NotNull ConfigBridge getBridge() {
-        return bridge;
     }
 }

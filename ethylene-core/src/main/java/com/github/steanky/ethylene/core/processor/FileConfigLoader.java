@@ -19,28 +19,14 @@ import java.util.concurrent.CompletableFuture;
  * @param <TData> the type of data object
  */
 public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
-    /**
-     * The {@link Path} object acting as the source of data.
-     */
-    protected final Path path;
-
-    private final ConfigBridge bridge;
+    private final Path path;
+    private final ConfigCodec codec;
 
     /**
      * General ConfigBridge implementation which may be synchronous or asynchronous. It will encode and decode data
      * based off of a single, provided codec.
      */
     protected abstract class CodecConfigBridge implements ConfigBridge {
-        private final ConfigCodec codec;
-
-        /**
-         * Produces a new instance of CodecConfigBridge using the provided codec.
-         * @param codec the codec to use
-         */
-        protected CodecConfigBridge(@NotNull ConfigCodec codec) {
-            this.codec = Objects.requireNonNull(codec);
-        }
-
         @Override
         public @NotNull CompletableFuture<ConfigElement> read() {
             return makeFuture(() -> codec.decode(Files.newInputStream(path)));
@@ -80,17 +66,17 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
         super(processor, defaultData);
 
         this.path = Objects.requireNonNull(path);
-        this.bridge = new CodecConfigBridge(codec) {
+        this.codec = Objects.requireNonNull(codec);
+    }
+
+    @Override
+    protected @NotNull ConfigBridge getBridge() {
+        return new CodecConfigBridge() {
             @Override
             protected <TReturn> @NotNull CompletableFuture<TReturn> makeFuture(@NotNull Callable<TReturn> callable) {
                 return FutureUtils.completeCallableSync(callable);
             }
         };
-    }
-
-    @Override
-    protected @NotNull ConfigBridge getBridge() {
-        return bridge;
     }
 
     @Override
