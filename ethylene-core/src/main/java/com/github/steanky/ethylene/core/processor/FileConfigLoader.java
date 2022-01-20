@@ -30,6 +30,7 @@ class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
      * @param defaultData the default data object
      * @param path the path to read data from and write defaults to
      * @param bridge the ConfigBridge used to read/write data
+     * @throws IllegalArgumentException if path represents a directory
      */
     FileConfigLoader(@NotNull ConfigProcessor<TData> processor,
                      @NotNull TData defaultData,
@@ -37,6 +38,10 @@ class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
                      @NotNull Path path) {
         super(processor, defaultData, bridge);
         this.path = Objects.requireNonNull(path);
+
+        if(Files.isDirectory(path)) {
+            throw new IllegalArgumentException("Supplied path is a directory");
+        }
     }
 
     @Override
