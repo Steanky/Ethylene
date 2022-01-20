@@ -16,8 +16,8 @@ import java.util.concurrent.Executor;
  */
 public class AsyncFileConfigLoader<TData> extends FileConfigLoader<TData> {
     /**
-     * Constructs a new AsyncFileConfigLoader instance from the given {@link ConfigProcessor}, data object, {
-     * @link Path}, {@link ConfigCodec}, and {@link Executor}.
+     * Constructs a new AsyncFileConfigLoader instance from the given {@link ConfigProcessor}, data object,
+     * {@link Path}, {@link ConfigCodec}, and {@link Executor}.
      * @param processor the processor used to marshal data
      * @param defaultData the default data object
      * @param path the path to read data from and write defaults to
