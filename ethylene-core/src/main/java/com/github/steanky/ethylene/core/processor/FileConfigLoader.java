@@ -38,10 +38,6 @@ class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
                      @NotNull Path path) {
         super(processor, defaultData, bridge);
         this.path = Objects.requireNonNull(path);
-
-        if(Files.isDirectory(path)) {
-            throw new IllegalArgumentException("Supplied path is a directory");
-        }
     }
 
     @Override

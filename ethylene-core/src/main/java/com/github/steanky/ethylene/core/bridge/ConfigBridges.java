@@ -96,9 +96,6 @@ public final class ConfigBridges {
      *
      * <p>If the file is invalid or cannot be read from, {@link IOException}s will be thrown when attempts are made to
      * read objects from the ConfigBridge.</p>
-     *
-     * <p>This method uses {@link ConfigBridges#fromStreams(Callable, Callable, ConfigCodec)} to produce its
-     * ConfigBridge implementation.</p>
      * @param path a path pointing to the file read from and written to
      * @param codec the codec used to read/write from this file
      * @return a ConfigBridge implementation which can read/write {@link ConfigElement} objects from and to the given
