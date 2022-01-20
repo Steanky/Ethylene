@@ -112,6 +112,10 @@ public class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+
         if(obj instanceof ConfigPrimitive primitive) {
             return object.equals(primitive.object);
         }
