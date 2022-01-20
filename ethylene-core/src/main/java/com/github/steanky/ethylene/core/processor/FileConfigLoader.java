@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.core.processor;
 
-import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.bridge.ConfigBridge;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import com.github.steanky.ethylene.core.util.FutureUtils;
@@ -20,36 +19,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
     private final Path path;
-    private final ConfigCodec codec;
-
-    /**
-     * General ConfigBridge implementation which may be synchronous or asynchronous. It will encode and decode data
-     * based off of a single, provided codec.
-     */
-    protected abstract class CodecConfigBridge implements ConfigBridge {
-        @Override
-        public @NotNull CompletableFuture<ConfigElement> read() {
-            return makeFuture(() -> codec.decode(Files.newInputStream(path)));
-        }
-
-        @Override
-        public @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element) {
-            return makeFuture(() -> {
-                codec.encode(element, Files.newOutputStream(path));
-                return null;
-            });
-        }
-
-        /**
-         * Produces a {@link CompletableFuture} object from a {@link Callable}. The future may or may not be already
-         * completed.
-         * @param callable the callable to convert
-         * @param <TReturn> the type of data object
-         * @return a {@link CompletableFuture} object which may represent a synchronous or asynchronous call
-         */
-        protected abstract <TReturn> @NotNull CompletableFuture<TReturn> makeFuture(
-                @NotNull Callable<TReturn> callable);
-    }
 
     /**
      * Constructs a new FileConfigLoader instance from the given {@link ConfigProcessor}, data object, {@link Path}, and
@@ -57,26 +26,15 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
      * @param processor the processor used to marshal data
      * @param defaultData the default data object
      * @param path the path to read data from and write defaults to
-     * @param codec the codec used to read and write data
+     * @param bridge the ConfigBridge used to read/write data
      */
     public FileConfigLoader(@NotNull ConfigProcessor<TData> processor,
                             @NotNull TData defaultData,
-                            @NotNull Path path,
-                            @NotNull ConfigCodec codec) {
-        super(processor, defaultData);
+                            @NotNull ConfigBridge bridge,
+                            @NotNull Path path) {
+        super(processor, defaultData, bridge);
 
         this.path = Objects.requireNonNull(path);
-        this.codec = Objects.requireNonNull(codec);
-    }
-
-    @Override
-    protected @NotNull ConfigBridge getBridge() {
-        return new CodecConfigBridge() {
-            @Override
-            protected <TReturn> @NotNull CompletableFuture<TReturn> makeFuture(@NotNull Callable<TReturn> callable) {
-                return FutureUtils.completeCallableSync(callable);
-            }
-        };
     }
 
     @Override

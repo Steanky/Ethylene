@@ -17,40 +17,40 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TData> {
     private final ConfigProcessor<TData> processor;
     private final TData defaultData;
+    private final ConfigBridge bridge;
 
     /**
      * Constructs a new instance of ProcessingConfigLoader from the given {@link ConfigProcessor} and default data
      * object.
      * @param processor the processor to use
      * @param defaultData the default data object
+     * @param bridge the {@link ConfigBridge} used for reading/writing data
      */
-    public ProcessingConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData) {
+    public ProcessingConfigLoader(@NotNull ConfigProcessor<TData> processor,
+                                  @NotNull TData defaultData,
+                                  @NotNull ConfigBridge bridge) {
         this.processor = Objects.requireNonNull(processor);
         this.defaultData = Objects.requireNonNull(defaultData);
+        this.bridge = Objects.requireNonNull(bridge);
     }
 
     @Override
     public @NotNull CompletableFuture<Void> writeDefaultIfAbsent() {
-        return FutureUtils.completeCallableSync(() -> {
-            if(isAbsent()) {
-                getBridge().write(processor.elementFromData(defaultData));
-            }
+        if(isAbsent()) {
+            //elementFromData will run synchronously in all cases, bridge::write MAY run asynchronously
+            return FutureUtils.completeCallableSync(() -> processor.elementFromData(defaultData))
+                    .thenCompose(bridge::write);
+        }
 
-            return null;
-        });
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public @NotNull CompletableFuture<TData> load() {
-        return getBridge().read().thenCompose(element ->
-                FutureUtils.completeCallableSync(() -> processor.dataFromElement(element)));
+        //bridge.read() MAY run asynchronously, dataFromElement will always run synchronously
+        return bridge.read().thenCompose(element -> FutureUtils.completeCallableSync(() ->
+                processor.dataFromElement(element)));
     }
-
-    /**
-     * Gets the bridge used by this instance.
-     * @return the bridge used by this instance
-     */
-    protected abstract @NotNull ConfigBridge getBridge();
 
     /**
      * Indicates whether this loader's data source is <i>absent</i>.
