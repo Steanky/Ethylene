@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'com.github.steanky'
-version '0.4.0'
+version '0.4.1'
 
 dependencies {
     api project(':ethylene-core')

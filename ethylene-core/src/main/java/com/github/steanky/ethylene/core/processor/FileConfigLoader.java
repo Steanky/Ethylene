@@ -16,11 +16,11 @@ import java.util.concurrent.CompletableFuture;
  * {@link Path} does not exist (see {@link ProcessingConfigLoader} for more information on how an absent source changes
  * behavior).</p>
  *
- * <p>This class is only used internally because there is some potential for misuse; i.e. it is possible for a user to
- * provide a {@link ConfigBridge} implementation that is not at all related to the given Path.</p>
+ * <p>This class is only instantiated internally because there is some potential for misuse; i.e. it is possible for a
+ * user to provide a {@link ConfigBridge} implementation that is not at all related to the given Path.</p>
  * @param <TData> the type of data object
  */
-class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
+public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
     private final Path path;
 
     /**
