@@ -3,4 +3,4 @@ plugins {
 }
 
 group 'com.github.steanky'
-version '0.4.1'
+version '0.4.2'

@@ -19,7 +19,7 @@ public class BasicConfigHandler implements ConfigHandler {
 
     @Override
     public @NotNull Future<Void> writeDefaults() {
-        return CompletableFuture.allOf(loaderMap.values().stream().map(ConfigLoader::load)
+        return CompletableFuture.allOf(loaderMap.values().stream().map(ConfigLoader::writeDefaultIfAbsent)
                 .toArray(CompletableFuture[]::new));
     }
 
