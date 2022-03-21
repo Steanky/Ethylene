@@ -80,6 +80,14 @@ public interface ConfigHandler {
     <TData> void registerLoader(@NotNull ConfigKey<TData> key, @NotNull ConfigLoader<TData> loader);
 
     /**
+     * Removes the loader associated with this key.
+     * @param key the key associated with the loader
+     * @param <TData> the type of data returned by the loader
+     * @return true if a loader was removed, false otherwise
+     */
+    <TData> boolean removeLoader(@NotNull ConfigKey<TData> key);
+
+    /**
      * Retrieves the {@link ConfigLoader} instances associated with the provided key.
      * @param key the ConfigKey object associated with a loader
      * @param <TData> the type of data returned by the loader

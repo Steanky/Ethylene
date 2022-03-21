@@ -26,7 +26,7 @@ public class JsonCodec extends AbstractConfigCodec {
     private final Gson gson;
 
     /**
-     * Creates a new JsonCodec using the provided {@link Gson} to read and write data.
+     * Creates a new JsonCodec using the provided {@link Gson} instance to read and write data.
      * @param gson the Gson instance to use
      * @throws NullPointerException if gson is null
      */

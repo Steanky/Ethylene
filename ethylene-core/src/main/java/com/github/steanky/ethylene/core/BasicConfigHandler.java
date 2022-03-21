@@ -47,6 +47,11 @@ public class BasicConfigHandler implements ConfigHandler {
     }
 
     @Override
+    public <TData> boolean removeLoader(@NotNull ConfigKey<TData> key) {
+        return loaderMap.remove(key) != null;
+    }
+
+    @Override
     public @NotNull <TData> ConfigLoader<TData> getLoader(@NotNull ConfigKey<TData> key) {
         validatePresentKey(key);
 

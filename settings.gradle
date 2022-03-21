@@ -5,5 +5,4 @@ include 'ethylene-json'
 include 'example-project'
 include 'ethylene-yaml'
 include 'ethylene-hjson'
-include 'ethylene-hjson'
 
