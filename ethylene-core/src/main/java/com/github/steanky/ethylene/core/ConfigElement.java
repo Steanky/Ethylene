@@ -3,10 +3,11 @@ package com.github.steanky.ethylene.core;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.util.ConfigElementUtils;
+import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -208,6 +209,17 @@ public interface ConfigElement {
     }
 
     /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but throws an informative {@link ConfigProcessException}
+     * if the path is invalid, or the value pointed to by the path is not the right type.
+     * @param path the object path
+     * @return the value located at the path
+     * @throws ConfigProcessException if the path or element type is invalid
+     */
+    default @NotNull ConfigElement getElementOrThrow(@NotNull Object... path) throws ConfigProcessException {
+        return ConfigElementHelper.getOrThrow(this, element -> true, Function.identity(), path);
+    }
+
+    /**
      * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
      * the value pointed to by the path is not the right type.
      * @param elementSupplier the supplier used to produce the default value
@@ -216,7 +228,8 @@ public interface ConfigElement {
      */
     default ConfigElement getElementOrDefault(@NotNull Supplier<ConfigElement> elementSupplier,
                                               @NotNull Object ... path) {
-        return ConfigElementUtils.getOrDefault(this, elementSupplier, element -> true, element -> element, path);
+        return ConfigElementHelper.getOrDefault(this, elementSupplier, element -> true, Function.identity(),
+                path);
     }
 
     /**
@@ -231,6 +244,17 @@ public interface ConfigElement {
     }
 
     /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but throws an informative {@link ConfigProcessException}
+     * if the path is invalid, or the value pointed to by the path is not the right type.
+     * @param path the object path
+     * @return the value located at the path
+     * @throws ConfigProcessException if the path or element type is invalid
+     */
+    default boolean getBooleanOrThrow(@NotNull Object... path) throws ConfigProcessException {
+        return ConfigElementHelper.getOrThrow(this, ConfigElement::isBoolean, ConfigElement::asBoolean, path);
+    }
+
+    /**
      * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
      * the value pointed to by the path is not the right type.
      * @param booleanSupplier the supplier used to produce the default value
@@ -238,7 +262,7 @@ public interface ConfigElement {
      * @return the value located at the path, or the default value
      */
     default boolean getBooleanOrDefault(@NotNull Supplier<Boolean> booleanSupplier, @NotNull Object ... path) {
-        return ConfigElementUtils.getOrDefault(this, booleanSupplier, ConfigElement::isBoolean,
+        return ConfigElementHelper.getOrDefault(this, booleanSupplier, ConfigElement::isBoolean,
                 ConfigElement::asBoolean, path);
     }
 
@@ -254,6 +278,17 @@ public interface ConfigElement {
     }
 
     /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but throws an informative {@link ConfigProcessException}
+     * if the path is invalid, or the value pointed to by the path is not the right type.
+     * @param path the object path
+     * @return the value located at the path
+     * @throws ConfigProcessException if the path or element type is invalid
+     */
+    default @NotNull Number getNumberOrThrow(@NotNull Object... path) throws ConfigProcessException {
+        return ConfigElementHelper.getOrThrow(this, ConfigElement::isNumber, ConfigElement::asNumber, path);
+    }
+
+    /**
      * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
      * the value pointed to by the path is not the right type.
      * @param numberSupplier the supplier used to produce the default value
@@ -261,7 +296,7 @@ public interface ConfigElement {
      * @return the value located at the path, or the default value
      */
     default Number getNumberOrDefault(@NotNull Supplier<Number> numberSupplier, @NotNull Object ... path) {
-        return ConfigElementUtils.getOrDefault(this, numberSupplier, ConfigElement::isNumber,
+        return ConfigElementHelper.getOrDefault(this, numberSupplier, ConfigElement::isNumber,
                 ConfigElement::asNumber, path);
     }
 
@@ -277,6 +312,17 @@ public interface ConfigElement {
     }
 
     /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but throws an informative {@link ConfigProcessException}
+     * if the path is invalid, or the value pointed to by the path is not the right type.
+     * @param path the object path
+     * @return the value located at the path
+     * @throws ConfigProcessException if the path or element type is invalid
+     */
+    default @NotNull String getStringOrThrow(@NotNull Object... path) throws ConfigProcessException {
+        return ConfigElementHelper.getOrThrow(this, ConfigElement::isString, ConfigElement::asString, path);
+    }
+
+    /**
      * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
      * the value pointed to by the path is not the right type.
      * @param stringSupplier the supplier used to produce the default value
@@ -284,7 +330,7 @@ public interface ConfigElement {
      * @return the value located at the path, or the default value
      */
     default String getStringOrDefault(@NotNull Supplier<String> stringSupplier, @NotNull Object ... path) {
-        return ConfigElementUtils.getOrDefault(this, stringSupplier, ConfigElement::isString,
+        return ConfigElementHelper.getOrDefault(this, stringSupplier, ConfigElement::isString,
                 ConfigElement::asString, path);
     }
 
@@ -300,6 +346,17 @@ public interface ConfigElement {
     }
 
     /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but throws an informative {@link ConfigProcessException}
+     * if the path is invalid, or the value pointed to by the path is not the right type.
+     * @param path the object path
+     * @return the value located at the path
+     * @throws ConfigProcessException if the path or element type is invalid
+     */
+    default @NotNull ConfigList getListOrThrow(@NotNull Object... path) throws ConfigProcessException {
+        return ConfigElementHelper.getOrThrow(this, ConfigElement::isList, ConfigElement::asList, path);
+    }
+
+    /**
      * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
      * the value pointed to by the path is not the right type.
      * @param listSupplier the supplier used to produce the default value
@@ -307,7 +364,7 @@ public interface ConfigElement {
      * @return the value located at the path, or the default value
      */
     default ConfigList getListOrDefault(@NotNull Supplier<ConfigList> listSupplier, @NotNull Object ... path) {
-        return ConfigElementUtils.getOrDefault(this, listSupplier, ConfigElement::isList, ConfigElement::asList,
+        return ConfigElementHelper.getOrDefault(this, listSupplier, ConfigElement::isList, ConfigElement::asList,
                 path);
     }
 
@@ -323,6 +380,17 @@ public interface ConfigElement {
     }
 
     /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but throws an informative {@link ConfigProcessException}
+     * if the path is invalid, or the value pointed to by the path is not the right type.
+     * @param path the object path
+     * @return the value located at the path
+     * @throws ConfigProcessException if the path or element type is invalid
+     */
+    default @NotNull ConfigNode getNodeOrThrow(@NotNull Object... path) throws ConfigProcessException {
+        return ConfigElementHelper.getOrThrow(this, ConfigElement::isNode, ConfigElement::asNode, path);
+    }
+
+    /**
      * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
      * the value pointed to by the path is not the right type.
      * @param nodeSupplier the supplier used to produce the default value
@@ -330,7 +398,7 @@ public interface ConfigElement {
      * @return the value located at the path, or the default value
      */
     default ConfigNode getNodeOrDefault(@NotNull Supplier<ConfigNode> nodeSupplier, @NotNull Object ... path) {
-        return ConfigElementUtils.getOrDefault(this, nodeSupplier, ConfigElement::isNode, ConfigElement::asNode,
+        return ConfigElementHelper.getOrDefault(this, nodeSupplier, ConfigElement::isNode, ConfigElement::asNode,
                 path);
     }
 
@@ -346,6 +414,17 @@ public interface ConfigElement {
     }
 
     /**
+     * Works like {@link ConfigElement#getElement(Object...)}, but throws an informative {@link ConfigProcessException}
+     * if the path is invalid, or the value pointed to by the path is not the right type.
+     * @param path the object path
+     * @return the value located at the path
+     * @throws ConfigProcessException if the path or element type is invalid
+     */
+    default Object getObjectOrThrow(@NotNull Object... path) throws ConfigProcessException {
+        return ConfigElementHelper.getOrThrow(this, ConfigElement::isObject, ConfigElement::asObject, path);
+    }
+
+    /**
      * Works like {@link ConfigElement#getElement(Object...)}, but returns a default value if the path is invalid, or
      * the value pointed to by the path is not the right type.
      * @param objectSupplier the supplier used to produce the default value
@@ -353,7 +432,7 @@ public interface ConfigElement {
      * @return the value located at the path, or the default value
      */
     default Object getObjectOrDefault(@NotNull Supplier<Object> objectSupplier, @NotNull Object ... path) {
-        return ConfigElementUtils.getOrDefault(this, objectSupplier, ConfigElement::isObject,
+        return ConfigElementHelper.getOrDefault(this, objectSupplier, ConfigElement::isObject,
                 ConfigElement::asObject, path);
     }
 
@@ -364,7 +443,7 @@ public interface ConfigElement {
      * @param path the object path
      * @return the value located at the path, or the default value
      */
-    default Object getObjectOrDefault(@NotNull Object defaultObject, @NotNull Object ... path) {
+    default Object getObjectOrDefault(Object defaultObject, @NotNull Object ... path) {
         return getObjectOrDefault(() -> defaultObject, path);
     }
 }
