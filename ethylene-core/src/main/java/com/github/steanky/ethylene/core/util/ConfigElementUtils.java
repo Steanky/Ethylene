@@ -9,6 +9,9 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Objects;
 
+/**
+ * Simple utilities for ConfigElements.
+ */
 public final class ConfigElementUtils {
     private ConfigElementUtils() {
         throw new AssertionError("Why?");

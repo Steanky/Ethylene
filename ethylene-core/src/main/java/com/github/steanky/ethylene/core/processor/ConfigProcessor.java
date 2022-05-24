@@ -15,7 +15,7 @@ public interface ConfigProcessor<TData> {
      * @return the data object
      * @throws ConfigProcessException if the provided {@link ConfigElement} does not contain valid data
      */
-    @NotNull TData dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException;
+    TData dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException;
 
     /**
      * Produces a {@link ConfigElement} from the provided data object.
@@ -23,5 +23,5 @@ public interface ConfigProcessor<TData> {
      * @return a {@link ConfigElement} representing the given data
      * @throws ConfigProcessException if the data is invalid
      */
-    @NotNull ConfigElement elementFromData(@NotNull TData data) throws ConfigProcessException;
+    @NotNull ConfigElement elementFromData(TData data) throws ConfigProcessException;
 }
