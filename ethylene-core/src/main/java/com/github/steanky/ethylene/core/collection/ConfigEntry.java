@@ -12,7 +12,6 @@ import java.util.Objects;
  * <p>This class is not a record because it should have a package-private constructor (there should never be a need for
  * an API user to create an instance of this class).</p>
  */
-@SuppressWarnings("ClassCanBeRecord")
 public final class ConfigEntry {
     private final String key;
     private final ConfigElement element;

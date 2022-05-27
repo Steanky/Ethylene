@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.core.collection;
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,5 +25,23 @@ public class LinkedConfigNode extends AbstractConfigNode {
      */
     public LinkedConfigNode(@NotNull Map<String, ConfigElement> mappings) {
         super(constructMap(mappings, LinkedHashMap::new, ignored -> true));
+    }
+
+    /**
+     * Constructs a new ArrayConfigList backed by an empty {@link LinkedHashMap} with the given initial capacity.
+     * @param initialCapacity the initial capacity
+     */
+    public LinkedConfigNode(int initialCapacity) {
+        super(new LinkedHashMap<>(initialCapacity));
+    }
+
+    /**
+     * Constructs a new ArrayConfigList backed by an empty {@link LinkedHashMap} with the given initial capacity and
+     * load factor.
+     * @param initialCapacity the initial capacity
+     * @param loadFactor the load factor
+     */
+    public LinkedConfigNode(int initialCapacity, float loadFactor) {
+        super(new LinkedHashMap<>(initialCapacity, loadFactor));
     }
 }

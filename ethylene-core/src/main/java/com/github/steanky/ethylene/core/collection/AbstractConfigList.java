@@ -17,7 +17,11 @@ import java.util.function.Supplier;
  * {@link ArrayConfigList} for an example of how to properly inherit this class.</p>
  */
 public abstract class AbstractConfigList extends AbstractList<ConfigElement> implements ConfigList {
-    private final List<ConfigElement> list;
+    /**
+     * The backing list for this AbstractConfigList. Implementations that access this variable must take care to ensure
+     * that null values cannot be inserted, and the list is never exposed publicly.
+     */
+    protected final List<ConfigElement> list;
     private Collection<ConfigEntry> containerCollection;
 
     /**

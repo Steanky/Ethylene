@@ -21,4 +21,13 @@ public class ConfigProcessException extends IOException {
     public ConfigProcessException(Throwable cause) {
         super(cause);
     }
+
+    /**
+     * Constructs a new ConfigProcessException with the provided message and cause.
+     * @param message a descriptive message
+     * @param cause the {@link Throwable} responsible for this exception
+     */
+    public ConfigProcessException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
