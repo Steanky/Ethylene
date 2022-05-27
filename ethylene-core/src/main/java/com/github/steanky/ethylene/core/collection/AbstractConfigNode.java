@@ -19,7 +19,8 @@ import java.util.function.Supplier;
  */
 public abstract class AbstractConfigNode extends AbstractMap<String, ConfigElement> implements ConfigNode {
     /**
-     * The backing map for this AbstractConfigNode.
+     * The backing map for this AbstractConfigNode. Implementations that access this variable must take care to ensure
+     * that null values cannot be inserted, and the map is never exposed publicly.
      */
     protected final Map<String, ConfigElement> mappings;
     private Collection<ConfigEntry> containerCollection;

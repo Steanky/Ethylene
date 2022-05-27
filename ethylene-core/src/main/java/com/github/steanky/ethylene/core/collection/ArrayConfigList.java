@@ -31,4 +31,19 @@ public class ArrayConfigList extends AbstractConfigList implements RandomAccess 
     public ArrayConfigList(@NotNull Collection<ConfigElement> collection) {
         super(constructList(collection, ArrayList::new, ignored -> true));
     }
+
+    /**
+     * Constructs a new ArrayConfigList backed by an empty {@link ArrayList} with the given initial capacity.
+     * @param initialCapacity the initial capacity
+     */
+    public ArrayConfigList(int initialCapacity) {
+        super(new ArrayList<>(initialCapacity));
+    }
+
+    /**
+     * Calls {@link ArrayList#trimToSize()} on the internal ArrayList.
+     */
+    public void trimToSize() {
+        ((ArrayList<?>)list).trimToSize();
+    }
 }
