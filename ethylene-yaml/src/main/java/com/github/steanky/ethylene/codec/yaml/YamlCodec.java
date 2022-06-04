@@ -77,4 +77,9 @@ public class YamlCodec extends AbstractConfigCodec {
             throw new IOException(exception);
         }
     }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return "yaml";
+    }
 }

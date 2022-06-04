@@ -32,4 +32,14 @@ public interface ConfigCodec {
      * @throws NullPointerException if any of the arguments are null
      */
     @NotNull ConfigElement decode(@NotNull InputStream input) throws IOException;
+
+    /**
+     * <p>Returns a string representing the preferred file extension for this codec. This can, but is not required to be
+     * respected when using this codec to save to a filesystem. There is no guarantee that a codec will have a unique
+     * preferred extension. Codecs may choose to report an empty string to indicate no preferred extension.</p>
+     *
+     * <p>Any reported string should be filesystem-agnostic.</p>
+     * @return the preferred extension for this codec, without a leading period
+     */
+    @NotNull String getPreferredExtension();
 }

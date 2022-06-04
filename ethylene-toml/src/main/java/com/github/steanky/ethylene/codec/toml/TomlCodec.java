@@ -79,4 +79,9 @@ public class TomlCodec extends AbstractConfigCodec {
 
         return super.deserializeObject(object);
     }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return "toml";
+    }
 }

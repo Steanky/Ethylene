@@ -128,4 +128,9 @@ public class HjsonCodec extends AbstractConfigCodec {
             return super.makeNode(inputContainer, mapSupplier, collectionSupplier);
         }
     }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return "hjson";
+    }
 }
