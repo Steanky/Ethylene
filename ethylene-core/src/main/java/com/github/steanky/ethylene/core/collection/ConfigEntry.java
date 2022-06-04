@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -21,7 +22,7 @@ public final class ConfigEntry {
      * @param key the key (name)
      * @param element the value element
      */
-    ConfigEntry(String key, @NotNull ConfigElement element) {
+    ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
         this.key = key;
         this.element = Objects.requireNonNull(element);
     }

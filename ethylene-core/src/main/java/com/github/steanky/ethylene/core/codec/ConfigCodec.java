@@ -9,8 +9,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * This interface represents the primary compatibility layer between any specific configuration format and a
- * {@link ConfigNode} object. As a general rule of thumb, ConfigCodec implementations should be immutable.
+ * <p>This interface represents the primary compatibility layer between any specific configuration format and a
+ * {@link ConfigNode} object. Codec implementations represent specific data formats (e.g. TOML, YAML, ...).</p>
+ *
+ * As a general rule of thumb, ConfigCodec implementations should be immutable.
  */
 public interface ConfigCodec {
     /**
@@ -24,8 +26,8 @@ public interface ConfigCodec {
     void encode(@NotNull ConfigElement element, @NotNull OutputStream output) throws IOException;
 
     /**
-     * <i>Decodes</i> a {@link ConfigElement} object (reads it from an {@link InputStream}). The format used to interpret
-     * the data is implementation dependent.
+     * <i>Decodes</i> a {@link ConfigElement} object (reads it from an {@link InputStream}). The format used to
+     * interpret the data is implementation dependent.
      * @param input the InputStream to read from
      * @return a ConfigNode object containing the data
      * @throws IOException if an IO error occurred
