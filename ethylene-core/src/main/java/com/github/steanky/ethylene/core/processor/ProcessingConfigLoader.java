@@ -27,8 +27,7 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
      * @param defaultData the default data object
      * @param bridge the {@link ConfigBridge} used for reading/writing data
      */
-    public ProcessingConfigLoader(@NotNull ConfigProcessor<TData> processor,
-                                  @NotNull TData defaultData,
+    public ProcessingConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
                                   @NotNull ConfigBridge bridge) {
         this.processor = Objects.requireNonNull(processor);
         this.defaultData = Objects.requireNonNull(defaultData);

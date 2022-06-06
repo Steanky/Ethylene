@@ -3,9 +3,9 @@ plugins {
 }
 
 group 'com.github.steanky'
-version '0.5.2'
+version '0.7.0'
 
 dependencies {
     api project(':ethylene-core')
-    api 'com.moandjiezana.toml:toml4j:0.7.2'
+    api 'com.electronwill.night-config:toml:3.6.5'
 }

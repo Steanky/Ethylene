@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.util.ConfigElementUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 /**
@@ -104,23 +105,22 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      * contains any null values, a {@link NullPointerException} will be thrown. Furthermore, each value will be tested
      * against the provided {@link Predicate}. If it returns false, an {@link IllegalArgumentException} will be thrown.
      * @param collection the collection whose elements will be added to the new list
-     * @param listSupplier the supplier used to create the list
+     * @param listSupplier the supplier used to create the new list from the size of the original collection
      * @param valuePredicate the predicate to use to validate each element against some condition
-     * @param <TList> the type of the list to construct
      * @return a list, constructed by the supplier, and containing the same elements as collection
      * @throws NullPointerException if any of the arguments are null, collection contains any null elements, or
      * listSupplier returns null
      * @throws IllegalArgumentException if the given predicate fails for any of the collection's values
      */
-    protected static <TList extends List<ConfigElement>> @NotNull TList constructList(
-            @NotNull Collection<ConfigElement> collection,
-            @NotNull Supplier<TList> listSupplier,
+    protected static @NotNull List<ConfigElement> constructList(
+            @NotNull Collection<? extends ConfigElement> collection,
+            @NotNull IntFunction<? extends List<ConfigElement>> listSupplier,
             @NotNull Predicate<ConfigElement> valuePredicate) {
         Objects.requireNonNull(collection);
         Objects.requireNonNull(listSupplier);
         Objects.requireNonNull(valuePredicate);
 
-        TList newList = Objects.requireNonNull(listSupplier.get());
+        List<ConfigElement> newList = Objects.requireNonNull(listSupplier.apply(collection.size()));
         for(ConfigElement element : collection) {
             if(!valuePredicate.test(element)) {
                 throw new IllegalArgumentException("Value predicate failed");

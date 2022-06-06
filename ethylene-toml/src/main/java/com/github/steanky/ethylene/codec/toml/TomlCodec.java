@@ -1,9 +1,16 @@
 package com.github.steanky.ethylene.codec.toml;
 
+import com.electronwill.nightconfig.core.Config;
+import com.electronwill.nightconfig.core.NullObject;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
+import com.electronwill.nightconfig.core.io.ParsingException;
+import com.electronwill.nightconfig.core.io.WritingException;
+import com.electronwill.nightconfig.toml.TomlFormat;
+import com.electronwill.nightconfig.toml.TomlParser;
+import com.electronwill.nightconfig.toml.TomlWriter;
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
-import com.moandjiezana.toml.Toml;
-import com.moandjiezana.toml.TomlWriter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,53 +19,51 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Provides support for the TOML format. This class overrides {@link AbstractConfigCodec#serializeElement(ConfigElement)} and
  * {@link AbstractConfigCodec#deserializeObject(Object)} in order to provide proper support for dates.
  */
 public class TomlCodec extends AbstractConfigCodec {
-    /**
-     * The default {@link TomlWriter} instance used to read and write data.
-     */
-    public static final TomlWriter DEFAULT_TOML_WRITER = new TomlWriter();
-
+    private final TomlParser parser;
     private final TomlWriter writer;
 
     /**
-     * Creates a new TomlCodec using the provided {@link TomlWriter} to read and write data.
-     * @param writer the TomlWriter instance to use
-     * @throws NullPointerException if writer is null
+     * Creates a new TomlCodec with default values.
      */
-    public TomlCodec(@NotNull TomlWriter writer) {
-        this.writer = Objects.requireNonNull(writer);
+    public TomlCodec() {
+        this.parser = new TomlParser();
+        this.writer = new TomlWriter();
     }
 
     /**
-     * Creates a new TomlCodec using the default {@link TomlWriter} ({@link TomlCodec#DEFAULT_TOML_WRITER}) to read and
-     * write data.
+     * Creates a new TomlCodec using the given {@link TomlParser} and {@link TomlWriter}.
+     * @param parser the TomlParser to use to read TOML
+     * @param writer the TomlWriter used to write TOML
      */
-    public TomlCodec() {
-        this.writer = DEFAULT_TOML_WRITER;
+    public TomlCodec(@NotNull TomlParser parser, @NotNull TomlWriter writer) {
+        this.parser = Objects.requireNonNull(parser);
+        this.writer = Objects.requireNonNull(writer);
     }
 
     @Override
     protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
         try {
-            return new Toml().read(input).toMap();
+            return parser.parse(input);
         }
-        catch (IllegalStateException exception) {
-            throw new IOException(exception);
+        catch (ParsingException e) {
+            throw new IOException(e);
         }
     }
 
     @Override
     protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
         try {
-            writer.write(object, output);
+            writer.write((UnmodifiableConfig) object, output);
         }
-        catch (IllegalArgumentException exception) {
-            throw new IOException(exception);
+        catch (WritingException e) {
+            throw new IOException(e);
         }
     }
 
@@ -78,5 +83,34 @@ public class TomlCodec extends AbstractConfigCodec {
         }
 
         return super.deserializeObject(object);
+    }
+
+    @Override
+    protected @NotNull <TOut> Output<TOut> makeEncodeMap() {
+        Config config = TomlFormat.newConfig();
+        return new Output<>(config, config::add);
+    }
+
+    @Override
+    protected boolean isContainer(@Nullable Object input) {
+        return super.isContainer(input) || input instanceof UnmodifiableConfig;
+    }
+
+    @Override
+    protected @NotNull <TOut> Node<TOut> makeNode(@NotNull Object inputContainer,
+                                                  @NotNull Supplier<Output<TOut>> mapSupplier,
+                                                  @NotNull Supplier<Output<TOut>> collectionSupplier) {
+        if(inputContainer instanceof UnmodifiableConfig object) {
+            return new Node<>(object, object.entrySet().stream().map(member -> new Entry<>(member.getKey(), member
+                    .getValue())).iterator(), mapSupplier.get());
+        }
+        else {
+            return super.makeNode(inputContainer, mapSupplier, collectionSupplier);
+        }
+    }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return "toml";
     }
 }
