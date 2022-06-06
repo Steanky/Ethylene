@@ -39,7 +39,7 @@ public class HjsonCodec extends AbstractConfigCodec {
     @Override
     protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
         try {
-            return JsonValue.readHjson(new BufferedReader(new InputStreamReader(input)), readOptions);
+            return JsonValue.readHjson(new InputStreamReader(input), readOptions);
         }
         catch (ParseException exception) {
             throw new IOException(exception);
@@ -48,7 +48,13 @@ public class HjsonCodec extends AbstractConfigCodec {
 
     @Override
     protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
-        ((JsonObject) object).writeTo(new BufferedWriter(new OutputStreamWriter(output)), writeOptions);
+        Writer outputWriter = new OutputStreamWriter(output);
+        BufferedWriter bufferedWriter = new BufferedWriter(outputWriter);
+        ((JsonObject) object).writeTo(bufferedWriter, writeOptions);
+
+        //ensure everything gets written to the OutputStream before it is closed
+        bufferedWriter.flush();
+        outputWriter.flush();
     }
 
     @Override
