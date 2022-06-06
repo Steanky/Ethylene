@@ -73,6 +73,7 @@ public class YamlCodec extends AbstractConfigCodec {
                 @Override
                 public void processIOException(IOException e) {}
             };
+
             dumpSupplier.get().dump(object, writer);
             writer.flush();
         }
