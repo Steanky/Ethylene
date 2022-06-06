@@ -8,6 +8,7 @@ import org.snakeyaml.engine.v2.exceptions.YamlEngineException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,10 +69,12 @@ public class YamlCodec extends AbstractConfigCodec {
     @Override
     protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
         try {
-            dumpSupplier.get().dump(object, new YamlOutputStreamWriter(output, Charset.defaultCharset()) {
+            StreamDataWriter writer = new YamlOutputStreamWriter(output, Charset.defaultCharset()) {
                 @Override
                 public void processIOException(IOException e) {}
-            });
+            };
+            dumpSupplier.get().dump(object, writer);
+            writer.flush();
         }
         catch (YamlEngineException exception) {
             throw new IOException(exception);
