@@ -3,12 +3,14 @@ package com.github.steanky.ethylene.core.bridge;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.collection.FileConfigNode;
-import com.github.steanky.ethylene.core.util.CallableUtils;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
+import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -29,15 +31,16 @@ public final class ConfigBridges {
                                                     ConfigCodec codec) {
         return new ConfigBridge() {
             @Override
-            public @NotNull Future<ConfigElement> read() throws IOException {
-                return CompletableFuture.completedFuture(codec.decode(CallableUtils.wrapException(inputCallable,
-                        IOException.class, IOException::new)));
+            public @NotNull CompletableFuture<ConfigElement> read() {
+                return FutureUtils.completeCallableSync(() -> codec.decode(inputCallable.call()));
             }
 
             @Override
-            public @NotNull Future<Void> write(@NotNull ConfigElement element) throws IOException {
-                codec.encode(element, CallableUtils.wrapException(outputCallable, IOException.class, IOException::new));
-                return CompletableFuture.completedFuture(null);
+            public @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element) {
+                return FutureUtils.completeCallableSync(() -> {
+                    codec.encode(element, outputCallable.call());
+                    return null;
+                });
             }
         };
     }
@@ -58,9 +61,7 @@ public final class ConfigBridges {
         }
     }
 
-    private static void writeInternal(OutputStream outputStream,
-                                      ConfigElement element,
-                                      ConfigCodec codec) throws IOException {
+    private static void writeInternal(OutputStream outputStream, ConfigElement element, ConfigCodec codec) {
         fromStreamsInternal(InputStream::nullInputStream, () -> outputStream, codec).write(element);
     }
 
@@ -92,25 +93,21 @@ public final class ConfigBridges {
     }
 
     /**
-     * <p>Produces a ConfigBridge implementation capable of reading and writing to the given file, using
-     * {@link FileInputStream} and {@link FileOutputStream} objects.</p>
+     * <p>Produces a ConfigBridge implementation capable of reading and writing to the given file path.</p>
      *
      * <p>If the file is invalid or cannot be read from, {@link IOException}s will be thrown when attempts are made to
      * read objects from the ConfigBridge.</p>
-     *
-     * <p>This method uses {@link ConfigBridges#fromStreams(Callable, Callable, ConfigCodec)} to produce its
-     * ConfigBridge implementation.</p>
-     * @param file the file read from and written to
+     * @param path a path pointing to the file read from and written to
      * @param codec the codec used to read/write from this file
-     * @return a ConfigBridge implementation which can read/write {@link FileConfigNode} objects from and to the given
+     * @return a ConfigBridge implementation which can read/write {@link ConfigElement} objects from and to the given
      * file
      * @throws NullPointerException if any of the arguments are null
      */
-    public static @NotNull ConfigBridge fromFile(@NotNull File file, @NotNull ConfigCodec codec) {
-        Objects.requireNonNull(file);
+    public static @NotNull ConfigBridge fromPath(@NotNull Path path, @NotNull ConfigCodec codec) {
+        Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
 
-        return fromStreamsInternal(() -> new FileInputStream(file), () -> new FileOutputStream(file), codec);
+        return fromStreamsInternal(() -> Files.newInputStream(path), () -> Files.newOutputStream(path), codec);
     }
 
     /**
@@ -119,16 +116,35 @@ public final class ConfigBridges {
      * ConfigBridge implementation that is immediately read from.
      * @param inputStream the InputStream to read from
      * @param codec the ConfigCodec which will be used to decode the input data
-     * @return a ConfigNode object representing the decoded configuration data
+     * @return a {@link ConfigNode} object representing the decoded configuration data
      * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
      * @throws NullPointerException if any arguments are null
      */
-    public static @NotNull ConfigElement read(@NotNull InputStream inputStream,
-                                              @NotNull ConfigCodec codec) throws IOException {
+    public static @NotNull ConfigElement read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec)
+            throws IOException {
         Objects.requireNonNull(inputStream);
         Objects.requireNonNull(codec);
 
         return readInternal(inputStream, codec);
+    }
+
+    /**
+     * Works similarly to {@link ConfigBridges#read(InputStream, ConfigCodec)}, but uses the given
+     * {@link ConfigProcessor} to process the resulting {@link  ConfigElement}.
+     * @param inputStream the InputStream to read from
+     * @param codec the ConfigCodec which will be used to decode the input data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @return an object representing the data from the input stream
+     * @param <TData> the type of data to read
+     * @throws IOException  if an IO error occurs or the InputStream does not contain valid data for the codec
+     */
+    public static <TData> TData read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec,
+                                     @NotNull ConfigProcessor<? extends TData> processor) throws IOException {
+        Objects.requireNonNull(inputStream);
+        Objects.requireNonNull(codec);
+        Objects.requireNonNull(processor);
+
+        return processor.dataFromElement(readInternal(inputStream, codec));
     }
 
     /**
@@ -139,8 +155,7 @@ public final class ConfigBridges {
      * @throws IOException if an IO error occurs when writing to the stream
      * @throws NullPointerException if any of the arguments are null
      */
-    public static void write(@NotNull OutputStream outputStream,
-                             @NotNull ConfigCodec codec,
+    public static void write(@NotNull OutputStream outputStream, @NotNull ConfigCodec codec,
                              @NotNull ConfigElement element)
             throws IOException {
         Objects.requireNonNull(outputStream);
@@ -151,11 +166,30 @@ public final class ConfigBridges {
     }
 
     /**
+     * Same as {@link ConfigBridges#write(OutputStream, ConfigCodec, ConfigElement)}, but uses the given
+     * {@link ConfigProcessor} to process the given {@link ConfigElement}.
+     * @param outputStream the OutputStream to write to
+     * @param codec the codec to use to encode the data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param data the data object to write
+     * @param <TData> the type of data to write
+     * @throws IOException if an IO error occurs when writing to the stream
+     */
+    public static <TData> void write(@NotNull OutputStream outputStream, @NotNull ConfigCodec codec,
+                                     @NotNull ConfigProcessor<? super TData> processor, TData data)
+            throws IOException {
+        Objects.requireNonNull(outputStream);
+        Objects.requireNonNull(codec);
+
+        writeInternal(outputStream, processor.elementFromData(data), codec);
+    }
+
+    /**
      * Same as {@link ConfigBridges#read(InputStream, ConfigCodec)}, but uses a {@link ByteArrayInputStream}
      * constructed from the provided string, assuming a UTF-8 encoding.
      * @param input the string to read from
-     * @param codec the ConfigCodec which will be used to decode the input string
-     * @return a {@link ConfigNode} object representing the decoded configuration data
+     * @param codec the {@link ConfigCodec} which will be used to decode the input string
+     * @return a {@link ConfigElement} object representing the decoded configuration data
      * @throws IOException if the string does not contain valid data for the codec
      * @throws NullPointerException if any of the arguments are null
      */
@@ -167,69 +201,135 @@ public final class ConfigBridges {
     }
 
     /**
-     * Writes the given {@link ConfigNode} to a string, using the provided {@link ConfigCodec}. Note that this should
+     * Works similarly to {@link ConfigBridges#read(String, ConfigCodec)}, but uses the given
+     * {@link ConfigProcessor} to process the resulting {@link  ConfigElement}.
+     * @param input the string to read from
+     * @param codec the ConfigCodec which will be used to decode the input data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @return an object representing the data from the input stream
+     * @param <TData> the type of data to read
+     * @throws IOException  if an IO error occurs or the InputStream does not contain valid data for the codec
+     */
+    public static <TData> TData read(@NotNull String input, @NotNull ConfigCodec codec,
+                                     @NotNull ConfigProcessor<? extends TData> processor) throws IOException {
+        Objects.requireNonNull(input);
+        Objects.requireNonNull(codec);
+        Objects.requireNonNull(processor);
+
+        return processor.dataFromElement(readInternal(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)),
+                codec));
+    }
+
+    /**
+     * Writes the given {@link ConfigElement} to a string, using the provided {@link ConfigCodec}. Note that this should
      * never throw an exception under normal circumstances, as the {@link OutputStream} being written to is a simple
      * in-memory {@link ByteArrayOutputStream}. However, an {@link IOException} <i>can still be thrown</i> if there is
      * a problem with the provided codec or node (perhaps the codec is incapable of parsing one or more of the objects
      * present in the node?)
-     * @param node the ConfigNode to write
+     * @param element the ConfigElement to write
      * @param codec the ConfigCodec used to decode node
      * @return a string containing the encoded data present in node
      * @throws IOException if an IO error occurs
      */
-    public static @NotNull String write(@NotNull ConfigNode node, @NotNull ConfigCodec codec) throws IOException {
-        Objects.requireNonNull(node);
+    public static @NotNull String write(@NotNull ConfigElement element, @NotNull ConfigCodec codec) throws IOException {
+        Objects.requireNonNull(element);
         Objects.requireNonNull(codec);
 
         OutputStream outputStream = new ByteArrayOutputStream();
-        writeInternal(outputStream, node, codec);
+        writeInternal(outputStream, element, codec);
         return outputStream.toString();
     }
 
     /**
-     * Same as {@link ConfigBridges#read(InputStream, ConfigCodec)}, but uses a {@link FileInputStream} constructed from
-     * the provided file.
-     * @param file the file to read from
+     * Same as {@link ConfigBridges#write(ConfigElement, ConfigCodec)}, but uses the given
+     * {@link ConfigProcessor} to process the given {@link ConfigElement}.
+     * @param codec the codec to use to encode the data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param data the data object to write
+     * @param <TData> the type of data to write
+     * @return a string containing the encoded data present in node
+     * @throws IOException if an IO error occurs when writing to the stream
+     */
+    public static <TData> @NotNull String write(@NotNull ConfigCodec codec,
+                                                @NotNull ConfigProcessor<? super TData> processor, TData data)
+            throws IOException {
+        Objects.requireNonNull(codec);
+        Objects.requireNonNull(processor);
+
+        OutputStream outputStream = new ByteArrayOutputStream();
+        writeInternal(outputStream, processor.elementFromData(data), codec);
+        return outputStream.toString();
+    }
+
+
+    /**
+     * Same as {@link ConfigBridges#read(InputStream, ConfigCodec)}, but uses a {@link InputStream} constructed from
+     * the provided {@link Path}.
+     * @param path the path pointing to the file to read from
      * @param codec the codec to use to decode the file
-     * @return a {@link FileConfigNode} representing the file's configuration data
+     * @return a {@link ConfigElement} representing the file's configuration data
      * @throws IOException if the config data contained in the file is invalid or if an IO error occurred
      * @throws NullPointerException if any of the arguments are null
      */
-    public static @NotNull ConfigElement read(@NotNull File file, @NotNull ConfigCodec codec) throws IOException {
-        Objects.requireNonNull(file);
+    public static @NotNull ConfigElement read(@NotNull Path path, @NotNull ConfigCodec codec) throws IOException {
+        Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
 
-        return readInternal(new FileInputStream(file), codec);
+        return readInternal(Files.newInputStream(path), codec);
     }
 
     /**
-     * Writes a {@link FileConfigNode} to the file. The node's codec will be used to encode the data. The node must not
-     * represent a directory.
-     * @param file the file to write to
-     * @param node the node to write
-     * @throws IOException if an IO error occurred
-     * @throws IllegalArgumentException if node represents a directory
+     * Works similarly to {@link ConfigBridges#read(Path, ConfigCodec)}, but uses the given
+     * {@link ConfigProcessor} to process the resulting {@link ConfigElement}.
+     * @param path the file path to read from
+     * @param codec the ConfigCodec which will be used to decode the input data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @return an object representing the data from the input stream
+     * @param <TData> the type of data to read
+     * @throws IOException  if an IO error occurs or the InputStream does not contain valid data for the codec
      */
-    public static void write(@NotNull File file, @NotNull FileConfigNode node) throws IOException {
-        Objects.requireNonNull(file);
-        Objects.requireNonNull(node);
+    public static <TData> TData read(@NotNull Path path, @NotNull ConfigCodec codec,
+                                     @NotNull ConfigProcessor<? extends TData> processor) throws IOException {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(codec);
+        Objects.requireNonNull(processor);
 
-        writeInternal(new FileOutputStream(file), node, node.getCodec());
+        return processor.dataFromElement(readInternal(Files.newInputStream(path), codec));
     }
 
     /**
-     * Writes a {@link FileConfigNode} to the file. The provided codec will be used to encode the node's data.
-     * @param file the file to write to
-     * @param node the node to write
+     * Writes a {@link ConfigNode} to the filesystem. The provided codec will be used to encode the node's data.
+     * @param path a path pointing to the file to write to
+     * @param element the element to write
      * @param codec the codec to use
      * @throws IOException if an IO error occurred
      */
-    public static void write(@NotNull File file, @NotNull ConfigNode node, @NotNull ConfigCodec codec)
+    public static void write(@NotNull Path path, @NotNull ConfigElement element, @NotNull ConfigCodec codec)
             throws IOException {
-        Objects.requireNonNull(file);
-        Objects.requireNonNull(node);
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(element);
         Objects.requireNonNull(codec);
 
-        writeInternal(new FileOutputStream(file), node, codec);
+        writeInternal(Files.newOutputStream(path), element, codec);
+    }
+
+    /**
+     * Same as {@link ConfigBridges#write(Path, ConfigElement, ConfigCodec)}, but uses the given
+     * {@link ConfigProcessor} to process the given {@link ConfigElement}.
+     * @param path the path to write to
+     * @param codec the codec to use to encode the data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param data the data object to write
+     * @param <TData> the type of data to write
+     * @throws IOException if an IO error occurs when writing to the stream
+     */
+    public static <TData> void write(@NotNull Path path, @NotNull ConfigCodec codec,
+                                     @NotNull ConfigProcessor<? super TData> processor, TData data)
+            throws IOException {
+        Objects.requireNonNull(path);
+        Objects.requireNonNull(codec);
+        Objects.requireNonNull(processor);
+
+        writeInternal(Files.newOutputStream(path), processor.elementFromData(data), codec);
     }
 }

@@ -1,10 +1,16 @@
 package com.github.steanky.ethylene.codec.hjson;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigPrimitive;
+import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,5 +36,20 @@ class HjsonCodecTest {
         assertEquals("this is a value", element.getElement("test_value").asString());
         assertEquals("test", element.getElement("sub", "sub_string").asString());
         assertSame(69, element.getElement("another_value").asNumber().intValue());
+    }
+
+    @Test
+    void writesHjson() throws IOException {
+        ConfigNode node = new LinkedConfigNode();
+        node.put("test_string", new ConfigPrimitive("value"));
+        node.put("test_number", new ConfigPrimitive(1.0));
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        codec.encode(node, stream);
+
+        String hjson = stream.toString(Charset.defaultCharset());
+        ConfigNode secondNode = codec.decode(new ByteArrayInputStream(hjson.getBytes(Charset.defaultCharset())))
+                .asNode();
+        assertEquals(node, secondNode);
     }
 }

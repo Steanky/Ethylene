@@ -131,8 +131,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     @Contract("null -> false")
     protected boolean isContainer(@Nullable Object input) {
-        return input != null && (input instanceof Collection<?> || input instanceof Map<?, ?> ||
-                input.getClass().isArray());
+        return input != null && (input instanceof Collection<?> || input instanceof Map<?, ?> || input.getClass()
+                .isArray());
     }
 
     /**

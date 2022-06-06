@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -12,7 +13,6 @@ import java.util.Objects;
  * <p>This class is not a record because it should have a package-private constructor (there should never be a need for
  * an API user to create an instance of this class).</p>
  */
-@SuppressWarnings("ClassCanBeRecord")
 public final class ConfigEntry {
     private final String key;
     private final ConfigElement element;
@@ -22,7 +22,7 @@ public final class ConfigEntry {
      * @param key the key (name)
      * @param element the value element
      */
-    ConfigEntry(String key, @NotNull ConfigElement element) {
+    ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
         this.key = key;
         this.element = Objects.requireNonNull(element);
     }

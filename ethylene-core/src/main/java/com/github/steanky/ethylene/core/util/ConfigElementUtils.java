@@ -5,19 +5,17 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
- * Utility class used by {@link ConfigElement}. These methods are public for convenience, but not intended for general
- * use.
+ * Simple utilities for ConfigElements.
  */
 public final class ConfigElementUtils {
-    private ConfigElementUtils() { throw new AssertionError("Don't do this."); }
+    private ConfigElementUtils() {
+        throw new AssertionError("Why?");
+    }
 
     private static String toStringInternal(ConfigElement input, IdentityHashMap<Object, Integer> identities) {
         if(input.isContainer()) {
@@ -57,40 +55,6 @@ public final class ConfigElementUtils {
         }
         else {
             return "[" + input + "]";
-        }
-    }
-
-    /**
-     * Static utility method used by {@link ConfigElement}. Acts as a wrapper for
-     * {@link ConfigElement#getElement(Object...)}, and will use the value supplied by the {@link Supplier} if the path
-     * does not exist, or the {@link Function} used to evaluate whether the type conversion may safely occur returns
-     * false. Otherwise, the type conversion Function will be called and its result returned.
-     * @param element the element to perform the operation on
-     * @param returnSupplier the supplier used to supply return values if the path or type is invalid
-     * @param typeValidator the function used to determine if the element type is valid
-     * @param typeGetter the function used to actually convert the element
-     * @param path the path to resolve
-     * @param <TReturn> the generic return value type
-     * @return the value stored in element at path, or the default value produced by the supplier
-     * @throws NullPointerException if any of the arguments are null
-     * @throws IllegalArgumentException if path contains invalid types (any besides Integer or String)
-     */
-    public static <TReturn> @NotNull TReturn getOrDefault(@NotNull ConfigElement element,
-                                                          @NotNull Supplier<TReturn> returnSupplier,
-                                                          @NotNull Function<ConfigElement, Boolean> typeValidator,
-                                                          @NotNull Function<ConfigElement, TReturn> typeGetter,
-                                                          @NotNull Object ... path) {
-        Objects.requireNonNull(returnSupplier);
-        Objects.requireNonNull(typeValidator);
-        Objects.requireNonNull(typeGetter);
-
-        ConfigElement newElement = element.getElement(path);
-
-        if(newElement != null && typeValidator.apply(newElement)) {
-            return typeGetter.apply(newElement);
-        }
-        else {
-            return returnSupplier.get();
         }
     }
 
