@@ -23,7 +23,7 @@ public final class ConfigEntry implements Entry<String, ConfigElement> {
      * @param key the key (name)
      * @param element the value element
      */
-    ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
+    public ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
         this.key = key;
         this.element = Objects.requireNonNull(element);
     }

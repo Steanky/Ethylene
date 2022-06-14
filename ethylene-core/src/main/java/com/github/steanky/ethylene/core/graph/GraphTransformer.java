@@ -18,11 +18,11 @@ public final class GraphTransformer {
                                         @NotNull BiConsumer<? super TKey, ? super TOut> accumulator) {}
 
     public static <TIn, TOut, TKey> TOut processRoot(TIn input,
-                                               @NotNull Deque<Node<TIn, TOut, TKey>> stack,
-                                               @NotNull Map<TIn, TOut> visited,
-                                               @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
-                                               @NotNull Predicate<? super TIn> scalarPredicate,
-                                               @NotNull Function<? super TIn, ? extends Entry<TKey, TOut>> scalarMapper) {
+                                                     @NotNull Deque<Node<TIn, TOut, TKey>> stack,
+                                                     @NotNull Map<TIn, TOut> visited,
+                                                     @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+                                                     @NotNull Predicate<? super TIn> scalarPredicate,
+                                                     @NotNull Function<? super TIn, ? extends Entry<TKey, TOut>> scalarMapper) {
         if(scalarPredicate.test(input)) {
             return scalarMapper.apply(input).getSecond();
         }

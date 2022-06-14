@@ -31,13 +31,6 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
-     * Represents a <i>tuple</i> (a pair of distinct, unrelated values that may be of different types).
-     * @param <TFirst> the type of the first element
-     * @param <TSecond> the type of the second element
-     */
-    public record Entry<TFirst, TSecond>(TFirst first, TSecond second) {}
-
-    /**
      * Represents a specific input <i>container</i> object, and its equivalent output container. A container is a map,
      * array, or collection.
      * @param <TOut> the object held in the output container
@@ -72,23 +65,23 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             Object object = GraphTransformer.processRoot(element, new ArrayDeque<>(), new IdentityHashMap<>(), target -> {
                 if(target.isNode()) {
                     ConfigNode elementNode = target.asNode();
-                    Map<String, Object> outputMap = new LinkedHashMap<>(elementNode.size());
+                    Output<Object> outputMap = makeEncodeMap();
 
-                    return new GraphTransformer.Node<>(target, outputMap, elementNode.entryCollection(), outputMap::put);
+                    return new GraphTransformer.Node<>(target, outputMap, elementNode.entryCollection(), outputMap
+                            .consumer);
                 }
                 else if(target.isList()) {
                     ConfigList elementList = target.asList();
-                    List<Object> outputList = new ArrayList<>(elementList.size());
+                    Output<Object> outputCollection = makeEncodeCollection();
 
-                    return new GraphTransformer.Node<>(target, outputList, elementList.entryCollection(),
-                            (first, second) -> outputList.add(second));
+                    return new GraphTransformer.Node<>(target, outputCollection, elementList.entryCollection(),
+                            outputCollection.consumer);
                 }
 
-                return null;
-            }, ConfigElement::isObject, e -> null);
+                throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
+            }, e -> !isContainer(e), scalar -> Entry.of(null, serializeElement(scalar)));
 
-            writeObject(mapInput(element, this::serializeElement, this::makeEncodeMap, this::makeEncodeCollection,
-                    ConfigElement.class, Object.class), output);
+            writeObject(object, output);
         }
     }
 
@@ -97,8 +90,32 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(input);
 
         try (input) {
-            return mapInput(readObject(input), this::deserializeObject, this::makeDecodeMap, this::makeDecodeCollection,
-                    Object.class, ConfigElement.class);
+            return GraphTransformer.processRoot(readObject(input), new ArrayDeque<>(),
+                    new IdentityHashMap<>(), target -> {
+                        if(target instanceof Map<?, ?> map) {
+                            Output<ConfigElement> outputMap = makeDecodeMap();
+
+
+                            Iterable<Entry<String, Object>> iterable = map.entrySet().stream().map(entry -> Entry
+                                    .of(entry.getKey().toString(), (Object) entry.getValue())).collect(Collectors
+                                    .toList());
+
+                            return new GraphTransformer.Node<>(target, (ConfigElement) outputMap.output, iterable,
+                                    outputMap.consumer);
+                        }
+                        else if(target instanceof List<?> list) {
+                            Output<ConfigElement> outputCollection = makeDecodeCollection();
+
+                            Iterable<Entry<String, Object>> iterable = list.stream().map(entry -> Entry
+                                    .of((String) null, (Object) entry)).collect(Collectors.toList());
+
+                            return new GraphTransformer.Node<>(target, (ConfigElement) outputCollection.output,
+                                    iterable, outputCollection.consumer);
+                        }
+
+                        throw new IllegalArgumentException("Invalid input node type " + target.getClass()
+                                .getTypeName());
+                    }, e -> !isContainer(e), scalar -> Entry.of(null, deserializeObject(scalar)));
         }
     }
 
@@ -192,11 +209,11 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                                                   @NotNull Supplier<Output<TOut>> mapSupplier,
                                                   @NotNull Supplier<Output<TOut>> collectionSupplier) {
         if(inputContainer instanceof Map<?, ?> inputMap) {
-            return new Node<>(inputContainer, inputMap.entrySet().stream().map(entry -> new Entry<>(entry.getKey()
+            return new Node<>(inputContainer, inputMap.entrySet().stream().map(entry -> Entry.of(entry.getKey()
                     .toString(), entry.getValue())).iterator(), mapSupplier.get());
         }
         else if(inputContainer instanceof Collection<?> inputCollection) {
-            return new Node<>(inputContainer, inputCollection.stream().map(entry -> new Entry<>((String)null, entry))
+            return new Node<>(inputContainer, inputCollection.stream().map(entry -> Entry.of((String)null, entry))
                     .iterator(), collectionSupplier.get());
         }
         else if(inputContainer.getClass().isArray()) {
@@ -212,7 +229,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
                 @Override
                 public Entry<String, ?> next() {
-                    return new Entry<>(null, Array.get(inputContainer, index++));
+                    return Entry.of(null, Array.get(inputContainer, index++));
                 }
             };
 
