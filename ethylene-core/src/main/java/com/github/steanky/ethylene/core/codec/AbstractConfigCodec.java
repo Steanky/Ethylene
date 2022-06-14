@@ -57,7 +57,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                                @NotNull BiConsumer<String, TOut> consumer) {}
 
     /**
-     * Empty constructor, for use by subclasses.
+     * Empty builder, for use by subclasses.
      */
     protected AbstractConfigCodec() {}
 

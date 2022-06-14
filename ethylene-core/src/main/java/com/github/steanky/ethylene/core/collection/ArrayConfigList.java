@@ -24,7 +24,7 @@ public class ArrayConfigList extends AbstractConfigList implements RandomAccess 
 
     /**
      * Constructs a new ArrayConfigList backed an {@link ArrayList} containing the same elements as the provided
-     * {@link Collection}. This constructor uses
+     * {@link Collection}. This builder uses
      * {@link AbstractConfigList#constructList(Collection, java.util.function.IntFunction, Predicate)} to validate that
      * the list has no null elements.
      * @param collection the collection to copy elements from

@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * {@link ConfigLoader} implementation that uses a {@link ConfigProcessor} instance to marshal {@link ConfigElement}s
  * to and from arbitrary data types. It stores a default type, which will be written if implementations specify that
- * their data source is currently <i>absent</i> (say, in case of a missing file) and
+ * their data in is currently <i>absent</i> (say, in case of a missing file) and
  * {@link ProcessingConfigLoader#writeDefaultIfAbsent()} is invoked.
  * @param <TData> the type of data to convert to and from
  */
@@ -53,7 +53,7 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
     }
 
     /**
-     * Indicates whether this loader's data source is <i>absent</i>.
+     * Indicates whether this loader's data in is <i>absent</i>.
      * @return true if {@link ProcessingConfigLoader#writeDefaultIfAbsent()} should write a default object when called,
      * false otherwise
      */

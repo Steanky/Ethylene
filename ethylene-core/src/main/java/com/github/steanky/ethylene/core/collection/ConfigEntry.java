@@ -10,7 +10,7 @@ import java.util.Objects;
  * <p>Represents a particular key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is like a list,
  * the key will be null.</p>
  *
- * <p>This class is not a record because it should have a package-private constructor (there should never be a need for
+ * <p>This class is not a record because it should have a package-private builder (there should never be a need for
  * an API user to create an instance of this class).</p>
  */
 public final class ConfigEntry {

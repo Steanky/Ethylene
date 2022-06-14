@@ -12,8 +12,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * <p>Filesystem-source specialization of ProcessingConfigLoader. The source is considered <i>absent</i> if the given
- * {@link Path} does not exist (see {@link ProcessingConfigLoader} for more information on how an absent source changes
+ * <p>Filesystem-in specialization of ProcessingConfigLoader. The in is considered <i>absent</i> if the given
+ * {@link Path} does not exist (see {@link ProcessingConfigLoader} for more information on how an absent in changes
  * behavior).</p>
  *
  * <p>This class is only instantiated internally because there is some potential for misuse; i.e. it is possible for a
