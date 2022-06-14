@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
  * <p>This class is not a record because it should have a package-private builder (there should never be a need for
  * an API user to create an instance of this class).</p>
  */
-public final class ConfigEntry {
+public final class ConfigEntry implements Entry<String, ConfigElement> {
     private final String key;
     private final ConfigElement element;
 
@@ -27,19 +28,13 @@ public final class ConfigEntry {
         this.element = Objects.requireNonNull(element);
     }
 
-    /**
-     * Returns the key (name) of this ConfigEntry.
-     * @return the key for this ConfigMember
-     */
-    public String getKey() {
+    @Override
+    public @Nullable String getFirst() {
         return key;
     }
 
-    /**
-     * Returns the {@link ConfigElement} (value) of this ConfigEntry.
-     * @return the value for this ConfigEntry
-     */
-    public @NotNull ConfigElement getValue() {
+    @Override
+    public @NotNull ConfigElement getSecond() {
         return element;
     }
 }

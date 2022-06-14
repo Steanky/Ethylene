@@ -2,10 +2,9 @@ package com.github.steanky.ethylene.core.codec;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
-import com.github.steanky.ethylene.core.collection.ArrayConfigList;
-import com.github.steanky.ethylene.core.collection.ConfigList;
-import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.github.steanky.ethylene.core.collection.*;
+import com.github.steanky.ethylene.core.graph.GraphTransformer;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +16,9 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * <p>This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
@@ -59,7 +60,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
      * Empty builder, for use by subclasses.
      */
-    protected AbstractConfigCodec() {}
+    protected AbstractConfigCodec() {
+    }
 
     @Override
     public void encode(@NotNull ConfigElement element, @NotNull OutputStream output) throws IOException {
@@ -67,6 +69,24 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(output);
 
         try(output) {
+            Object object = GraphTransformer.processRoot(element, new ArrayDeque<>(), new IdentityHashMap<>(), target -> {
+                if(target.isNode()) {
+                    ConfigNode elementNode = target.asNode();
+                    Map<String, Object> outputMap = new LinkedHashMap<>(elementNode.size());
+
+                    return new GraphTransformer.Node<>(target, outputMap, elementNode.entryCollection(), outputMap::put);
+                }
+                else if(target.isList()) {
+                    ConfigList elementList = target.asList();
+                    List<Object> outputList = new ArrayList<>(elementList.size());
+
+                    return new GraphTransformer.Node<>(target, outputList, elementList.entryCollection(),
+                            (first, second) -> outputList.add(second));
+                }
+
+                return null;
+            }, ConfigElement::isObject, e -> null);
+
             writeObject(mapInput(element, this::serializeElement, this::makeEncodeMap, this::makeEncodeCollection,
                     ConfigElement.class, Object.class), output);
         }

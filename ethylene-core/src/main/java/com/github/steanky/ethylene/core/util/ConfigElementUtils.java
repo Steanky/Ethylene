@@ -32,8 +32,8 @@ public final class ConfigElementUtils {
             while(true) {
                 ConfigEntry entry = entryIterator.next();
 
-                String key = entry.getKey();
-                ConfigElement value = entry.getValue();
+                String key = entry.getFirst();
+                ConfigElement value = entry.getSecond();
 
                 if(key != null) {
                     builder.append(key).append('=');
