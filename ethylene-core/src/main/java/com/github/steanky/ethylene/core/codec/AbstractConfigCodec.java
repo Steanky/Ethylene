@@ -35,9 +35,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(output);
 
         try(output) {
-            writeObject(GraphTransformer.process(element, new ArrayDeque<>(), new IdentityHashMap<>(),
-                    this::makeEncodeNode, e -> !isContainer(e), scalar -> Entry.of(null, serializeElement(scalar))),
-                    output);
+            writeObject(GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, scalar -> Entry
+                    .of(null, serializeElement(scalar))), output);
         }
     }
 
@@ -46,8 +45,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(input);
 
         try (input) {
-            return GraphTransformer.process(readObject(input), new ArrayDeque<>(), new IdentityHashMap<>(),
-                    this::makeDecodeNode, e -> !isContainer(e), scalar -> Entry.of(null, deserializeObject(scalar)));
+            return GraphTransformer.process(readObject(input), this::makeDecodeNode, this::isContainer, scalar -> Entry
+                    .of(null, deserializeObject(scalar)));
         }
     }
 
@@ -65,7 +64,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
     }
 
-    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(Object target) {
+    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if(target instanceof Map<?, ?> map) {
             return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
                 private final Iterator<? extends Map.Entry<?, ?>> iterator = map.entrySet().iterator();
@@ -144,7 +143,6 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @param input the input object
      * @return true if input is a container and non-null, false if it is not a container or is null
      */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     @Contract("null -> false")
     protected boolean isContainer(@Nullable Object input) {
         return input != null && (input instanceof Collection<?> || input instanceof Map<?, ?> || input.getClass()

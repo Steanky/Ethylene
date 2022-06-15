@@ -98,7 +98,7 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(Object target) {
+    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if(target instanceof UnmodifiableConfig config) {
             return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
                 private final Iterator<? extends UnmodifiableConfig.Entry> backing = config.entrySet().iterator();

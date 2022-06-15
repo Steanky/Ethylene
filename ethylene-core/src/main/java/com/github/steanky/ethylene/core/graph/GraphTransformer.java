@@ -23,9 +23,9 @@ public final class GraphTransformer {
                                                  @NotNull Deque<Node<TIn, TOut, TKey>> stack,
                                                  @NotNull Map<TIn, TOut> visited,
                                                  @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
-                                                 @NotNull Predicate<? super TIn> scalarPredicate,
+                                                 @NotNull Predicate<? super TIn> containerPredicate,
                                                  @NotNull Function<? super TIn, ? extends Entry<TKey, TOut>> scalarMapper) {
-        if(scalarPredicate.test(input)) {
+        if(!containerPredicate.test(input)) {
             return scalarMapper.apply(input).getSecond();
         }
 
@@ -37,7 +37,7 @@ public final class GraphTransformer {
             Node<TIn, TOut, TKey> node = stack.pop();
 
             for(Entry<TKey, TIn> in : node.inputIterable) {
-                if(scalarPredicate.test(in.getSecond())) {
+                if(!containerPredicate.test(in.getSecond())) {
                     Entry<TKey, TOut> entry = scalarMapper.apply(in.getSecond());
                     node.output.accumulator.accept(in.getFirst(), entry.getSecond());
                     continue;
@@ -58,5 +58,12 @@ public final class GraphTransformer {
         }
 
         return root.output.data;
+    }
+
+    public static <TIn, TOut, TKey> TOut process(TIn input,
+                                                 @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+                                                 @NotNull Predicate<? super TIn> containerPredicate,
+                                                 @NotNull Function<? super TIn, ? extends Entry<TKey, TOut>> scalarMapper)  {
+        return process(input, new ArrayDeque<>(), new IdentityHashMap<>(), nodeFunction, containerPredicate, scalarMapper);
     }
 }

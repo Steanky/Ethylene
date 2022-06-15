@@ -116,7 +116,7 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(Object target) {
+    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if(target instanceof JsonObject object) {
             return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
                 private final Iterator<JsonObject.Member> iterator = object.iterator();
