@@ -17,12 +17,12 @@ public final class GraphTransformer {
                                         @NotNull Iterable<? extends Entry<TKey, TIn>> inputIterable,
                                         @NotNull BiConsumer<? super TKey, ? super TOut> accumulator) {}
 
-    public static <TIn, TOut, TKey> TOut processRoot(TIn input,
-                                                     @NotNull Deque<Node<TIn, TOut, TKey>> stack,
-                                                     @NotNull Map<TIn, TOut> visited,
-                                                     @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
-                                                     @NotNull Predicate<? super TIn> scalarPredicate,
-                                                     @NotNull Function<? super TIn, ? extends Entry<TKey, TOut>> scalarMapper) {
+    public static <TIn, TOut, TKey> TOut process(TIn input,
+                                                 @NotNull Deque<Node<TIn, TOut, TKey>> stack,
+                                                 @NotNull Map<TIn, TOut> visited,
+                                                 @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+                                                 @NotNull Predicate<? super TIn> scalarPredicate,
+                                                 @NotNull Function<? super TIn, ? extends Entry<TKey, TOut>> scalarMapper) {
         if(scalarPredicate.test(input)) {
             return scalarMapper.apply(input).getSecond();
         }

@@ -4,8 +4,6 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.*;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
-import com.github.steanky.ethylene.core.processor.ConfigProcessException;
-import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,14 +11,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * <p>This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
@@ -46,8 +38,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
      * Empty builder, for use by subclasses.
      */
-    protected AbstractConfigCodec() {
-    }
+    protected AbstractConfigCodec() {}
 
     @Override
     public void encode(@NotNull ConfigElement element, @NotNull OutputStream output) throws IOException {
@@ -55,10 +46,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(output);
 
         try(output) {
-            Object object = GraphTransformer.processRoot(element, new ArrayDeque<>(), new IdentityHashMap<>(),
-                    this::makeEncodeNode, e -> !isContainer(e), scalar -> Entry.of(null, serializeElement(scalar)));
-
-            writeObject(object, output);
+            writeObject(GraphTransformer.process(element, new ArrayDeque<>(), new IdentityHashMap<>(),
+                    this::makeEncodeNode, e -> !isContainer(e), scalar -> Entry.of(null, serializeElement(scalar))),
+                    output);
         }
     }
 
@@ -67,19 +57,17 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(input);
 
         try (input) {
-            return GraphTransformer.processRoot(readObject(input), new ArrayDeque<>(),
-                    new IdentityHashMap<>(), this::makeDecodeNode, e -> !isContainer(e), scalar -> Entry.of(null,
-                            deserializeObject(scalar)));
+            return GraphTransformer.process(readObject(input), new ArrayDeque<>(), new IdentityHashMap<>(),
+                    this::makeDecodeNode, e -> !isContainer(e), scalar -> Entry.of(null, deserializeObject(scalar)));
         }
     }
 
     protected @NotNull GraphTransformer.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
         if(target.isNode()) {
             ConfigNode elementNode = target.asNode();
-            Output<Object> outputMap = makeEncodeMap(elementNode.size());
+            Output<Object> output = makeEncodeMap(elementNode.size());
 
-            return new GraphTransformer.Node<>(target, outputMap, elementNode.entryCollection(), outputMap
-                    .consumer);
+            return new GraphTransformer.Node<>(target, output, elementNode.entryCollection(), output.consumer);
         }
         else if(target.isList()) {
             ConfigList elementList = target.asList();

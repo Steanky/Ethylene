@@ -205,17 +205,7 @@ class AbstractConfigCodecTest {
 
     @Test
     void correctSelfReferentialMapping() {
-        Map<String, Object> root = new LinkedHashMap<>();
-        root.put("number", 69);
-        root.put("string", "this is a string");
 
-        //noinspection CollectionAddedToSelf
-        root.put("selfReference", root);
-
-        ConfigElement element = testCodec.mapInput(root, testCodec::deserializeObject, testCodec::makeDecodeMap,
-                testCodec::makeEncodeMap, Object.class, ConfigElement.class);
-        assertTrue(element.isNode());
-        assertSame(element.asNode().get("selfReference"), element);
     }
 
     @Test

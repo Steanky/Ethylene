@@ -3,14 +3,15 @@ package com.github.steanky.ethylene.codec.hjson;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import org.hjson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.util.Iterator;
 import java.util.Objects;
-import java.util.function.Supplier;
-import java.util.stream.StreamSupport;
 
 /**
  * Provides support for HJSON.
@@ -58,13 +59,13 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull <TOut> Output<TOut> makeEncodeMap() {
+    protected @NotNull Output<Object> makeEncodeMap(int size) {
         JsonObject object = new JsonObject();
         return new Output<>(object, (k, v) -> object.add(k, (JsonValue) v));
     }
 
     @Override
-    protected @NotNull <TOut> Output<TOut> makeEncodeCollection() {
+    protected @NotNull Output<Object> makeEncodeCollection(int size) {
         JsonArray array = new JsonArray();
         return new Output<>(array, (k, v) -> array.add((JsonValue) v));
     }
@@ -86,15 +87,11 @@ public class HjsonCodec extends AbstractConfigCodec {
             }
         }
 
-        throw new IllegalArgumentException("Invalid element: " + element.getClass().getName());
+        return super.serializeElement(element);
     }
 
     @Override
     protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
-        if(object == null) {
-            return new ConfigPrimitive(null);
-        }
-
         if(object instanceof JsonValue value) {
             if(value.isNull()) {
                 return new ConfigPrimitive(null);
@@ -110,7 +107,7 @@ public class HjsonCodec extends AbstractConfigCodec {
             }
         }
 
-        throw new IllegalArgumentException("Invalid JsonValue type: " + object.getClass().getName());
+        return super.deserializeObject(object);
     }
 
     @Override
@@ -119,20 +116,42 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull <TOut> Node<TOut> makeNode(@NotNull Object inputContainer,
-                                                  @NotNull Supplier<Output<TOut>> mapSupplier,
-                                                  @NotNull Supplier<Output<TOut>> collectionSupplier) {
-        if(inputContainer instanceof JsonObject object) {
-            return new Node<>(object, StreamSupport.stream(object.spliterator(), false)
-                    .map(member -> new Entry<>(member.getName(), member.getValue())).iterator(), mapSupplier.get());
+    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(Object target) {
+        if(target instanceof JsonObject object) {
+            Output<ConfigElement> output = makeDecodeMap(object.size());
+            return new GraphTransformer.Node<>(target, output.output(), () -> new Iterator<>() {
+                private final Iterator<JsonObject.Member> iterator = object.iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return iterator.hasNext();
+                }
+
+                @Override
+                public Entry<String, Object> next() {
+                    JsonObject.Member next = iterator.next();
+                    return Entry.of(next.getName(), next.getValue());
+                }
+            }, output.consumer());
         }
-        else if(inputContainer instanceof JsonArray array) {
-            return new Node<>(array, StreamSupport.stream(array.spliterator(), false)
-                    .map(element -> new Entry<>((String)null, element)).iterator(), collectionSupplier.get());
+        else if(target instanceof JsonArray array) {
+            Output<ConfigElement> output = makeDecodeCollection(array.size());
+
+            return new GraphTransformer.Node<>(target, output.output(), () -> new Iterator<>() {
+                private final Iterator<JsonValue> backing = array.iterator();
+                @Override
+                public boolean hasNext() {
+                    return backing.hasNext();
+                }
+
+                @Override
+                public Entry<String, Object> next() {
+                    return Entry.of(null, backing.next());
+                }
+            }, output.consumer());
         }
-        else {
-            return super.makeNode(inputContainer, mapSupplier, collectionSupplier);
-        }
+
+        return super.makeDecodeNode(target);
     }
 
     @Override
