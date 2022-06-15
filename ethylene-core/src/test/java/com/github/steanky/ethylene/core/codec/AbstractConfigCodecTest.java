@@ -25,6 +25,7 @@ class AbstractConfigCodecTest {
     private static final String LIST_KEY = "list";
     private static final String SUB_LIST_KEY = "sub_list";
     private static final String SUB_LIST_NODES_KEY = "sub_list_nodes";
+    private static final String PARENT_REF = "parent_ref";
 
     private static final String SUB_ROOT_KEY = "sub_root";
 
@@ -73,9 +74,11 @@ class AbstractConfigCodecTest {
         root.put(SUB_ROOT_KEY, subRoot);
 
         List<Object> subListNodes = new ArrayList<>();
+
         subRoot.put(SUB_STRING_KEY, SUB_STRING_VALUE);
         subRoot.put(SUB_LIST_KEY, SUB_LIST_VALUE);
         subRoot.put(SUB_LIST_NODES_KEY, subListNodes);
+        subRoot.put(PARENT_REF, root);
 
         for(int i = 0; i < SUB_NODE_COUNT; i++) {
             Map<String, Object> subNode = new HashMap<>();
@@ -205,8 +208,11 @@ class AbstractConfigCodecTest {
     }
 
     @Test
-    void correctSelfReferentialMapping() {
+    void correctSelfReferentialMapping() throws IOException {
+        ConfigElement element = testCodec.decode(InputStream.nullInputStream());
+        ConfigNode root = element.asNode();
 
+        assertSame(root, element.getElementOrThrow(SUB_ROOT_KEY, PARENT_REF));
     }
 
     @Test
