@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.*;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
+import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +20,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * <p>This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
@@ -31,15 +33,6 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
-     * Represents a specific input <i>container</i> object, and its equivalent output container. A container is a map,
-     * array, or collection.
-     * @param <TOut> the object held in the output container
-     */
-    public record Node<TOut>(@NotNull Object input,
-                             @NotNull Iterator<? extends Entry<String, ?>> inputIterator,
-                             @NotNull Output<TOut> output) {}
-
-    /**
      * Represents an <i>output</i> object, which we convert to from an <i>input</i> object (when serializing or
      * deserializing). This record holds a reference to the raw object itself (which may be a map, collection, or some
      * other arbitrary class) as well as a {@link BiConsumer} used to add new elements to the output. If output is a map
@@ -47,7 +40,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * array, or some other type that has no concept of a "key", the first parameter may be ignored (it should be null).
      * @param <TOut> the output type
      */
-    public record Output<TOut>(@NotNull Object output,
+    public record Output<TOut>(@NotNull TOut output,
                                @NotNull BiConsumer<String, TOut> consumer) {}
 
     /**
@@ -62,24 +55,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(output);
 
         try(output) {
-            Object object = GraphTransformer.processRoot(element, new ArrayDeque<>(), new IdentityHashMap<>(), target -> {
-                if(target.isNode()) {
-                    ConfigNode elementNode = target.asNode();
-                    Output<Object> outputMap = makeEncodeMap();
-
-                    return new GraphTransformer.Node<>(target, outputMap, elementNode.entryCollection(), outputMap
-                            .consumer);
-                }
-                else if(target.isList()) {
-                    ConfigList elementList = target.asList();
-                    Output<Object> outputCollection = makeEncodeCollection();
-
-                    return new GraphTransformer.Node<>(target, outputCollection, elementList.entryCollection(),
-                            outputCollection.consumer);
-                }
-
-                throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
-            }, e -> !isContainer(e), scalar -> Entry.of(null, serializeElement(scalar)));
+            Object object = GraphTransformer.processRoot(element, new ArrayDeque<>(), new IdentityHashMap<>(),
+                    this::makeEncodeNode, e -> !isContainer(e), scalar -> Entry.of(null, serializeElement(scalar)));
 
             writeObject(object, output);
         }
@@ -91,71 +68,105 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
         try (input) {
             return GraphTransformer.processRoot(readObject(input), new ArrayDeque<>(),
-                    new IdentityHashMap<>(), target -> {
-                        if(target instanceof Map<?, ?> map) {
-                            Output<ConfigElement> outputMap = makeDecodeMap();
-
-
-                            Iterable<Entry<String, Object>> iterable = map.entrySet().stream().map(entry -> Entry
-                                    .of(entry.getKey().toString(), (Object) entry.getValue())).collect(Collectors
-                                    .toList());
-
-                            return new GraphTransformer.Node<>(target, (ConfigElement) outputMap.output, iterable,
-                                    outputMap.consumer);
-                        }
-                        else if(target instanceof List<?> list) {
-                            Output<ConfigElement> outputCollection = makeDecodeCollection();
-
-                            Iterable<Entry<String, Object>> iterable = list.stream().map(entry -> Entry
-                                    .of((String) null, (Object) entry)).collect(Collectors.toList());
-
-                            return new GraphTransformer.Node<>(target, (ConfigElement) outputCollection.output,
-                                    iterable, outputCollection.consumer);
-                        }
-
-                        throw new IllegalArgumentException("Invalid input node type " + target.getClass()
-                                .getTypeName());
-                    }, e -> !isContainer(e), scalar -> Entry.of(null, deserializeObject(scalar)));
+                    new IdentityHashMap<>(), this::makeDecodeNode, e -> !isContainer(e), scalar -> Entry.of(null,
+                            deserializeObject(scalar)));
         }
     }
 
-    /**
-     * Produces a {@link Output} object used to hold a reference to the <i>output map</i> used during encoding.
-     * @param <TOut> the output type
-     * @return an Output object containing a reference to an output map
-     */
-    protected <TOut> @NotNull Output<TOut> makeEncodeMap() {
-        Map<String, Object> map = new LinkedHashMap<>();
+    protected @NotNull GraphTransformer.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
+        if(target.isNode()) {
+            ConfigNode elementNode = target.asNode();
+            Output<Object> outputMap = makeEncodeMap(elementNode.size());
+
+            return new GraphTransformer.Node<>(target, outputMap, elementNode.entryCollection(), outputMap
+                    .consumer);
+        }
+        else if(target.isList()) {
+            ConfigList elementList = target.asList();
+            Output<Object> outputCollection = makeEncodeCollection(elementList.size());
+
+            return new GraphTransformer.Node<>(target, outputCollection, elementList.entryCollection(),
+                    outputCollection.consumer);
+        }
+
+        throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
+    }
+
+    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(Object target) {
+        if(target instanceof Map<?, ?> map) {
+            Output<ConfigElement> output = makeDecodeMap(map.size());
+
+            return new GraphTransformer.Node<>(target, output.output, () -> new Iterator<>() {
+                private final Iterator<? extends Map.Entry<?, ?>> iterator = map.entrySet().iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return iterator.hasNext();
+                }
+
+                @Override
+                public Entry<String, Object> next() {
+                    Map.Entry<?, ?> next = iterator.next();
+                    return Entry.of(next.getKey().toString(), next.getValue());
+                }
+            }, output.consumer);
+        }
+        else if(target instanceof List<?> list) {
+            Output<ConfigElement> output = makeDecodeCollection(list.size());
+
+            return new GraphTransformer.Node<>(target, output.output, () -> new Iterator<>() {
+                private final Iterator<?> backing = list.iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return backing.hasNext();
+                }
+
+                @Override
+                public Entry<String, Object> next() {
+                    return Entry.of(null, backing.next());
+                }
+            }, output.consumer);
+        }
+        else if(target.getClass().isArray()) {
+            Object[] array = (Object[])target;
+            Output<ConfigElement> output = makeDecodeCollection(array.length);
+
+            return new GraphTransformer.Node<>(target, output.output, () -> new Iterator<>() {
+                private int i = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return i < array.length;
+                }
+
+                @Override
+                public Entry<String, Object> next() {
+                    return Entry.of(null, array[i++]);
+                }
+            }, output.consumer);
+        }
+
+        throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
+    }
+
+    protected @NotNull Output<Object> makeEncodeMap(int size) {
+        Map<String, Object> map = new LinkedHashMap<>(size);
         return new Output<>(map, map::put);
     }
 
-    /**
-     * Produces a {@link Output} object used to hold a reference to the <i>output collection</i> used during encoding.
-     * @param <TOut> the output type
-     * @return an Output object containing a reference to an output collection
-     */
-    protected <TOut> @NotNull Output<TOut> makeEncodeCollection() {
-        Collection<Object> collection = new ArrayList<>();
+    protected @NotNull Output<Object> makeEncodeCollection(int size) {
+        Collection<Object> collection = new ArrayList<>(size);
         return new Output<>(collection, (k, v) -> collection.add(v));
     }
 
-    /**
-     * Produces a {@link Output} object used to hold a reference to the <i>output map</i> used during decoding.
-     * @param <TOut> the output type
-     * @return an Output object containing a reference to an output map
-     */
-    protected <TOut extends ConfigElement> @NotNull Output<TOut> makeDecodeMap() {
-        ConfigNode node = new LinkedConfigNode();
+    protected @NotNull Output<ConfigElement> makeDecodeMap(int size) {
+        ConfigNode node = new LinkedConfigNode(size);
         return new Output<>(node, node::put);
     }
 
-    /**
-     * Produces a {@link Output} object used to hold a reference to the <i>output collection</i> used during decoding.
-     * @param <TOut> the output type
-     * @return an Output object containing a reference to an output collection
-     */
-    protected <TOut extends ConfigElement> @NotNull Output<TOut> makeDecodeCollection() {
-        ConfigList list = new ArrayConfigList();
+    protected @NotNull Output<ConfigElement> makeDecodeCollection(int size) {
+        ConfigList list = new ArrayConfigList(size);
         return new Output<>(list, (k, v) -> list.add(v));
     }
 
@@ -192,140 +203,6 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      */
     protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
         return new ConfigPrimitive(object);
-    }
-
-    /**
-     * Constructs a {@link Node} object from an input container object, and using the given suppliers to create an
-     * equivalent output {@link Map} or {@link Collection}.
-     * @param inputContainer the input object, for which {@link AbstractConfigCodec#isContainer(Object)} should return
-     *                       true
-     * @param mapSupplier the supplier used to produce the output map
-     * @param collectionSupplier the supplier used to produce the output collection
-     * @param <TOut> the type of object contained in the output map or collection
-     * @return a new node containing the input, output, and a {@link BiConsumer} used to add elements
-     * @throws IllegalArgumentException if inputContainer is not a valid container (map, collection, or array)
-     */
-    protected <TOut> @NotNull Node<TOut> makeNode(@NotNull Object inputContainer,
-                                                  @NotNull Supplier<Output<TOut>> mapSupplier,
-                                                  @NotNull Supplier<Output<TOut>> collectionSupplier) {
-        if(inputContainer instanceof Map<?, ?> inputMap) {
-            return new Node<>(inputContainer, inputMap.entrySet().stream().map(entry -> Entry.of(entry.getKey()
-                    .toString(), entry.getValue())).iterator(), mapSupplier.get());
-        }
-        else if(inputContainer instanceof Collection<?> inputCollection) {
-            return new Node<>(inputContainer, inputCollection.stream().map(entry -> Entry.of((String)null, entry))
-                    .iterator(), collectionSupplier.get());
-        }
-        else if(inputContainer.getClass().isArray()) {
-            int length = Array.getLength(inputContainer);
-
-            Iterator<? extends Entry<String, ?>> arrayIterator = new Iterator<>() {
-                private int index = 0;
-
-                @Override
-                public boolean hasNext() {
-                    return index < length;
-                }
-
-                @Override
-                public Entry<String, ?> next() {
-                    return Entry.of(null, Array.get(inputContainer, index++));
-                }
-            };
-
-            return new Node<>(inputContainer, arrayIterator, collectionSupplier.get());
-        }
-        else {
-            throw new IllegalArgumentException("Invalid input type " + inputContainer.getClass().getName());
-        }
-    }
-
-    /**
-     * Processes a particular {@link Node}. The node's input container will be iterated. New Node objects will be
-     * created for every container object contained in this one, if applicable. All objects will be added to the current
-     * node's output. Any objects contained in the input container that are not containers will be converted to the
-     * output type using the provided {@link Function} scalarMapper.
-     * @param node the node to process
-     * @param stack the current node stack
-     * @param visited a map of the containers visited so far
-     * @param scalarMapper the mapping function used to convert scalars
-     * @param mapSupplier the {@link Supplier} used to construct new output maps
-     * @param collectionSupplier the supplier used to construct new output collections
-     * @param inClass the superclass of all input objects
-     * @param outClass the superclass of all output objects
-     * @param <TIn> the type of input object
-     * @param <TOut> the type of output object
-     */
-    protected <TIn, TOut> void processNode(@NotNull Node<TOut> node,
-                                           @NotNull Deque<Node<TOut>> stack,
-                                           @NotNull Map<Object, TOut> visited,
-                                           @NotNull Function<TIn, TOut> scalarMapper,
-                                           @NotNull Supplier<Output<TOut>> mapSupplier,
-                                           @NotNull Supplier<Output<TOut>> collectionSupplier,
-                                           @NotNull Class<TIn> inClass,
-                                           @NotNull Class<TOut> outClass) {
-        while(node.inputIterator.hasNext()) {
-            Entry<String, ?> pair = node.inputIterator.next();
-
-            if(!isContainer(pair.second)) {
-                node.output.consumer.accept(pair.first, scalarMapper.apply(inClass.cast(pair.second)));
-            }
-            else {
-                if(visited.containsKey(pair.second)) {
-                    node.output.consumer.accept(pair.first, visited.get(pair.second));
-                }
-                else {
-                    Node<TOut> newNode = makeNode(pair.second, mapSupplier, collectionSupplier);
-                    TOut newOut = outClass.cast(newNode.output.output);
-
-                    stack.push(newNode);
-                    visited.put(pair.first, newOut);
-
-                    node.output.consumer.accept(pair.first, newOut);
-                }
-            }
-        }
-    }
-
-    /**
-     * Maps a provided input, deeply iterating all elements and converting them according to a provided {@link Function}
-     * used to map scalars (non-containers). Container objects will be converted to {@link Map} or {@link Collection},
-     * provided by the given {@link Supplier}s.
-     * @param input the input object
-     * @param scalarMapper the function used to map non-containers
-     * @param mapSupplier the supplier used to produce output maps
-     * @param collectionSupplier the supplier used to produce output collections
-     * @param inClass the superclass of the input object
-     * @param outClass the superclass of the output object
-     * @param <TIn> the input type
-     * @param <TOut> the output type
-     * @return the output object, containing converted elements from the input object
-     */
-    protected <TIn, TOut> TOut mapInput(@NotNull Object input,
-                                        @NotNull Function<TIn, TOut> scalarMapper,
-                                        @NotNull Supplier<Output<TOut>> mapSupplier,
-                                        @NotNull Supplier<Output<TOut>> collectionSupplier,
-                                        @NotNull Class<TIn> inClass,
-                                        @NotNull Class<TOut> outClass) {
-        if(!isContainer(input)) {
-            return scalarMapper.apply(inClass.cast(input));
-        }
-        else {
-            Deque<Node<TOut>> stack = new ArrayDeque<>();
-            Node<TOut> node = makeNode(input, mapSupplier, collectionSupplier);
-            TOut rootOut = outClass.cast(node.output.output);
-            stack.push(node);
-
-            Map<Object, TOut> visited = new IdentityHashMap<>();
-            visited.put(input, rootOut);
-
-            while(!stack.isEmpty()) {
-                processNode(stack.pop(), stack, visited, scalarMapper, mapSupplier, collectionSupplier, inClass,
-                        outClass);
-            }
-
-            return rootOut;
-        }
     }
 
     /**

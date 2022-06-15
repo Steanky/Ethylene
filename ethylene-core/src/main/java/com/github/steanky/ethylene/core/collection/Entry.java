@@ -1,5 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
+import java.util.Map;
+
 public interface Entry<TFirst, TSecond> {
     TFirst getFirst();
 
