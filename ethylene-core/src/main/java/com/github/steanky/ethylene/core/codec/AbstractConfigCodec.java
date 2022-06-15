@@ -25,17 +25,6 @@ import java.util.function.BiConsumer;
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
-     * Represents an <i>output</i> object, which we convert to from an <i>input</i> object (when serializing or
-     * deserializing). This record holds a reference to the raw object itself (which may be a map, collection, or some
-     * other arbitrary class) as well as a {@link BiConsumer} used to add new elements to the output. If output is a map
-     * (or any type that requires a key), the first parameter of the BiConsumer should be used. If it is a collection,
-     * array, or some other type that has no concept of a "key", the first parameter may be ignored (it should be null).
-     * @param <TOut> the output type
-     */
-    public record Output<TOut>(@NotNull TOut output,
-                               @NotNull BiConsumer<String, TOut> consumer) {}
-
-    /**
      * Empty builder, for use by subclasses.
      */
     protected AbstractConfigCodec() {}
@@ -65,16 +54,12 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     protected @NotNull GraphTransformer.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
         if(target.isNode()) {
             ConfigNode elementNode = target.asNode();
-            Output<Object> output = makeEncodeMap(elementNode.size());
-
-            return new GraphTransformer.Node<>(target, output, elementNode.entryCollection(), output.consumer);
+            return new GraphTransformer.Node<>(target, elementNode.entryCollection(), makeEncodeMap(elementNode.size()));
         }
         else if(target.isList()) {
             ConfigList elementList = target.asList();
-            Output<Object> outputCollection = makeEncodeCollection(elementList.size());
-
-            return new GraphTransformer.Node<>(target, outputCollection, elementList.entryCollection(),
-                    outputCollection.consumer);
+            return new GraphTransformer.Node<>(target, elementList.entryCollection(), makeEncodeCollection(elementList
+                    .size()));
         }
 
         throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
@@ -82,9 +67,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(Object target) {
         if(target instanceof Map<?, ?> map) {
-            Output<ConfigElement> output = makeDecodeMap(map.size());
-
-            return new GraphTransformer.Node<>(target, output.output, () -> new Iterator<>() {
+            return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
                 private final Iterator<? extends Map.Entry<?, ?>> iterator = map.entrySet().iterator();
 
                 @Override
@@ -97,12 +80,10 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                     Map.Entry<?, ?> next = iterator.next();
                     return Entry.of(next.getKey().toString(), next.getValue());
                 }
-            }, output.consumer);
+            }, makeDecodeMap(map.size()));
         }
         else if(target instanceof List<?> list) {
-            Output<ConfigElement> output = makeDecodeCollection(list.size());
-
-            return new GraphTransformer.Node<>(target, output.output, () -> new Iterator<>() {
+            return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
                 private final Iterator<?> backing = list.iterator();
 
                 @Override
@@ -114,13 +95,12 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 public Entry<String, Object> next() {
                     return Entry.of(null, backing.next());
                 }
-            }, output.consumer);
+            }, makeDecodeCollection(list.size()));
         }
         else if(target.getClass().isArray()) {
             Object[] array = (Object[])target;
-            Output<ConfigElement> output = makeDecodeCollection(array.length);
 
-            return new GraphTransformer.Node<>(target, output.output, () -> new Iterator<>() {
+            return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
                 private int i = 0;
 
                 @Override
@@ -132,30 +112,30 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 public Entry<String, Object> next() {
                     return Entry.of(null, array[i++]);
                 }
-            }, output.consumer);
+            }, makeDecodeCollection(array.length));
         }
 
         throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
     }
 
-    protected @NotNull Output<Object> makeEncodeMap(int size) {
+    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
         Map<String, Object> map = new LinkedHashMap<>(size);
-        return new Output<>(map, map::put);
+        return new GraphTransformer.Output<>(map, map::put);
     }
 
-    protected @NotNull Output<Object> makeEncodeCollection(int size) {
+    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeCollection(int size) {
         Collection<Object> collection = new ArrayList<>(size);
-        return new Output<>(collection, (k, v) -> collection.add(v));
+        return new GraphTransformer.Output<>(collection, (k, v) -> collection.add(v));
     }
 
-    protected @NotNull Output<ConfigElement> makeDecodeMap(int size) {
+    protected @NotNull GraphTransformer.Output<ConfigElement, String> makeDecodeMap(int size) {
         ConfigNode node = new LinkedConfigNode(size);
-        return new Output<>(node, node::put);
+        return new GraphTransformer.Output<>(node, node::put);
     }
 
-    protected @NotNull Output<ConfigElement> makeDecodeCollection(int size) {
+    protected @NotNull GraphTransformer.Output<ConfigElement, String> makeDecodeCollection(int size) {
         ConfigList list = new ArrayConfigList(size);
-        return new Output<>(list, (k, v) -> list.add(v));
+        return new GraphTransformer.Output<>(list, (k, v) -> list.add(v));
     }
 
     /**

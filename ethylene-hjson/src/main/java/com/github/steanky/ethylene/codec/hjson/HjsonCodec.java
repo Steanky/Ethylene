@@ -59,15 +59,15 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull Output<Object> makeEncodeMap(int size) {
+    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
         JsonObject object = new JsonObject();
-        return new Output<>(object, (k, v) -> object.add(k, (JsonValue) v));
+        return new GraphTransformer.Output<>(object, (k, v) -> object.add(k, (JsonValue) v));
     }
 
     @Override
-    protected @NotNull Output<Object> makeEncodeCollection(int size) {
+    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeCollection(int size) {
         JsonArray array = new JsonArray();
-        return new Output<>(array, (k, v) -> array.add((JsonValue) v));
+        return new GraphTransformer.Output<>(array, (k, v) -> array.add((JsonValue) v));
     }
 
     @Override
@@ -118,8 +118,7 @@ public class HjsonCodec extends AbstractConfigCodec {
     @Override
     protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(Object target) {
         if(target instanceof JsonObject object) {
-            Output<ConfigElement> output = makeDecodeMap(object.size());
-            return new GraphTransformer.Node<>(target, output.output(), () -> new Iterator<>() {
+            return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
                 private final Iterator<JsonObject.Member> iterator = object.iterator();
 
                 @Override
@@ -132,12 +131,10 @@ public class HjsonCodec extends AbstractConfigCodec {
                     JsonObject.Member next = iterator.next();
                     return Entry.of(next.getName(), next.getValue());
                 }
-            }, output.consumer());
+            }, makeDecodeMap(object.size()));
         }
         else if(target instanceof JsonArray array) {
-            Output<ConfigElement> output = makeDecodeCollection(array.size());
-
-            return new GraphTransformer.Node<>(target, output.output(), () -> new Iterator<>() {
+            return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
                 private final Iterator<JsonValue> backing = array.iterator();
                 @Override
                 public boolean hasNext() {
@@ -148,7 +145,7 @@ public class HjsonCodec extends AbstractConfigCodec {
                 public Entry<String, Object> next() {
                     return Entry.of(null, backing.next());
                 }
-            }, output.consumer());
+            }, makeDecodeCollection(array.size()));
         }
 
         return super.makeDecodeNode(target);

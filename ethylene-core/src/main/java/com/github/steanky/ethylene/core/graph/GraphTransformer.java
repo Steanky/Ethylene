@@ -13,9 +13,11 @@ import java.util.function.Predicate;
  */
 public final class GraphTransformer {
     public record Node<TIn, TOut, TKey>(TIn in,
-                                        TOut out,
                                         @NotNull Iterable<? extends Entry<TKey, TIn>> inputIterable,
-                                        @NotNull BiConsumer<? super TKey, ? super TOut> accumulator) {}
+                                        @NotNull Output<TOut, TKey> output) {}
+
+    public record Output<TOut, TKey>(@NotNull TOut data,
+                                     @NotNull BiConsumer<? super TKey, ? super TOut> accumulator) {}
 
     public static <TIn, TOut, TKey> TOut process(TIn input,
                                                  @NotNull Deque<Node<TIn, TOut, TKey>> stack,
@@ -28,7 +30,7 @@ public final class GraphTransformer {
         }
 
         Node<TIn, TOut, TKey> root = nodeFunction.apply(input);
-        visited.put(input, root.out);
+        visited.put(input, root.output.data);
         stack.push(root);
 
         while(!stack.isEmpty()) {
@@ -37,24 +39,24 @@ public final class GraphTransformer {
             for(Entry<TKey, TIn> in : node.inputIterable) {
                 if(scalarPredicate.test(in.getSecond())) {
                     Entry<TKey, TOut> entry = scalarMapper.apply(in.getSecond());
-                    node.accumulator.accept(entry.getFirst(), entry.getSecond());
+                    node.output.accumulator.accept(in.getFirst(), entry.getSecond());
                     continue;
                 }
 
                 TOut out = visited.get(in.getSecond()); //handle already-visited non-scalar nodes
                 if(out != null) {
-                    node.accumulator.accept(in.getFirst(), out);
+                    node.output.accumulator.accept(in.getFirst(), out);
                     continue;
                 }
 
                 Node<TIn, TOut, TKey> newNode = nodeFunction.apply(in.getSecond());
-                visited.put(in.getSecond(), newNode.out);
+                visited.put(in.getSecond(), newNode.output.data);
                 stack.push(newNode);
 
-                node.accumulator.accept(in.getFirst(), newNode.out);
+                node.output.accumulator.accept(in.getFirst(), newNode.output.data);
             }
         }
 
-        return root.out;
+        return root.output.data;
     }
 }

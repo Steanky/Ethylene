@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.codec.toml;
 
 import com.electronwill.nightconfig.core.Config;
-import com.electronwill.nightconfig.core.NullObject;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.core.io.WritingException;
@@ -9,8 +8,9 @@ import com.electronwill.nightconfig.toml.TomlFormat;
 import com.electronwill.nightconfig.toml.TomlParser;
 import com.electronwill.nightconfig.toml.TomlWriter;
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,8 +18,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /**
  * Provides support for the TOML format. This class overrides {@link AbstractConfigCodec#serializeElement(ConfigElement)} and
@@ -86,9 +87,9 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull <TOut> Output<TOut> makeEncodeMap() {
-        Config config = TomlFormat.newConfig();
-        return new Output<>(config, config::add);
+    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
+        Config config = TomlFormat.newConfig(() -> new LinkedHashMap<>(size));
+        return new GraphTransformer.Output<>(config, config::add);
     }
 
     @Override
@@ -97,16 +98,25 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull <TOut> Node<TOut> makeNode(@NotNull Object inputContainer,
-                                                  @NotNull Supplier<Output<TOut>> mapSupplier,
-                                                  @NotNull Supplier<Output<TOut>> collectionSupplier) {
-        if(inputContainer instanceof UnmodifiableConfig object) {
-            return new Node<>(object, object.entrySet().stream().map(member -> new Entry<>(member.getKey(), member
-                    .getValue())).iterator(), mapSupplier.get());
+    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(Object target) {
+        if(target instanceof UnmodifiableConfig config) {
+            return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
+                private final Iterator<? extends UnmodifiableConfig.Entry> backing = config.entrySet().iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return backing.hasNext();
+                }
+
+                @Override
+                public Entry<String, Object> next() {
+                    UnmodifiableConfig.Entry next = backing.next();
+                    return Entry.of(next.getKey(), next.getValue());
+                }
+            }, makeDecodeMap(config.size()));
         }
-        else {
-            return super.makeNode(inputContainer, mapSupplier, collectionSupplier);
-        }
+
+        return super.makeDecodeNode(target);
     }
 
     @Override

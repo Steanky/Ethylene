@@ -66,6 +66,6 @@ class TokenTest {
     @Test
     void parameterlessConstructionThrowsException() {
         //noinspection rawtypes
-        assertThrows(IllegalArgumentException.class, () -> new Token() {});
+        assertThrows(IllegalStateException.class, () -> new Token() {});
     }
 }

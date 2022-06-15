@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.core.codec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -198,7 +199,7 @@ class AbstractConfigCodecTest {
     @Test
     void encodeClosesStream() throws IOException {
         OutputStream stream = OutputStream.nullOutputStream();
-        testCodec.encode(Mockito.mock(ConfigNode.class), stream);
+        testCodec.encode(new LinkedConfigNode(), stream);
 
         assertThrows(IOException.class, () -> stream.write(0));
     }
