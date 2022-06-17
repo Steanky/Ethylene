@@ -9,7 +9,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * This utility class can be used to aid the process of designing generalized object graph transformations.
+ * This utility class can be used to aid the process of designing generalized topology-preserving object graph
+ * transformations.
  */
 public final class GraphTransformer {
     public record Node<TIn, TOut, TKey>(TIn in,
@@ -52,7 +53,6 @@ public final class GraphTransformer {
                 Node<TIn, TOut, TKey> newNode = nodeFunction.apply(in.getSecond());
                 visited.put(in.getSecond(), newNode.output.data);
                 stack.push(newNode);
-
                 node.output.accumulator.accept(in.getFirst(), newNode.output.data);
             }
         }

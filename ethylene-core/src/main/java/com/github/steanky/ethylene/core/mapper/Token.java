@@ -11,10 +11,15 @@ import java.util.function.Supplier;
  * arrays, bounded or wildcard generics, and classes. This type may be accessed by using the {@code get} method.
  * <p>
  * This class is abstract to force implementing it wherever it is used, so that information may be extracted from the
- * superclass type parameter.
+ * superclass type parameter. A standard usage pattern for Token is shown below:
+ * <p></p>
+ * {@code Token<List<String>> token = new Token<>() {};}
+ * <p></p>
  * <p>
  * It is impossible to construct an instance of Token without a type parameter. Attempting to do so will result in an
- * {@link IllegalStateException}.
+ * {@link IllegalStateException}, as in the following code:
+ * <p></p>
+ * {@code Token token = new Token() {}; //throws an IllegalStateException!}
  * @param <T> the type information to be held in this token
  */
 //T is NOT unused, it is inspected reflectively on Token instantiation!

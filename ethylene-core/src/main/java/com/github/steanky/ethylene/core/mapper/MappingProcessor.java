@@ -5,17 +5,40 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Type;
 import java.util.Objects;
 
 public class MappingProcessor<T> implements ConfigProcessor<T> {
-    private final Token<?> root;
+    public record NodeInfo(Type type, ConfigElement element) {}
 
-    public MappingProcessor(@NotNull Token<T> token) {
-        this.root = Objects.requireNonNull(token);
+    private final Token<T> token;
+    private final BuilderResolver builderResolver;
+    private final ScalarMapper scalarMapper;
+
+    public MappingProcessor(@NotNull Token<T> token, @NotNull BuilderResolver builderResolver,
+                            @NotNull ScalarMapper scalarMapper) {
+        this.token = Objects.requireNonNull(token);
+        this.builderResolver = Objects.requireNonNull(builderResolver);
+        this.scalarMapper = Objects.requireNonNull(scalarMapper);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+        Type root = token.get();
+
+        //first, see if we can serialize the root element
+        ScalarMapper.Result result = scalarMapper.convertScalar(root, element);
+        if(result.successful()) {
+            return (T) result.value();
+        }
+
+        ObjectBuilder[] objectBuilders = builderResolver.forType(token.get());
+
+        for(ObjectBuilder builder : objectBuilders) {
+
+        }
+
         return null;
     }
 
