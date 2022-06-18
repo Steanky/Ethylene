@@ -25,7 +25,7 @@ public class ConstructorObjectBuilder implements ObjectBuilder {
     }
 
     @Override
-    public @NotNull Type[] signature() {
-        return constructor.getParameterTypes();
+    public @NotNull Signature signature() {
+        return null;
     }
 }

@@ -33,8 +33,8 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
             return (T) result.value();
         }
 
+        //can't serialize the root element directly, so we have to find a matching ObjectBuilder
         ObjectBuilder[] objectBuilders = builderResolver.forType(token.get());
-
         for(ObjectBuilder builder : objectBuilders) {
 
         }

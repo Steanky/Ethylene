@@ -53,7 +53,7 @@ class ConfigPrimitiveTest {
     void charCoercionToString() {
         ConfigPrimitive character = new ConfigPrimitive('a');
 
-        assertTrue(character.asObject() instanceof Character);
+        assertTrue(character.asScalar() instanceof Character);
         assertEquals("a", character.asString());
     }
 
@@ -61,7 +61,7 @@ class ConfigPrimitiveTest {
     void failsOnInvalidTypes() {
         ConfigPrimitive string = new ConfigPrimitive("this is a string");
         assertTrue(string.isString());
-        assertTrue(string.isObject());
+        assertTrue(string.isScalar());
 
         assertFalse(string.isBoolean());
         assertFalse(string.isNumber());
@@ -82,7 +82,7 @@ class ConfigPrimitiveTest {
 
         assertTrue(string.isNull());
 
-        assertSame(null, string.asObject());
+        assertSame(null, string.asScalar());
 
         assertThrows(IllegalStateException.class, string::asString);
         assertThrows(IllegalStateException.class, string::asBoolean);

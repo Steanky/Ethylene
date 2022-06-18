@@ -6,7 +6,6 @@ import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -162,7 +161,7 @@ class AbstractConfigCodecTest {
         assertFalse(resultingElement.isString());
         assertFalse(resultingElement.isList());
         assertFalse(resultingElement.isNumber());
-        assertFalse(resultingElement.isObject());
+        assertFalse(resultingElement.isScalar());
     }
 
     @Test
@@ -171,7 +170,7 @@ class AbstractConfigCodecTest {
         assertThrows(IllegalStateException.class, resultingElement::asString);
         assertThrows(IllegalStateException.class, resultingElement::asList);
         assertThrows(IllegalStateException.class, resultingElement::asNumber);
-        assertThrows(IllegalStateException.class, resultingElement::asObject);
+        assertThrows(IllegalStateException.class, resultingElement::asScalar);
     }
 
     @Test

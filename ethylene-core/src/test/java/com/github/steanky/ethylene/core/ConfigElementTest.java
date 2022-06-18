@@ -12,7 +12,7 @@ class ConfigElementTest {
 
     @Test
     void defaults() {
-        assertFalse(defaultElement.isObject());
+        assertFalse(defaultElement.isScalar());
         assertFalse(defaultElement.isNull());
         assertFalse(defaultElement.isBoolean());
         assertFalse(defaultElement.isList());
@@ -24,7 +24,7 @@ class ConfigElementTest {
 
     @Test
     void defaultThrows() {
-        assertThrows(IllegalStateException.class, defaultElement::asObject);
+        assertThrows(IllegalStateException.class, defaultElement::asScalar);
         assertThrows(IllegalStateException.class, defaultElement::asBoolean);
         assertThrows(IllegalStateException.class, defaultElement::asList);
         assertThrows(IllegalStateException.class, defaultElement::asString);

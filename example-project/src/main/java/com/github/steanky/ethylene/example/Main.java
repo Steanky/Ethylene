@@ -133,7 +133,7 @@ public class Main {
 
         //you can also call asObject and cast
         //this will print the same as the previous example
-        Date date = (Date)node.get("date").asObject();
+        Date date = (Date)node.get("date").asScalar();
         System.out.println(date);
 
         /*

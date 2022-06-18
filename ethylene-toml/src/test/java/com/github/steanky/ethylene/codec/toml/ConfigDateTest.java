@@ -17,7 +17,7 @@ class ConfigDateTest {
 
     @Test
     void correctType() {
-        assertTrue(testDate.isObject());
+        assertTrue(testDate.isScalar());
         assertTrue(testDate.isString());
         assertFalse(testDate.isBoolean());
         assertFalse(testDate.isList());
@@ -32,7 +32,7 @@ class ConfigDateTest {
 
     @Test
     void correctObject() {
-        assertSame(DATE, testDate.asObject());
+        assertSame(DATE, testDate.asScalar());
     }
 
     @Test

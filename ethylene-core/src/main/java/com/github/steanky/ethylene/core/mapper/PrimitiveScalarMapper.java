@@ -6,15 +6,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 
-public class PrimitiveScalarMapper implements ScalarMapper {
+public final class PrimitiveScalarMapper implements ScalarMapper {
     private static final ScalarMapper INSTANCE = new PrimitiveScalarMapper();
 
     private PrimitiveScalarMapper() {}
 
     @Override
     public @NotNull Result convertScalar(@NotNull Type type, @NotNull ConfigElement element) {
-        if(element.isObject()) {
-            Object object = element.asObject();
+        if(element.isScalar()) {
+            Object object = element.asScalar();
             Class<?> resolved = ReflectionUtils.getUnderlyingClass(type);
 
             if(resolved.isAssignableFrom(object.getClass())) {

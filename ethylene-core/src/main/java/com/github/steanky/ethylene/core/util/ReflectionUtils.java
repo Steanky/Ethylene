@@ -31,7 +31,7 @@ public final class ReflectionUtils {
             return clazz;
         }
         else if(type instanceof ParameterizedType parameterizedType) {
-            //the JDK implementation of this class, ParameterizedTypeImpl, *always* returns a Class<?> third-party
+            //the JDK implementation of this class, ParameterizedTypeImpl, *always* returns a Class<?>, but third-party
             //subclasses are not obligated to do so by method contract
             Type rawType = parameterizedType.getRawType();
             if(rawType instanceof Class<?> clazz) {
@@ -58,6 +58,7 @@ public final class ReflectionUtils {
             return getUnderlyingClass(arrayType.getGenericComponentType()).arrayType();
         }
         else if(type instanceof TypeVariable<?> typeVariable) {
+            //TypeVariable only supplies upper bounds
             Type[] upperBounds = typeVariable.getBounds();
             if(upperBounds.length > 0) {
                 return getUnderlyingClass(upperBounds[0]);

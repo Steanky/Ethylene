@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.function.BiConsumer;
 
 /**
  * <p>This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
@@ -155,10 +154,10 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * Number or String).
      * @param element the ConfigElement to convert
      * @return the serialized object
-     * @throws IllegalStateException if element cannot be converted using {@link ConfigElement#asObject()}
+     * @throws IllegalStateException if element cannot be converted using {@link ConfigElement#asScalar()}
      */
     protected @Nullable Object serializeElement(@NotNull ConfigElement element) {
-        return element.asObject();
+        return element.asScalar();
     }
 
     /**

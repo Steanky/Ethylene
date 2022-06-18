@@ -7,7 +7,6 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -129,21 +128,20 @@ public interface ConfigElement {
      * Determines if this ConfigElement represents an object. This is true for {@link ConfigPrimitive} and should be
      * true for specialized, direct implementations of this interface that do not, themselves, hold on to ConfigElement
      * instances. It should be false for {@link ConfigNode} and {@link ConfigList}.
-     * @return true if {@link ConfigElement#asObject()} will succeed without throwing an exception; false otherwise
+     * @return true if {@link ConfigElement#asScalar()} will succeed without throwing an exception; false otherwise
      */
-    default boolean isObject() {
+    default boolean isScalar() {
         return false;
     }
 
     /**
-     * Converts this ConfigElement into an object. For elements whose purpose it is to "wrap" Java types, this method
-     * should return the wrapped object. Although it may seem counterintuitive, this method <i>should</i> throw an
-     * exception for {@link ConfigList} and {@link ConfigNode} implementations — because these types are not meant to be
-     * simple wrappers.
+     * Converts this ConfigElement into the <i>scalar</i> Java type it represents. Scalar types are types that cannot
+     * themselves contain additional ConfigElements. In Ethylene Core, the only scalar ConfigElement implementation is
+     * {@link ConfigPrimitive}.
      * @return this element as an object
      * @throws IllegalStateException if this element cannot be converted into an object
      */
-    default Object asObject() { throw new IllegalStateException("Element may not be converted to Object"); }
+    default Object asScalar() { throw new IllegalStateException("Element may not be converted to Object"); }
 
     /**
      * Obtains a child ConfigElement from this one by following the specified path. Path objects may be either string
@@ -422,7 +420,7 @@ public interface ConfigElement {
      * @throws ConfigProcessException if the path or element type is invalid
      */
     default Object getObjectOrThrow(@NotNull Object... path) throws ConfigProcessException {
-        return ConfigElementHelper.getOrThrow(this, ConfigElement::isObject, ConfigElement::asObject, path);
+        return ConfigElementHelper.getOrThrow(this, ConfigElement::isScalar, ConfigElement::asScalar, path);
     }
 
     /**
@@ -433,8 +431,8 @@ public interface ConfigElement {
      * @return the value located at the path, or the default value
      */
     default Object getObjectOrDefault(@NotNull Supplier<Object> objectSupplier, @NotNull Object ... path) {
-        return ConfigElementHelper.getOrDefault(this, objectSupplier, ConfigElement::isObject,
-                ConfigElement::asObject, path);
+        return ConfigElementHelper.getOrDefault(this, objectSupplier, ConfigElement::isScalar,
+                ConfigElement::asScalar, path);
     }
 
     /**

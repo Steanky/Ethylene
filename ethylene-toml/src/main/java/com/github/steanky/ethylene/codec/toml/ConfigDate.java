@@ -22,7 +22,7 @@ public class ConfigDate implements ConfigElement {
     }
 
     @Override
-    public boolean isObject() {
+    public boolean isScalar() {
         return true;
     }
 
@@ -38,7 +38,7 @@ public class ConfigDate implements ConfigElement {
     }
 
     @Override
-    public @NotNull Object asObject() {
+    public @NotNull Object asScalar() {
         return date;
     }
 

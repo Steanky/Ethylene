@@ -8,5 +8,5 @@ import java.lang.reflect.Type;
 public interface ObjectBuilder {
     @NotNull Object construct(Object ... objects) throws ConfigProcessException;
 
-    @NotNull Type[] signature();
+    @NotNull Signature signature();
 }
