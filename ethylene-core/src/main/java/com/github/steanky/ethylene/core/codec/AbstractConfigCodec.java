@@ -34,8 +34,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(output);
 
         try(output) {
-            writeObject(GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, scalar -> Entry
-                    .of(null, serializeElement(scalar))), output);
+            writeObject(GraphTransformer.process(element, this::makeEncodeNode, this::isContainer,
+                    this::serializeElement), output);
         }
     }
 
@@ -44,8 +44,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(input);
 
         try (input) {
-            return GraphTransformer.process(readObject(input), this::makeDecodeNode, this::isContainer, scalar -> Entry
-                    .of(null, deserializeObject(scalar)));
+            return GraphTransformer.process(readObject(input), this::makeDecodeNode, this::isContainer,
+                    this::deserializeObject);
         }
     }
 

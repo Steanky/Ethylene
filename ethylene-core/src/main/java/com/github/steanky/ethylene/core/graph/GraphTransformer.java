@@ -25,9 +25,9 @@ public final class GraphTransformer {
                                                  @NotNull Map<TIn, TOut> visited,
                                                  @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
                                                  @NotNull Predicate<? super TIn> containerPredicate,
-                                                 @NotNull Function<? super TIn, ? extends Entry<TKey, TOut>> scalarMapper) {
+                                                 @NotNull Function<? super TIn, ? extends TOut> scalarMapper) {
         if(!containerPredicate.test(input)) {
-            return scalarMapper.apply(input).getSecond();
+            return scalarMapper.apply(input);
         }
 
         Node<TIn, TOut, TKey> root = nodeFunction.apply(input);
@@ -39,8 +39,7 @@ public final class GraphTransformer {
 
             for(Entry<TKey, TIn> in : node.inputIterable) {
                 if(!containerPredicate.test(in.getSecond())) {
-                    Entry<TKey, TOut> entry = scalarMapper.apply(in.getSecond());
-                    node.output.accumulator.accept(in.getFirst(), entry.getSecond());
+                    node.output.accumulator.accept(in.getFirst(), scalarMapper.apply(in.getSecond()));
                     continue;
                 }
 
@@ -63,7 +62,7 @@ public final class GraphTransformer {
     public static <TIn, TOut, TKey> TOut process(TIn input,
                                                  @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
                                                  @NotNull Predicate<? super TIn> containerPredicate,
-                                                 @NotNull Function<? super TIn, ? extends Entry<TKey, TOut>> scalarMapper)  {
+                                                 @NotNull Function<? super TIn, ? extends TOut> scalarMapper)  {
         return process(input, new ArrayDeque<>(), new IdentityHashMap<>(), nodeFunction, containerPredicate, scalarMapper);
     }
 }

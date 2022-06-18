@@ -12,17 +12,18 @@ public final class PrimitiveScalarMapper implements ScalarMapper {
     private PrimitiveScalarMapper() {}
 
     @Override
-    public @NotNull Result convertScalar(@NotNull Type type, @NotNull ConfigElement element) {
+    public @NotNull Object convertScalar(@NotNull Type type, @NotNull ConfigElement element) {
         if(element.isScalar()) {
             Object object = element.asScalar();
             Class<?> resolved = ReflectionUtils.getUnderlyingClass(type);
 
             if(resolved.isAssignableFrom(object.getClass())) {
-                return new Result(true, object);
+                return object;
             }
         }
 
-        return Result.FAIL;
+        throw new MappingException("Unable to convert ConfigElement " + element + " to scalar type " + type
+                .getTypeName());
     }
 
     public static @NotNull ScalarMapper getInstance() {

@@ -6,7 +6,9 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 
 public interface ObjectBuilder {
-    @NotNull Object construct(Object ... objects) throws ConfigProcessException;
+    void appendObject(Object parameter);
 
     @NotNull Signature signature();
+
+    Object build();
 }

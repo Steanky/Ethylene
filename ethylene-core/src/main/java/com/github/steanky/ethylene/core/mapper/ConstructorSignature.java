@@ -1,11 +1,10 @@
 package com.github.steanky.ethylene.core.mapper;
 
-import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Objects;
 
 public class ConstructorSignature implements Signature {
@@ -16,18 +15,20 @@ public class ConstructorSignature implements Signature {
         this.constructor = Objects.requireNonNull(constructor);
     }
 
-    @Override
-    public boolean matches(@NotNull List<Entry<String, Type>> arguments) {
-        Type[] types = getTypes();
-
-        return false;
-    }
-
     private Type[] getTypes() {
         if(types == null) {
             types = constructor.getGenericParameterTypes();
         }
 
         return types;
+    }
+
+    @Override
+    public boolean matches(@NotNull ConfigElement element) {
+        if(element.isNode()) {
+
+        }
+
+        return false;
     }
 }

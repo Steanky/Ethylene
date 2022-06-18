@@ -1,11 +1,15 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
+import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
+import java.util.Iterator;
 import java.util.Objects;
 
 public class MappingProcessor<T> implements ConfigProcessor<T> {
@@ -26,20 +30,29 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
     @Override
     public T dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
         Type root = token.get();
+        NodeInfo rootNode = new NodeInfo(root, element);
 
-        //first, see if we can serialize the root element
-        ScalarMapper.Result result = scalarMapper.convertScalar(root, element);
-        if(result.successful()) {
-            return (T) result.value();
-        }
+        ObjectBuilder object = GraphTransformer.process(rootNode, info -> {
+            //info.element may be either a Node or List
+            ObjectBuilder newBuilder = builderResolver.forType(info.type, info.element.asContainer());
+            GraphTransformer.Output<ObjectBuilder, String> output = new GraphTransformer.Output<>(newBuilder,
+                    (k, v) -> newBuilder.appendObject(v));
 
-        //can't serialize the root element directly, so we have to find a matching ObjectBuilder
-        ObjectBuilder[] objectBuilders = builderResolver.forType(token.get());
-        for(ObjectBuilder builder : objectBuilders) {
+            return new GraphTransformer.Node<>(info, () -> new Iterator<>() {
+                @Override
+                public boolean hasNext() {
+                    return false;
+                }
 
-        }
+                @Override
+                public Entry<String, NodeInfo> next() {
+                    return null;
+                }
+            }, output);
+        }, info -> !info.element.isScalar(), scalarInfo -> new SimpleObjectBuilder(scalarMapper.convertScalar(scalarInfo
+                .type, scalarInfo.element)));
 
-        return null;
+        return (T) object.build();
     }
 
     @Override
