@@ -10,7 +10,7 @@ public class SimpleObjectBuilder implements ObjectBuilder {
     }
 
     @Override
-    public void appendObject(Object parameter) {
+    public void appendParameter(Object parameter) {
         throw new UnsupportedOperationException();
     }
 

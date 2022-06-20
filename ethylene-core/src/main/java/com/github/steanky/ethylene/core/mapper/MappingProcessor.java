@@ -5,7 +5,6 @@ import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
-import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -36,7 +35,7 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
             //info.element may be either a Node or List
             ObjectBuilder newBuilder = builderResolver.forType(info.type, info.element.asContainer());
             GraphTransformer.Output<ObjectBuilder, String> output = new GraphTransformer.Output<>(newBuilder,
-                    (k, v) -> newBuilder.appendObject(v));
+                    (k, v) -> newBuilder.appendParameter(v));
 
             return new GraphTransformer.Node<>(info, () -> new Iterator<>() {
                 @Override

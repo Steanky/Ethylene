@@ -16,7 +16,7 @@ public class ConstructorObjectBuilder implements ObjectBuilder {
     }
 
     @Override
-    public void appendObject(Object parameter) {
+    public void appendParameter(Object parameter) {
         getParameters().add(parameter);
     }
 
