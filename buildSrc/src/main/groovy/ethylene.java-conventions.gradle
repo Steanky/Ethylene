@@ -9,6 +9,10 @@ repositories {
 java {
     withSourcesJar()
     withJavadocJar()
+
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 test {
