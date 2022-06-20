@@ -6,10 +6,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 
-public final class PrimitiveScalarMapper implements ScalarMapper {
-    private static final ScalarMapper INSTANCE = new PrimitiveScalarMapper();
+public final class GlobalScalarMapper implements ScalarMapper {
+    private static final ScalarMapper INSTANCE = new GlobalScalarMapper();
 
-    private PrimitiveScalarMapper() {}
+    private GlobalScalarMapper() {}
 
     @Override
     public @NotNull Object convertScalar(@NotNull Type type, @NotNull ConfigElement element) {

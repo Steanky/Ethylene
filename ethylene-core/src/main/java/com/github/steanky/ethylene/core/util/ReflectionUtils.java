@@ -69,4 +69,8 @@ public final class ReflectionUtils {
 
         throw new IllegalArgumentException("Unexpected subclass of Type: " + type.getClass().getTypeName());
     }
+
+    public static boolean isArray(@NotNull Type type) {
+        return type instanceof Class<?> clazz && clazz.isArray();
+    }
 }

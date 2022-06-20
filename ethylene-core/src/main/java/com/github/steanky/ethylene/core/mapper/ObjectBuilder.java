@@ -2,10 +2,16 @@ package com.github.steanky.ethylene.core.mapper;
 
 import org.jetbrains.annotations.NotNull;
 
-public interface ObjectBuilder {
-    void appendParameter(Object parameter);
+import java.lang.reflect.Type;
 
-    @NotNull Signature signature();
+public interface ObjectBuilder {
+    void appendParameter(@NotNull ObjectBuilder parameter);
 
     Object build();
+
+    Object getCurrentObject();
+
+    Type @NotNull [] getArgumentTypes();
+
+    boolean isBuilding();
 }

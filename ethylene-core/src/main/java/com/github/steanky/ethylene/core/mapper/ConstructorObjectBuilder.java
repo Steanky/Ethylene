@@ -3,34 +3,68 @@ package com.github.steanky.ethylene.core.mapper;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public class ConstructorObjectBuilder implements ObjectBuilder {
     private final Constructor<?> constructor;
-    private List<Object> parameters;
+    private final Type[] args;
+    private List<ObjectBuilder> parameters;
+    private boolean isBuilding;
 
     public ConstructorObjectBuilder(@NotNull Constructor<?> constructor) {
         this.constructor = Objects.requireNonNull(constructor);
+        this.args = constructor.getGenericParameterTypes();
     }
 
     @Override
-    public void appendParameter(Object parameter) {
+    public void appendParameter(@NotNull ObjectBuilder parameter) {
         getParameters().add(parameter);
     }
 
     @Override
-    public @NotNull Signature signature() {
-        return null;
+    public Object build() {
+        Object[] args = new Object[parameters.size()];
+
+        isBuilding = true;
+        int i = 0;
+        for(ObjectBuilder builder : parameters) {
+            if (!builder.isBuilding()) {
+                args[i++] = builder.build();
+            }
+            else {
+                args[i++] = builder.getCurrentObject();
+            }
+        }
+        isBuilding = false;
+
+        try {
+            return constructor.newInstance(args);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new MappingException(e);
+        }
     }
 
     @Override
-    public Object build() {
-        return null;
+    public Object getCurrentObject() {
+        throw new MappingException("ConstructorObjectBuilder does not support circular references");
     }
 
-    private List<Object> getParameters() {
+    @Override
+    public Type @NotNull [] getArgumentTypes() {
+        return Arrays.copyOf(args, args.length);
+    }
+
+    @Override
+    public boolean isBuilding() {
+        return isBuilding;
+    }
+
+    private List<ObjectBuilder> getParameters() {
         if(parameters == null) {
             parameters = new ArrayList<>(constructor.getParameterCount());
         }

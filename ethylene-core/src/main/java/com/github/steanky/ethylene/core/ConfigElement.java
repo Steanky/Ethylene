@@ -137,7 +137,7 @@ public interface ConfigElement {
     /**
      * Converts this ConfigElement into the <i>scalar</i> Java type it represents. Scalar types are types that cannot
      * themselves contain additional ConfigElements. In Ethylene Core, the only scalar ConfigElement implementation is
-     * {@link ConfigPrimitive}.
+     * {@link ConfigPrimitive}. Other modules may add scalar types specific to certain formats.
      * @return this element as an object
      * @throws IllegalStateException if this element cannot be converted into an object
      */

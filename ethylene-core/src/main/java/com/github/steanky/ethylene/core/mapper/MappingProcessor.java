@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
@@ -37,14 +38,16 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
             GraphTransformer.Output<ObjectBuilder, String> output = new GraphTransformer.Output<>(newBuilder,
                     (k, v) -> newBuilder.appendParameter(v));
 
-            return new GraphTransformer.Node<>(info, makeIterable(), output);
-        }, info -> !info.element.isScalar(), scalarInfo -> new SimpleObjectBuilder(scalarMapper.convertScalar(scalarInfo
-                .type, scalarInfo.element)));
+            return new GraphTransformer.Node<>(info, makeIterable(info, newBuilder), output);
+        }, info -> info.element.isContainer(), scalarInfo -> new SimpleObjectBuilder(scalarMapper.convertScalar(
+                scalarInfo.type, scalarInfo.element)));
 
         return (T) object.build();
     }
 
-    private Iterable<Entry<String, NodeInfo>> makeIterable() {
+    private Iterable<Entry<String, NodeInfo>> makeIterable(NodeInfo info, ObjectBuilder builder) {
+        ConfigContainer container = info.element.asContainer();
+
         return () -> new Iterator<>() {
             @Override
             public boolean hasNext() {
