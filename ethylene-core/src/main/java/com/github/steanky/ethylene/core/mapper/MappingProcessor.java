@@ -37,21 +37,25 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
             GraphTransformer.Output<ObjectBuilder, String> output = new GraphTransformer.Output<>(newBuilder,
                     (k, v) -> newBuilder.appendParameter(v));
 
-            return new GraphTransformer.Node<>(info, () -> new Iterator<>() {
-                @Override
-                public boolean hasNext() {
-                    return false;
-                }
-
-                @Override
-                public Entry<String, NodeInfo> next() {
-                    return null;
-                }
-            }, output);
+            return new GraphTransformer.Node<>(info, makeIterable(), output);
         }, info -> !info.element.isScalar(), scalarInfo -> new SimpleObjectBuilder(scalarMapper.convertScalar(scalarInfo
                 .type, scalarInfo.element)));
 
         return (T) object.build();
+    }
+
+    private Iterable<Entry<String, NodeInfo>> makeIterable() {
+        return () -> new Iterator<>() {
+            @Override
+            public boolean hasNext() {
+                return false;
+            }
+
+            @Override
+            public Entry<String, NodeInfo> next() {
+                return null;
+            }
+        };
     }
 
     @Override
