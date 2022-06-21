@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.core.util;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.*;
+import java.util.Objects;
 
 public final class ReflectionUtils {
     private ReflectionUtils() {
@@ -71,6 +72,59 @@ public final class ReflectionUtils {
     }
 
     public static boolean isArray(@NotNull Type type) {
-        return type instanceof Class<?> clazz && clazz.isArray();
+        return type instanceof Class<?> clazz && clazz.isArray() || type instanceof GenericArrayType;
+    }
+
+    public static @NotNull Type getGenericParameter(@NotNull Type type, int index) {
+        if(type instanceof ParameterizedType parameterizedType) {
+            return parameterizedType.getActualTypeArguments()[index];
+        }
+        else if(type instanceof Class<?> clazz) {
+            TypeVariable<? extends Class<?>>[] variables = clazz.getTypeParameters();
+            if(variables.length == 0) {
+                throw new IllegalArgumentException("Class " + clazz.getTypeName() + " has no type parameters");
+            }
+
+            TypeVariable<? extends Class<?>> variable = variables[index];
+            Type[] bounds = variable.getBounds();
+            if(bounds.length > 0) {
+                return bounds[0];
+            }
+
+            return Object.class;
+        }
+        else if(type instanceof GenericArrayType genericArrayType) {
+            return getGenericParameter(stripGenericArray(genericArrayType), index);
+        }
+        else if(type instanceof WildcardType wildcardType) {
+            Type[] bounds = wildcardType.getUpperBounds();
+
+            if(bounds.length > 0) {
+                return getGenericParameter(bounds[0], index);
+            }
+
+            throw new IllegalArgumentException("No type parameters");
+        }
+        else if(type instanceof TypeVariable<?> variable) {
+            Type[] bounds = variable.getBounds();
+
+            if(bounds.length > 0) {
+                return getGenericParameter(bounds[0], index);
+            }
+
+            throw new IllegalArgumentException("No type parameters");
+        }
+
+        throw new IllegalArgumentException("Unexpected subclass of Type: " + type.getClass().getTypeName());
+    }
+
+    public static @NotNull Type stripGenericArray(@NotNull GenericArrayType genericArrayType) {
+        Type type = genericArrayType;
+        do {
+            type = ((GenericArrayType)type).getGenericComponentType();
+        }
+        while (type instanceof GenericArrayType);
+
+        return type;
     }
 }

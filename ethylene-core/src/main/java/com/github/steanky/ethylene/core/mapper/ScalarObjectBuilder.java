@@ -4,10 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 
-public class SimpleObjectBuilder implements ObjectBuilder {
+public class ScalarObjectBuilder implements ObjectBuilder {
     private final Object value;
 
-    public SimpleObjectBuilder(Object value) {
+    public ScalarObjectBuilder(Object value) {
         this.value = value;
     }
 
@@ -34,5 +34,10 @@ public class SimpleObjectBuilder implements ObjectBuilder {
     @Override
     public boolean isBuilding() {
         return false;
+    }
+
+    @Override
+    public @NotNull TypeHinter.TypeHint typeHint() {
+        return TypeHinter.TypeHint.SCALAR;
     }
 }

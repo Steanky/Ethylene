@@ -54,7 +54,7 @@ public class ConstructorBuilderResolver implements BuilderResolver {
     private boolean constructorMatches(Constructor<?> constructor, Collection<ConfigEntry> entries) {
         Type[] parameters = constructor.getGenericParameterTypes();
         if(entries.size() != parameters.length) {
-            throw new MappingException("Element size mismatch");
+            return false;
         }
 
         int i = 0;
@@ -62,6 +62,7 @@ public class ConstructorBuilderResolver implements BuilderResolver {
             if(!typeHinter.getHint(parameters[i]).matches(entry.getSecond())) {
                 return false;
             }
+
             i++;
         }
 

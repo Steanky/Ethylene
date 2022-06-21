@@ -9,6 +9,7 @@ import java.util.List;
 public class ListObjectBuilder implements ObjectBuilder {
     private final List<ObjectBuilder> list;
     private final boolean outputArray;
+
     private List<Object> currentObject;
     private boolean isBuilding;
 
@@ -53,5 +54,10 @@ public class ListObjectBuilder implements ObjectBuilder {
     @Override
     public boolean isBuilding() {
         return isBuilding;
+    }
+
+    @Override
+    public @NotNull TypeHinter.TypeHint typeHint() {
+        return TypeHinter.TypeHint.LIST_LIKE;
     }
 }

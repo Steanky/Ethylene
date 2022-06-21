@@ -64,6 +64,11 @@ public class ConstructorObjectBuilder implements ObjectBuilder {
         return isBuilding;
     }
 
+    @Override
+    public @NotNull TypeHinter.TypeHint typeHint() {
+        return TypeHinter.TypeHint.OBJECT;
+    }
+
     private List<ObjectBuilder> getParameters() {
         if(parameters == null) {
             parameters = new ArrayList<>(constructor.getParameterCount());

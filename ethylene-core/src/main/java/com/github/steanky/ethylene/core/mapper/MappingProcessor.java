@@ -1,14 +1,16 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.collection.ConfigContainer;
+import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
+import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -32,31 +34,65 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
         Type root = token.get();
         NodeInfo rootNode = new NodeInfo(root, element);
 
-        ObjectBuilder object = GraphTransformer.process(rootNode, info -> {
-            //info.element may be either a Node or List
-            ObjectBuilder newBuilder = builderResolver.forType(info.type, info.element.asContainer());
-            GraphTransformer.Output<ObjectBuilder, String> output = new GraphTransformer.Output<>(newBuilder,
-                    (k, v) -> newBuilder.appendParameter(v));
+        try {
+            ObjectBuilder object = GraphTransformer.process(rootNode, info -> {
+                //info.element may be either a Node or List
+                ObjectBuilder newBuilder = builderResolver.forType(info.type, info.element.asContainer());
+                GraphTransformer.Output<ObjectBuilder, String> output = new GraphTransformer.Output<>(newBuilder,
+                        (k, v) -> newBuilder.appendParameter(v));
 
-            return new GraphTransformer.Node<>(info, makeIterable(info, newBuilder), output);
-        }, info -> info.element.isContainer(), scalarInfo -> new SimpleObjectBuilder(scalarMapper.convertScalar(
-                scalarInfo.type, scalarInfo.element)));
+                return new GraphTransformer.Node<>(info, makeIterable(info, newBuilder), output);
+            }, info -> info.element.isContainer(), scalarInfo -> new ScalarObjectBuilder(scalarMapper.convertScalar(
+                    scalarInfo.type, scalarInfo.element)));
 
-        return (T) object.build();
+            return (T) object.build();
+        }
+        catch (MappingException mappingException) {
+            throw new ConfigProcessException(mappingException);
+        }
     }
 
     private Iterable<Entry<String, NodeInfo>> makeIterable(NodeInfo info, ObjectBuilder builder) {
-        ConfigContainer container = info.element.asContainer();
+        TypeHinter.TypeHint hint = builder.typeHint();
+        Collection<ConfigEntry> entryCollection = info.element.asContainer().entryCollection();
+
+        switch (hint) {
+            case LIST_LIKE -> {
+                Type arg = ReflectionUtils.getGenericParameter(info.type, 1);
+                return () -> new Iterator<>() {
+                    private final Iterator<ConfigEntry> configEntryIterator = entryCollection.iterator();
+                    @Override
+                    public boolean hasNext() {
+                        return configEntryIterator.hasNext();
+                    }
+
+                    @Override
+                    public Entry<String, NodeInfo> next() {
+                        ConfigEntry entry = configEntryIterator.next();
+                        return Entry.of(entry.getFirst(), new NodeInfo(arg, entry.getSecond()));
+                    }
+                };
+            }
+        }
+
+        Type[] args = builder.getArgumentTypes();
+        if(args.length != entryCollection.size()) {
+            throw new MappingException("Mismatched argument lengths");
+        }
 
         return () -> new Iterator<>() {
+            private final Iterator<ConfigEntry> configEntryIterator = entryCollection.iterator();
+            private int i;
+
             @Override
             public boolean hasNext() {
-                return false;
+                return configEntryIterator.hasNext();
             }
 
             @Override
             public Entry<String, NodeInfo> next() {
-                return null;
+                ConfigEntry entry = configEntryIterator.next();
+                return Entry.of(entry.getFirst(), new NodeInfo(args[i++], configEntryIterator.next().getSecond()));
             }
         };
     }

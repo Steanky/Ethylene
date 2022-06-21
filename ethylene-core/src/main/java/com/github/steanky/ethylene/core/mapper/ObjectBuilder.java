@@ -14,4 +14,6 @@ public interface ObjectBuilder {
     Type @NotNull [] getArgumentTypes();
 
     boolean isBuilding();
+
+    @NotNull TypeHinter.TypeHint typeHint();
 }
