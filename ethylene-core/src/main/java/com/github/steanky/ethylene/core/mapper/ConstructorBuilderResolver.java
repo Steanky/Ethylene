@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
@@ -14,9 +15,9 @@ public class ConstructorBuilderResolver implements BuilderResolver {
     private final AbstractClassResolver abstractClassResolver;
     private final TypeHinter typeHinter;
 
-    public ConstructorBuilderResolver(@NotNull AbstractClassResolver abstractClassResolver,
+    public ConstructorBuilderResolver(@Nullable AbstractClassResolver abstractClassResolver,
                                       @NotNull TypeHinter typeHinter) {
-        this.abstractClassResolver = Objects.requireNonNull(abstractClassResolver);
+        this.abstractClassResolver = abstractClassResolver;
         this.typeHinter = Objects.requireNonNull(typeHinter);
     }
 
@@ -36,7 +37,7 @@ public class ConstructorBuilderResolver implements BuilderResolver {
         }
 
         Class<?> resolved = ReflectionUtils.getUnderlyingClass(type);
-        if(resolved.isInterface()) {
+        if(abstractClassResolver != null && resolved.isInterface()) {
             //can't construct abstract classes
             resolved = abstractClassResolver.resolveAbstract(resolved);
         }

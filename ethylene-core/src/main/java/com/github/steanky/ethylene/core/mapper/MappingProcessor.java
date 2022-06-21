@@ -92,7 +92,7 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
             @Override
             public Entry<String, NodeInfo> next() {
                 ConfigEntry entry = configEntryIterator.next();
-                return Entry.of(entry.getFirst(), new NodeInfo(args[i++], configEntryIterator.next().getSecond()));
+                return Entry.of(entry.getFirst(), new NodeInfo(args[i++], entry.getSecond()));
             }
         };
     }

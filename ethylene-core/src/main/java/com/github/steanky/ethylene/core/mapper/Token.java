@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.function.Supplier;
 
 /**
@@ -50,6 +51,10 @@ public abstract class Token<T> implements Supplier<Type> {
         if(target == null) {
             //second sanity check, probably completely unnecessary, JVM might have blown up
             throw new IllegalStateException("Expected non-null type parameter for class " + getClass().getTypeName());
+        }
+
+        if(target instanceof TypeVariable<?> typeVariable) {
+            target = typeVariable.getBounds()[0];
         }
 
         this.type = target;
