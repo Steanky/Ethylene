@@ -6,9 +6,13 @@ import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class ConstructorBuilderResolver implements BuilderResolver {
@@ -53,18 +57,20 @@ public class ConstructorBuilderResolver implements BuilderResolver {
     }
 
     private boolean constructorMatches(Constructor<?> constructor, Collection<ConfigEntry> entries) {
-        Type[] parameters = constructor.getGenericParameterTypes();
+        Parameter[] parameters = constructor.getParameters();
         if(entries.size() != parameters.length) {
             return false;
         }
 
-        int i = 0;
+        Map<String, Type> typeMap = new HashMap<>(parameters.length);
+        for(Parameter parameter : parameters) {
+            typeMap.put(parameter.getName(), parameter.getParameterizedType());
+        }
+
         for(ConfigEntry entry : entries) {
-            if(!typeHinter.getHint(parameters[i]).matches(entry.getSecond())) {
+            if(!typeHinter.getHint(typeMap.get(entry.getFirst())).matches(entry.getSecond())) {
                 return false;
             }
-
-            i++;
         }
 
         return true;
