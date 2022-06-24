@@ -58,9 +58,10 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
 
         switch (hint) {
             case LIST_LIKE -> {
-                Type arg = ReflectionUtils.getGenericParameter(info.type, 1);
+                Type arg = ReflectionUtils.getGenericParameter(info.type, 0);
                 return () -> new Iterator<>() {
                     private final Iterator<ConfigEntry> configEntryIterator = entryCollection.iterator();
+
                     @Override
                     public boolean hasNext() {
                         return configEntryIterator.hasNext();
@@ -70,6 +71,24 @@ public class MappingProcessor<T> implements ConfigProcessor<T> {
                     public Entry<String, NodeInfo> next() {
                         ConfigEntry entry = configEntryIterator.next();
                         return Entry.of(entry.getFirst(), new NodeInfo(arg, entry.getSecond()));
+                    }
+                };
+            }
+            case MAP_LIKE -> {
+                Type key = ReflectionUtils.getGenericParameter(info.type, 0);
+                Type value = ReflectionUtils.getGenericParameter(info.type, 1);
+
+                return () -> new Iterator<>() {
+                    private final Iterator<ConfigEntry> configEntryIterator = entryCollection.iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return configEntryIterator.hasNext();
+                    }
+
+                    @Override
+                    public Entry<String, NodeInfo> next() {
+                        return null;
                     }
                 };
             }

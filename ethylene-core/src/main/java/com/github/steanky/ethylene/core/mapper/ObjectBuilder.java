@@ -7,6 +7,14 @@ import java.lang.reflect.Type;
 public interface ObjectBuilder {
     void appendParameter(@NotNull ObjectBuilder parameter);
 
+    default Object buildOrGetCurrent() {
+        if(!isBuilding()) {
+            return build();
+        }
+
+        return getCurrentObject();
+    }
+
     Object build();
 
     Object getCurrentObject();

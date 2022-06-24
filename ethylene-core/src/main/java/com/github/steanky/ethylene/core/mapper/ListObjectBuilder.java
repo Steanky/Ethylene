@@ -29,12 +29,7 @@ public class ListObjectBuilder implements ObjectBuilder {
 
         isBuilding = true;
         for(ObjectBuilder builder : list) {
-            if(!builder.isBuilding()) {
-                currentObject.add(builder.build());
-            }
-            else {
-                currentObject.add(builder.getCurrentObject());
-            }
+            currentObject.add(builder.buildOrGetCurrent());
         }
         isBuilding = false;
 

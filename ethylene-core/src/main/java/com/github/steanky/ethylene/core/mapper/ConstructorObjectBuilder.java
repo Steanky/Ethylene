@@ -33,12 +33,7 @@ public class ConstructorObjectBuilder implements ObjectBuilder {
         isBuilding = true;
         int i = 0;
         for(ObjectBuilder builder : parameters) {
-            if (!builder.isBuilding()) {
-                args[i++] = builder.build();
-            }
-            else {
-                args[i++] = builder.getCurrentObject();
-            }
+            args[i++] = builder.buildOrGetCurrent();
         }
         isBuilding = false;
 
