@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 /**
  * <p>Contains functionality and methods common to many {@link ConfigList} implementations. This abstract class does not
  * define any abstract methods. Its main use is to enable concrete implementations to specify what kind of backing list

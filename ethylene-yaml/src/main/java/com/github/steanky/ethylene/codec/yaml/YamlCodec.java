@@ -8,7 +8,6 @@ import org.snakeyaml.engine.v2.exceptions.YamlEngineException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
