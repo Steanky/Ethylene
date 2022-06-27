@@ -46,4 +46,13 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
     default void addCharacter(char value) {
         add(new ConfigPrimitive(value));
     }
+
+    /**
+     * Convenience overload for {@link ConfigList#add(Object)}. The provided boolean value will be wrapped in a new
+     * {@link ConfigPrimitive} and added to this list.
+     * @param value the value to add to the node
+     */
+    default void addBoolean(boolean value) {
+        add(new ConfigPrimitive(value));
+    }
 }

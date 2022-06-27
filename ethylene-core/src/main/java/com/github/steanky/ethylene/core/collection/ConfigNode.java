@@ -53,4 +53,14 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     default void putCharacter(@NotNull String key, char value) {
         put(key, new ConfigPrimitive(value));
     }
+
+    /**
+     * Convenience overload for {@link ConfigNode#put(Object, Object)}. The provided boolean value will be wrapped in a
+     * new {@link ConfigPrimitive} and added to this node.
+     * @param key the key to be associated with this value
+     * @param value the value to add to the node
+     */
+    default void putBoolean(@NotNull String key, boolean value) {
+        put(key, new ConfigPrimitive(value));
+    }
 }
