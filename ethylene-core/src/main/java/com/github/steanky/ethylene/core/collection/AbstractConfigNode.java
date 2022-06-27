@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /**
  * <p>Contains functionality and methods common to {@link ConfigNode} implementations. This abstract class does not

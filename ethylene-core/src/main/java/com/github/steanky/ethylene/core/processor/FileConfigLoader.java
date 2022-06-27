@@ -2,14 +2,11 @@ package com.github.steanky.ethylene.core.processor;
 
 import com.github.steanky.ethylene.core.bridge.ConfigBridge;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
-import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * <p>Filesystem-source specialization of ProcessingConfigLoader. The source is considered <i>absent</i> if the given
