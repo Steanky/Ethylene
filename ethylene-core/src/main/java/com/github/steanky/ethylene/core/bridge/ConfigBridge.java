@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 /**
  * <p>Reads and writes {@link ConfigElement} objects to and from an implementation-defined in. This in may be

@@ -5,10 +5,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.RandomAccess;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /**
  * An implementation of {@link ConfigList} based off of {@link ArrayList}, with similar performance and other
