@@ -6,9 +6,11 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -16,6 +18,8 @@ import java.util.Objects;
  * Provides support for the JSON format.
  */
 public class JsonCodec extends AbstractConfigCodec {
+    private static final List<String> EXTENSIONS = List.of("json");
+
     /**
      * The default {@link Gson} instance used to read and write data.
      */
@@ -62,7 +66,7 @@ public class JsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @NotNull String getPreferredExtension() {
-        return "json";
+    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+        return EXTENSIONS;
     }
 }

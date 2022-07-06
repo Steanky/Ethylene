@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.codec.yaml;
 
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 import org.snakeyaml.engine.v2.api.*;
 import org.snakeyaml.engine.v2.exceptions.YamlEngineException;
 
@@ -18,6 +19,8 @@ import java.util.function.Supplier;
  * Provides support for the YAML format.
  */
 public class YamlCodec extends AbstractConfigCodec {
+    private static final List<String> EXTENSIONS = List.of("yaml", "yml");
+
     private final Supplier<Load> loadSupplier;
     private final Supplier<Dump> dumpSupplier;
 
@@ -82,7 +85,7 @@ public class YamlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @NotNull String getPreferredExtension() {
-        return "yaml";
+    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+        return EXTENSIONS;
     }
 }

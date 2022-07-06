@@ -11,11 +11,14 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -24,6 +27,8 @@ import java.util.function.Supplier;
  * {@link AbstractConfigCodec#deserializeObject(Object)} in order to provide proper support for dates.
  */
 public class TomlCodec extends AbstractConfigCodec {
+    private static final List<String> EXTENSIONS = List.of("toml");
+
     private final TomlParser parser;
     private final TomlWriter writer;
 
@@ -85,7 +90,7 @@ public class TomlCodec extends AbstractConfigCodec {
 
     @Override
     protected @NotNull <TOut> Output<TOut> makeEncodeMap() {
-        Config config = TomlFormat.newConfig();
+        Config config = TomlFormat.newConfig(LinkedHashMap::new);
         return new Output<>(config, config::add);
     }
 
@@ -108,7 +113,7 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @NotNull String getPreferredExtension() {
-        return "toml";
+    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+        return EXTENSIONS;
     }
 }
