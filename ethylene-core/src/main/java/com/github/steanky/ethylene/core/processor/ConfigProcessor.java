@@ -2,16 +2,13 @@ package com.github.steanky.ethylene.core.processor;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
-import com.github.steanky.ethylene.core.collection.ArrayConfigList;
-import com.github.steanky.ethylene.core.collection.ConfigList;
+import com.github.steanky.ethylene.core.collection.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
 /**
  * Processes some configuration data. Fundamentally, implementations of this interface act as simple bidirectional
@@ -74,6 +71,25 @@ public interface ConfigProcessor<TData> {
     ConfigProcessor<Byte> BYTE = new NumberConfigProcessor<>(Number::byteValue);
 
     /**
+     * Built-in ConfigProcessor implementation for booleans.
+     */
+    ConfigProcessor<Boolean> BOOLEAN = new ConfigProcessor<>() {
+        @Override
+        public Boolean dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if(!element.isBoolean()) {
+                throw new ConfigProcessException("Element is not a boolean");
+            }
+
+            return element.asBoolean();
+        }
+
+        @Override
+        public @NotNull ConfigElement elementFromData(Boolean b) {
+            return new ConfigPrimitive(b);
+        }
+    };
+
+    /**
      * Produces some data from a provided {@link ConfigElement}.
      * @param element the element to process
      * @return the data object
@@ -90,7 +106,9 @@ public interface ConfigProcessor<TData> {
     @NotNull ConfigElement elementFromData(TData data) throws ConfigProcessException;
 
     /**
-     * Creates a new ConfigProcessor capable of converting enum constants from the specified enum class.
+     * Creates a new ConfigProcessor capable of converting enum constants from the specified enum class. The returned
+     * processor will use case-sensitive conversions (the string "ENUM_CONSTANT" is not treated the same as
+     * "enum_constant").
      * @param enumClass the class from which to extract enum constants
      * @return a ConfigProcessor which can convert enum constants
      * @param <TEnum> the type of enum to convert
@@ -98,6 +116,89 @@ public interface ConfigProcessor<TData> {
     static <TEnum extends Enum<?>> @NotNull ConfigProcessor<TEnum> enumProcessor(
             @NotNull Class<? extends TEnum> enumClass) {
         return new EnumConfigProcessor<>(enumClass);
+    }
+
+    /**
+     * Creates a new ConfigProcessor capable of converting enum constants from the specified enum class, with the
+     * provided case sensitivity when converting strings to enum instances.
+     * @param enumClass the class from which to extract enum constants
+     * @param caseSensitive whether string comparisons are case-sensitive
+     * @return a ConfigProcessor which can convert enum constants
+     * @param <TEnum> the type of enum to convert
+     */
+    static <TEnum extends Enum<?>> @NotNull ConfigProcessor<TEnum> enumProcessor(
+            @NotNull Class<? extends TEnum> enumClass, boolean caseSensitive) {
+        return new EnumConfigProcessor<>(enumClass, caseSensitive);
+    }
+
+    /**
+     * Produces a minimal ConfigProcessor whose {@link ConfigProcessor#elementFromData(Object)} method always returns a
+     * new empty {@link ConfigNode} implementation, and whose {@link ConfigProcessor#dataFromElement(ConfigElement)}
+     * function calls the provided supplier to obtain data objects.
+     * @param returnSupplier the supplier of data objects used
+     * @return a minimal ConfigProcessor implementation
+     * @param <TReturn> the type of value to process
+     */
+    static <TReturn> @NotNull ConfigProcessor<TReturn> emptyProcessor(
+            @NotNull Supplier<? extends TReturn> returnSupplier) {
+        return new ConfigProcessor<>() {
+            @Override
+            public TReturn dataFromElement(@NotNull ConfigElement element) {
+                return returnSupplier.get();
+            }
+
+            @Override
+            public @NotNull ConfigElement elementFromData(TReturn tReturn) {
+                return new LinkedConfigNode(0);
+            }
+        };
+    }
+
+    /**
+     * Creates a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects,
+     * and vice-versa.
+     * @param mapFunction the function used to instantiate new maps
+     * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects
+     * @param <M> the type of map
+     */
+    default <M extends Map<String, TData>> @NotNull ConfigProcessor<M> mapProcessor(
+            @NotNull IntFunction<M> mapFunction) {
+        Objects.requireNonNull(mapFunction, "mapFunction");
+
+        return new ConfigProcessor<>() {
+            @Override
+            public M dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+                if(!element.isNode()) {
+                    throw new ConfigProcessException("Element must be a ConfigNode");
+                }
+
+                ConfigNode node = element.asNode();
+                M map = mapFunction.apply(node.size());
+                for(ConfigEntry entry : node.entryCollection()) {
+                    map.put(entry.getKey(), ConfigProcessor.this.dataFromElement(entry.getValue()));
+                }
+
+                return map;
+            }
+
+            @Override
+            public @NotNull ConfigElement elementFromData(M m) throws ConfigProcessException {
+                ConfigNode node = new LinkedConfigNode(m.size());
+                for(Map.Entry<String, TData> entry : m.entrySet()) {
+                    node.put(entry.getKey(), ConfigProcessor.this.elementFromData(entry.getValue()));
+                }
+
+                return node;
+            }
+        };
+    }
+
+    /**
+     * Convenience method that calls {@link ConfigProcessor#mapProcessor(IntFunction)} with {@code HashMap::new}.
+     * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to a Map
+     */
+    default @NotNull ConfigProcessor<Map<String, TData>> mapProcessor() {
+        return mapProcessor(HashMap::new);
     }
 
     /**
@@ -146,6 +247,24 @@ public interface ConfigProcessor<TData> {
      */
     default @NotNull ConfigProcessor<List<TData>> listProcessor() {
         return collectionProcessor(ArrayList::new);
+    }
+
+    /**
+     * Convenience overload for {@link ConfigProcessor#collectionProcessor(IntFunction)} which uses
+     * {@code ArrayList::new} for its IntFunction.
+     * @return a collection ConfigProcessor
+     */
+    default @NotNull ConfigProcessor<Collection<TData>> collectionProcessor() {
+        return collectionProcessor(ArrayList::new);
+    }
+
+    /**
+     * Convenience overload for {@link ConfigProcessor#collectionProcessor(IntFunction)} which uses {@code HashSet::new}
+     * for its IntFunction.
+     * @return a set ConfigProcessor
+     */
+    default @NotNull ConfigProcessor<Set<TData>> setProcessor() {
+        return collectionProcessor(HashSet::new);
     }
 
     /**
