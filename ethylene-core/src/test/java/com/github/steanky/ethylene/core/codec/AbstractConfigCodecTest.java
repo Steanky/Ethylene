@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -50,8 +51,8 @@ class AbstractConfigCodecTest {
 
         testCodec = new AbstractConfigCodec() {
             @Override
-            public @NotNull String getPreferredExtension() {
-                return "";
+            public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+                return Collections.emptyList();
             }
 
             @Override

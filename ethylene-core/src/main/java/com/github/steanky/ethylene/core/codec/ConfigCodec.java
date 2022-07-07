@@ -3,10 +3,12 @@ package com.github.steanky.ethylene.core.codec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * <p>This interface represents the primary compatibility layer between any specific configuration format and a
@@ -36,12 +38,12 @@ public interface ConfigCodec {
     @NotNull ConfigElement decode(@NotNull InputStream input) throws IOException;
 
     /**
-     * <p>Returns a string representing the preferred file extension for this codec. This can, but is not required to be
-     * respected when using this codec to save to a filesystem. There is no guarantee that a codec will have a unique
-     * preferred extension. Codecs may choose to report an empty string to indicate no preferred extension.</p>
+     * <p>Returns a list of strings representing the preferred file extensions for this codec. The list may be empty, in
+     * which case no extension should be preferred. Codecs may report any number of extensions. Users of this codec are
+     * not required to respect its preferred extensions.</p>
      *
      * <p>Any reported string should be filesystem-agnostic.</p>
-     * @return the preferred extension for this codec, without a leading period
+     * @return a list of preferred extensions for this codec, without a leading period
      */
-    @NotNull String getPreferredExtension();
+    @Unmodifiable @NotNull List<String> getPreferredExtensions();
 }
