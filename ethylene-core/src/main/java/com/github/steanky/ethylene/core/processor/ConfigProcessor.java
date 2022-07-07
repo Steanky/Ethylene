@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
 /**
  * Processes some configuration data. Fundamentally, implementations of this interface act as simple bidirectional
@@ -130,6 +131,36 @@ public interface ConfigProcessor<TData> {
         return new EnumConfigProcessor<>(enumClass, caseSensitive);
     }
 
+    /**
+     * Produces a minimal ConfigProcessor whose {@link ConfigProcessor#elementFromData(Object)} method always returns a
+     * new empty {@link ConfigNode} implementation, and whose {@link ConfigProcessor#dataFromElement(ConfigElement)}
+     * function calls the provided supplier to obtain data objects.
+     * @param returnSupplier the supplier of data objects used
+     * @return a minimal ConfigProcessor implementation
+     * @param <TReturn> the type of value to process
+     */
+    static <TReturn> @NotNull ConfigProcessor<TReturn> emptyProcessor(
+            @NotNull Supplier<? extends TReturn> returnSupplier) {
+        return new ConfigProcessor<>() {
+            @Override
+            public TReturn dataFromElement(@NotNull ConfigElement element) {
+                return returnSupplier.get();
+            }
+
+            @Override
+            public @NotNull ConfigElement elementFromData(TReturn tReturn) {
+                return new LinkedConfigNode(0);
+            }
+        };
+    }
+
+    /**
+     * Creates a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects,
+     * and vice-versa.
+     * @param mapFunction the function used to instantiate new maps
+     * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects
+     * @param <M> the type of map
+     */
     default <M extends Map<String, TData>> @NotNull ConfigProcessor<M> mapProcessor(
             @NotNull IntFunction<M> mapFunction) {
         Objects.requireNonNull(mapFunction, "mapFunction");
@@ -162,6 +193,10 @@ public interface ConfigProcessor<TData> {
         };
     }
 
+    /**
+     * Convenience method that calls {@link ConfigProcessor#mapProcessor(IntFunction)} with {@code HashMap::new}.
+     * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to a Map
+     */
     default @NotNull ConfigProcessor<Map<String, TData>> mapProcessor() {
         return mapProcessor(HashMap::new);
     }
@@ -211,6 +246,15 @@ public interface ConfigProcessor<TData> {
      * @return a list ConfigProcessor
      */
     default @NotNull ConfigProcessor<List<TData>> listProcessor() {
+        return collectionProcessor(ArrayList::new);
+    }
+
+    /**
+     * Convenience overload for {@link ConfigProcessor#collectionProcessor(IntFunction)} which uses
+     * {@code ArrayList::new} for its IntFunction.
+     * @return a collection ConfigProcessor
+     */
+    default @NotNull ConfigProcessor<Collection<TData>> collectionProcessor() {
         return collectionProcessor(ArrayList::new);
     }
 
