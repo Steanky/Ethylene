@@ -155,6 +155,63 @@ public interface ConfigProcessor<TData> {
     }
 
     /**
+     * Creates a ConfigProcessor implementation capable of serializing and deserializing Map objects whose keys are not
+     * necessarily string-valued. Elements are expected to be {@link ConfigList}s of "entries", which are single
+     * {@link ConfigNode} objects containing exactly two entries, a "key" entry and a "value" entry.
+     *
+     * @param keyProcessor the processor used to serialize/deserialize keys
+     * @param valueProcessor the processor used to serialize/deserialize values
+     * @param mapFunction the function used to construct the desired map implementation
+     * @return a new ConfigProcessor which can serialize/deserialize the desired kind of map
+     * @param <TKey> the key type
+     * @param <TValue> the value type
+     * @param <TMap> the map type
+     */
+    static <TKey, TValue, TMap extends Map<TKey, TValue>> @NotNull ConfigProcessor<TMap> mapProcessor(
+            @NotNull ConfigProcessor<TKey> keyProcessor, @NotNull ConfigProcessor<TValue> valueProcessor,
+            @NotNull IntFunction<? extends TMap> mapFunction) {
+        Objects.requireNonNull(keyProcessor);
+        Objects.requireNonNull(valueProcessor);
+        Objects.requireNonNull(mapFunction);
+
+        return new ConfigProcessor<>() {
+            @Override
+            public TMap dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+                if(!element.isList()) {
+                    throw new ConfigProcessException("Element must be a list");
+                }
+
+                ConfigList list = element.asList();
+                TMap map = mapFunction.apply(list.size());
+                for(ConfigElement entry : element.asList()) {
+                    if(!entry.isNode()) {
+                        throw new ConfigProcessException("All entries must be nodes");
+                    }
+
+                    ConfigNode entryNode = entry.asNode();
+                    map.put(keyProcessor.dataFromElement(entryNode.getElementOrThrow("key")), valueProcessor
+                            .dataFromElement(entryNode.getElementOrThrow("value")));
+                }
+
+                return map;
+            }
+
+            @Override
+            public @NotNull ConfigElement elementFromData(TMap map) throws ConfigProcessException {
+                ConfigList list = new ArrayConfigList(map.size());
+                for(Map.Entry<TKey, TValue> mapEntry : map.entrySet()) {
+                    ConfigNode nodeEntry = new LinkedConfigNode(2);
+                    nodeEntry.put("key", keyProcessor.elementFromData(mapEntry.getKey()));
+                    nodeEntry.put("value", valueProcessor.elementFromData(mapEntry.getValue()));
+                    list.add(nodeEntry);
+                }
+
+                return list;
+            }
+        };
+    }
+
+    /**
      * Creates a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects,
      * and vice-versa.
      * @param mapFunction the function used to instantiate new maps
