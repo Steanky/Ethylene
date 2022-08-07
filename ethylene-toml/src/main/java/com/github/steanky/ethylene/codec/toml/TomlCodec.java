@@ -13,14 +13,12 @@ import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Provides support for the TOML format. This class overrides {@link AbstractConfigCodec#serializeElement(ConfigElement)} and
