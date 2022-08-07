@@ -8,8 +8,10 @@ import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import org.hjson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
+import java.util.List;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -17,6 +19,8 @@ import java.util.Objects;
  * Provides support for HJSON.
  */
 public class HjsonCodec extends AbstractConfigCodec {
+    private static final List<String> EXTENSIONS = List.of("hjson");
+
     private final HjsonOptions readOptions;
     private final HjsonOptions writeOptions;
 
@@ -152,7 +156,7 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @NotNull String getPreferredExtension() {
-        return "hjson";
+    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+        return EXTENSIONS;
     }
 }
