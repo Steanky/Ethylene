@@ -3,4 +3,3 @@ plugins {
 }
 
 group 'com.github.steanky'
-version '0.11.2'
