@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * <p>Represents some arbitrary configuration data in a tree-like structure. ConfigNode objects are mutable data
@@ -14,6 +15,50 @@ import java.util.Map;
  * {@link ConfigPrimitive} instance containing null.</p>
  */
 public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, ConfigContainer {
+    /**
+     * Creates a new ordered ConfigNode implementation from the given object array. The array must be even-length, with
+     * all even indices interpreted as keys, and all odd indices interpreted as the value corresponding to the prior
+     * key.
+     *
+     * @param objects the object array to read
+     * @throws IllegalArgumentException if the array length is uneven, or if one of the even indices is not a string
+     * @return a new ordered ConfigNode implementation containing the objects present in the array, formatted as
+     * specified above
+     */
+    static @NotNull ConfigNode of(Object @NotNull ... objects) {
+        Objects.requireNonNull(objects);
+
+        if(objects.length == 0) {
+            return new LinkedConfigNode(0);
+        }
+
+        if(objects.length % 2 != 0) {
+            throw new IllegalArgumentException("Must have an even number of arguments");
+        }
+
+        ConfigNode output = new LinkedConfigNode(objects.length / 2);
+        for(int i = 0; i < objects.length; i += 2) {
+            Object keyObject = objects[i];
+            if(!(keyObject instanceof String keyString)) {
+                throw new IllegalArgumentException("Key object must be string, was " + (keyObject == null ? "null" :
+                        keyObject.getClass().getName()));
+            }
+
+            Object valueObject = objects[i + 1];
+            ConfigElement element;
+            if(valueObject instanceof ConfigElement valueElement) {
+                element = valueElement;
+            }
+            else {
+                element = new ConfigPrimitive(valueObject);
+            }
+
+            output.put(keyString, element);
+        }
+
+        return output;
+    }
+
     @Override
     default boolean isNode() {
         return true;
