@@ -18,7 +18,9 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     /**
      * Creates a new ordered ConfigNode implementation from the given object array. The array must be even-length, with
      * all even indices interpreted as keys, and all odd indices interpreted as the value corresponding to the prior
-     * key.
+     * key. The value, if it is a ConfigElement, will be directly associated with the key, otherwise, it will be used in
+     * an attempt to construct a {@link ConfigPrimitive} which will be associated with the key. Therefore, the value
+     * must either be assignable to ConfigElement, or a valid type for the ConfigPrimitive constructor.
      *
      * @param objects the object array to read
      * @throws IllegalArgumentException if the array length is uneven, or if one of the even indices is not a string

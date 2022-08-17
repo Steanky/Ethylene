@@ -102,7 +102,7 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public String toString() {
-        return object == null ? "null" : object.toString();
+        return Objects.toString(object);
     }
 
     @Override
@@ -114,6 +114,10 @@ public final class ConfigPrimitive implements ConfigElement {
     public boolean equals(Object obj) {
         if(this == obj) {
             return true;
+        }
+
+        if(obj == null) {
+            return false;
         }
 
         if(obj instanceof ConfigPrimitive primitive) {

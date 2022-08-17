@@ -9,9 +9,6 @@ import java.util.Objects;
 /**
  * <p>Represents a particular key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is like a list,
  * the key will be null.</p>
- *
- * <p>This class is not a record because it should have a package-private constructor (there should never be a need for
- * an API user to create an instance of this class).</p>
  */
 public final class ConfigEntry {
     private final String key;
@@ -22,13 +19,13 @@ public final class ConfigEntry {
      * @param key the key (name)
      * @param element the value element
      */
-    ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
+    public ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
         this.key = key;
         this.element = Objects.requireNonNull(element);
     }
 
     /**
-     * Returns the key (name) of this ConfigEntry.
+     * Returns the key (name) of this ConfigEntry. May be null, if this entry is part of a list.
      * @return the key for this ConfigMember
      */
     public String getKey() {
