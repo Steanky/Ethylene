@@ -204,13 +204,13 @@ class AbstractConfigCodecTest {
         assertThrows(IOException.class, () -> stream.write(0));
     }
 
+    @SuppressWarnings("CollectionAddedToSelf")
     @Test
     void correctSelfReferentialMapping() {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put("number", 69);
         root.put("string", "this is a string");
 
-        //noinspection CollectionAddedToSelf
         root.put("selfReference", root);
 
         ConfigElement element = testCodec.mapInput(root, testCodec::deserializeObject, testCodec::makeDecodeMap,

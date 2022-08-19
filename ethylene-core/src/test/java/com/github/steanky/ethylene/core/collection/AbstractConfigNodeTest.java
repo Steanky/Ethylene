@@ -44,12 +44,12 @@ class AbstractConfigNodeTest {
                 "circular_reference"));
     }
 
+    @SuppressWarnings("CollectionAddedToSelf")
     @Test
     void toStringTest() {
         assertEquals("$0{}", new AbstractConfigNode(new HashMap<>()) {}.toString());
 
         AbstractConfigNode node = new AbstractConfigNode(new LinkedHashMap<>()) {};
-        //noinspection CollectionAddedToSelf
         node.put("self", node);
 
         assertEquals("$0{self=$0}", node.toString());
@@ -59,7 +59,6 @@ class AbstractConfigNodeTest {
 
         assertEquals("$0{self=$0, list=$1{}}", node.toString());
 
-        //noinspection CollectionAddedToSelf
         list.add(list);
         list.add(node);
         assertEquals("$0{self=$0, list=$1{$1, $0}}", node.toString());

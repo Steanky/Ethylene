@@ -51,27 +51,24 @@ public class BasicConfigHandler implements ConfigHandler {
         return loaderMap.remove(key) != null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public @NotNull <TData> ConfigLoader<TData> getLoader(@NotNull ConfigKey<TData> key) {
         validatePresentKey(key);
-
-        //noinspection unchecked
         return (ConfigLoader<TData>) loaderMap.get(key);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public @NotNull <TData> Future<TData> loadData(@NotNull ConfigKey<TData> key) {
         validatePresentKey(key);
-
-        //noinspection unchecked
         return ((ConfigLoader<TData>)loaderMap.get(key)).load();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <TData> @NotNull TData getData(@NotNull ConfigKey<TData> key) throws ConfigProcessException {
         validatePresentKey(key);
-
-        //noinspection unchecked
         return FutureUtils.getAndWrapException(((ConfigLoader<TData>)loaderMap.get(key)).load(),
                 ConfigProcessException::new, ConfigProcessException.class);
     }

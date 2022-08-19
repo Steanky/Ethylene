@@ -13,13 +13,14 @@ final class ConfigElementHelper {
     private ConfigElementHelper() { throw new AssertionError("Don't do this."); }
 
     private static String pathToString(@NotNull Object... pathString) {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder("'");
         for(int i = 0; i < pathString.length; i++) {
             builder.append(pathString[i]);
             if(i < pathString.length - 1) {
                 builder.append('/');
             }
         }
+        builder.append('\'');
 
         return builder.toString();
     }
