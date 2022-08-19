@@ -40,7 +40,7 @@ public class BasicConfigHandler implements ConfigHandler {
         Objects.requireNonNull(key);
 
         if(loaderMap.containsKey(key)) {
-            throw new IllegalArgumentException("Key already registered");
+            throw new IllegalArgumentException("Key '" + key + "' already registered");
         }
 
         loaderMap.put(key, loader);
@@ -77,7 +77,7 @@ public class BasicConfigHandler implements ConfigHandler {
         Objects.requireNonNull(key);
 
         if(!loaderMap.containsKey(key)) {
-            throw new IllegalArgumentException("No loader registered with key");
+            throw new IllegalArgumentException("No loader registered with key '" + key + "'");
         }
     }
 }

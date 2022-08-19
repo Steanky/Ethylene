@@ -165,7 +165,7 @@ public interface ConfigElement {
             //validate the path first
             for(Object key : path) {
                 if(!(key instanceof String || key instanceof Integer)) {
-                    throw new IllegalArgumentException("Invalid key type: " + key.getClass().getName());
+                    throw new IllegalArgumentException("Invalid key type " + key.getClass().getName());
                 }
             }
 
