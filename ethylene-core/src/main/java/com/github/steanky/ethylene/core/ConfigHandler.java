@@ -51,7 +51,7 @@ public interface ConfigHandler {
 
     /**
      * Calls {@link ConfigLoader#writeDefaultIfAbsent()} on all managed {@link ConfigLoader} instances.
-     * @return a {@link Future} object which may be used to await this operation
+     * @return a {@link CompletableFuture} object which may be used to await this operation
      */
     @NotNull CompletableFuture<Void> writeDefaults();
 
@@ -99,11 +99,11 @@ public interface ConfigHandler {
     <TData> @NotNull ConfigLoader<TData> getLoader(@NotNull ConfigKey<TData> key);
 
     /**
-     * Retrieves a {@link Future} object representing the result of loading some data from the associated
+     * Retrieves a {@link CompletableFuture} object representing the result of loading some data from the associated
      * {@link ConfigKey}.
      * @param key the key used to retrieve the {@link ConfigLoader}, on which {@link ConfigLoader#load()}
      * @param <TData> the type of data returned by the loader
-     * @return a Future object representing the result of loading some data from the associated Configkey
+     * @return a CompletableFuture object representing the result of loading some data from the associated ConfigKey
      * @throws IllegalArgumentException if there is no loader associated with the given key
      * @throws NullPointerException if the argument is null
      */
