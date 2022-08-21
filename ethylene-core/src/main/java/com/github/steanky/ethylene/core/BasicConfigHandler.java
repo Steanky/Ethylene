@@ -5,16 +5,16 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Basic implementation of {@link ConfigHandler}.
  */
 public class BasicConfigHandler implements ConfigHandler {
-    private final Map<ConfigKey<?>, ConfigLoader<?>> loaderMap = new HashMap<>();
+    private final Map<ConfigKey<?>, ConfigLoader<?>> loaderMap = new ConcurrentHashMap<>();
 
     @Override
     public @NotNull CompletableFuture<Void> writeDefaults() {
@@ -38,11 +38,9 @@ public class BasicConfigHandler implements ConfigHandler {
         Objects.requireNonNull(loader);
         Objects.requireNonNull(key);
 
-        if(loaderMap.containsKey(key)) {
+        if(loaderMap.putIfAbsent(key, loader) != null) {
             throw new IllegalArgumentException("Key '" + key + "' already registered");
         }
-
-        loaderMap.put(key, loader);
     }
 
     @Override
