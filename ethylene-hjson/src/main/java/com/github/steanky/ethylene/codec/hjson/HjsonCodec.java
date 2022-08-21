@@ -90,7 +90,7 @@ public class HjsonCodec extends AbstractConfigCodec {
             }
         }
 
-        throw new IllegalArgumentException("Invalid element: " + element.getClass().getName());
+        throw new IllegalArgumentException("Invalid element " + element.getClass().getName());
     }
 
     @Override
@@ -114,7 +114,7 @@ public class HjsonCodec extends AbstractConfigCodec {
             }
         }
 
-        throw new IllegalArgumentException("Invalid JsonValue type: " + object.getClass().getName());
+        throw new IllegalArgumentException("Invalid JsonValue type " + object.getClass().getName());
     }
 
     @Override

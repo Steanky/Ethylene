@@ -52,6 +52,12 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
                 processor.dataFromElement(element)));
     }
 
+    @Override
+    public @NotNull CompletableFuture<Void> write(@NotNull TData data) {
+        return FutureUtils.completeCallableSync(() -> processor.elementFromData(defaultData))
+                .thenCompose(bridge::write);
+    }
+
     /**
      * Indicates whether this loader's data source is <i>absent</i>.
      * @return true if {@link ProcessingConfigLoader#writeDefaultIfAbsent()} should write a default object when called,
