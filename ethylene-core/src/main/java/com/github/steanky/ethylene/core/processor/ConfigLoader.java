@@ -25,4 +25,14 @@ public interface ConfigLoader<TData> {
      * @return a {@link CompletableFuture} that may be used to wait on the read operation
      */
     @NotNull CompletableFuture<TData> load();
+
+    /**
+     * Writes some data to the source. Returns a {@link CompletableFuture} object that be used to wait on the operation.
+     * If an exception occurs during this operation, it will be thrown when {@link Future#get()} is called on the
+     * returned object.
+     *
+     * @param data the data object to write
+     * @return a {@link CompletableFuture} that may be used to wait on the write operation
+     */
+    @NotNull CompletableFuture<Void> write(@NotNull TData data);
 }

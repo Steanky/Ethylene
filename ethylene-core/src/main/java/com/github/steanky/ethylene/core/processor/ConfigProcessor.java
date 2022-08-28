@@ -332,6 +332,7 @@ public interface ConfigProcessor<TData> {
      */
     default @NotNull ConfigProcessor<TData[]> arrayProcessor() {
         return new ConfigProcessor<>() {
+            @SuppressWarnings("unchecked")
             @Override
             public TData[] dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
                 if(!element.isList()) {
@@ -339,7 +340,6 @@ public interface ConfigProcessor<TData> {
                 }
 
                 ConfigList list = element.asList();
-                //noinspection unchecked
                 TData[] data = (TData[]) new Object[list.size()];
                 int i = 0;
                 for(ConfigElement sample : list) {

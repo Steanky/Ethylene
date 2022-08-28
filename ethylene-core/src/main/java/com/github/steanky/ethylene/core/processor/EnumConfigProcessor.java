@@ -49,7 +49,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
         String elementString = element.asString();
         TEnum result = lookup(elementString);
         if(result == null) {
-            throw new ConfigProcessException("No enum constant named " + elementString + " in " + enumClass
+            throw new ConfigProcessException("No enum constant named '" + elementString + "' in " + enumClass
                     .getTypeName());
         }
 

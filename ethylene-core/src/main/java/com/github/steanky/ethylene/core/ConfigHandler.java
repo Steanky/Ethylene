@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
@@ -50,9 +51,9 @@ public interface ConfigHandler {
 
     /**
      * Calls {@link ConfigLoader#writeDefaultIfAbsent()} on all managed {@link ConfigLoader} instances.
-     * @return a {@link Future} object which may be used to await this operation
+     * @return a {@link CompletableFuture} object which may be used to await this operation
      */
-    @NotNull Future<Void> writeDefaults();
+    @NotNull CompletableFuture<Void> writeDefaults();
 
     /**
      * Calls {@link ConfigLoader#writeDefaultIfAbsent()}. This method will only return when all of these calls have
@@ -98,18 +99,19 @@ public interface ConfigHandler {
     <TData> @NotNull ConfigLoader<TData> getLoader(@NotNull ConfigKey<TData> key);
 
     /**
-     * Retrieves a {@link Future} object representing the result of loading some data from the associated
+     * Retrieves a {@link CompletableFuture} object representing the result of loading some data from the associated
      * {@link ConfigKey}.
      * @param key the key used to retrieve the {@link ConfigLoader}, on which {@link ConfigLoader#load()}
      * @param <TData> the type of data returned by the loader
-     * @return a Future object representing the result of loading some data from the associated Configkey
+     * @return a CompletableFuture object representing the result of loading some data from the associated ConfigKey
      * @throws IllegalArgumentException if there is no loader associated with the given key
      * @throws NullPointerException if the argument is null
      */
-    <TData> @NotNull Future<TData> loadData(@NotNull ConfigKey<TData> key);
+    <TData> @NotNull CompletableFuture<TData> loadData(@NotNull ConfigKey<TData> key);
 
     /**
-     * Fetches some data from the {@link ConfigLoader} associated with the {@link ConfigKey}.
+     * Fetches some data from the {@link ConfigLoader} associated with the {@link ConfigKey}. This method will block
+     * until the operation completes.
      * @param key the key used to retrieve the ConfigLoader
      * @param <TData> the type of data returned by the ConfigLoader
      * @return the data itself, obtained by calling {@link Future#get()} on the Future returned by
@@ -118,5 +120,24 @@ public interface ConfigHandler {
      * @throws IllegalArgumentException if there is no loader associated with the given key
      * @throws NullPointerException if the argument is null
      */
-    <TData> @NotNull TData getData(@NotNull ConfigKey<TData> key) throws ConfigProcessException;
+    <TData> @NotNull TData loadDataNow(@NotNull ConfigKey<TData> key) throws ConfigProcessException;
+
+    /**
+     * Writes some data to a configuration. This method may or may not block, depending on if asynchronous operations
+     * are supported by the underlying {@link ConfigLoader}.
+     * @param key the key used to retrieve the ConfigLoader
+     * @param data the data object to write
+     * @return a {@link CompletableFuture} object which may be used to await the write operation
+     * @param <TData> the type of data to write
+     */
+    <TData> @NotNull CompletableFuture<Void> writeData(@NotNull ConfigKey<TData> key, @NotNull TData data);
+
+    /**
+     * Writes some data to a configuration. This method will block until the operation is complete.
+     * @param key  the key used to retrieve the ConfigLoader
+     * @param data the data object to write
+     * @param <TData> the type of data to write
+     * @throws ConfigProcessException if an error occurs when converting or writing data
+     */
+    <TData> void writeDataNow(@NotNull ConfigKey<TData> key, @NotNull TData data) throws ConfigProcessException;
 }
