@@ -42,15 +42,29 @@ public class ConstructorTypeFactory extends TypeFactoryBase {
             Parameter[] constructorParameters = constructor.getParameters();
             SignatureElement[] signatureElements = new SignatureElement[constructorParameters.length];
 
+            boolean parameterNamesPresent = true;
             for (int j = 0; j < constructorParameters.length; j++) {
                 Parameter constructorParameter = constructorParameters[j];
-                Name name = constructorParameter.getAnnotation(Name.class);
-                String nameString = name == null ? constructorParameter.getName() : name.value();
 
-                signatureElements[j] = new SignatureElement(constructorParameter.getParameterizedType(), nameString);
+                Name name = constructorParameter.getAnnotation(Name.class);
+                Object identifier;
+                if (name == null) {
+                    if (parameterNamesPresent && constructorParameter.isNamePresent()) {
+                        identifier = constructorParameter.getName();
+                    }
+                    else {
+                        parameterNamesPresent = false;
+                        identifier = j;
+                    }
+                }
+                else {
+                    identifier = name.value();
+                }
+
+                signatureElements[j] = new SignatureElement(constructorParameter.getParameterizedType(), identifier);
             }
 
-            signatures[i] = new Signature(i, signatureElements);
+            signatures[i] = new Signature(i, signatureElements, !parameterNamesPresent);
         }
     }
 

@@ -41,7 +41,7 @@ public class MapTypeFactory extends TypeFactoryBase {
             signatureElements[i] = new SignatureElement(entryType, i);
         }
 
-        return new Signature(0, signatureElements);
+        return new Signature(0, signatureElements, true);
     }
 
     @SuppressWarnings("unchecked")

@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
@@ -36,6 +37,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                         return new GraphTransformer.Node<>(classEntry, new Iterator<>() {
                             private int i = 0;
+                            private Iterator<ConfigEntry> entryIterator;
 
                             @Override
                             public boolean hasNext() {
@@ -46,9 +48,21 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             public Entry<Object, ClassEntry> next() {
                                 SignatureElement nextSignature = signatureElements[i++];
                                 Type nextType = nextSignature.type();
-                                ConfigElement nextElement = classEntry.configElement.getElement(nextSignature.identifier());
-                                TypeFactory nextFactory = typeFactorySource.factory(nextType);
 
+                                ConfigElement nextElement;
+                                if (signature.indexed()) {
+                                    if (entryIterator == null) {
+                                        entryIterator = classEntry.configElement.asContainer().entryCollection()
+                                                .iterator();
+                                    }
+
+                                    nextElement = entryIterator.next().getSecond();
+                                }
+                                else {
+                                    nextElement = classEntry.configElement.getElement(nextSignature.identifier());
+                                }
+
+                                TypeFactory nextFactory = typeFactorySource.factory(nextType);
                                 return Entry.of(null, new ClassEntry(nextType, nextElement, nextFactory));
                             }
                         }, new GraphTransformer.Output<>(classEntry.reference, new BiConsumer<>() {

@@ -24,7 +24,7 @@ class MappingConfigProcessorIntegrationTest {
         private final int value;
         private final Set<Integer> intSet;
 
-        public CustomClass(@Name("strings") @NotNull List<String> strings, @Name("value") int value,
+        public CustomClass(@Name("value") int value, @Name("strings") @NotNull List<String> strings,
                 @Name("intSet") @NotNull Set<Integer> intSet) {
             this.strings = strings;
             this.value = value;
