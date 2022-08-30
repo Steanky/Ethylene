@@ -118,7 +118,7 @@ public class ConstructorTypeFactory extends TypeFactoryBase {
                 SignatureElement[] signatureElements = signature.elements();
                 Collection<ConfigEntry> entryCollection = providedElement.asContainer().entryCollection();
 
-                validateArguments(signatureElements.length, entryCollection.size(), objects.length);
+                validateLengths(signatureElements.length, entryCollection.size(), objects.length);
 
                 Map<Object, Object> elementMap = new HashMap<>(entryCollection.size());
                 Iterator<ConfigEntry> configEntryIterator = entryCollection.iterator();

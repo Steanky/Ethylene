@@ -50,7 +50,7 @@ public class CollectionTypeFactory extends TypeFactoryBase {
         }
 
         int listSize = providedElement.asList().size();
-        validateArguments(signature.elements().length, listSize, objects.length);
+        validateLengths(signature.elements().length, listSize, objects.length);
 
         try {
             Collection<Object> collection = (Collection<Object>) sizeConstructor.newInstance(listSize);

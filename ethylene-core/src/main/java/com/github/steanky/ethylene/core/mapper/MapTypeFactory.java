@@ -8,8 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
@@ -56,7 +54,7 @@ public class MapTypeFactory extends TypeFactoryBase {
         }
 
         int listSize = providedElement.asList().size();
-        validateArguments(signature.elements().length, listSize, objects.length);
+        validateLengths(signature.elements().length, listSize, objects.length);
 
         try {
             Map<Object, Object> map = (Map<Object, Object>) sizeConstructor.newInstance(listSize);

@@ -7,13 +7,14 @@ import java.lang.reflect.Type;
 
 public interface TypeHinter {
     enum Hint {
-        CONTAINER,
+        COLLECTION_LIKE,
+        MAP_LIKE,
         OBJECT,
         SCALAR;
 
         public boolean compatible(@NotNull ConfigElement element) {
             return switch (this) {
-                case CONTAINER -> element.isList();
+                case COLLECTION_LIKE, MAP_LIKE -> element.isList();
                 case OBJECT -> element.isNode();
                 case SCALAR -> element.isScalar();
             };
