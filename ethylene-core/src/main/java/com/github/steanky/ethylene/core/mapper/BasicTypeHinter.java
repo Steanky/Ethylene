@@ -20,7 +20,8 @@ public class BasicTypeHinter implements TypeHinter {
         else if(TypeUtils.isArrayType(type)) {
             return Hint.ARRAY_LIKE;
         }
-        else if (ClassUtils.isPrimitiveOrWrapper(TypeUtils.getRawType(type, null))) {
+        else if (ClassUtils.isPrimitiveOrWrapper(TypeUtils.getRawType(type, null)) || TypeUtils
+                .isAssignable(type, String.class)) {
             return Hint.SCALAR;
         }
 

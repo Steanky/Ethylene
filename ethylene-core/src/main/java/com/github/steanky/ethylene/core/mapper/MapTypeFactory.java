@@ -52,11 +52,10 @@ public class MapTypeFactory extends TypeFactoryBase {
             throw new MapperException("expected ConfigList");
         }
 
-        int listSize = providedElement.asList().size();
-        validateLengths(signature.elements().length, listSize, objects.length);
+        validateLengths(signature.elements().length, providedElement.asList().size(), objects.length);
 
         try {
-            Map<Object, Object> map = (Map<Object, Object>) sizeConstructor.newInstance(listSize);
+            Map<Object, Object> map = (Map<Object, Object>) sizeConstructor.newInstance(objects.length);
             for (Object object : objects) {
                 Map.Entry<Object, Object> entry = (Map.Entry<Object, Object>)object;
                 map.put(entry.getKey(), entry.getValue());

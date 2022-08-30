@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
 
-@SuppressWarnings("rawtypes")
 public class BasicTypeFactorySource implements TypeFactory.Source {
+    @SuppressWarnings("rawtypes")
     private static final TypeVariable<Class<Map>>[] MAP_VARIABLES = Map.class.getTypeParameters();
 
     private final TypeHinter typeHinter;
@@ -22,8 +22,7 @@ public class BasicTypeFactorySource implements TypeFactory.Source {
     private final Map<Class<?>, TypeFactory> objectFactories;
 
     public BasicTypeFactorySource(@NotNull TypeHinter typeHinter, @NotNull TypeResolver resolver,
-            boolean matchParameterNames,
-            boolean matchParameterTypeHints) {
+            boolean matchParameterNames, boolean matchParameterTypeHints) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.resolver = Objects.requireNonNull(resolver);
         this.matchParameterNames = matchParameterNames;
@@ -37,6 +36,8 @@ public class BasicTypeFactorySource implements TypeFactory.Source {
 
         return switch (typeHinter.getHint(type)) {
             case ARRAY_LIKE -> new ArrayTypeFactory(TypeUtils.getArrayComponentType(type));
+
+            //TODO: allow users to register specific constructors to handle certain generic types
             case OBJECT ->
                     objectFactories.computeIfAbsent(resolvedType, key -> new ConstructorTypeFactory(key, typeHinter,
                             matchParameterNames, matchParameterTypeHints));
