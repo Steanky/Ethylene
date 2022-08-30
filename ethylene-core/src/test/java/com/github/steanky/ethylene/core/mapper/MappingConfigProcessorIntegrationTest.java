@@ -1,12 +1,13 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.collection.ConfigList;
+import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.processor.ConfigProcessException;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,17 +17,34 @@ class MappingConfigProcessorIntegrationTest {
     private final MappingConfigProcessor<List<Object>> objectListProcessor;
     private final MappingConfigProcessor<List<List<String>>> listListStringProcessor;
     private final MappingConfigProcessor<List<List<String>[]>> reallyStupidProcessor;
+    private final MappingConfigProcessor<CustomClass> customClassProcessor;
+
+    public static class CustomClass {
+        private final List<String> strings;
+        private final int value;
+        private final Set<Integer> intSet;
+
+        public CustomClass(@Name("strings") @NotNull List<String> strings, @Name("value") int value,
+                @Name("intSet") @NotNull Set<Integer> intSet) {
+            this.strings = strings;
+            this.value = value;
+            this.intSet = intSet;
+        }
+    }
 
     public MappingConfigProcessorIntegrationTest() {
         TypeHinter typeHinter = new BasicTypeHinter();
         BasicTypeResolver typeResolver = new BasicTypeResolver();
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
+        typeResolver.registerTypeImplementation(Set.class, HashSet.class);
+
         TypeFactory.Source source = new BasicTypeFactorySource(typeHinter, typeResolver, false, false);
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
+        this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
     }
 
     @Nested
@@ -68,6 +86,20 @@ class MappingConfigProcessorIntegrationTest {
 
             assertArrayEquals(stupidStringArray, stupidString.get(0));
             assertArrayEquals(stupidStringArray2, stupidString.get(1));
+        }
+    }
+
+    @Nested
+    class Objects {
+        @Test
+        void customObject() {
+            ConfigNode node = ConfigNode.of("strings", ConfigList.of("a", "b", "c"), "value", 69,
+                    "intSet", ConfigList.of(1, 2, 3));
+            CustomClass custom = assertDoesNotThrow(() -> customClassProcessor.dataFromElement(node));
+
+            assertEquals(List.of("a", "b", "c"), custom.strings);
+            assertEquals(69, custom.value);
+            assertEquals(Set.of(1, 2, 3), custom.intSet);
         }
     }
 }

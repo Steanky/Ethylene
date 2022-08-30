@@ -51,7 +51,7 @@ public class BasicTypeFactorySource implements TypeFactory.Source {
 
                 yield new MapTypeFactory(resolver.resolveType(type), keyType, valueType);
             }
-            case SCALAR -> new ScalarTypeFactory(resolver.resolveType(type));
+            case SCALAR -> new ScalarTypeFactory(TypeUtils.getRawType(type, null));
         };
     }
 }

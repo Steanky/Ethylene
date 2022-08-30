@@ -87,4 +87,9 @@ public abstract class Token<T> implements Supplier<Type> {
 
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "Token{type=" + type.toString() + "}";
+    }
 }

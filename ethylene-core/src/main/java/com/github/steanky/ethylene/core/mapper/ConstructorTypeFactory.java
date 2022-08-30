@@ -15,6 +15,7 @@ public class ConstructorTypeFactory extends TypeFactoryBase {
     private final TypeHinter typeHinter;
     private final ArrayList<Constructor<?>> constructors;
     private final Signature[] signatures;
+
     private final boolean matchParameterNames;
     private final boolean matchParameterTypeHints;
 
@@ -43,8 +44,10 @@ public class ConstructorTypeFactory extends TypeFactoryBase {
 
             for (int j = 0; j < constructorParameters.length; j++) {
                 Parameter constructorParameter = constructorParameters[j];
-                signatureElements[j] = new SignatureElement(constructorParameter.getParameterizedType(),
-                        constructorParameter.getName());
+                Name name = constructorParameter.getAnnotation(Name.class);
+                String nameString = name == null ? constructorParameter.getName() : name.value();
+
+                signatureElements[j] = new SignatureElement(constructorParameter.getParameterizedType(), nameString);
             }
 
             signatures[i] = new Signature(i, signatureElements);
