@@ -10,6 +10,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.WeakHashMap;
 import java.util.function.Supplier;
 
@@ -38,7 +39,13 @@ public class BasicTypeResolver implements TypeResolver {
 
     @Override
     public @NotNull Class<?> resolveType(@NotNull Type type) {
+        Objects.requireNonNull(type);
+
         Class<?> raw = TypeUtils.getRawType(type, null);
+        if (raw == null) {
+            throw new MapperException("resolved raw type was null for '" + type.getTypeName() + "'");
+        }
+
         ClassEntry cached = cache.get(raw);
         if (cached != null) {
             Class<?> target = cached.reference.get();
@@ -49,7 +56,7 @@ public class BasicTypeResolver implements TypeResolver {
             cache.remove(raw);
         }
 
-        for(Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
+        for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
             ClassEntry entry = types.get(ClassUtils.getName(superclass));
             if (entry != null) {
                 Class<?> ref = entry.reference.get();
