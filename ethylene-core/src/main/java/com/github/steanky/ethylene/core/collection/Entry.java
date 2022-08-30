@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
 import java.util.Map;
+import java.util.Objects;
 
 public interface Entry<TFirst, TSecond> extends Map.Entry<TFirst, TSecond> {
     TFirst getFirst();
@@ -32,6 +33,28 @@ public interface Entry<TFirst, TSecond> extends Map.Entry<TFirst, TSecond> {
             @Override
             public TSecond getSecond() {
                 return second;
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(first, second);
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj == null) {
+                    return false;
+                }
+
+                if (obj == this) {
+                    return true;
+                }
+
+                if (obj instanceof Entry<?,?> entry) {
+                    return Objects.equals(first, entry.getFirst()) && Objects.equals(second, entry.getSecond());
+                }
+
+                return false;
             }
         };
     }

@@ -24,7 +24,7 @@ import java.util.*;
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
-     * Empty builder, for use by subclasses.
+     * Empty constructor, for use by subclasses.
      */
     protected AbstractConfigCodec() {}
 

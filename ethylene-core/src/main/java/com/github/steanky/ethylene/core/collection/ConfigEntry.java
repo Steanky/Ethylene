@@ -37,4 +37,26 @@ public final class ConfigEntry implements Entry<String, ConfigElement> {
     public @NotNull ConfigElement getSecond() {
         return element;
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(key, element);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof Entry<?,?> entry) {
+            return Objects.equals(key, entry.getFirst()) && Objects.equals(element, entry.getSecond());
+        }
+
+        return false;
+    }
 }
