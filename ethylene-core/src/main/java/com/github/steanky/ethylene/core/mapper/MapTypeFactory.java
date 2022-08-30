@@ -17,14 +17,13 @@ public class MapTypeFactory extends TypeFactoryBase {
 
     private final Constructor<?> sizeConstructor;
 
-    public MapTypeFactory(@NotNull Class<?> mapType, @NotNull Type keyType,
-            @NotNull Type valueType) {
+    public MapTypeFactory(@NotNull Class<?> mapType, @NotNull Type keyType, @NotNull Type valueType) {
         this.keyType = Objects.requireNonNull(keyType);
         this.valueType = Objects.requireNonNull(valueType);
 
         this.sizeConstructor = ConstructorUtils.getAccessibleConstructor(mapType, int.class);
         if (sizeConstructor == null) {
-            throw new MapperException("unable to find suitable constructor for map " + mapType);
+            throw new MapperException("unable to find suitable constructor for map '" + mapType + "'");
         }
     }
 

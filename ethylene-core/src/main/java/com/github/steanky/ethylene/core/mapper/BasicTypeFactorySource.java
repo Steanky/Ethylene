@@ -33,10 +33,9 @@ public class BasicTypeFactorySource implements TypeFactory.Source {
 
     @Override
     public @NotNull TypeFactory factory(@NotNull Type type) {
-        TypeHinter.Hint hint = typeHinter.getHint(type);
         Class<?> resolvedType = resolver.resolveType(type);
 
-        return switch (hint) {
+        return switch (typeHinter.getHint(type)) {
             case ARRAY_LIKE -> new ArrayTypeFactory(resolvedType.getComponentType());
             case OBJECT ->
                     objectFactories.computeIfAbsent(resolvedType, key -> new ConstructorTypeFactory(key, typeHinter,

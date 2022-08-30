@@ -20,8 +20,7 @@ public abstract class ListFactoryBase extends TypeFactoryBase {
             throw new MapperException("expected ConfigList");
         }
 
-        ConfigList list = providedElement.asList();
-        SignatureElement[] elements = new SignatureElement[list.size()];
+        SignatureElement[] elements = new SignatureElement[providedElement.asList().size()];
         for (int i = 0; i < elements.length; i++) {
             elements[i] = new SignatureElement(componentType, i);
         }

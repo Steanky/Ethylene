@@ -6,10 +6,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 public class ScalarTypeFactory extends TypeFactoryBase {
-    private final Class<?> scalarType;
+    private final SignatureElement element;
 
     public ScalarTypeFactory(@NotNull Class<?> scalarType) {
-        this.scalarType = Objects.requireNonNull(scalarType);
+        this.element = new SignatureElement(Objects.requireNonNull(scalarType), 0);
     }
 
     @Override
@@ -18,7 +18,7 @@ public class ScalarTypeFactory extends TypeFactoryBase {
             throw new MapperException("expected scalar");
         }
 
-        return new Signature(0, new SignatureElement[] { new SignatureElement(scalarType, 0) });
+        return new Signature(0, new SignatureElement[] { element });
     }
 
     @Override

@@ -30,11 +30,10 @@ public class CollectionTypeFactory extends ListFactoryBase {
             throw new MapperException("expected ConfigList");
         }
 
-        int listSize = providedElement.asList().size();
-        validateLengths(signature.elements().length, listSize, objects.length);
+        validateLengths(signature.elements().length, providedElement.asList().size(), objects.length);
 
         try {
-            Collection<Object> collection = (Collection<Object>) sizeConstructor.newInstance(listSize);
+            Collection<Object> collection = (Collection<Object>) sizeConstructor.newInstance(objects.length);
             collection.addAll(Arrays.asList(objects));
             return collection;
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {

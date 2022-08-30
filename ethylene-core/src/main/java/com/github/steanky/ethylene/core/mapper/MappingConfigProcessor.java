@@ -31,8 +31,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final TypeFactory.Source typeFactorySource;
     private final TypeHinter typeHinter;
 
-    public MappingConfigProcessor(@NotNull Token<T> token,
-            @NotNull TypeFactory.Source typeFactorySource, @NotNull TypeHinter typeHinter) {
+    public MappingConfigProcessor(@NotNull Token<T> token, @NotNull TypeFactory.Source typeFactorySource,
+            @NotNull TypeHinter typeHinter) {
         this.token = Objects.requireNonNull(token);
         this.typeFactorySource = Objects.requireNonNull(typeFactorySource);
         this.typeHinter = Objects.requireNonNull(typeHinter);
@@ -84,7 +84,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             }, potentialContainer -> {
                 TypeHinter.Hint hint = typeHinter.getHint(potentialContainer.type);
                 if (!hint.compatible(potentialContainer.configElement)) {
-                    throw new MapperException("mismatched types " + hint + " and " + potentialContainer.type.getTypeName());
+                    throw new MapperException("mismatched types '" + hint + "' and '" + potentialContainer.type
+                            .getTypeName() + "'");
                 }
 
                 return potentialContainer.configElement.isContainer();

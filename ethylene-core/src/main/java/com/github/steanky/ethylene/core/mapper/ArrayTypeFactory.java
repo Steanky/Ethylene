@@ -17,8 +17,7 @@ public class ArrayTypeFactory extends ListFactoryBase {
             throw new MapperException("expected ConfigList");
         }
 
-        int listSize = providedElement.asList().size();
-        validateLengths(signature.elements().length, listSize, objects.length);
+        validateLengths(signature.elements().length, providedElement.asList().size(), objects.length);
 
         Object array = Array.newInstance((Class<?>)componentType, objects.length);
         for (int i = 0; i < objects.length; i++) {
