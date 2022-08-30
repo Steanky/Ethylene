@@ -4,10 +4,11 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 
 public class ArrayTypeFactory extends ListFactoryBase {
-    public ArrayTypeFactory(@NotNull Class<?> componentClass) {
-        super(componentClass);
+    public ArrayTypeFactory(@NotNull Type componentType) {
+        super(componentType);
     }
 
     @Override

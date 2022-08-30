@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.collection.ConfigList;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;

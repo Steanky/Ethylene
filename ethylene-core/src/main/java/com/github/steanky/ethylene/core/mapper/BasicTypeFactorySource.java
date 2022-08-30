@@ -36,7 +36,7 @@ public class BasicTypeFactorySource implements TypeFactory.Source {
         Class<?> resolvedType = resolver.resolveType(type);
 
         return switch (typeHinter.getHint(type)) {
-            case ARRAY_LIKE -> new ArrayTypeFactory(resolvedType.getComponentType());
+            case ARRAY_LIKE -> new ArrayTypeFactory(TypeUtils.getArrayComponentType(type));
             case OBJECT ->
                     objectFactories.computeIfAbsent(resolvedType, key -> new ConstructorTypeFactory(key, typeHinter,
                             matchParameterNames, matchParameterTypeHints));
