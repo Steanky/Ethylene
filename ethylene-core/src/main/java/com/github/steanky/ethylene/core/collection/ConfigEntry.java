@@ -1,14 +1,14 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 /**
- * <p>Represents a particular key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is like a list,
+ * <p>Represents a particular key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is like a
+ * list,
  * the key will be null.</p>
  *
  * <p>This class is not a record because it should have a package-private builder (there should never be a need for
@@ -20,7 +20,8 @@ public final class ConfigEntry implements Entry<String, ConfigElement> {
 
     /**
      * Creates a new ConfigEntry instance.
-     * @param key the key (name)
+     *
+     * @param key     the key (name)
      * @param element the value element
      */
     public ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
@@ -53,7 +54,7 @@ public final class ConfigEntry implements Entry<String, ConfigElement> {
             return true;
         }
 
-        if (obj instanceof Entry<?,?> entry) {
+        if (obj instanceof Entry<?, ?> entry) {
             return Objects.equals(key, entry.getFirst()) && Objects.equals(element, entry.getSecond());
         }
 

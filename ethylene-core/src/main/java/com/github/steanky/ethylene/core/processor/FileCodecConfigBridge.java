@@ -20,7 +20,8 @@ abstract class FileCodecConfigBridge implements ConfigBridge {
 
     /**
      * Constructs a new FileCodecConfigBridge from the provided {@link Path} and {@link ConfigCodec}.
-     * @param path the path to use
+     *
+     * @param path  the path to use
      * @param codec the codec to use
      */
     FileCodecConfigBridge(@NotNull Path path, @NotNull ConfigCodec codec) {
@@ -44,7 +45,8 @@ abstract class FileCodecConfigBridge implements ConfigBridge {
     /**
      * Produces a {@link CompletableFuture} object from a {@link Callable}. The future may or may not be already
      * completed, depending on if the implementation is synchronous or asynchronous.
-     * @param callable the callable to convert
+     *
+     * @param callable  the callable to convert
      * @param <TReturn> the type of data object
      * @return a {@link CompletableFuture} object which may represent a synchronous or asynchronous call
      */

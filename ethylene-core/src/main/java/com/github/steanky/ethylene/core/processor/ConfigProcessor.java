@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 /**
  * Processes some configuration data. Fundamentally, implementations of this interface act as simple bidirectional
  * mapping functions between {@link ConfigElement} instances and arbitrary data.
+ *
  * @param <TData> the type of data to convert to and from
  */
 public interface ConfigProcessor<TData> {
@@ -22,7 +23,7 @@ public interface ConfigProcessor<TData> {
     ConfigProcessor<String> STRING = new ConfigProcessor<>() {
         @Override
         public String dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-            if(!element.isString()) {
+            if (!element.isString()) {
                 throw new ConfigProcessException("Element must be a string");
             }
 
@@ -76,7 +77,7 @@ public interface ConfigProcessor<TData> {
     ConfigProcessor<Boolean> BOOLEAN = new ConfigProcessor<>() {
         @Override
         public Boolean dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-            if(!element.isBoolean()) {
+            if (!element.isBoolean()) {
                 throw new ConfigProcessException("Element is not a boolean");
             }
 
@@ -90,28 +91,13 @@ public interface ConfigProcessor<TData> {
     };
 
     /**
-     * Produces some data from a provided {@link ConfigElement}.
-     * @param element the element to process
-     * @return the data object
-     * @throws ConfigProcessException if the provided {@link ConfigElement} does not contain valid data
-     */
-    TData dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException;
-
-    /**
-     * Produces a {@link ConfigElement} from the provided data object.
-     * @param data the data object
-     * @return a {@link ConfigElement} representing the given data
-     * @throws ConfigProcessException if the data is invalid
-     */
-    @NotNull ConfigElement elementFromData(TData data) throws ConfigProcessException;
-
-    /**
      * Creates a new ConfigProcessor capable of converting enum constants from the specified enum class. The returned
      * processor will use case-sensitive conversions (the string "ENUM_CONSTANT" is not treated the same as
      * "enum_constant").
+     *
      * @param enumClass the class from which to extract enum constants
+     * @param <TEnum>   the type of enum to convert
      * @return a ConfigProcessor which can convert enum constants
-     * @param <TEnum> the type of enum to convert
      */
     static <TEnum extends Enum<?>> @NotNull ConfigProcessor<TEnum> enumProcessor(
             @NotNull Class<? extends TEnum> enumClass) {
@@ -121,10 +107,11 @@ public interface ConfigProcessor<TData> {
     /**
      * Creates a new ConfigProcessor capable of converting enum constants from the specified enum class, with the
      * provided case sensitivity when converting strings to enum instances.
-     * @param enumClass the class from which to extract enum constants
+     *
+     * @param enumClass     the class from which to extract enum constants
      * @param caseSensitive whether string comparisons are case-sensitive
+     * @param <TEnum>       the type of enum to convert
      * @return a ConfigProcessor which can convert enum constants
-     * @param <TEnum> the type of enum to convert
      */
     static <TEnum extends Enum<?>> @NotNull ConfigProcessor<TEnum> enumProcessor(
             @NotNull Class<? extends TEnum> enumClass, boolean caseSensitive) {
@@ -135,9 +122,10 @@ public interface ConfigProcessor<TData> {
      * Produces a minimal ConfigProcessor whose {@link ConfigProcessor#elementFromData(Object)} method always returns a
      * new empty {@link ConfigNode} implementation, and whose {@link ConfigProcessor#dataFromElement(ConfigElement)}
      * function calls the provided supplier to obtain data objects.
+     *
      * @param returnSupplier the supplier of data objects used
+     * @param <TReturn>      the type of value to process
      * @return a minimal ConfigProcessor implementation
-     * @param <TReturn> the type of value to process
      */
     static <TReturn> @NotNull ConfigProcessor<TReturn> emptyProcessor(
             @NotNull Supplier<? extends TReturn> returnSupplier) {
@@ -159,13 +147,13 @@ public interface ConfigProcessor<TData> {
      * necessarily string-valued. Elements are expected to be {@link ConfigList}s of "entries", which are single
      * {@link ConfigNode} objects containing exactly two entries, a "key" entry and a "value" entry.
      *
-     * @param keyProcessor the processor used to serialize/deserialize keys
+     * @param keyProcessor   the processor used to serialize/deserialize keys
      * @param valueProcessor the processor used to serialize/deserialize values
-     * @param mapFunction the function used to construct the desired map implementation
+     * @param mapFunction    the function used to construct the desired map implementation
+     * @param <TKey>         the key type
+     * @param <TValue>       the value type
+     * @param <TMap>         the map type
      * @return a new ConfigProcessor which can serialize/deserialize the desired kind of map
-     * @param <TKey> the key type
-     * @param <TValue> the value type
-     * @param <TMap> the map type
      */
     static <TKey, TValue, TMap extends Map<TKey, TValue>> @NotNull ConfigProcessor<TMap> mapProcessor(
             @NotNull ConfigProcessor<TKey> keyProcessor, @NotNull ConfigProcessor<TValue> valueProcessor,
@@ -177,20 +165,20 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public TMap dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-                if(!element.isList()) {
+                if (!element.isList()) {
                     throw new ConfigProcessException("Element must be a list");
                 }
 
                 ConfigList list = element.asList();
                 TMap map = mapFunction.apply(list.size());
-                for(ConfigElement entry : element.asList()) {
-                    if(!entry.isNode()) {
+                for (ConfigElement entry : element.asList()) {
+                    if (!entry.isNode()) {
                         throw new ConfigProcessException("All entries must be nodes");
                     }
 
                     ConfigNode entryNode = entry.asNode();
-                    map.put(keyProcessor.dataFromElement(entryNode.getElementOrThrow("key")), valueProcessor
-                            .dataFromElement(entryNode.getElementOrThrow("value")));
+                    map.put(keyProcessor.dataFromElement(entryNode.getElementOrThrow("key")),
+                            valueProcessor.dataFromElement(entryNode.getElementOrThrow("value")));
                 }
 
                 return map;
@@ -199,7 +187,7 @@ public interface ConfigProcessor<TData> {
             @Override
             public @NotNull ConfigElement elementFromData(TMap map) throws ConfigProcessException {
                 ConfigList list = new ArrayConfigList(map.size());
-                for(Map.Entry<TKey, TValue> mapEntry : map.entrySet()) {
+                for (Map.Entry<TKey, TValue> mapEntry : map.entrySet()) {
                     ConfigNode nodeEntry = new LinkedConfigNode(2);
                     nodeEntry.put("key", keyProcessor.elementFromData(mapEntry.getKey()));
                     nodeEntry.put("value", valueProcessor.elementFromData(mapEntry.getValue()));
@@ -212,11 +200,30 @@ public interface ConfigProcessor<TData> {
     }
 
     /**
+     * Produces some data from a provided {@link ConfigElement}.
+     *
+     * @param element the element to process
+     * @return the data object
+     * @throws ConfigProcessException if the provided {@link ConfigElement} does not contain valid data
+     */
+    TData dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException;
+
+    /**
+     * Produces a {@link ConfigElement} from the provided data object.
+     *
+     * @param data the data object
+     * @return a {@link ConfigElement} representing the given data
+     * @throws ConfigProcessException if the data is invalid
+     */
+    @NotNull ConfigElement elementFromData(TData data) throws ConfigProcessException;
+
+    /**
      * Creates a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects,
      * and vice-versa.
+     *
      * @param mapFunction the function used to instantiate new maps
+     * @param <M>         the type of map
      * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects
-     * @param <M> the type of map
      */
     default <M extends Map<String, TData>> @NotNull ConfigProcessor<M> mapProcessor(
             @NotNull IntFunction<M> mapFunction) {
@@ -225,13 +232,13 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public M dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-                if(!element.isNode()) {
+                if (!element.isNode()) {
                     throw new ConfigProcessException("Element must be a ConfigNode");
                 }
 
                 ConfigNode node = element.asNode();
                 M map = mapFunction.apply(node.size());
-                for(ConfigEntry entry : node.entryCollection()) {
+                for (ConfigEntry entry : node.entryCollection()) {
                     map.put(entry.getKey(), ConfigProcessor.this.dataFromElement(entry.getValue()));
                 }
 
@@ -241,7 +248,7 @@ public interface ConfigProcessor<TData> {
             @Override
             public @NotNull ConfigElement elementFromData(M m) throws ConfigProcessException {
                 ConfigNode node = new LinkedConfigNode(m.size());
-                for(Map.Entry<String, TData> entry : m.entrySet()) {
+                for (Map.Entry<String, TData> entry : m.entrySet()) {
                     node.put(entry.getKey(), ConfigProcessor.this.elementFromData(entry.getValue()));
                 }
 
@@ -252,6 +259,7 @@ public interface ConfigProcessor<TData> {
 
     /**
      * Convenience method that calls {@link ConfigProcessor#mapProcessor(IntFunction)} with {@code HashMap::new}.
+     *
      * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to a Map
      */
     default @NotNull ConfigProcessor<Map<String, TData>> mapProcessor() {
@@ -261,9 +269,10 @@ public interface ConfigProcessor<TData> {
     /**
      * Creates a new ConfigProcessor capable of processing some type of collection which holds elements whose type is
      * assignable to the type of data this ConfigProcessor converts.
+     *
      * @param collectionSupplier the function which will produce new collections
+     * @param <TCollection>      the type of collection to create
      * @return a new ConfigProcessor which can process collections of elements
-     * @param <TCollection> the type of collection to create
      */
     default <TCollection extends Collection<TData>> @NotNull ConfigProcessor<TCollection> collectionProcessor(
             @NotNull IntFunction<? extends TCollection> collectionSupplier) {
@@ -272,13 +281,13 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public TCollection dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-                if(!element.isList()) {
+                if (!element.isList()) {
                     throw new ConfigProcessException("Element must be a list");
                 }
 
                 ConfigList list = element.asList();
                 TCollection container = collectionSupplier.apply(list.size());
-                for(ConfigElement sample : list) {
+                for (ConfigElement sample : list) {
                     container.add(ConfigProcessor.this.dataFromElement(sample));
                 }
 
@@ -288,7 +297,7 @@ public interface ConfigProcessor<TData> {
             @Override
             public @NotNull ConfigElement elementFromData(TCollection container) throws ConfigProcessException {
                 ConfigList list = new ArrayConfigList(container.size());
-                for(TData data : container) {
+                for (TData data : container) {
                     list.add(ConfigProcessor.this.elementFromData(data));
                 }
 
@@ -300,6 +309,7 @@ public interface ConfigProcessor<TData> {
     /**
      * Convenience overload for {@link ConfigProcessor#collectionProcessor(IntFunction)} which uses
      * {@code ArrayList::new} for its IntFunction.
+     *
      * @return a list ConfigProcessor
      */
     default @NotNull ConfigProcessor<List<TData>> listProcessor() {
@@ -309,6 +319,7 @@ public interface ConfigProcessor<TData> {
     /**
      * Convenience overload for {@link ConfigProcessor#collectionProcessor(IntFunction)} which uses
      * {@code ArrayList::new} for its IntFunction.
+     *
      * @return a collection ConfigProcessor
      */
     default @NotNull ConfigProcessor<Collection<TData>> collectionProcessor() {
@@ -318,6 +329,7 @@ public interface ConfigProcessor<TData> {
     /**
      * Convenience overload for {@link ConfigProcessor#collectionProcessor(IntFunction)} which uses {@code HashSet::new}
      * for its IntFunction.
+     *
      * @return a set ConfigProcessor
      */
     default @NotNull ConfigProcessor<Set<TData>> setProcessor() {
@@ -326,8 +338,9 @@ public interface ConfigProcessor<TData> {
 
     /**
      * Creates a new ConfigProcessor capable of processing arrays whose component type is the same as this
-     * ConfigProcessor's data type. Works similarly to {@link ConfigProcessor#collectionProcessor(IntFunction)}, but
-     * for arrays.
+     * ConfigProcessor's data type. Works similarly to {@link ConfigProcessor#collectionProcessor(IntFunction)}, but for
+     * arrays.
+     *
      * @return a new array-based ConfigProcessor
      */
     default @NotNull ConfigProcessor<TData[]> arrayProcessor() {
@@ -335,14 +348,14 @@ public interface ConfigProcessor<TData> {
             @SuppressWarnings("unchecked")
             @Override
             public TData[] dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-                if(!element.isList()) {
+                if (!element.isList()) {
                     throw new ConfigProcessException("Element must be a list");
                 }
 
                 ConfigList list = element.asList();
                 TData[] data = (TData[]) new Object[list.size()];
                 int i = 0;
-                for(ConfigElement sample : list) {
+                for (ConfigElement sample : list) {
                     data[i++] = ConfigProcessor.this.dataFromElement(sample);
                 }
 
@@ -352,7 +365,7 @@ public interface ConfigProcessor<TData> {
             @Override
             public @NotNull ConfigElement elementFromData(TData[] data) throws ConfigProcessException {
                 ConfigList list = new ArrayConfigList(data.length);
-                for(TData sample : data) {
+                for (TData sample : data) {
                     list.add(ConfigProcessor.this.elementFromData(sample));
                 }
 

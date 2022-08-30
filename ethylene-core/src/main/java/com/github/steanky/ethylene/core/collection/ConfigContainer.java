@@ -24,6 +24,7 @@ public interface ConfigContainer extends ConfigElement {
     /**
      * Returns the <i>entry collection</i> maintained by this ConfigContainer. The collection must be immutable and
      * read-through. Additionally, repeated calls to this method should return the same instance.
+     *
      * @return an immutable, read-through collection representing the entries contained in this object
      */
     @NotNull Collection<ConfigEntry> entryCollection();

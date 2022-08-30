@@ -16,17 +16,18 @@ public final class ConfigPrimitive implements ConfigElement {
     /**
      * Creates a new ConfigPrimitive instance wrapping the provided {@link Object}. The object may only subclass one of
      * a number of restricted types; otherwise, an {@link IllegalArgumentException} will be thrown.
+     *
      * @param object the object to wrap
      * @throws IllegalArgumentException if the provided object is a type other than a String, Number, Boolean, or
-     * Character and is not null
+     *                                  Character and is not null
      */
     public ConfigPrimitive(@Nullable Object object) {
         this.object = validateType(object);
     }
 
     private static Object validateType(Object object) {
-        if(!(object == null || object instanceof String || object instanceof Number || object instanceof Boolean
-                || object instanceof Character)) {
+        if (!(object == null || object instanceof String || object instanceof Number || object instanceof Boolean ||
+                object instanceof Character)) {
             throw new IllegalArgumentException("Object " + object + " not a valid type for ConfigPrimitive");
         }
 
@@ -34,7 +35,7 @@ public final class ConfigPrimitive implements ConfigElement {
     }
 
     private static <TReturn> TReturn convert(Object object, Class<TReturn> classType) {
-        if(classType.isInstance(object)) {
+        if (classType.isInstance(object)) {
             return classType.cast(object);
         }
 
@@ -48,7 +49,7 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public @NotNull String asString() {
-        if(object instanceof Character character) {
+        if (object instanceof Character character) {
             //don't distinguish between char and string
             return character.toString();
         }
@@ -77,13 +78,13 @@ public final class ConfigPrimitive implements ConfigElement {
     }
 
     @Override
-    public boolean isScalar() {
-        return true;
+    public boolean isNull() {
+        return object == null;
     }
 
     @Override
-    public boolean isNull() {
-        return object == null;
+    public boolean isScalar() {
+        return true;
     }
 
     @Override
@@ -93,16 +94,12 @@ public final class ConfigPrimitive implements ConfigElement {
 
     /**
      * Sets the object wrapped by this ConfigPrimitive.
+     *
      * @param object the new object
      * @throws IllegalArgumentException if the provided object is not a valid type
      */
     public void setObject(@Nullable Object object) {
         this.object = validateType(object);
-    }
-
-    @Override
-    public String toString() {
-        return Objects.toString(object);
     }
 
     @Override
@@ -112,18 +109,23 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean equals(Object obj) {
-        if(this == obj) {
+        if (this == obj) {
             return true;
         }
 
-        if(obj == null) {
+        if (obj == null) {
             return false;
         }
 
-        if(obj instanceof ConfigPrimitive primitive) {
+        if (obj instanceof ConfigPrimitive primitive) {
             return Objects.equals(object, primitive.object);
         }
 
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toString(object);
     }
 }

@@ -1,12 +1,17 @@
 # Ethylene
 
-Ethylene is a open-source, lightweight, general-purpose compatibility layer standing between the developer and the chaotic world of configuration file formats. The purpose of this library is simple: decouple any specific configuration format (TOML, JSON, YML, ...) from the code that actually uses it. Ideally, with minimal work by the developer, you should even be able to change or mix different formats without needing to modify lots of code. 
+Ethylene is a open-source, lightweight, general-purpose compatibility layer standing between the developer and the
+chaotic world of configuration file formats. The purpose of this library is simple: decouple any specific configuration
+format (TOML, JSON, YML, ...) from the code that actually uses it. Ideally, with minimal work by the developer, you
+should even be able to change or mix different formats without needing to modify lots of code.
 
-**Ethylene is currently in early development; the public API should be considered unstable and liable to change over time. Version 1.0.0 will mark the first "stable" release.**
+**Ethylene is currently in early development; the public API should be considered unstable and liable to change over
+time. Version 1.0.0 will mark the first "stable" release.**
 
 # Get Ethylene
 
-Ethylene binaries are available from a publicly hosted [Cloudsmith repository](https://cloudsmith.io/~steank-f1g/repos/ethylene/packages/).
+Ethylene binaries are available from a publicly
+hosted [Cloudsmith repository](https://cloudsmith.io/~steank-f1g/repos/ethylene/packages/).
 
 <details>
   <summary>Latest Versions</summary>
@@ -58,6 +63,7 @@ dependencies {
 ```
 
 For Maven, you'd add the repository like this:
+
 ```xml
 <repositories>
   <repository>
@@ -68,6 +74,7 @@ For Maven, you'd add the repository like this:
 ```
 
 And the dependency like _this_:
+
 ```xml
 <dependency>
   <groupId>com.github.steanky</groupId>
@@ -76,7 +83,9 @@ And the dependency like _this_:
 </dependency>
 ```
 
-Note that in most cases you'll actually want to depend on a bunch of different Ethylene _modules_, such as `ethylene-json` or `ethylene-toml`, as without at least one of these you won't actually be able to read or write configuration data.
+Note that in most cases you'll actually want to depend on a bunch of different Ethylene _modules_, such
+as `ethylene-json` or `ethylene-toml`, as without at least one of these you won't actually be able to read or write
+configuration data.
 
 # Examples
 
@@ -86,7 +95,9 @@ To read some configuration data from a source (let's say a file, `/tmp/config.js
 ConfigNode node = ConfigBridges.read(new File("/tmp/config.json"), new JsonCodec()).asNode();
 ```
 
-The `node` object will contain the data stored in the file we just read from. Ethylene knew how to interpret that data because the codec we supplied, `JsonCodec`, is designed for that purpose. If the file contained some other kind of format — say, YAML — you'd want to use a `YamlCodec` instance from the `ethylene-yaml` module.
+The `node` object will contain the data stored in the file we just read from. Ethylene knew how to interpret that data
+because the codec we supplied, `JsonCodec`, is designed for that purpose. If the file contained some other kind of
+format — say, YAML — you'd want to use a `YamlCodec` instance from the `ethylene-yaml` module.
 
 Now, let's assume that our file contains the following json:
 
@@ -149,9 +160,14 @@ For additional examples, check out the `example-project` module.
 
 # Build Ethylene
 
-Building Ethylene is simple! Just clone this repository and run `gradlew build` in the root directory. Build outputs are located in the `[module]/build` directory, replacing `[module]` with the name of the Ethylene module (such as `ethylene-core`) for which you want to find the build output for.
+Building Ethylene is simple! Just clone this repository and run `gradlew build` in the root directory. Build outputs are
+located in the `[module]/build` directory, replacing `[module]` with the name of the Ethylene module (such
+as `ethylene-core`) for which you want to find the build output for.
 
-Ethylene uses a few custom Gradle plugins to simplify build logic. These can be found in the `buildSrc/src/main/groovy` folder. If you're creating addons, like support for a specific configuration format, take a look at the `build.gradle` file for an existing module, and use the same structure. Generally, you'll want to apply `ethylene.library-conventions` for most cases.
+Ethylene uses a few custom Gradle plugins to simplify build logic. These can be found in the `buildSrc/src/main/groovy`
+folder. If you're creating addons, like support for a specific configuration format, take a look at the `build.gradle`
+file for an existing module, and use the same structure. Generally, you'll want to apply `ethylene.library-conventions`
+for most cases.
 
 # Contributing
 
@@ -161,5 +177,6 @@ See `CONTRIBUTING.md` for more information on making contributions.
 
 [![Hosted By: Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=for-the-badge)](https://cloudsmith.com)
 
-Package repository hosting is graciously provided by  [Cloudsmith](https://cloudsmith.com). 
-Cloudsmith is the only fully hosted, cloud-native, universal package management solution, that enables your organization to create, store and share packages in any format, to any place, with total confidence.
+Package repository hosting is graciously provided by  [Cloudsmith](https://cloudsmith.com).
+Cloudsmith is the only fully hosted, cloud-native, universal package management solution, that enables your organization
+to create, store and share packages in any format, to any place, with total confidence.

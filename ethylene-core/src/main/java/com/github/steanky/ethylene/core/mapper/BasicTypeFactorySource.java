@@ -36,9 +36,8 @@ public class BasicTypeFactorySource implements TypeFactory.Source {
             case ARRAY_LIKE -> new ArrayTypeFactory(TypeUtils.getArrayComponentType(type));
 
             //TODO: allow users to register specific constructors to handle certain generic types
-            case OBJECT ->
-                    objectFactories.computeIfAbsent(resolver.resolveType(type), key -> new ConstructorTypeFactory(key, typeHinter,
-                            matchParameterNames, matchParameterTypeHints));
+            case OBJECT -> objectFactories.computeIfAbsent(resolver.resolveType(type),
+                    key -> new ConstructorTypeFactory(key, typeHinter, matchParameterNames, matchParameterTypeHints));
             case COLLECTION_LIKE -> {
                 Map<TypeVariable<?>, Type> typeVariables = TypeUtils.getTypeArguments(type, Collection.class);
                 Type componentType = typeVariables.values().iterator().next();

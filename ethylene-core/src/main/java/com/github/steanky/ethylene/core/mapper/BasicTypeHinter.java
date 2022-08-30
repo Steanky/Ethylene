@@ -13,15 +13,12 @@ public class BasicTypeHinter implements TypeHinter {
     public @NotNull Hint getHint(@NotNull Type type) {
         if (TypeUtils.isAssignable(type, Map.class)) {
             return Hint.MAP_LIKE;
-        }
-        else if(TypeUtils.isAssignable(type, Collection.class)) {
+        } else if (TypeUtils.isAssignable(type, Collection.class)) {
             return Hint.COLLECTION_LIKE;
-        }
-        else if(TypeUtils.isArrayType(type)) {
+        } else if (TypeUtils.isArrayType(type)) {
             return Hint.ARRAY_LIKE;
-        }
-        else if (ClassUtils.isPrimitiveOrWrapper(TypeUtils.getRawType(type, null)) || TypeUtils
-                .isAssignable(type, String.class)) {
+        } else if (ClassUtils.isPrimitiveOrWrapper(TypeUtils.getRawType(type, null)) ||
+                TypeUtils.isAssignable(type, String.class)) {
             return Hint.SCALAR;
         }
 

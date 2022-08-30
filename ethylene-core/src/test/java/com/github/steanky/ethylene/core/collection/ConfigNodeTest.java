@@ -3,7 +3,8 @@ package com.github.steanky.ethylene.core.collection;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ConfigNodeTest {
     @Test
@@ -20,6 +21,6 @@ class ConfigNodeTest {
 
     @Test
     void throwsWhenNonStringKey() {
-        assertThrows(IllegalArgumentException.class, () -> ConfigNode.of(new Object[] { 1, "value" }));
+        assertThrows(IllegalArgumentException.class, () -> ConfigNode.of(new Object[] {1, "value"}));
     }
 }

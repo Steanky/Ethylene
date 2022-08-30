@@ -25,16 +25,17 @@ public class YamlCodec extends AbstractConfigCodec {
     private final Supplier<Dump> dumpSupplier;
 
     /**
-     * <p>Creates a new YamlCodec that will use the given {@link Supplier} objects to produce {@link Load} and {@link Dump}
+     * <p>Creates a new YamlCodec that will use the given {@link Supplier} objects to produce {@link Load} and
+     * {@link Dump}
      * objects (used to read and write YAML, respectively).</p>
      *
      * <p>Note that users should ensure the suppliers always return new objects, as each Load and Dump instance may
      * only be used to read or write once.</p>
+     *
      * @param loadSupplier the supplier creating Load instances
      * @param dumpSupplier the supplier created Dump instances
      */
-    public YamlCodec(@NotNull Supplier<Load> loadSupplier,
-                     @NotNull Supplier<Dump> dumpSupplier) {
+    public YamlCodec(@NotNull Supplier<Load> loadSupplier, @NotNull Supplier<Dump> dumpSupplier) {
         this.loadSupplier = Objects.requireNonNull(loadSupplier);
         this.dumpSupplier = Objects.requireNonNull(dumpSupplier);
     }
@@ -51,19 +52,17 @@ public class YamlCodec extends AbstractConfigCodec {
         try {
             Iterable<Object> objectIterable = loadSupplier.get().loadAllFromInputStream(input);
             List<Object> objectList = new ArrayList<>();
-            for(Object object : objectIterable) {
+            for (Object object : objectIterable) {
                 objectList.add(object);
             }
 
             //support loading multiple YAML documents from one stream
-            if(objectList.size() == 1) {
+            if (objectList.size() == 1) {
                 return objectList.get(0);
-            }
-            else {
+            } else {
                 return objectList;
             }
-        }
-        catch (YamlEngineException exception) {
+        } catch (YamlEngineException exception) {
             throw new IOException(exception);
         }
     }
@@ -78,8 +77,7 @@ public class YamlCodec extends AbstractConfigCodec {
 
             dumpSupplier.get().dump(object, writer);
             writer.flush();
-        }
-        catch (YamlEngineException exception) {
+        } catch (YamlEngineException exception) {
             throw new IOException(exception);
         }
     }

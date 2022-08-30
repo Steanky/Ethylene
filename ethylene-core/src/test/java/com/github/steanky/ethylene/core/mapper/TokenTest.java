@@ -6,7 +6,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TokenTest {
     //fields retain generic type information, objects cannot, so this is a convenient way to do type comparison

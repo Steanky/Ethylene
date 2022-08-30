@@ -15,6 +15,7 @@ import java.util.Objects;
  *
  * <p>This class is only instantiated internally because there is some potential for misuse; i.e. it is possible for a
  * user to provide a {@link ConfigBridge} implementation that is not at all related to the given Path.</p>
+ *
  * @param <TData> the type of data object
  */
 public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
@@ -23,16 +24,15 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
     /**
      * Constructs a new FileConfigLoader instance from the given {@link ConfigProcessor}, data object, {@link Path}, and
      * {@link ConfigCodec}.
-     * @param processor the processor used to marshal data
+     *
+     * @param processor   the processor used to marshal data
      * @param defaultData the default data object
-     * @param path the path to read data from and write defaults to
-     * @param bridge the ConfigBridge used to read/write data
+     * @param path        the path to read data from and write defaults to
+     * @param bridge      the ConfigBridge used to read/write data
      * @throws IllegalArgumentException if path represents a directory
      */
-    FileConfigLoader(@NotNull ConfigProcessor<TData> processor,
-                     @NotNull TData defaultData,
-                     @NotNull ConfigBridge bridge,
-                     @NotNull Path path) {
+    FileConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
+            @NotNull ConfigBridge bridge, @NotNull Path path) {
         super(processor, defaultData, bridge);
         this.path = Objects.requireNonNull(path);
     }

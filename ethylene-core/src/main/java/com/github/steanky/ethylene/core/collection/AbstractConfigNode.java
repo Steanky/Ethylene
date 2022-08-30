@@ -27,11 +27,56 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
     /**
      * Construct a new AbstractConfigNode using the provided mappings.
+     *
      * @param mappings the mappings to use
      * @throws NullPointerException if mappings is null
      */
     protected AbstractConfigNode(@NotNull Map<String, ConfigElement> mappings) {
         this.mappings = Objects.requireNonNull(mappings);
+    }
+
+    /**
+     * This helper method can be used to construct a map with the same elements as another map. If the given map
+     * contains any null keys or values, a {@link NullPointerException} will be thrown. Furthermore, each value will be
+     * tested against the provided {@link Predicate}. If it returns false, an {@link IllegalArgumentException} will be
+     * thrown.
+     *
+     * @param map            the map whose elements will be added to the returned map
+     * @param mapSupplier    the supplier used to create the new map from the size of the original map
+     * @param valuePredicate the predicate to use to validate each element against some condition
+     * @return a new map, constructed by the supplier, and containing the same elements as map
+     * @throws NullPointerException     if any of the arguments are null, or map contains any null keys or values
+     * @throws IllegalArgumentException if the given predicate fails for any of the map's values
+     */
+    protected static @NotNull Map<String, ConfigElement> constructMap(
+            @NotNull Map<? extends String, ? extends ConfigElement> map,
+            @NotNull IntFunction<? extends Map<String, ConfigElement>> mapSupplier,
+            @NotNull Predicate<ConfigElement> valuePredicate) {
+        Objects.requireNonNull(map);
+        Objects.requireNonNull(mapSupplier);
+        Objects.requireNonNull(valuePredicate);
+
+        Map<String, ConfigElement> newMap = mapSupplier.apply(map.size());
+        for (Map.Entry<? extends String, ? extends ConfigElement> entry : map.entrySet()) {
+            if (!valuePredicate.test(entry.getValue())) {
+                throw new IllegalArgumentException("Value predicate failed");
+            } else {
+                newMap.put(Objects.requireNonNull(entry.getKey(), "Input map must not contain null keys"),
+                        Objects.requireNonNull(entry.getValue(), "Input map must not contain null values"));
+            }
+        }
+
+        return newMap;
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        return mappings.containsValue(Objects.requireNonNull(value));
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+        return mappings.containsKey(Objects.requireNonNull(key));
     }
 
     @Override
@@ -42,16 +87,6 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     @Override
     public ConfigElement put(@NotNull String key, @NotNull ConfigElement value) {
         return mappings.put(Objects.requireNonNull(key), Objects.requireNonNull(value));
-    }
-
-    @Override
-    public boolean containsKey(Object key) {
-        return mappings.containsKey(Objects.requireNonNull(key));
-    }
-
-    @Override
-    public boolean containsValue(Object value) {
-        return mappings.containsValue(Objects.requireNonNull(value));
     }
 
     @Override
@@ -71,74 +106,38 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     }
 
     @Override
-    public @NotNull Collection<ConfigEntry> entryCollection() {
-        if(containerCollection != null) {
-            return containerCollection;
-        }
-
-        return containerCollection = new AbstractCollection<>() {
-            @Override
-            public Iterator<ConfigEntry> iterator() {
-                return new Iterator<>() {
-                    private final Iterator<Map.Entry<String, ConfigElement>> entryIterator = mappings.entrySet()
-                            .iterator();
-
-                    @Override
-                    public boolean hasNext() {
-                        return entryIterator.hasNext();
-                    }
-
-                    @Override
-                    public ConfigEntry next() {
-                        Entry<String, ConfigElement> next = entryIterator.next();
-                        return new ConfigEntry(next.getKey(), next.getValue());
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return mappings.size();
-            }
-        };
-    }
-
-    @Override
     public String toString() {
         return ConfigElementUtils.toString(this);
     }
 
-    /**
-     * This helper method can be used to construct a map with the same elements as another map. If the given map
-     * contains any null keys or values, a {@link NullPointerException} will be thrown. Furthermore, each value will
-     * be tested against the provided {@link Predicate}. If it returns false, an {@link IllegalArgumentException} will
-     * be thrown.
-     * @param map the map whose elements will be added to the returned map
-     * @param mapSupplier the supplier used to create the new map from the size of the original map
-     * @param valuePredicate the predicate to use to validate each element against some condition
-     * @return a new map, constructed by the supplier, and containing the same elements as map
-     * @throws NullPointerException if any of the arguments are null, or map contains any null keys or values
-     * @throws IllegalArgumentException if the given predicate fails for any of the map's values
-     */
-    protected static @NotNull Map<String, ConfigElement> constructMap(
-            @NotNull Map<? extends String, ? extends ConfigElement> map,
-            @NotNull IntFunction<? extends Map<String, ConfigElement>> mapSupplier,
-            @NotNull Predicate<ConfigElement> valuePredicate) {
-        Objects.requireNonNull(map);
-        Objects.requireNonNull(mapSupplier);
-        Objects.requireNonNull(valuePredicate);
+    @Override
+    public @NotNull Collection<ConfigEntry> entryCollection() {
+        return Objects.requireNonNullElseGet(containerCollection,
+                () -> containerCollection = new AbstractCollection<>() {
+                    @Override
+                    public Iterator<ConfigEntry> iterator() {
+                        return new Iterator<>() {
+                            private final Iterator<Entry<String, ConfigElement>> entryIterator = mappings.entrySet()
+                                    .iterator();
 
-        Map<String, ConfigElement> newMap = mapSupplier.apply(map.size());
-        for(Map.Entry<? extends String, ? extends ConfigElement> entry : map.entrySet()) {
-            if(!valuePredicate.test(entry.getValue())) {
-                throw new IllegalArgumentException("Value predicate failed");
-            }
-            else {
-                newMap.put(Objects.requireNonNull(entry.getKey(), "Input map must not contain null keys"),
-                        Objects.requireNonNull(entry.getValue(), "Input map must not contain null values"));
-            }
-        }
+                            @Override
+                            public boolean hasNext() {
+                                return entryIterator.hasNext();
+                            }
 
-        return newMap;
+                            @Override
+                            public ConfigEntry next() {
+                                Entry<String, ConfigElement> next = entryIterator.next();
+                                return new ConfigEntry(next.getKey(), next.getValue());
+                            }
+                        };
+                    }
+
+                    @Override
+                    public int size() {
+                        return mappings.size();
+                    }
+                });
+
     }
 }

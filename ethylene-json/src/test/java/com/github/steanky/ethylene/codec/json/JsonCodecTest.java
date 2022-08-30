@@ -35,8 +35,8 @@ class JsonCodecTest {
 
     @Test
     void throwsFormatErrorOnBadJson() {
-        assertThrows(IOException.class, () -> codec.decode(
-                new ByteArrayInputStream(BAD_JSON.getBytes(StandardCharsets.UTF_8))));
+        assertThrows(IOException.class,
+                () -> codec.decode(new ByteArrayInputStream(BAD_JSON.getBytes(StandardCharsets.UTF_8))));
     }
 
     @Test

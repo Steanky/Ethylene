@@ -19,6 +19,7 @@ public interface ConfigBridge {
     /**
      * Loads a {@link ConfigElement} object from this loader's in. Asynchronous implementations may choose to load
      * ConfigElement objects on another thread; in which case this method should return immediately.
+     *
      * @return a {@link CompletableFuture} object which will contain a ConfigElement object when it has finished
      * loading, and can be used to query or await the completion of the read task
      */
@@ -27,6 +28,7 @@ public interface ConfigBridge {
     /**
      * Writes a {@link ConfigElement} object to this loader's in. This operation may occur asynchronously in some
      * implementations, in which case this method should return immediately.
+     *
      * @param element the element to write to the in
      * @return a {@link CompletableFuture} object, which may be used to query or await the completion of the write
      * operation. {@link CompletableFuture#get()} will return null for the returned value.

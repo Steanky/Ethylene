@@ -27,13 +27,13 @@ class ConfigPrimitiveTest {
         assertTrue(primitiveFloat.isNumber());
         assertEquals(10F, primitiveFloat.asNumber().floatValue());
 
-        ConfigPrimitive primitiveShort = new ConfigPrimitive((short)10);
+        ConfigPrimitive primitiveShort = new ConfigPrimitive((short) 10);
         assertTrue(primitiveShort.isNumber());
-        assertEquals((short)10, primitiveShort.asNumber().shortValue());
+        assertEquals((short) 10, primitiveShort.asNumber().shortValue());
 
-        ConfigPrimitive primitiveByte = new ConfigPrimitive((byte)10);
+        ConfigPrimitive primitiveByte = new ConfigPrimitive((byte) 10);
         assertTrue(primitiveByte.isNumber());
-        assertEquals((byte)10, primitiveByte.asNumber().byteValue());
+        assertEquals((byte) 10, primitiveByte.asNumber().byteValue());
 
         ConfigPrimitive primitiveBoolean = new ConfigPrimitive(true);
         assertTrue(primitiveBoolean.isBoolean());

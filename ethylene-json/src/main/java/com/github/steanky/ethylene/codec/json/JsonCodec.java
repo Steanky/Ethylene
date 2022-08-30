@@ -18,19 +18,18 @@ import java.util.Objects;
  * Provides support for the JSON format.
  */
 public class JsonCodec extends AbstractConfigCodec {
-    private static final List<String> EXTENSIONS = List.of("json");
-
     /**
      * The default {@link Gson} instance used to read and write data.
      */
     public static final Gson DEFAULT_GSON = new Gson();
-
+    private static final List<String> EXTENSIONS = List.of("json");
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
 
     private final Gson gson;
 
     /**
      * Creates a new JsonCodec using the provided {@link Gson} instance to read and write data.
+     *
      * @param gson the Gson instance to use
      * @throws NullPointerException if gson is null
      */
@@ -47,20 +46,18 @@ public class JsonCodec extends AbstractConfigCodec {
 
     @Override
     protected @NotNull Map<String, Object> readObject(@NotNull InputStream input) throws IOException {
-        try(InputStreamReader reader = new InputStreamReader(input)) {
+        try (InputStreamReader reader = new InputStreamReader(input)) {
             return gson.fromJson(reader, MAP_TYPE);
-        }
-        catch (JsonIOException | JsonSyntaxException exception) {
+        } catch (JsonIOException | JsonSyntaxException exception) {
             throw new IOException(exception);
         }
     }
 
     @Override
     protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
-        try(OutputStreamWriter writer = new OutputStreamWriter(output)) {
+        try (OutputStreamWriter writer = new OutputStreamWriter(output)) {
             gson.toJson(object, writer);
-        }
-        catch (JsonIOException exception) {
+        } catch (JsonIOException exception) {
             throw new IOException(exception);
         }
     }

@@ -21,6 +21,7 @@ import java.util.function.Supplier;
  * {@link IllegalStateException}, as in the following code:
  * <p></p>
  * {@code Token token = new Token() {}; //throws an IllegalStateException!}
+ *
  * @param <T> the type information to be held in this token
  */
 //T is NOT unused, it is inspected reflectively on Token instantiation!
@@ -30,30 +31,31 @@ public abstract class Token<T> implements Supplier<Type> {
 
     /**
      * Constructs a new Token representing a (often generic) type.
+     *
      * @throws IllegalStateException if this class is constructed with no type parameters, or an unexpected condition
-     * occurs
+     *                               occurs
      */
     public Token() {
         Type superclass = getClass().getGenericSuperclass();
-        if(!(superclass instanceof ParameterizedType parameterizedType)) {
+        if (!(superclass instanceof ParameterizedType parameterizedType)) {
             //happens if someone tries to construct a Token raw, without type parameters
             throw new IllegalStateException("This class may not be constructed without type parameters");
         }
 
         Type[] types = parameterizedType.getActualTypeArguments();
-        if(types.length != 1) {
+        if (types.length != 1) {
             //sanity check, should absolutely never happen, if it does there's probably something wrong with the JVM
-            throw new IllegalStateException("Expected 1 type parameter, found " + types.length + " for class " +
-                    getClass().getTypeName());
+            throw new IllegalStateException(
+                    "Expected 1 type parameter, found " + types.length + " for class " + getClass().getTypeName());
         }
 
         Type target = types[0];
-        if(target == null) {
+        if (target == null) {
             //second sanity check, probably completely unnecessary, JVM might have blown up
             throw new IllegalStateException("Expected non-null type parameter for class " + getClass().getTypeName());
         }
 
-        if(target instanceof TypeVariable<?> typeVariable) {
+        if (target instanceof TypeVariable<?> typeVariable) {
             target = typeVariable.getBounds()[0];
         }
 

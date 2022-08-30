@@ -94,8 +94,8 @@ public class ConstructorTypeFactory extends TypeFactoryBase {
 
                         for (SignatureElement element : elements) {
                             ConfigElement configElement = identifiers.get(element.identifier());
-                            if (configElement == null || !typeHinter.getHint(element.type())
-                                    .compatible(configElement)) {
+                            if (configElement == null ||
+                                    !typeHinter.getHint(element.type()).compatible(configElement)) {
                                 break outer;
                             }
                         }

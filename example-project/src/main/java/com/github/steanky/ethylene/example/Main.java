@@ -56,6 +56,7 @@ public class Main {
 
     /**
      * Entrypoint for contrived example program.
+     *
      * @param args program arguments, unused
      * @throws IOException if the JSON data is invalid
      */
@@ -72,6 +73,7 @@ public class Main {
 
     /**
      * Demonstrates how you can read simple values from a JSON string.
+     *
      * @throws IOException if the JSON data we're reading is invalid
      */
     public static void json() throws IOException {
@@ -97,7 +99,7 @@ public class Main {
         System.out.println(node.get("and here is a number").asNumber().intValue());
 
         //prints out "first" and then "second"
-        for(ConfigElement element : node.get("array").asList()) {
+        for (ConfigElement element : node.get("array").asList()) {
             System.out.println(element.asString());
         }
 
@@ -117,6 +119,7 @@ public class Main {
 
     /**
      * Reads some values from a TOML string and prints them.
+     *
      * @throws IOException if the TOML data is invalid
      */
     public static void toml() throws IOException {
@@ -129,11 +132,11 @@ public class Main {
         //TOML has first-class support for dates, and Ethylene can take advantage of that too
         //this functionality (ConfigDate) is specific to the ethylene-toml module (use with caution!)
         //the output of this differs depending on your locale
-        System.out.println(((ConfigDate)node.get("date")).getDate());
+        System.out.println(((ConfigDate) node.get("date")).getDate());
 
         //you can also call asObject and cast
         //this will print the same as the previous example
-        Date date = (Date)node.get("date").asScalar();
+        Date date = (Date) node.get("date").asScalar();
         System.out.println(date);
 
         /*

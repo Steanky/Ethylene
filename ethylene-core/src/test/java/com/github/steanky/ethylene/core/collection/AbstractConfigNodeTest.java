@@ -31,8 +31,8 @@ class AbstractConfigNodeTest {
 
     @Test
     void validType() {
-       assertTrue(populatedNode.isNode());
-       assertSame(populatedNode, populatedNode.asNode());
+        assertTrue(populatedNode.isNode());
+        assertSame(populatedNode, populatedNode.asNode());
     }
 
     @Test
@@ -40,8 +40,7 @@ class AbstractConfigNodeTest {
         assertEquals(10, populatedNode.getNumberOrDefault(1000, "int"));
         assertEquals("string", populatedNode.getStringOrDefault("default", "string"));
         assertSame(innerList, populatedNode.getListOrDefault((ConfigList) null, "list"));
-        assertSame(populatedNode, populatedNode.getNodeOrDefault((ConfigNode) null, "list", 1,
-                "circular_reference"));
+        assertSame(populatedNode, populatedNode.getNodeOrDefault((ConfigNode) null, "list", 1, "circular_reference"));
     }
 
     @SuppressWarnings("CollectionAddedToSelf")

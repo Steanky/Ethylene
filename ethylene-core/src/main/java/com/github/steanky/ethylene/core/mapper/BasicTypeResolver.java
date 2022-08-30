@@ -15,19 +15,8 @@ import java.util.WeakHashMap;
 import java.util.function.Supplier;
 
 public class BasicTypeResolver implements TypeResolver {
-    private static class ClassEntry {
-        private final String name;
-        private Reference<Class<?>> reference;
-
-        private ClassEntry(String name, Class<?> type) {
-            this.name = name;
-            reference = new WeakReference<>(type);
-        }
-    }
-
     private final Map<String, ClassEntry> types;
     private final Map<Class<?>, ClassEntry> cache;
-
     public BasicTypeResolver(int initialCapacity) {
         types = new HashMap<>(initialCapacity);
         cache = new WeakHashMap<>(initialCapacity);
@@ -35,6 +24,14 @@ public class BasicTypeResolver implements TypeResolver {
 
     public BasicTypeResolver() {
         this(4);
+    }
+
+    private static Class<?> forName(String className, Supplier<String> nameSupplier) {
+        try {
+            return ClassUtils.getClass(className);
+        } catch (ClassNotFoundException e) {
+            throw new MapperException("got invalid concrete type when resolving '" + nameSupplier.get() + "'", e);
+        }
     }
 
     @Override
@@ -79,8 +76,9 @@ public class BasicTypeResolver implements TypeResolver {
 
     public void registerTypeImplementation(@NotNull Class<?> superclass, @NotNull Class<?> implementation) {
         if (!TypeUtils.isAssignable(implementation, superclass)) {
-            throw new MapperException("implementation class '" + implementation.getName() + "' is not assignable to " +
-                    "superclass '" + superclass.getName() + "'");
+            throw new MapperException(
+                    "implementation class '" + implementation.getName() + "' is not assignable to " + "superclass '" +
+                            superclass.getName() + "'");
         }
 
         if (Modifier.isAbstract(implementation.getModifiers())) {
@@ -89,19 +87,20 @@ public class BasicTypeResolver implements TypeResolver {
 
         ClassEntry newEntry = new ClassEntry(ClassUtils.getName(implementation), implementation);
         if (types.putIfAbsent(ClassUtils.getName(superclass), newEntry) != null) {
-            throw new MapperException("there is already an implementation type registered for class '" +
-                    superclass.getName() + "'");
+            throw new MapperException(
+                    "there is already an implementation type registered for class '" + superclass.getName() + "'");
         }
 
         cache.put(superclass, newEntry);
     }
 
-    private static Class<?> forName(String className, Supplier<String> nameSupplier) {
-        try {
-            return ClassUtils.getClass(className);
-        }
-        catch (ClassNotFoundException e) {
-            throw new MapperException("got invalid concrete type when resolving '" + nameSupplier.get() + "'", e);
+    private static class ClassEntry {
+        private final String name;
+        private Reference<Class<?>> reference;
+
+        private ClassEntry(String name, Class<?> type) {
+            this.name = name;
+            reference = new WeakReference<>(type);
         }
     }
 }

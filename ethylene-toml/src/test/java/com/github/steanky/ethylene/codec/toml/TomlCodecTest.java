@@ -20,17 +20,17 @@ class TomlCodecTest {
             topLevelString = "topLevel"
             topLevelInt = 69
             intArray = [ 0, 1, 2, 3, 4 ]
-            
+                        
             [[object_array]]
             x = 0
             y = 1
             z = 2
-            
+                        
             [[object_array]]
             x = 3
             y = 4
             z = 5
-            
+                        
             [[object_array]]
             x = 6
             y = 7
@@ -40,8 +40,8 @@ class TomlCodecTest {
 
     @Test
     void throwsFormatErrorOnBadToml() {
-        assertThrows(IOException.class, () -> codec.decode(
-                new ByteArrayInputStream(BAD_TOML.getBytes(StandardCharsets.UTF_8))));
+        assertThrows(IOException.class,
+                () -> codec.decode(new ByteArrayInputStream(BAD_TOML.getBytes(StandardCharsets.UTF_8))));
     }
 
     @Test

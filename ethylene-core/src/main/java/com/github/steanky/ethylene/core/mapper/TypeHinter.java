@@ -6,12 +6,10 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 
 public interface TypeHinter {
+    @NotNull Hint getHint(@NotNull Type type);
+
     enum Hint {
-        COLLECTION_LIKE,
-        MAP_LIKE,
-        ARRAY_LIKE,
-        OBJECT,
-        SCALAR;
+        COLLECTION_LIKE, MAP_LIKE, ARRAY_LIKE, OBJECT, SCALAR;
 
         @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         public boolean compatible(@NotNull ConfigElement element) {
@@ -22,6 +20,4 @@ public interface TypeHinter {
             };
         }
     }
-
-    @NotNull Hint getHint(@NotNull Type type);
 }

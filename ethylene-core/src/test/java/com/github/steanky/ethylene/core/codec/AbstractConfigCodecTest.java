@@ -57,7 +57,7 @@ class AbstractConfigCodecTest {
             }
 
             @Override
-            protected @NotNull Object readObject(@NotNull InputStream input)  {
+            protected @NotNull Object readObject(@NotNull InputStream input) {
                 return root;
             }
 
@@ -80,7 +80,7 @@ class AbstractConfigCodecTest {
         subRoot.put(SUB_LIST_NODES_KEY, subListNodes);
         subRoot.put(PARENT_REF, root);
 
-        for(int i = 0; i < SUB_NODE_COUNT; i++) {
+        for (int i = 0; i < SUB_NODE_COUNT; i++) {
             Map<String, Object> subNode = new HashMap<>();
             subNode.put(SUB_NODE_KEY_PREFIX + i, i);
             subListNodes.add(subNode);
@@ -102,7 +102,7 @@ class AbstractConfigCodecTest {
     void validTopLevelFlatStringList() {
         ConfigList array = resultingElement.getElement(LIST_KEY).asList();
         List<String> equivalent = new ArrayList<>();
-        for(ConfigElement element : array) {
+        for (ConfigElement element : array) {
             equivalent.add(element.asString());
         }
 
@@ -113,7 +113,7 @@ class AbstractConfigCodecTest {
     void validNestedFlatStringList() {
         ConfigList array = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_KEY).asList();
         List<String> equivalent = new ArrayList<>();
-        for(ConfigElement element : array) {
+        for (ConfigElement element : array) {
             equivalent.add(element.asString());
         }
 
@@ -122,8 +122,8 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedPrimitives() {
-        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY)
-                .asString());
+        assertEquals(SUB_STRING_VALUE,
+                resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY).asString());
     }
 
     @Test
@@ -131,7 +131,7 @@ class AbstractConfigCodecTest {
         ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_NODES_KEY)
                 .asList();
 
-        for(int i = 0; i < SUB_NODE_COUNT; i++) {
+        for (int i = 0; i < SUB_NODE_COUNT; i++) {
             ConfigNode element = subNodes.get(i).asNode();
             assertEquals(i, element.getElement(SUB_NODE_KEY_PREFIX + i).asNumber().intValue());
         }

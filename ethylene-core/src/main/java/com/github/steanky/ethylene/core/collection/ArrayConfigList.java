@@ -25,6 +25,7 @@ public class ArrayConfigList extends AbstractConfigList implements RandomAccess 
      * {@link Collection}. This builder uses
      * {@link AbstractConfigList#constructList(Collection, java.util.function.IntFunction, Predicate)} to validate that
      * the list has no null elements.
+     *
      * @param collection the collection to copy elements from
      */
     public ArrayConfigList(@NotNull Collection<? extends ConfigElement> collection) {
@@ -33,6 +34,7 @@ public class ArrayConfigList extends AbstractConfigList implements RandomAccess 
 
     /**
      * Constructs a new ArrayConfigList backed by an empty {@link ArrayList} with the given initial capacity.
+     *
      * @param initialCapacity the initial capacity
      */
     public ArrayConfigList(int initialCapacity) {
@@ -43,6 +45,6 @@ public class ArrayConfigList extends AbstractConfigList implements RandomAccess 
      * Calls {@link ArrayList#trimToSize()} on the internal ArrayList.
      */
     public void trimToSize() {
-        ((ArrayList<?>)list).trimToSize();
+        ((ArrayList<?>) list).trimToSize();
     }
 }

@@ -18,8 +18,8 @@ public class BasicConfigHandler implements ConfigHandler {
 
     @Override
     public @NotNull CompletableFuture<Void> writeDefaults() {
-        return CompletableFuture.allOf(loaderMap.values().stream().map(ConfigLoader::writeDefaultIfAbsent)
-                .toArray(CompletableFuture[]::new));
+        return CompletableFuture.allOf(
+                loaderMap.values().stream().map(ConfigLoader::writeDefaultIfAbsent).toArray(CompletableFuture[]::new));
     }
 
     @Override
@@ -38,7 +38,7 @@ public class BasicConfigHandler implements ConfigHandler {
         Objects.requireNonNull(loader);
         Objects.requireNonNull(key);
 
-        if(loaderMap.putIfAbsent(key, loader) != null) {
+        if (loaderMap.putIfAbsent(key, loader) != null) {
             throw new IllegalArgumentException("Key '" + key + "' already registered");
         }
     }
@@ -59,14 +59,14 @@ public class BasicConfigHandler implements ConfigHandler {
     @Override
     public @NotNull <TData> CompletableFuture<TData> loadData(@NotNull ConfigKey<TData> key) {
         validatePresentKey(key);
-        return ((ConfigLoader<TData>)loaderMap.get(key)).load();
+        return ((ConfigLoader<TData>) loaderMap.get(key)).load();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <TData> @NotNull TData loadDataNow(@NotNull ConfigKey<TData> key) throws ConfigProcessException {
         validatePresentKey(key);
-        return FutureUtils.getAndWrapException(((ConfigLoader<TData>)loaderMap.get(key)).load(),
+        return FutureUtils.getAndWrapException(((ConfigLoader<TData>) loaderMap.get(key)).load(),
                 ConfigProcessException::new, ConfigProcessException.class);
     }
 
@@ -74,21 +74,21 @@ public class BasicConfigHandler implements ConfigHandler {
     @Override
     public <TData> @NotNull CompletableFuture<Void> writeData(@NotNull ConfigKey<TData> key, @NotNull TData data) {
         validatePresentKey(key);
-        return CompletableFuture.allOf(((ConfigLoader<TData>)loaderMap.get(key)).write(data));
+        return CompletableFuture.allOf(((ConfigLoader<TData>) loaderMap.get(key)).write(data));
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <TData> void writeDataNow(@NotNull ConfigKey<TData> key, @NotNull TData data) throws ConfigProcessException {
         validatePresentKey(key);
-        FutureUtils.getAndWrapException(((ConfigLoader<TData>)loaderMap.get(key)).write(data),
+        FutureUtils.getAndWrapException(((ConfigLoader<TData>) loaderMap.get(key)).write(data),
                 ConfigProcessException::new, ConfigProcessException.class);
     }
 
     private void validatePresentKey(ConfigKey<?> key) {
         Objects.requireNonNull(key);
 
-        if(!loaderMap.containsKey(key)) {
+        if (!loaderMap.containsKey(key)) {
             throw new IllegalArgumentException("No loader registered with key '" + key + "'");
         }
     }

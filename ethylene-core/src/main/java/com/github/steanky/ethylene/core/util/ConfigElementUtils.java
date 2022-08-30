@@ -18,42 +18,40 @@ public final class ConfigElementUtils {
     }
 
     private static String toStringInternal(ConfigElement input, IdentityHashMap<Object, Integer> identities) {
-        if(input.isContainer()) {
+        if (input.isContainer()) {
             ConfigContainer configContainer = input.asContainer();
             Iterator<ConfigEntry> entryIterator = configContainer.entryCollection().iterator();
 
-            if(!entryIterator.hasNext()) {
+            if (!entryIterator.hasNext()) {
                 return "$" + identities.size() + "{}";
             }
 
             StringBuilder builder = new StringBuilder().append('$').append(identities.size()).append('{');
             identities.put(configContainer, identities.size());
 
-            while(true) {
+            while (true) {
                 ConfigEntry entry = entryIterator.next();
 
                 String key = entry.getFirst();
                 ConfigElement value = entry.getSecond();
 
-                if(key != null) {
+                if (key != null) {
                     builder.append(key).append('=');
                 }
 
-                if(value.isContainer() && identities.containsKey(value)) {
+                if (value.isContainer() && identities.containsKey(value)) {
                     builder.append('$').append(identities.get(value));
-                }
-                else {
+                } else {
                     builder.append(toStringInternal(value, identities));
                 }
 
-                if(!entryIterator.hasNext()) {
+                if (!entryIterator.hasNext()) {
                     return builder.append('}').toString();
                 }
 
                 builder.append(',').append(' ');
             }
-        }
-        else {
+        } else {
             return "[" + input + "]";
         }
     }
@@ -63,6 +61,7 @@ public final class ConfigElementUtils {
      * {@link Object#toString()}. Supports circular and self-referential ConfigElement constructions by use of a "tag"
      * syntax: containers are associated with a <i>name</i>, and if a container occurs twice, it will be referred to by
      * the name the second time rather than showing its entire contents again.</p>
+     *
      * @param input the input {@link ConfigElement} to show
      * @return the ConfigElement, represented as a string
      */

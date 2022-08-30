@@ -19,8 +19,8 @@ import java.util.*;
  *
  * <p>In addition to the two abstract methods, {@link AbstractConfigCodec#readObject(InputStream)} and
  * {@link AbstractConfigCodec#writeObject(Object, OutputStream)}, almost every method is designed to be readily
- * subclassed by implementations. In particular, specialized codecs may enable processing of custom objects that are
- * not natively supported by this class.</p>
+ * subclassed by implementations. In particular, specialized codecs may enable processing of custom objects that are not
+ * natively supported by this class.</p>
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
@@ -33,9 +33,10 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(element);
         Objects.requireNonNull(output);
 
-        try(output) {
-            writeObject(GraphTransformer.process(element, this::makeEncodeNode, this::isContainer,
-                    this::serializeElement), output);
+        try (output) {
+            writeObject(
+                    GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement),
+                    output);
         }
     }
 
@@ -49,13 +50,13 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         }
     }
 
-    protected @NotNull GraphTransformer.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
-        if(target.isNode()) {
+    protected @NotNull GraphTransformer.Node<ConfigElement, Object, String> makeEncodeNode(
+            @NotNull ConfigElement target) {
+        if (target.isNode()) {
             ConfigNode elementNode = target.asNode();
             return new GraphTransformer.Node<>(target, elementNode.entryCollection().iterator(),
                     makeEncodeMap(elementNode.size()));
-        }
-        else if(target.isList()) {
+        } else if (target.isList()) {
             ConfigList elementList = target.asList();
             return new GraphTransformer.Node<>(target, elementList.entryCollection().iterator(),
                     makeEncodeCollection(elementList.size()));
@@ -65,7 +66,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
-        if(target instanceof Map<?, ?> map) {
+        if (target instanceof Map<?, ?> map) {
             return new GraphTransformer.Node<>(target, new Iterator<>() {
                 private final Iterator<? extends Map.Entry<?, ?>> iterator = map.entrySet().iterator();
 
@@ -80,8 +81,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                     return Entry.of(next.getKey().toString(), next.getValue());
                 }
             }, makeDecodeMap(map.size()));
-        }
-        else if(target instanceof List<?> list) {
+        } else if (target instanceof List<?> list) {
             return new GraphTransformer.Node<>(target, new Iterator<>() {
                 private final Iterator<?> backing = list.iterator();
 
@@ -95,9 +95,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                     return Entry.of(null, backing.next());
                 }
             }, makeDecodeCollection(list.size()));
-        }
-        else if(target.getClass().isArray()) {
-            Object[] array = (Object[])target;
+        } else if (target.getClass().isArray()) {
+            Object[] array = (Object[]) target;
 
             return new GraphTransformer.Node<>(target, new Iterator<>() {
                 private int i = 0;
@@ -138,21 +137,23 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     /**
-     * Returns true if this object is non-null and a container (subclass of {@link Collection}, {@link Map}, or an
-     * array type).
+     * Returns true if this object is non-null and a container (subclass of {@link Collection}, {@link Map}, or an array
+     * type).
+     *
      * @param input the input object
      * @return true if input is a container and non-null, false if it is not a container or is null
      */
     @Contract("null -> false")
     protected boolean isContainer(@Nullable Object input) {
-        return input != null && (input instanceof Collection<?> || input instanceof Map<?, ?> || input.getClass()
-                .isArray());
+        return input != null &&
+                (input instanceof Collection<?> || input instanceof Map<?, ?> || input.getClass().isArray());
     }
 
     /**
      * Serializes a {@link ConfigElement} object (converts it into an object which should be interpreted by a particular
      * format serializer). This function only applies to <i>scalars</i> (i.e. objects that are not containers; such as
      * Number or String).
+     *
      * @param element the ConfigElement to convert
      * @return the serialized object
      * @throws IllegalStateException if element cannot be converted using {@link ConfigElement#asScalar()}
@@ -163,6 +164,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     /**
      * Deserializes a given object, as it is typically produced by a particular format deserializer.
+     *
      * @param object the object to deserialize
      * @return the resulting ConfigElement
      * @throws IllegalArgumentException if object is not a valid type for {@link ConfigPrimitive}
@@ -174,6 +176,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
      * Reads an object from the given {@link InputStream}, which should contain configuration data in a particular
      * format.
+     *
      * @param input the InputStream to read from
      * @return an object
      * @throws IOException if an IO error occurs
@@ -183,6 +186,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
      * Writes an object to the given {@link OutputStream}, which will then contain configuration data in some particular
      * format.
+     *
      * @param object the object to write
      * @param output the OutputStream to write to
      * @throws IOException if an IO error occurs

@@ -13,20 +13,6 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
-    private record ClassEntry(Type type, ConfigElement configElement, TypeFactory typeFactory, Reference reference) {
-        private ClassEntry(Type type, ConfigElement configElement, TypeFactory typeFactory) {
-            this(type, configElement, typeFactory, new Reference(null));
-        }
-    }
-
-    private static class Reference {
-        private Object ref;
-
-        private Reference(Object ref) {
-            this.ref = ref;
-        }
-    }
-
     private final Token<T> token;
     private final TypeFactory.Source typeFactorySource;
 
@@ -44,46 +30,45 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
 
             Reference reference = GraphTransformer.process(rootEntry, classEntry -> {
-                Signature signature = classEntry.typeFactory.signature(classEntry.configElement);
-                SignatureElement[] signatureElements = signature.elements();
-                Object[] args = new Object[signatureElements.length];
+                        Signature signature = classEntry.typeFactory.signature(classEntry.configElement);
+                        SignatureElement[] signatureElements = signature.elements();
+                        Object[] args = new Object[signatureElements.length];
 
-                return new GraphTransformer.Node<>(classEntry, new Iterator<>() {
-                    private int i = 0;
+                        return new GraphTransformer.Node<>(classEntry, new Iterator<>() {
+                            private int i = 0;
 
-                    @Override
-                    public boolean hasNext() {
-                        return i < signatureElements.length;
-                    }
+                            @Override
+                            public boolean hasNext() {
+                                return i < signatureElements.length;
+                            }
 
-                    @Override
-                    public Entry<Object, ClassEntry> next() {
-                        SignatureElement nextSignature = signatureElements[i++];
-                        Type nextType = nextSignature.type();
-                        ConfigElement nextElement = classEntry.configElement.getElement(nextSignature.identifier());
-                        TypeFactory nextFactory = typeFactorySource.factory(nextType);
+                            @Override
+                            public Entry<Object, ClassEntry> next() {
+                                SignatureElement nextSignature = signatureElements[i++];
+                                Type nextType = nextSignature.type();
+                                ConfigElement nextElement = classEntry.configElement.getElement(nextSignature.identifier());
+                                TypeFactory nextFactory = typeFactorySource.factory(nextType);
 
-                        return Entry.of(null, new ClassEntry(nextType, nextElement, nextFactory));
-                    }
-                }, new GraphTransformer.Output<>(classEntry.reference, new BiConsumer<>() {
-                    private int i = 0;
+                                return Entry.of(null, new ClassEntry(nextType, nextElement, nextFactory));
+                            }
+                        }, new GraphTransformer.Output<>(classEntry.reference, new BiConsumer<>() {
+                            private int i = 0;
 
-                    @Override
-                    public void accept(Object key, Reference value) {
-                        args[i++] = value.ref;
+                            @Override
+                            public void accept(Object key, Reference value) {
+                                args[i++] = value.ref;
 
-                        if (i == args.length) {
-                            classEntry.reference.ref = classEntry.typeFactory.make(signature, classEntry.configElement,
-                                    args);
-                        }
-                    }
-                }));
-            }, potentialContainer -> potentialContainer.configElement.isContainer(), scalar -> new Reference(scalar
-                    .configElement.asScalar()));
+                                if (i == args.length) {
+                                    classEntry.reference.ref = classEntry.typeFactory.make(signature, classEntry.configElement,
+                                            args);
+                                }
+                            }
+                        }));
+                    }, potentialContainer -> potentialContainer.configElement.isContainer(),
+                    scalar -> new Reference(scalar.configElement.asScalar()));
 
             return (T) reference.ref;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
     }
@@ -91,5 +76,19 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     @Override
     public @NotNull ConfigElement elementFromData(T t) throws ConfigProcessException {
         return null;
+    }
+
+    private record ClassEntry(Type type, ConfigElement configElement, TypeFactory typeFactory, Reference reference) {
+        private ClassEntry(Type type, ConfigElement configElement, TypeFactory typeFactory) {
+            this(type, configElement, typeFactory, new Reference(null));
+        }
+    }
+
+    private static class Reference {
+        private Object ref;
+
+        private Reference(Object ref) {
+            this.ref = ref;
+        }
     }
 }

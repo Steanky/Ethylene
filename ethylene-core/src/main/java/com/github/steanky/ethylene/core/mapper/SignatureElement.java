@@ -4,5 +4,4 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 
-public record SignatureElement(@NotNull Type type, @NotNull Object identifier) {
-}
+public record SignatureElement(@NotNull Type type, @NotNull Object identifier) {}

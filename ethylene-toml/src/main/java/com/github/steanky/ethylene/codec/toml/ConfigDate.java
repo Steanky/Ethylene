@@ -14,16 +14,12 @@ public class ConfigDate implements ConfigElement {
 
     /**
      * Construct a new ConfigDate wrapping the provided {@link Date}.
+     *
      * @param date the date to wrap
      * @throws NullPointerException if date is null
      */
     public ConfigDate(@NotNull Date date) {
         this.date = Objects.requireNonNull(date);
-    }
-
-    @Override
-    public boolean isScalar() {
-        return true;
     }
 
     @Override
@@ -38,24 +34,31 @@ public class ConfigDate implements ConfigElement {
     }
 
     @Override
+    public boolean isScalar() {
+        return true;
+    }
+
+    @Override
     public @NotNull Object asScalar() {
         return date;
     }
 
     /**
+     * Gets the date wrapped by this ConfigDate object.
+     *
+     * @return the wrapped date
+     */
+    public @NotNull Date getDate() {
+        return date;
+    }
+
+    /**
      * Sets the {@link Date} wrapped by this ConfigDate object.
+     *
      * @param date the date to set
      * @throws NullPointerException if date is null
      */
     public void setDate(@NotNull Date date) {
         this.date = Objects.requireNonNull(date);
-    }
-
-    /**
-     * Gets the date wrapped by this ConfigDate object.
-     * @return the wrapped date
-     */
-    public @NotNull Date getDate() {
-        return date;
     }
 }

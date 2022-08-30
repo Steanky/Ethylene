@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -26,7 +26,8 @@ public class HjsonCodec extends AbstractConfigCodec {
 
     /**
      * Creates a new HjsonCodec instance using the given {@link HjsonOptions} for reading and writing.
-     * @param readOptions the options used when reading
+     *
+     * @param readOptions  the options used when reading
      * @param writeOptions the options used when writing
      */
     public HjsonCodec(@NotNull HjsonOptions readOptions, @NotNull HjsonOptions writeOptions) {
@@ -42,24 +43,39 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
-        try {
-            return JsonValue.readHjson(new InputStreamReader(input), readOptions);
-        }
-        catch (ParseException exception) {
-            throw new IOException(exception);
-        }
-    }
+    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
+        if (target instanceof JsonObject object) {
+            return new GraphTransformer.Node<>(target, new Iterator<>() {
+                private final Iterator<JsonObject.Member> iterator = object.iterator();
 
-    @Override
-    protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
-        Writer outputWriter = new OutputStreamWriter(output);
-        BufferedWriter bufferedWriter = new BufferedWriter(outputWriter);
-        ((JsonObject) object).writeTo(bufferedWriter, writeOptions);
+                @Override
+                public boolean hasNext() {
+                    return iterator.hasNext();
+                }
 
-        //ensure everything gets written to the OutputStream before it is closed
-        bufferedWriter.flush();
-        outputWriter.flush();
+                @Override
+                public Entry<String, Object> next() {
+                    JsonObject.Member next = iterator.next();
+                    return Entry.of(next.getName(), next.getValue());
+                }
+            }, makeDecodeMap(object.size()));
+        } else if (target instanceof JsonArray array) {
+            return new GraphTransformer.Node<>(target, new Iterator<>() {
+                private final Iterator<JsonValue> backing = array.iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return backing.hasNext();
+                }
+
+                @Override
+                public Entry<String, Object> next() {
+                    return Entry.of(null, backing.next());
+                }
+            }, makeDecodeCollection(array.size()));
+        }
+
+        return super.makeDecodeNode(target);
     }
 
     @Override
@@ -75,18 +91,20 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
+    protected boolean isContainer(@Nullable Object input) {
+        return super.isContainer(input) || input instanceof JsonArray || input instanceof JsonObject;
+    }
+
+    @Override
     protected @Nullable Object serializeElement(@NotNull ConfigElement element) {
-        if(element instanceof ConfigPrimitive primitive) {
-            if(primitive.isNull()) {
+        if (element instanceof ConfigPrimitive primitive) {
+            if (primitive.isNull()) {
                 return JsonValue.NULL;
-            }
-            else if(primitive.isBoolean()) {
+            } else if (primitive.isBoolean()) {
                 return JsonValue.valueOf(primitive.asBoolean());
-            }
-            else if(primitive.isNumber()) {
+            } else if (primitive.isNumber()) {
                 return JsonValue.valueOf(primitive.asNumber().doubleValue());
-            }
-            else if(primitive.isString()) {
+            } else if (primitive.isString()) {
                 return JsonValue.valueOf(primitive.asString());
             }
         }
@@ -96,17 +114,14 @@ public class HjsonCodec extends AbstractConfigCodec {
 
     @Override
     protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
-        if(object instanceof JsonValue value) {
-            if(value.isNull()) {
+        if (object instanceof JsonValue value) {
+            if (value.isNull()) {
                 return new ConfigPrimitive(null);
-            }
-            else if(value.isBoolean()) {
+            } else if (value.isBoolean()) {
                 return new ConfigPrimitive(value.asBoolean());
-            }
-            else if(value.isNumber()) {
+            } else if (value.isNumber()) {
                 return new ConfigPrimitive(value.asDouble());
-            }
-            else if(value.isString()) {
+            } else if (value.isString()) {
                 return new ConfigPrimitive(value.asString());
             }
         }
@@ -115,44 +130,23 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected boolean isContainer(@Nullable Object input) {
-        return super.isContainer(input) || input instanceof JsonArray || input instanceof JsonObject;
+    protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
+        try {
+            return JsonValue.readHjson(new InputStreamReader(input), readOptions);
+        } catch (ParseException exception) {
+            throw new IOException(exception);
+        }
     }
 
     @Override
-    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
-        if(target instanceof JsonObject object) {
-            return new GraphTransformer.Node<>(target, new Iterator<>() {
-                private final Iterator<JsonObject.Member> iterator = object.iterator();
+    protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
+        Writer outputWriter = new OutputStreamWriter(output);
+        BufferedWriter bufferedWriter = new BufferedWriter(outputWriter);
+        ((JsonObject) object).writeTo(bufferedWriter, writeOptions);
 
-                @Override
-                public boolean hasNext() {
-                    return iterator.hasNext();
-                }
-
-                @Override
-                public Entry<String, Object> next() {
-                    JsonObject.Member next = iterator.next();
-                    return Entry.of(next.getName(), next.getValue());
-                }
-            }, makeDecodeMap(object.size()));
-        }
-        else if(target instanceof JsonArray array) {
-            return new GraphTransformer.Node<>(target, new Iterator<>() {
-                private final Iterator<JsonValue> backing = array.iterator();
-                @Override
-                public boolean hasNext() {
-                    return backing.hasNext();
-                }
-
-                @Override
-                public Entry<String, Object> next() {
-                    return Entry.of(null, backing.next());
-                }
-            }, makeDecodeCollection(array.size()));
-        }
-
-        return super.makeDecodeNode(target);
+        //ensure everything gets written to the OutputStream before it is closed
+        bufferedWriter.flush();
+        outputWriter.flush();
     }
 
     @Override
