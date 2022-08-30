@@ -8,7 +8,8 @@ import java.lang.reflect.Type;
 public interface TypeFactory {
     @NotNull Signature signature(@NotNull ConfigElement providedElement);
 
-    @NotNull Object make(@NotNull Signature signature, @NotNull Object... objects);
+    @NotNull Object make(@NotNull Signature signature, @NotNull ConfigElement providedElement,
+            @NotNull Object... objects);
 
     @FunctionalInterface
     interface Source {

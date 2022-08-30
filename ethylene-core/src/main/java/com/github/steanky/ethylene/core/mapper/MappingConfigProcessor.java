@@ -79,7 +79,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         args[i++] = value.ref;
 
                         if (i == args.length) {
-                            classEntry.reference.ref = classEntry.typeFactory.make(signature, args);
+                            classEntry.reference.ref = classEntry.typeFactory.make(signature,
+                                    classEntry.configElement, args);
                         }
                     }
                 }));

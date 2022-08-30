@@ -59,30 +59,50 @@ public class ConstructorTypeFactory implements TypeFactory {
 
         ConfigContainer configContainer = providedElement.asContainer();
         Collection<ConfigEntry> entries = configContainer.entryCollection();
+
+        outer:
         for (Signature signature : signatures) {
             SignatureElement[] elements = signature.elements();
 
             if (elements.length == entries.size()) {
                 if (matchParameterNames || matchParameterTypeHints) {
-                    Iterator<ConfigEntry> entryIterator = entries.iterator();
-                    for (int i = 0; i < entries.size(); i++) {
-                        SignatureElement element = elements[i];
-                        ConfigEntry entry = entryIterator.next();
-
-                        if (matchParameterNames) {
-                            if (!Objects.equals(element.identifier(), entry.getFirst())) {
-                                break;
-                            }
+                    Map<Object, ConfigElement> identifiers = null;
+                    if (matchParameterNames) {
+                        identifiers = new LinkedHashMap<>(elements.length);
+                        for (ConfigEntry entry : entries) {
+                            identifiers.put(entry.getFirst(), entry.getSecond());
                         }
 
-                        if (matchParameterTypeHints) {
-                            TypeHinter.Hint typeHint = typeHinter.getHint(element.type());
-                            if (!typeHint.compatible(entry.getSecond())) {
-                                break;
+                        for (SignatureElement element : elements) {
+                            if (!identifiers.containsKey(element.identifier())) {
+                                break outer;
+                            }
+                        }
+                    }
+
+                    if (matchParameterTypeHints) {
+                        if (!matchParameterNames) {
+                            Iterator<ConfigEntry> iterator = entries.iterator();
+                            for (SignatureElement element : elements) {
+                                if (!typeHinter.getHint(element.type()).compatible(iterator.next().getSecond())) {
+                                    break outer;
+                                }
+                            }
+
+                            continue;
+                        }
+
+                        for (SignatureElement element : elements) {
+                            ConfigElement configElement = identifiers.get(element.identifier());
+                            if (configElement == null || !typeHinter.getHint(element.type())
+                                    .compatible(configElement)) {
+                                break outer;
                             }
                         }
                     }
                 }
+
+                return signature;
             }
         }
 
@@ -90,8 +110,35 @@ public class ConstructorTypeFactory implements TypeFactory {
     }
 
     @Override
-    public @NotNull Object make(@NotNull Signature signature, @NotNull Object... objects) {
+    public @NotNull Object make(@NotNull Signature signature, @NotNull ConfigElement providedElement,
+            @NotNull Object... objects) {
         try {
+            //if matching names, we have to re-order the object array
+            if (matchParameterNames) {
+                Collection<ConfigEntry> entryCollection = providedElement.asContainer().entryCollection();
+                SignatureElement[] signatureElements = signature.elements();
+
+                if (!(signatureElements.length == entryCollection.size() && signatureElements.length == objects.length)) {
+                    throw new MapperException("mismatched number of arguments, signature expected " +
+                            signatureElements.length);
+                }
+
+                Map<Object, Object> elementMap = new HashMap<>(entryCollection.size());
+                Iterator<ConfigEntry> configEntryIterator = entryCollection.iterator();
+
+                for (Object object : objects) {
+                    elementMap.put(configEntryIterator.next().getFirst(), object);
+                }
+
+                Object[] newArgs = new Object[signatureElements.length];
+
+                for (int i = 0; i < signatureElements.length; i++) {
+                    newArgs[i] = elementMap.get(signatureElements[i].identifier());
+                }
+
+                return constructors.get(signature.index()).newInstance(newArgs);
+            }
+
             return constructors.get(signature.index()).newInstance(objects);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new MapperException(e);
