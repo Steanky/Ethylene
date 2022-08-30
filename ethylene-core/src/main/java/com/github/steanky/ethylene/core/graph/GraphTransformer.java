@@ -13,9 +13,25 @@ import java.util.function.Predicate;
  * transformations.
  */
 public final class GraphTransformer {
+    public static class NodeResult<TKey, TOut> {
+        private TKey key;
+        private TOut out;
+
+        private NodeResult(TKey key, TOut out) {
+            this.key = key;
+            this.out = out;
+        }
+    }
+
     public record Node<TIn, TOut, TKey>(TIn in,
-                                        @NotNull Iterable<? extends Entry<TKey, TIn>> inputIterable,
-                                        @NotNull Output<TOut, TKey> output) {}
+            @NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator,
+            @NotNull Output<TOut, TKey> output, @NotNull NodeResult<TKey, TOut> result) {
+        public Node(TIn in,
+                @NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator,
+                @NotNull Output<TOut, TKey> output) {
+            this(in, inputIterator, output, new NodeResult<>(null, null));
+        }
+    }
 
     public record Output<TOut, TKey>(@NotNull TOut data,
                                      @NotNull BiConsumer<? super TKey, ? super TOut> accumulator) {}
@@ -35,25 +51,39 @@ public final class GraphTransformer {
         stack.push(root);
 
         while(!stack.isEmpty()) {
-            Node<TIn, TOut, TKey> node = stack.pop();
+            Node<TIn, TOut, TKey> node = stack.peek();
 
-            for(Entry<TKey, TIn> entry : node.inputIterable) {
-                if(!containerPredicate.test(entry.getSecond())) {
-                    node.output.accumulator.accept(entry.getFirst(), scalarMapper.apply(entry.getSecond()));
-                    continue;
+            outer:
+            {
+                while (node.inputIterator.hasNext()) {
+                    Entry<TKey, TIn> entry = node.inputIterator.next();
+                    if(!containerPredicate.test(entry.getSecond())) {
+                        node.output.accumulator.accept(entry.getFirst(), scalarMapper.apply(entry.getSecond()));
+                        continue;
+                    }
+
+                    //handle already-visited non-scalar nodes, to allow proper handling of circular references
+                    TIn in = entry.getSecond();
+                    if(visited.containsKey(in)) {
+                        node.output.accumulator.accept(entry.getFirst(), visited.get(in));
+                        continue;
+                    }
+
+                    Node<TIn, TOut, TKey> newNode = nodeFunction.apply(entry.getSecond());
+                    visited.put(entry.getSecond(), newNode.output.data);
+                    stack.push(newNode);
+
+                    //this node is unfinished, wait to call the accumulator
+                    node.result.key = entry.getFirst();
+                    node.result.out = newNode.output.data;
+                    break outer;
                 }
 
-                //handle already-visited non-scalar nodes, to allow proper handling of circular references
-                TIn in = entry.getSecond();
-                if(visited.containsKey(in)) {
-                    node.output.accumulator.accept(entry.getFirst(), visited.get(in));
-                    continue;
+                stack.pop();
+                Node<TIn, TOut, TKey> old = stack.peek();
+                if (old != null) {
+                    old.output.accumulator.accept(old.result.key, old.result.out);
                 }
-
-                Node<TIn, TOut, TKey> newNode = nodeFunction.apply(entry.getSecond());
-                visited.put(entry.getSecond(), newNode.output.data);
-                stack.push(newNode);
-                node.output.accumulator.accept(entry.getFirst(), newNode.output.data);
             }
         }
 

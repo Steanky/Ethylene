@@ -48,7 +48,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                 SignatureElement[] signatureElements = signature.elements();
                 Object[] args = new Object[signatureElements.length];
 
-                return new GraphTransformer.Node<>(classEntry, () -> new Iterator<>() {
+                return new GraphTransformer.Node<>(classEntry, new Iterator<>() {
                     private int i = 0;
 
                     @Override
@@ -73,14 +73,13 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         args[i++] = value.ref;
 
                         if (i == args.length) {
-                            classEntry.reference.ref = classEntry.typeFactory.make(signature,
-                                    classEntry.configElement, args);
+                            classEntry.reference.ref = classEntry.typeFactory.make(signature, classEntry.configElement,
+                                    args);
                         }
                     }
                 }));
-            }, potentialContainer -> potentialContainer.configElement.isContainer(),
-                    scalar -> new Reference(scalar.configElement.asScalar()));
-
+            }, potentialContainer -> potentialContainer.configElement.isContainer(), scalar -> new Reference(scalar
+                    .configElement.asScalar()));
 
             return (T) reference.ref;
         }

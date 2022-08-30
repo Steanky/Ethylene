@@ -122,7 +122,7 @@ public class HjsonCodec extends AbstractConfigCodec {
     @Override
     protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if(target instanceof JsonObject object) {
-            return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
+            return new GraphTransformer.Node<>(target, new Iterator<>() {
                 private final Iterator<JsonObject.Member> iterator = object.iterator();
 
                 @Override
@@ -138,7 +138,7 @@ public class HjsonCodec extends AbstractConfigCodec {
             }, makeDecodeMap(object.size()));
         }
         else if(target instanceof JsonArray array) {
-            return new GraphTransformer.Node<>(target, () -> new Iterator<>() {
+            return new GraphTransformer.Node<>(target, new Iterator<>() {
                 private final Iterator<JsonValue> backing = array.iterator();
                 @Override
                 public boolean hasNext() {
