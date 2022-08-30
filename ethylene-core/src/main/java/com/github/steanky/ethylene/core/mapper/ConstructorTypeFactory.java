@@ -10,7 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.util.*;
 
-public class ConstructorTypeFactory implements TypeFactory {
+public class ConstructorTypeFactory extends TypeFactoryBase {
     private final Class<?> owner;
     private final TypeHinter typeHinter;
     private final ArrayList<Constructor<?>> constructors;
@@ -115,23 +115,18 @@ public class ConstructorTypeFactory implements TypeFactory {
         try {
             //if matching names, we have to re-order the object array
             if (matchParameterNames) {
-                Collection<ConfigEntry> entryCollection = providedElement.asContainer().entryCollection();
                 SignatureElement[] signatureElements = signature.elements();
+                Collection<ConfigEntry> entryCollection = providedElement.asContainer().entryCollection();
 
-                if (!(signatureElements.length == entryCollection.size() && signatureElements.length == objects.length)) {
-                    throw new MapperException("mismatched number of arguments, signature expected " +
-                            signatureElements.length);
-                }
+                validateArguments(signatureElements.length, entryCollection.size(), objects.length);
 
                 Map<Object, Object> elementMap = new HashMap<>(entryCollection.size());
                 Iterator<ConfigEntry> configEntryIterator = entryCollection.iterator();
-
                 for (Object object : objects) {
                     elementMap.put(configEntryIterator.next().getFirst(), object);
                 }
 
                 Object[] newArgs = new Object[signatureElements.length];
-
                 for (int i = 0; i < signatureElements.length; i++) {
                     newArgs[i] = elementMap.get(signatureElements[i].identifier());
                 }
@@ -139,6 +134,7 @@ public class ConstructorTypeFactory implements TypeFactory {
                 return constructors.get(signature.index()).newInstance(newArgs);
             }
 
+            //no need to reorder
             return constructors.get(signature.index()).newInstance(objects);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new MapperException(e);
