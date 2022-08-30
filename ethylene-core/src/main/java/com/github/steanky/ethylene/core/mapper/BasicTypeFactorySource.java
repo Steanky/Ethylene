@@ -32,29 +32,27 @@ public class BasicTypeFactorySource implements TypeFactory.Source {
 
     @Override
     public @NotNull TypeFactory factory(@NotNull Type type) {
-        Class<?> resolvedType = resolver.resolveType(type);
-
         return switch (typeHinter.getHint(type)) {
             case ARRAY_LIKE -> new ArrayTypeFactory(TypeUtils.getArrayComponentType(type));
 
             //TODO: allow users to register specific constructors to handle certain generic types
             case OBJECT ->
-                    objectFactories.computeIfAbsent(resolvedType, key -> new ConstructorTypeFactory(key, typeHinter,
+                    objectFactories.computeIfAbsent(resolver.resolveType(type), key -> new ConstructorTypeFactory(key, typeHinter,
                             matchParameterNames, matchParameterTypeHints));
             case COLLECTION_LIKE -> {
                 Map<TypeVariable<?>, Type> typeVariables = TypeUtils.getTypeArguments(type, Collection.class);
                 Type componentType = typeVariables.values().iterator().next();
 
-                yield new CollectionTypeFactory(resolvedType, componentType);
+                yield new CollectionTypeFactory(resolver.resolveType(type), componentType);
             }
             case MAP_LIKE -> {
                 Map<TypeVariable<?>, Type> typeVariables = TypeUtils.getTypeArguments(type, Map.class);
                 Type keyType = typeVariables.get(MAP_VARIABLES[0]);
                 Type valueType = typeVariables.get(MAP_VARIABLES[1]);
 
-                yield new MapTypeFactory(resolvedType, keyType, valueType);
+                yield new MapTypeFactory(resolver.resolveType(type), keyType, valueType);
             }
-            case SCALAR -> new ScalarTypeFactory(resolvedType);
+            case SCALAR -> new ScalarTypeFactory(resolver.resolveType(type));
         };
     }
 }

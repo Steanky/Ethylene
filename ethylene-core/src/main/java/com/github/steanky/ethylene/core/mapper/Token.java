@@ -63,4 +63,26 @@ public abstract class Token<T> implements Supplier<Type> {
     public final @NotNull Type get() {
         return type;
     }
+
+    @Override
+    public final int hashCode() {
+        return type.hashCode();
+    }
+
+    @Override
+    public final boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof Token<?> other) {
+            return type.equals(other.type);
+        }
+
+        return false;
+    }
 }
