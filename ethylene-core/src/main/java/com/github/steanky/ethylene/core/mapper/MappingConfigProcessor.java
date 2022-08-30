@@ -30,15 +30,12 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final Token<T> token;
     private final TypeFactory.Source typeFactorySource;
     private final TypeHinter typeHinter;
-    private final ScalarMapper scalarMapper;
 
     public MappingConfigProcessor(@NotNull Token<T> token,
-            @NotNull TypeFactory.Source typeFactorySource, @NotNull TypeHinter typeHinter,
-            @NotNull ScalarMapper scalarMapper) {
+            @NotNull TypeFactory.Source typeFactorySource, @NotNull TypeHinter typeHinter) {
         this.token = Objects.requireNonNull(token);
         this.typeFactorySource = Objects.requireNonNull(typeFactorySource);
         this.typeHinter = Objects.requireNonNull(typeHinter);
-        this.scalarMapper = Objects.requireNonNull(scalarMapper);
     }
 
     @SuppressWarnings("unchecked")
@@ -91,7 +88,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                 }
 
                 return potentialContainer.configElement.isContainer();
-            }, scalar -> new Reference(scalarMapper.makeScalar(scalar.configElement)));
+            }, scalar -> new Reference(scalar.configElement.asScalar()));
 
 
             return (T) reference.ref;

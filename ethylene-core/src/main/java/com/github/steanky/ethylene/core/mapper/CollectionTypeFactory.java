@@ -15,9 +15,9 @@ import java.util.Objects;
 public class CollectionTypeFactory extends TypeFactoryBase {
     private final Type parameterType;
 
-    private final Constructor<? extends Collection<?>> sizeConstructor;
+    private final Constructor<?> sizeConstructor;
 
-    public CollectionTypeFactory(@NotNull Class<? extends Collection<?>> collectionType, @NotNull Type parameterType) {
+    public CollectionTypeFactory(@NotNull Class<?> collectionType, @NotNull Type parameterType) {
         this.parameterType = Objects.requireNonNull(parameterType);
 
         this.sizeConstructor = ConstructorUtils.getAccessibleConstructor(collectionType, int.class);

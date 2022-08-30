@@ -15,9 +15,9 @@ public class MapTypeFactory extends TypeFactoryBase {
     private final Type keyType;
     private final Type valueType;
 
-    private final Constructor<? extends Map<?, ?>> sizeConstructor;
+    private final Constructor<?> sizeConstructor;
 
-    public MapTypeFactory(@NotNull Class<? extends Map<?, ?>> mapType, @NotNull Type keyType,
+    public MapTypeFactory(@NotNull Class<?> mapType, @NotNull Type keyType,
             @NotNull Type valueType) {
         this.keyType = Objects.requireNonNull(keyType);
         this.valueType = Objects.requireNonNull(valueType);

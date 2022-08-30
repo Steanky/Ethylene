@@ -46,6 +46,10 @@ public class BasicTypeResolver implements TypeResolver {
             throw new MapperException("resolved raw type was null for '" + type.getTypeName() + "'");
         }
 
+        if (!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(ClassUtils.getName(raw))) {
+            return raw;
+        }
+
         ClassEntry cached = cache.get(raw);
         if (cached != null) {
             Class<?> target = cached.reference.get();

@@ -3,13 +3,12 @@ package com.github.steanky.ethylene.core.mapper;
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
 import java.util.Objects;
 
 public class ScalarTypeFactory extends TypeFactoryBase {
-    private final Type scalarType;
+    private final Class<?> scalarType;
 
-    public ScalarTypeFactory(@NotNull Type scalarType) {
+    public ScalarTypeFactory(@NotNull Class<?> scalarType) {
         this.scalarType = Objects.requireNonNull(scalarType);
     }
 
