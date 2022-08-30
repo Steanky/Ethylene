@@ -9,12 +9,14 @@ public interface TypeHinter {
     enum Hint {
         COLLECTION_LIKE,
         MAP_LIKE,
+        ARRAY_LIKE,
         OBJECT,
         SCALAR;
 
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         public boolean compatible(@NotNull ConfigElement element) {
             return switch (this) {
-                case COLLECTION_LIKE, MAP_LIKE -> element.isList();
+                case COLLECTION_LIKE, MAP_LIKE, ARRAY_LIKE -> element.isList();
                 case OBJECT -> element.isNode();
                 case SCALAR -> element.isScalar();
             };
