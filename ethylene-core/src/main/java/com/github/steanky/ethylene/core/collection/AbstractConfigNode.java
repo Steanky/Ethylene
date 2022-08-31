@@ -37,33 +37,23 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
     /**
      * This helper method can be used to construct a map with the same elements as another map. If the given map
-     * contains any null keys or values, a {@link NullPointerException} will be thrown. Furthermore, each value will be
-     * tested against the provided {@link Predicate}. If it returns false, an {@link IllegalArgumentException} will be
-     * thrown.
+     * contains any null keys or values, a {@link NullPointerException} will be thrown.
      *
      * @param map            the map whose elements will be added to the returned map
      * @param mapSupplier    the supplier used to create the new map from the size of the original map
-     * @param valuePredicate the predicate to use to validate each element against some condition
      * @return a new map, constructed by the supplier, and containing the same elements as map
      * @throws NullPointerException     if any of the arguments are null, or map contains any null keys or values
-     * @throws IllegalArgumentException if the given predicate fails for any of the map's values
      */
     protected static @NotNull Map<String, ConfigElement> constructMap(
             @NotNull Map<? extends String, ? extends ConfigElement> map,
-            @NotNull IntFunction<? extends Map<String, ConfigElement>> mapSupplier,
-            @NotNull Predicate<ConfigElement> valuePredicate) {
+            @NotNull IntFunction<? extends Map<String, ConfigElement>> mapSupplier) {
         Objects.requireNonNull(map);
         Objects.requireNonNull(mapSupplier);
-        Objects.requireNonNull(valuePredicate);
 
         Map<String, ConfigElement> newMap = mapSupplier.apply(map.size());
         for (Map.Entry<? extends String, ? extends ConfigElement> entry : map.entrySet()) {
-            if (!valuePredicate.test(entry.getValue())) {
-                throw new IllegalArgumentException("Value predicate failed");
-            } else {
-                newMap.put(Objects.requireNonNull(entry.getKey(), "Input map must not contain null keys"),
-                        Objects.requireNonNull(entry.getValue(), "Input map must not contain null values"));
-            }
+            newMap.put(Objects.requireNonNull(entry.getKey(), "map entry key"),
+                    Objects.requireNonNull(entry.getValue(), "map entry value"));
         }
 
         return newMap;

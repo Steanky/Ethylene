@@ -18,7 +18,7 @@ public class ScalarTypeFactory extends TypeFactoryBase {
             throw new MapperException("expected scalar");
         }
 
-        return new Signature(0, new SignatureElement[] {element}, true);
+        return new Signature(0, true, element);
     }
 
     @Override

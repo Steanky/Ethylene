@@ -64,7 +64,7 @@ public class ConstructorTypeFactory extends TypeFactoryBase {
                 signatureElements[j] = new SignatureElement(constructorParameter.getParameterizedType(), identifier);
             }
 
-            signatures[i] = new Signature(i, signatureElements, !parameterNamesPresent);
+            signatures[i] = new Signature(i, !parameterNamesPresent, signatureElements);
         }
     }
 

@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface ConfigBridge {
     /**
-     * Loads a {@link ConfigElement} object from this loader's in. Asynchronous implementations may choose to load
+     * Loads a {@link ConfigElement} object from this loader's source. Asynchronous implementations may choose to load
      * ConfigElement objects on another thread; in which case this method should return immediately.
      *
      * @return a {@link CompletableFuture} object which will contain a ConfigElement object when it has finished
@@ -26,7 +26,7 @@ public interface ConfigBridge {
     @NotNull CompletableFuture<ConfigElement> read();
 
     /**
-     * Writes a {@link ConfigElement} object to this loader's in. This operation may occur asynchronously in some
+     * Writes a {@link ConfigElement} object to this loader's source. This operation may occur asynchronously in some
      * implementations, in which case this method should return immediately.
      *
      * @param element the element to write to the in

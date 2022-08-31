@@ -38,31 +38,22 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
 
     /**
      * This helper method can be used to construct a list with the same elements as a collection. If the collection
-     * contains any null values, a {@link NullPointerException} will be thrown. Furthermore, each value will be tested
-     * against the provided {@link Predicate}. If it returns false, an {@link IllegalArgumentException} will be thrown.
+     * contains any null values, a {@link NullPointerException} will be thrown.
      *
      * @param collection     the collection whose elements will be added to the new list
      * @param listSupplier   the supplier used to create the new list from the size of the original collection
-     * @param valuePredicate the predicate to use to validate each element against some condition
      * @return a list, constructed by the supplier, and containing the same elements as collection
      * @throws NullPointerException     if any of the arguments are null, collection contains any null elements, or
      *                                  listSupplier returns null
-     * @throws IllegalArgumentException if the given predicate fails for any of the collection's values
      */
     protected static @NotNull List<ConfigElement> constructList(@NotNull Collection<? extends ConfigElement> collection,
-            @NotNull IntFunction<? extends List<ConfigElement>> listSupplier,
-            @NotNull Predicate<ConfigElement> valuePredicate) {
+            @NotNull IntFunction<? extends List<ConfigElement>> listSupplier) {
         Objects.requireNonNull(collection);
         Objects.requireNonNull(listSupplier);
-        Objects.requireNonNull(valuePredicate);
 
         List<ConfigElement> newList = Objects.requireNonNull(listSupplier.apply(collection.size()));
         for (ConfigElement element : collection) {
-            if (!valuePredicate.test(element)) {
-                throw new IllegalArgumentException("Value predicate failed");
-            } else {
-                newList.add(Objects.requireNonNull(element, "Input collection must not contain null elements"));
-            }
+            newList.add(Objects.requireNonNull(element, "collection element"));
         }
 
         return newList;

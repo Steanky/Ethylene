@@ -24,6 +24,6 @@ public abstract class ListFactoryBase extends TypeFactoryBase {
             elements[i] = new SignatureElement(componentType, i);
         }
 
-        return new Signature(0, elements, true);
+        return new Signature(0, true, elements);
     }
 }
