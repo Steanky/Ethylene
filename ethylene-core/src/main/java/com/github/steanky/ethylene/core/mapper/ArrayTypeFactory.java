@@ -8,8 +8,11 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 
 public class ArrayTypeFactory extends ListFactoryBase {
+    private final Class<?> rawType;
+
     public ArrayTypeFactory(@NotNull Type componentType) {
         super(componentType);
+        this.rawType = TypeUtils.getRawType(componentType, null);
     }
 
     @Override
@@ -21,7 +24,7 @@ public class ArrayTypeFactory extends ListFactoryBase {
 
         validateLengths(signature.elements().length, providedElement.asList().size(), objects.length);
 
-        Object array = Array.newInstance(TypeUtils.getRawType(componentType, null), objects.length);
+        Object array = Array.newInstance(rawType, objects.length);
         for (int i = 0; i < objects.length; i++) {
             Array.set(array, i, objects[i]);
         }
