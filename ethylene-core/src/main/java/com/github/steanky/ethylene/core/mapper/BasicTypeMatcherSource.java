@@ -6,8 +6,6 @@ import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
 import com.github.steanky.ethylene.core.mapper.signature.container.ArraySignature;
 import com.github.steanky.ethylene.core.mapper.signature.container.CollectionSignature;
-import com.github.steanky.ethylene.core.mapper.signature.scalar.ScalarSignature;
-import com.github.steanky.ethylene.core.mapper.signature.scalar.ScalarTypeSignatureMatcher;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -71,7 +69,7 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
             }
             case OBJECT_LIKE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(type), typeHinter,
                     matchParameterNames, matchParameterTypeHints);
-            case SCALAR -> new ScalarTypeSignatureMatcher(new ScalarSignature(type));
+            case SCALAR -> null;
         };
     }
 }
