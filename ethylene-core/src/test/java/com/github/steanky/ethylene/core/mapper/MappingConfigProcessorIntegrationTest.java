@@ -2,7 +2,9 @@ package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.processor.ConfigProcessException;
+import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
+import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
+import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,8 +26,7 @@ class MappingConfigProcessorIntegrationTest {
         private final int value;
         private final Set<Integer> intSet;
 
-        public CustomClass(@Name("value") int value, @Name("strings") @NotNull List<String> strings,
-                @Name("intSet") @NotNull Set<Integer> intSet) {
+        public CustomClass(@NotNull List<String> strings, int value, @NotNull Set<Integer> intSet) {
             this.strings = strings;
             this.value = value;
             this.intSet = intSet;
@@ -35,10 +36,12 @@ class MappingConfigProcessorIntegrationTest {
     public MappingConfigProcessorIntegrationTest() {
         TypeHinter typeHinter = new BasicTypeHinter();
         BasicTypeResolver typeResolver = new BasicTypeResolver();
+        SignatureBuilder signatureBuilder = new ConstructorSignatureBuilder();
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);
 
-        TypeFactory.Source source = new BasicTypeFactorySource(typeHinter, typeResolver, false, false);
+        TypeSignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, signatureBuilder,
+                false, false);
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
@@ -60,9 +63,9 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void basicObjectList() {
             List<Object> stringList = assertDoesNotThrow(
-                    () -> objectListProcessor.dataFromElement(ConfigList.of("a", "b", "c")));
+                    () -> objectListProcessor.dataFromElement(ConfigList.of("a", "b", "c", 1, 2, 3)));
 
-            assertEquals(List.of("a", "b", "c"), stringList);
+            assertEquals(List.of("a", "b", "c", 1, 2, 3), stringList);
         }
 
         @Test

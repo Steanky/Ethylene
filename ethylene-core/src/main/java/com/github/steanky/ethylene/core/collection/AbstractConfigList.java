@@ -24,7 +24,10 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      * that null values cannot be inserted, and the list is never exposed publicly.
      */
     protected final List<ConfigElement> list;
+
+
     private Collection<ConfigEntry> containerCollection;
+    private Collection<ConfigElement> elementCollection;
 
     /**
      * Construct a new AbstractConfigList using the provided list to store its elements.
@@ -94,32 +97,66 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
         return ConfigElementUtils.toString(this);
     }
 
+    @SuppressWarnings("ReplaceNullCheck") //bad intelliJ, I want to cache the collection object...
     @Override
     public @NotNull Collection<ConfigEntry> entryCollection() {
-        return Objects.requireNonNullElseGet(containerCollection,
-                () -> containerCollection = new AbstractCollection<>() {
+        if (containerCollection != null) {
+            return containerCollection;
+        }
+
+        return containerCollection = new AbstractCollection<>() {
+            @Override
+            public Iterator<ConfigEntry> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<ConfigElement> elementIterator = list.iterator();
+
                     @Override
-                    public Iterator<ConfigEntry> iterator() {
-                        return new Iterator<>() {
-                            private final Iterator<ConfigElement> elementIterator = list.iterator();
-
-                            @Override
-                            public boolean hasNext() {
-                                return elementIterator.hasNext();
-                            }
-
-                            @Override
-                            public ConfigEntry next() {
-                                return new ConfigEntry(null, elementIterator.next());
-                            }
-                        };
+                    public boolean hasNext() {
+                        return elementIterator.hasNext();
                     }
 
                     @Override
-                    public int size() {
-                        return list.size();
+                    public ConfigEntry next() {
+                        return new ConfigEntry(null, elementIterator.next());
                     }
-                });
+                };
+            }
 
+            @Override
+            public int size() {
+                return list.size();
+            }
+        };
+    }
+
+    @Override
+    public @NotNull Collection<ConfigElement> elementCollection() {
+        if (elementCollection != null) {
+            return elementCollection;
+        }
+
+        return elementCollection = new AbstractCollection<>() {
+            @Override
+            public Iterator<ConfigElement> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<ConfigElement> elementIterator = list.iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return elementIterator.hasNext();
+                    }
+
+                    @Override
+                    public ConfigElement next() {
+                        return elementIterator.next();
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return list.size();
+            }
+        };
     }
 }

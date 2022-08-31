@@ -28,4 +28,6 @@ public interface ConfigContainer extends ConfigElement {
      * @return an immutable, read-through collection representing the entries contained in this object
      */
     @NotNull Collection<ConfigEntry> entryCollection();
+
+    @NotNull Collection<ConfigElement> elementCollection();
 }

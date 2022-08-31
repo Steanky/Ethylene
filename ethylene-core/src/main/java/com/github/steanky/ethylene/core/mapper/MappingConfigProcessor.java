@@ -1,9 +1,11 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
+import com.github.steanky.ethylene.core.mapper.signature.OrderedSignature;
+import com.github.steanky.ethylene.core.mapper.signature.Signature;
+import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.NotNull;
@@ -15,9 +17,9 @@ import java.util.function.BiConsumer;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final Token<T> token;
-    private final TypeFactory.Source typeFactorySource;
+    private final TypeSignatureMatcher.Source typeFactorySource;
 
-    public MappingConfigProcessor(@NotNull Token<T> token, @NotNull TypeFactory.Source typeFactorySource) {
+    public MappingConfigProcessor(@NotNull Token<T> token, @NotNull TypeSignatureMatcher.Source typeFactorySource) {
         this.token = Objects.requireNonNull(token);
         this.typeFactorySource = Objects.requireNonNull(typeFactorySource);
     }
@@ -27,45 +29,39 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     public T dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
         try {
             Type rootType = token.get();
-            TypeFactory rootFactory = typeFactorySource.factory(rootType);
+            TypeSignatureMatcher rootFactory = typeFactorySource.matcherFor(rootType);
             ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
 
-            Reference reference = GraphTransformer.process(rootEntry, classEntry -> {
-                        Signature signature = classEntry.typeFactory.signature(classEntry.configElement);
-                        SignatureElement[] signatureElements = signature.elements();
-                        Object[] args = new Object[signatureElements.length];
+            Reference reference = GraphTransformer.process(rootEntry, nodeEntry -> {
+                        OrderedSignature orderedSignature = nodeEntry.signatureMatcher.signature(nodeEntry.element);
 
-                        return new GraphTransformer.Node<>(classEntry, new Iterator<>() {
+                        Signature signature = orderedSignature.signature();
+                        int signatureSize = orderedSignature.size();
+
+                        Iterator<ConfigElement> elementIterator = orderedSignature.elementIterable().iterator();
+                        Iterator<Entry<String, Type>> typeEntryIterator = signature.types().iterator();
+
+                        Object[] args = new Object[signatureSize];
+
+                        return new GraphTransformer.Node<>(nodeEntry, new Iterator<>() {
                             private int i = 0;
-                            private Iterator<ConfigEntry> entryIterator;
 
                             @Override
                             public boolean hasNext() {
-                                return i < signatureElements.length;
+                                return i < signatureSize;
                             }
 
                             @Override
                             public Entry<Object, ClassEntry> next() {
-                                SignatureElement nextSignature = signatureElements[i++];
-                                Type nextType = nextSignature.type();
+                                i++;
 
-                                ConfigElement nextElement;
-                                if (signature.indexed()) {
-                                    if (entryIterator == null) {
-                                        entryIterator = classEntry.configElement.asContainer().entryCollection()
-                                                .iterator();
-                                    }
+                                Type nextType = typeEntryIterator.next().getSecond();
+                                ConfigElement nextElement = elementIterator.next();
+                                TypeSignatureMatcher nextMatcher = typeFactorySource.matcherFor(nextType);
 
-                                    nextElement = entryIterator.next().getSecond();
-                                }
-                                else {
-                                    nextElement = classEntry.configElement.getElement(nextSignature.identifier());
-                                }
-
-                                TypeFactory nextFactory = typeFactorySource.factory(nextType);
-                                return Entry.of(null, new ClassEntry(nextType, nextElement, nextFactory));
+                                return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
                             }
-                        }, new GraphTransformer.Output<>(classEntry.reference, new BiConsumer<>() {
+                        }, new GraphTransformer.Output<>(nodeEntry.reference, new BiConsumer<>() {
                             private int i = 0;
 
                             @Override
@@ -73,13 +69,12 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 args[i++] = value.ref;
 
                                 if (i == args.length) {
-                                    classEntry.reference.ref = classEntry.typeFactory.make(signature, classEntry
-                                            .configElement, args);
+                                    nodeEntry.reference.ref = signature.makeObject(args);
                                 }
                             }
                         }));
-                    }, potentialContainer -> potentialContainer.configElement.isContainer(),
-                    scalar -> new Reference(scalar.configElement.asScalar()));
+                    }, potentialContainer -> potentialContainer.element.isContainer(),
+                    scalar -> new Reference(scalar.element.asScalar()));
             return (T) reference.ref;
         } catch (Exception e) {
             throw new ConfigProcessException(e);
@@ -91,12 +86,13 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
         return null;
     }
 
-    private record ClassEntry(Type type, ConfigElement configElement, TypeFactory typeFactory, Reference reference) {
-        private ClassEntry(Type type, ConfigElement configElement, TypeFactory typeFactory) {
-            this(type, configElement, typeFactory, new Reference(null));
+    private record ClassEntry(Type type, ConfigElement element, TypeSignatureMatcher signatureMatcher, Reference reference) {
+        private ClassEntry(Type type, ConfigElement configElement, TypeSignatureMatcher typeSignatureProvider) {
+            this(type, configElement, typeSignatureProvider, new Reference(null));
         }
     }
 
+    //a simple mutable reference to an object
     private static class Reference {
         private Object ref;
 

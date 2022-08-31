@@ -23,7 +23,9 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      * that null values cannot be inserted, and the map is never exposed publicly.
      */
     protected final Map<String, ConfigElement> mappings;
+
     private Collection<ConfigEntry> containerCollection;
+    private Collection<ConfigElement> elementCollection;
 
     /**
      * Construct a new AbstractConfigNode using the provided mappings.
@@ -100,34 +102,68 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         return ConfigElementUtils.toString(this);
     }
 
+    @SuppressWarnings("ReplaceNullCheck")
     @Override
     public @NotNull Collection<ConfigEntry> entryCollection() {
-        return Objects.requireNonNullElseGet(containerCollection,
-                () -> containerCollection = new AbstractCollection<>() {
+        if (containerCollection != null) {
+            return containerCollection;
+        }
+
+        return containerCollection = new AbstractCollection<>() {
+            @Override
+            public Iterator<ConfigEntry> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<Entry<String, ConfigElement>> entryIterator = mappings.entrySet()
+                            .iterator();
+
                     @Override
-                    public Iterator<ConfigEntry> iterator() {
-                        return new Iterator<>() {
-                            private final Iterator<Entry<String, ConfigElement>> entryIterator = mappings.entrySet()
-                                    .iterator();
-
-                            @Override
-                            public boolean hasNext() {
-                                return entryIterator.hasNext();
-                            }
-
-                            @Override
-                            public ConfigEntry next() {
-                                Entry<String, ConfigElement> next = entryIterator.next();
-                                return new ConfigEntry(next.getKey(), next.getValue());
-                            }
-                        };
+                    public boolean hasNext() {
+                        return entryIterator.hasNext();
                     }
 
                     @Override
-                    public int size() {
-                        return mappings.size();
+                    public ConfigEntry next() {
+                        Entry<String, ConfigElement> next = entryIterator.next();
+                        return new ConfigEntry(next.getKey(), next.getValue());
                     }
-                });
+                };
+            }
 
+            @Override
+            public int size() {
+                return mappings.size();
+            }
+        };
+    }
+
+    @Override
+    public @NotNull Collection<ConfigElement> elementCollection() {
+        if (elementCollection != null) {
+            return elementCollection;
+        }
+
+        return elementCollection = new AbstractCollection<>() {
+            @Override
+            public Iterator<ConfigElement> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<ConfigElement> elementIterator = mappings.values().iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return elementIterator.hasNext();
+                    }
+
+                    @Override
+                    public ConfigElement next() {
+                        return elementIterator.next();
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return mappings.size();
+            }
+        };
     }
 }
