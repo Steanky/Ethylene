@@ -6,10 +6,10 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-public abstract class ListFactoryBase extends TypeFactoryBase {
+public abstract class CollectionFactoryBase extends TypeFactoryBase {
     protected final Type componentType;
 
-    public ListFactoryBase(@NotNull Type componentType) {
+    public CollectionFactoryBase(@NotNull Type componentType) {
         this.componentType = Objects.requireNonNull(componentType);
     }
 

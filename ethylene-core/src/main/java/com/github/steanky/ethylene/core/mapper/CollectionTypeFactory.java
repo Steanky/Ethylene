@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class CollectionTypeFactory extends ListFactoryBase {
+public class CollectionTypeFactory extends CollectionFactoryBase {
     private final Constructor<?> sizeConstructor;
 
     public CollectionTypeFactory(@NotNull Class<?> collectionType, @NotNull Type parameterType) {

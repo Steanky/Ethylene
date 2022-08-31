@@ -44,7 +44,6 @@ public abstract class Token<T> implements Supplier<Type> {
 
         Type[] types = parameterizedType.getActualTypeArguments();
         if (types.length != 1) {
-            //sanity check, should absolutely never happen, if it does there's probably something wrong with the JVM
             throw new IllegalStateException(
                     "Expected 1 type parameter, found " + types.length + " for class " + getClass().getTypeName());
         }
@@ -89,7 +88,7 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return "Token{type=" + type.toString() + "}";
     }
 }

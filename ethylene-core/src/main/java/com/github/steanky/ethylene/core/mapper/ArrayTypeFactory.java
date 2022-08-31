@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 
-public class ArrayTypeFactory extends ListFactoryBase {
+public class ArrayTypeFactory extends CollectionFactoryBase {
     private final Class<?> rawType;
 
     public ArrayTypeFactory(@NotNull Type componentType) {
