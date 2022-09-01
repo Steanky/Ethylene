@@ -33,13 +33,14 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
 
             Reference reference = GraphTransformer.process(rootEntry, nodeEntry -> {
-                        OrderedSignature orderedSignature = nodeEntry.signatureMatcher.signature(nodeEntry.element);
+                        OrderedSignature orderedSignature = nodeEntry.signatureMatcher.signature(nodeEntry.element,
+                                nodeEntry.type);
 
                         Signature signature = orderedSignature.signature();
                         int signatureSize = orderedSignature.size();
 
                         Iterator<ConfigElement> elementIterator = orderedSignature.elementIterable().iterator();
-                        Iterator<Entry<String, Type>> typeEntryIterator = signature.types().iterator();
+                        Iterator<Entry<String, Type>> typeEntryIterator = signature.argumentTypes().iterator();
 
                         Object[] args = new Object[signatureSize];
 

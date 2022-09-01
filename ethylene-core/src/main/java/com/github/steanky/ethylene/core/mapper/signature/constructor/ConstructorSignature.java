@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.mapper.signature.constructor;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.TypeHinter;
@@ -23,7 +24,7 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Type>> types() {
+    public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
         return getTypeCollection();
     }
 
@@ -46,8 +47,18 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public TypeHinter.Hint type() {
+    public int length(@NotNull ConfigElement element) {
+        return constructor.getParameterCount();
+    }
+
+    @Override
+    public TypeHinter.Hint typeHint() {
         return TypeHinter.Hint.OBJECT_LIKE;
+    }
+
+    @Override
+    public @NotNull Type returnType() {
+        return constructor.getDeclaringClass();
     }
 
     private Collection<Entry<String, Type>> getTypeCollection() {

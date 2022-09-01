@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
@@ -14,12 +15,13 @@ public class CollectionSignature extends ContainerSignatureBase {
     private final Constructor<?> constructor;
     private final boolean parameterless;
 
-    public CollectionSignature(@NotNull Type componentType, Class<?> collectionClass) {
-        super(componentType);
+    public CollectionSignature(@NotNull Type componentType, @NotNull Type collectionClass) {
+        super(componentType, collectionClass);
 
-        Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(collectionClass, int.class);
+        Class<?> rawClass = TypeUtils.getRawType(collectionClass, null);
+        Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass, int.class);
         if (constructor == null) {
-            constructor = ConstructorUtils.getMatchingAccessibleConstructor(collectionClass);
+            constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass);
             if (constructor == null) {
                 throw new MapperException("no suitable collection constructor found for '" + collectionClass + "'");
             }

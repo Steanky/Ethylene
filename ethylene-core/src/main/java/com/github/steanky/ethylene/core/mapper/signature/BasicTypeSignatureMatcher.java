@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.*;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -25,16 +26,17 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
     }
 
     @Override
-    public @NotNull OrderedSignature signature(@NotNull ConfigElement providedElement) {
+    public @NotNull OrderedSignature signature(@NotNull ConfigElement providedElement, @NotNull Type desiredType) {
         for (Signature signature : signatures) {
-            TypeHinter.Hint signatureHint = signature.type();
-            if (!signatureHint.compatible(providedElement)) {
+            if (!TypeUtils.isAssignable(signature.returnType(), desiredType)) {
                 continue;
             }
 
+            TypeHinter.Hint signatureHint = signature.typeHint();
             Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
+            int signatureLength = signature.length(providedElement);
             if (signatureHint == TypeHinter.Hint.CONTAINER_LIKE || !(matchNames || matchTypeHints)) {
-                return new OrderedSignature(signature, elementCollection, elementCollection.size());
+                return new OrderedSignature(signature, elementCollection, signatureLength);
             }
 
             if (!providedElement.isNode()) {
@@ -43,7 +45,7 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
 
             ConfigNode providedNode = providedElement.asNode();
             boolean hasArgumentNames = signature.hasArgumentNames();
-            Iterable<Entry<String, Type>> signatureTypes = signature.types();
+            Iterable<Entry<String, Type>> signatureTypes = signature.argumentTypes();
 
             outer:
             {
@@ -78,7 +80,7 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
                     }
                 }
 
-                return new OrderedSignature(signature, targetCollection, targetCollection.size());
+                return new OrderedSignature(signature, targetCollection, signatureLength);
             }
 
         }

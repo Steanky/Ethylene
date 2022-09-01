@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 
 @FunctionalInterface
 public interface TypeSignatureMatcher {
-    @NotNull OrderedSignature signature(@NotNull ConfigElement providedElement);
+    @NotNull OrderedSignature signature(@NotNull ConfigElement providedElement, @NotNull Type desiredType);
 
     @FunctionalInterface
     interface Source {
