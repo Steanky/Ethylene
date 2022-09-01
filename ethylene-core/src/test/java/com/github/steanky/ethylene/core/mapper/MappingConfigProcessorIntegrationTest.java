@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.core.mapper;
 
-import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
@@ -90,18 +89,6 @@ class MappingConfigProcessorIntegrationTest {
 
             assertArrayEquals(stupidStringArray, stupidString.get(0));
             assertArrayEquals(stupidStringArray2, stupidString.get(1));
-        }
-
-        @SuppressWarnings("CollectionAddedToSelf")
-        @Test
-        void selfReferentialList() {
-            ConfigList list = ConfigList.of("a", "b");
-            list.add(list);
-
-            List<Object> array = assertDoesNotThrow(() -> objectListProcessor.dataFromElement(list));
-            assertEquals("a", array.get(0));
-            assertEquals("b", array.get(1));
-            assertSame(array, array.get(2));
         }
     }
 
