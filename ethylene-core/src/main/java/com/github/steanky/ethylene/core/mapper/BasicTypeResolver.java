@@ -88,8 +88,8 @@ public class BasicTypeResolver implements TypeResolver {
 
         ClassEntry newEntry = new ClassEntry(ClassUtils.getName(implementation), implementation);
         if (types.putIfAbsent(ClassUtils.getName(superclass), newEntry) != null) {
-            throw new MapperException(
-                    "there is already an implementation type registered for class '" + superclass.getName() + "'");
+            throw new MapperException("there is already an implementation type registered for class '" + superclass
+                    .getName() + "'");
         }
 
         cache.put(superclass, newEntry);

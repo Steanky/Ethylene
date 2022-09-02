@@ -43,13 +43,8 @@ public class MapSignature extends ContainerSignatureBase {
     @Override
     public Object makeObject(@NotNull Object[] args) {
         try {
-            Map<Object, Object> map;
-            if (parameterless) {
-                map = (Map<Object, Object>) constructor.newInstance();
-            }
-            else {
-                map = (Map<Object, Object>) constructor.newInstance(args.length);
-            }
+            Map<Object, Object> map = parameterless ? (Map<Object, Object>) constructor.newInstance() : (Map<Object,
+                    Object>) constructor.newInstance(args.length);
 
             for (Object object : args) {
                 Map.Entry<Object, Object> entry = (Map.Entry<Object, Object>)object;

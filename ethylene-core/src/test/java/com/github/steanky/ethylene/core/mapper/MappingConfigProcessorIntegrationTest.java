@@ -2,7 +2,7 @@ package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
+import com.github.steanky.ethylene.core.mapper.signature.constructor.ObjectSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +36,7 @@ class MappingConfigProcessorIntegrationTest {
     public MappingConfigProcessorIntegrationTest() {
         TypeHinter typeHinter = new BasicTypeHinter();
         BasicTypeResolver typeResolver = new BasicTypeResolver();
-        SignatureBuilder signatureBuilder = new ConstructorSignatureBuilder();
+        SignatureBuilder signatureBuilder = new ObjectSignatureBuilder();
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);
 

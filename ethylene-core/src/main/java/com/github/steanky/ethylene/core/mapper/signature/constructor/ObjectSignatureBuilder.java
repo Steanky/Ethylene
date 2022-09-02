@@ -9,7 +9,10 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 
-public class ConstructorSignatureBuilder implements SignatureBuilder {
+public class ObjectSignatureBuilder implements SignatureBuilder {
+    public ObjectSignatureBuilder() {
+
+    }
 
     @Override
     public @NotNull Signature[] buildSignatures(@NotNull Type type) {
@@ -19,21 +22,21 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
         }
 
         Constructor<?>[] allConstructors = rawType.getConstructors();
-        Signature[] specArray = new Signature[allConstructors.length];
+        Signature[] signatures = new Signature[allConstructors.length];
 
         int j = 0;
         for (Constructor<?> constructor : allConstructors) {
             if (constructor.canAccess(null)) {
-                specArray[j++] = new ConstructorSignature(constructor);
+                signatures[j++] = new ConstructorSignature(constructor);
             }
         }
 
-        if (j < specArray.length) {
+        if (j < signatures.length) {
             Signature[] resized = new Signature[j];
-            System.arraycopy(specArray, 0, resized, 0, j);
+            System.arraycopy(signatures, 0, resized, 0, j);
             return resized;
         }
 
-        return specArray;
+        return signatures;
     }
 }

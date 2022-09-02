@@ -71,7 +71,7 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
                     yield new BasicTypeSignatureMatcher(mapSignature, typeHinter, false, false);
                 }
 
-                throw new MapperException("unexpected collection-like type '" + type.getTypeName() + "'");
+                throw new MapperException("unexpected container-like type '" + type.getTypeName() + "'");
             }
             case OBJECT_LIKE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(resolvedType),
                     typeHinter, matchParameterNames, matchParameterTypeHints);
