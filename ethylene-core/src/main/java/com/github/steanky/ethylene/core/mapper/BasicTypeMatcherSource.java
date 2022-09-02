@@ -23,7 +23,6 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
 
     private static final TypeVariable<Class<Map>>[] MAP_TYPE_VARIABLES = Map.class.getTypeParameters();
 
-
     private final TypeHinter typeHinter;
     private final TypeResolver resolver;
     private final SignatureBuilder objectSignatureBuilder;
@@ -66,6 +65,13 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
 
                     Type keyType = variables.get(MAP_TYPE_VARIABLES[0]);
                     Type valueType = variables.get(MAP_TYPE_VARIABLES[1]);
+                    if (keyType instanceof TypeVariable<?>) {
+                        keyType = Object.class;
+                    }
+
+                    if (valueType instanceof TypeVariable<?>) {
+                        valueType = Object.class;
+                    }
 
                     Signature[] mapSignature = new Signature[] { new MapSignature(keyType, valueType, resolvedType) };
                     yield new BasicTypeSignatureMatcher(mapSignature, typeHinter, false, false);

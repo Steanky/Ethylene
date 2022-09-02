@@ -78,7 +78,6 @@ public class ConstructorSignature implements Signature {
             return types = Collections.singleton(makeEntry(first, matchesNames = first.isNamePresent()));
         }
 
-
         //use a backing ArrayList for n > 1 length
         List<Entry<String, Type>> entryList = new ArrayList<>(parameters.length);
 

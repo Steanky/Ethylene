@@ -6,5 +6,5 @@ import java.lang.reflect.Type;
 
 @FunctionalInterface
 public interface SignatureBuilder {
-    @NotNull Signature[] buildSignatures(@NotNull Type type);
+    @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type);
 }
