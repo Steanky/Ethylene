@@ -42,11 +42,10 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
 
     @Override
     public TypeSignatureMatcher matcherFor(@NotNull Type type) {
-        TypeHinter.Hint hint = typeHinter.getHint(type);
+        Class<?> resolvedType = resolver.resolveType(type);
 
-        return switch (hint) {
+        return switch (typeHinter.getHint(type)) {
             case CONTAINER_LIKE -> {
-                Class<?> resolvedType = resolver.resolveType(type);
                 if (resolvedType.isArray()) {
                     Signature[] arraySignature = new Signature[] { new ArraySignature(resolvedType.getComponentType()) };
                     yield new BasicTypeSignatureMatcher(arraySignature, typeHinter, false, false);
@@ -74,8 +73,8 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
 
                 throw new MapperException("unexpected collection-like type '" + type.getTypeName() + "'");
             }
-            case OBJECT_LIKE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(type), typeHinter,
-                    matchParameterNames, matchParameterTypeHints);
+            case OBJECT_LIKE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(resolvedType),
+                    typeHinter, matchParameterNames, matchParameterTypeHints);
             case SCALAR -> null;
         };
     }
