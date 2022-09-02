@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
 import com.github.steanky.ethylene.core.mapper.signature.container.ArraySignature;
 import com.github.steanky.ethylene.core.mapper.signature.container.CollectionSignature;
+import com.github.steanky.ethylene.core.mapper.signature.container.MapSignature;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,7 +63,13 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
                     yield new BasicTypeSignatureMatcher(collectionSignature, typeHinter, false, false);
                 }
                 else if (Map.class.isAssignableFrom(resolvedType)) {
-                    throw new UnsupportedOperationException("not implemented");
+                    Map<TypeVariable<?>, Type> variables = TypeUtils.getTypeArguments(type, Map.class);
+
+                    Type keyType = variables.get(MAP_TYPE_VARIABLES[0]);
+                    Type valueType = variables.get(MAP_TYPE_VARIABLES[1]);
+
+                    Signature[] mapSignature = new Signature[] { new MapSignature(keyType, valueType, resolvedType) };
+                    yield new BasicTypeSignatureMatcher(mapSignature, typeHinter, false, false);
                 }
 
                 throw new MapperException("unexpected collection-like type '" + type.getTypeName() + "'");
