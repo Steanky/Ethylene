@@ -234,11 +234,7 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public TMap dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-                if(!element.isList()) {
-                    throw new ConfigProcessException("Element must be a list");
-                }
-
-                ConfigList list = element.asList();
+                ConfigList list = CONFIG_LIST.dataFromElement(element);
                 TMap map = mapFunction.apply(list.size());
                 for(ConfigElement entry : element.asList()) {
                     if(!entry.isNode()) {
@@ -282,11 +278,7 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public M dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-                if(!element.isNode()) {
-                    throw new ConfigProcessException("Element must be a ConfigNode");
-                }
-
-                ConfigNode node = element.asNode();
+                ConfigNode node = CONFIG_NODE.dataFromElement(element);
                 M map = mapFunction.apply(node.size());
                 for(ConfigEntry entry : node.entryCollection()) {
                     map.put(entry.getKey(), ConfigProcessor.this.dataFromElement(entry.getValue()));
@@ -329,11 +321,7 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public TCollection dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-                if(!element.isList()) {
-                    throw new ConfigProcessException("Element must be a list");
-                }
-
-                ConfigList list = element.asList();
+                ConfigList list = CONFIG_LIST.dataFromElement(element);
                 TCollection container = collectionSupplier.apply(list.size());
                 for(ConfigElement sample : list) {
                     container.add(ConfigProcessor.this.dataFromElement(sample));
@@ -392,11 +380,7 @@ public interface ConfigProcessor<TData> {
             @SuppressWarnings("unchecked")
             @Override
             public TData[] dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-                if(!element.isList()) {
-                    throw new ConfigProcessException("Element must be a list");
-                }
-
-                ConfigList list = element.asList();
+                ConfigList list = CONFIG_LIST.dataFromElement(element);
                 TData[] data = (TData[]) new Object[list.size()];
                 int i = 0;
                 for(ConfigElement sample : list) {
@@ -414,6 +398,32 @@ public interface ConfigProcessor<TData> {
                 }
 
                 return list;
+            }
+        };
+    }
+
+    /**
+     * Creates a new ConfigProcessor capable of processing optional data. If this ConfigProcessor's {@code
+     * dataFromElement} method returns null, the returned processor's optional will be empty, else it will contain the
+     * value returned from {@code dataFromElement}. Likewise, when calling {@code elementFromData} with the given
+     * optional, if empty, a null-holding {@link ConfigPrimitive} instance will be returned, otherwise, the element
+     * will contain the result of calling {@code elementFromData}.
+     * @return a ConfigProcessor capable of processing optional data
+     */
+    default @NotNull ConfigProcessor<Optional<TData>> optionalProcessor() {
+        return new ConfigProcessor<>() {
+            @Override
+            public Optional<TData> dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+                return Optional.ofNullable(ConfigProcessor.this.dataFromElement(element));
+            }
+
+            @Override
+            public @NotNull ConfigElement elementFromData(Optional<TData> data) throws ConfigProcessException {
+                if (data.isPresent()) {
+                    return ConfigProcessor.this.elementFromData(data.get());
+                }
+
+                return ConfigPrimitive.nil();
             }
         };
     }
