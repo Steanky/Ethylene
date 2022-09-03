@@ -11,6 +11,6 @@ public interface TypeSignatureMatcher {
 
     @FunctionalInterface
     interface Source {
-        TypeSignatureMatcher matcherFor(@NotNull Type type);
+        TypeSignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element);
     }
 }

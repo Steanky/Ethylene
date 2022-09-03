@@ -35,7 +35,7 @@ class MappingConfigProcessorIntegrationTest {
 
     public MappingConfigProcessorIntegrationTest() {
         TypeHinter typeHinter = new BasicTypeHinter();
-        BasicTypeResolver typeResolver = new BasicTypeResolver();
+        BasicTypeResolver typeResolver = new BasicTypeResolver(typeHinter);
         SignatureBuilder signatureBuilder = new ObjectSignatureBuilder();
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);

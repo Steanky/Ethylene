@@ -159,6 +159,14 @@ public interface ConfigElement {
     default Object asScalar() {throw new IllegalStateException("Element may not be converted to Object");}
 
     /**
+     * Returns the type of this ConfigElement.
+     * @return the type of this ConfigElement
+     */
+    default ElementType type() {
+        throw new IllegalStateException("Element does not specify an ElementType");
+    }
+
+    /**
      * Obtains a child ConfigElement from this one by following the specified path. Path objects may be either string
      * keys (corresponding to {@link ConfigNode}s) or integers (for accessing {@link ConfigList}s). Other types will
      * result in an {@link IllegalArgumentException}. If the given array is empty, this object will be returned. The

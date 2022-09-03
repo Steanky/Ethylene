@@ -29,7 +29,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     public T dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
         try {
             Type rootType = token.get();
-            TypeSignatureMatcher rootFactory = typeFactorySource.matcherFor(rootType);
+            TypeSignatureMatcher rootFactory = typeFactorySource.matcherFor(rootType, element);
             ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
 
             Reference reference = GraphTransformer.process(rootEntry, nodeEntry -> {
@@ -58,7 +58,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                                 Type nextType = typeEntryIterator.next().getSecond();
                                 ConfigElement nextElement = elementIterator.next();
-                                TypeSignatureMatcher nextMatcher = typeFactorySource.matcherFor(nextType);
+                                TypeSignatureMatcher nextMatcher = typeFactorySource.matcherFor(nextType, nextElement);
 
                                 return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
                             }

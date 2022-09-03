@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.TypeHinter;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import org.jetbrains.annotations.NotNull;
@@ -55,6 +56,6 @@ public abstract class ContainerSignatureBase implements Signature {
             return configElement.asContainer().elementCollection().size();
         }
 
-        return 0;
+        throw new MapperException("cannot compute the length of a container for non-container ConfigElement");
     }
 }

@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
+import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -112,5 +113,10 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      */
     default void putBoolean(@NotNull String key, boolean value) {
         put(key, new ConfigPrimitive(value));
+    }
+
+    @Override
+    default @NotNull ElementType type() {
+        return ElementType.NODE;
     }
 }

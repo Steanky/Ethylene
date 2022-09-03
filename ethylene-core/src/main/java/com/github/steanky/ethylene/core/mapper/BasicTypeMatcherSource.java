@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.mapper;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.mapper.signature.BasicTypeSignatureMatcher;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
@@ -7,6 +8,7 @@ import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
 import com.github.steanky.ethylene.core.mapper.signature.container.ArraySignature;
 import com.github.steanky.ethylene.core.mapper.signature.container.CollectionSignature;
 import com.github.steanky.ethylene.core.mapper.signature.container.MapSignature;
+import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,8 +42,8 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
     }
 
     @Override
-    public TypeSignatureMatcher matcherFor(@NotNull Type type) {
-        Class<?> resolvedType = resolver.resolveType(type);
+    public TypeSignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element) {
+        Class<?> resolvedType = resolver.resolveType(type, element);
 
         return switch (typeHinter.getHint(type)) {
             case CONTAINER_LIKE -> {
@@ -50,30 +52,13 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
                     yield new BasicTypeSignatureMatcher(arraySignature, typeHinter, false, false);
                 }
                 else if (Collection.class.isAssignableFrom(resolvedType)) {
-                    Type collectionType = TypeUtils.getTypeArguments(type, Collection.class)
-                            .get(COLLECTION_TYPE_VARIABLES[0]);
-                    if (collectionType instanceof TypeVariable<?>) {
-                        collectionType = Object.class;
-                    }
-
-                    Signature[] collectionSignature = new Signature[] { new CollectionSignature(collectionType,
-                            resolvedType) };
+                    Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Collection.class);
+                    Signature[] collectionSignature = new Signature[] { new CollectionSignature(types[0], resolvedType) };
                     yield new BasicTypeSignatureMatcher(collectionSignature, typeHinter, false, false);
                 }
                 else if (Map.class.isAssignableFrom(resolvedType)) {
-                    Map<TypeVariable<?>, Type> variables = TypeUtils.getTypeArguments(type, Map.class);
-
-                    Type keyType = variables.get(MAP_TYPE_VARIABLES[0]);
-                    Type valueType = variables.get(MAP_TYPE_VARIABLES[1]);
-                    if (keyType instanceof TypeVariable<?>) {
-                        keyType = Object.class;
-                    }
-
-                    if (valueType instanceof TypeVariable<?>) {
-                        valueType = Object.class;
-                    }
-
-                    Signature[] mapSignature = new Signature[] { new MapSignature(keyType, valueType, resolvedType) };
+                    Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Map.class);
+                    Signature[] mapSignature = new Signature[] { new MapSignature(types[0], types[1], resolvedType) };
                     yield new BasicTypeSignatureMatcher(mapSignature, typeHinter, false, false);
                 }
 

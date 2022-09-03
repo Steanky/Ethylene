@@ -1,5 +1,7 @@
 package com.github.steanky.ethylene.core.mapper;
 
+import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
@@ -8,22 +10,23 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.WeakHashMap;
+import java.lang.reflect.TypeVariable;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class BasicTypeResolver implements TypeResolver {
+    private final TypeHinter typeHinter;
     private final Map<String, ClassEntry> types;
     private final Map<Class<?>, ClassEntry> cache;
-    public BasicTypeResolver(int initialCapacity) {
+
+    public BasicTypeResolver(@NotNull TypeHinter typeHinter, int initialCapacity) {
+        this.typeHinter = Objects.requireNonNull(typeHinter);
         types = new HashMap<>(initialCapacity);
         cache = new WeakHashMap<>(initialCapacity);
     }
 
-    public BasicTypeResolver() {
-        this(4);
+    public BasicTypeResolver(@NotNull TypeHinter typeHinter) {
+        this(typeHinter, 4);
     }
 
     private static Class<?> forName(String className, Supplier<String> nameSupplier) {
@@ -35,17 +38,23 @@ public class BasicTypeResolver implements TypeResolver {
     }
 
     @Override
-    public @NotNull Class<?> resolveType(@NotNull Type type) {
+    public @NotNull Class<?> resolveType(@NotNull Type type, @NotNull ConfigElement element) {
         Objects.requireNonNull(type);
+        Objects.requireNonNull(element);
 
         Class<?> raw = TypeUtils.getRawType(type, null);
+
         if (raw == null) {
             throw new MapperException("resolved raw type was null for '" + type.getTypeName() + "'");
         }
 
-        if ((!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(ClassUtils.getName(raw))) || raw.isArray()
-                || raw.isPrimitive()) {
+        TypeHinter.Hint hint = typeHinter.getHint(type);
+        if (raw.isArray() || raw.isPrimitive()) {
             return raw;
+        }
+
+        if ((!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(ClassUtils.getName(raw)))) {
+
         }
 
         ClassEntry cached = cache.get(raw);

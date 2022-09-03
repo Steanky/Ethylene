@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
+import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -86,5 +87,10 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
      */
     default void addBoolean(boolean value) {
         add(new ConfigPrimitive(value));
+    }
+
+    @Override
+    default @NotNull ElementType type() {
+        return ElementType.LIST;
     }
 }

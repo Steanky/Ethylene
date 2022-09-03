@@ -34,11 +34,10 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
 
             TypeHinter.Hint signatureHint = signature.typeHint();
             Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
-            int signatureLength = signature.length(providedElement);
 
             if (signatureHint == TypeHinter.Hint.CONTAINER_LIKE || !(matchNames || matchTypeHints) || desiredType
                     .equals(Object.class)) {
-                return new OrderedSignature(signature, elementCollection, signatureLength);
+                return new OrderedSignature(signature, elementCollection, signature.length(providedElement));
             }
 
             if (!providedElement.isNode()) {
@@ -82,7 +81,7 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
                     }
                 }
 
-                return new OrderedSignature(signature, targetCollection, signatureLength);
+                return new OrderedSignature(signature, targetCollection, signature.length(providedElement));
             }
 
         }

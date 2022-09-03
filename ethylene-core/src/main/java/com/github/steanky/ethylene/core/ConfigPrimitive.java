@@ -128,4 +128,9 @@ public final class ConfigPrimitive implements ConfigElement {
     public String toString() {
         return Objects.toString(object);
     }
+
+    @Override
+    public @NotNull ElementType type() {
+        return ElementType.SCALAR;
+    }
 }
