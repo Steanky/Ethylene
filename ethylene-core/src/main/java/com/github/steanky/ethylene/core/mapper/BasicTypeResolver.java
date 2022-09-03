@@ -64,8 +64,16 @@ public class BasicTypeResolver implements TypeResolver {
             else {
                 //check assignability
                 Class<?> elementType = switch (element.type()) {
-                    case NODE, SCALAR -> raw;
-                    case LIST -> Collection.class;
+                    case NODE -> raw;
+                    case LIST -> ArrayList.class;
+                    case SCALAR -> {
+                        Object scalar = element.asScalar();
+                        if (scalar == null) {
+                            yield Object.class;
+                        }
+
+                        yield scalar.getClass();
+                    }
                 };
 
                 if (!raw.isAssignableFrom(elementType)) {
