@@ -18,6 +18,63 @@ import java.util.function.Supplier;
  */
 public interface ConfigProcessor<TData> {
     /**
+     * Built-in ConfigProcessor implementation for ConfigNodes.
+     */
+    ConfigProcessor<ConfigNode> CONFIG_NODE = new ConfigProcessor<>() {
+        @Override
+        public ConfigNode dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if (!element.isNode()) {
+                throw new ConfigProcessException("Element must be a node");
+            }
+
+            return element.asNode();
+        }
+
+        @Override
+        public @NotNull ConfigElement elementFromData(ConfigNode node) {
+            return node;
+        }
+    };
+
+    /**
+     * Built-in ConfigProcessor implementation for ConfigLists.
+     */
+    ConfigProcessor<ConfigList> CONFIG_LIST = new ConfigProcessor<>() {
+        @Override
+        public ConfigList dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if (!element.isList()) {
+                throw new ConfigProcessException("Element must be a list");
+            }
+
+            return element.asList();
+        }
+
+        @Override
+        public @NotNull ConfigElement elementFromData(ConfigList list) {
+            return list;
+        }
+    };
+
+    /**
+     * Built-in ConfigProcessor implementation for ConfigContainers.
+     */
+    ConfigProcessor<ConfigContainer> CONFIG_CONTAINER = new ConfigProcessor<>() {
+        @Override
+        public ConfigContainer dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if (!element.isContainer()) {
+                throw new ConfigProcessException("Element must be a container");
+            }
+
+            return element.asContainer();
+        }
+
+        @Override
+        public @NotNull ConfigElement elementFromData(ConfigContainer container) {
+            return container;
+        }
+    };
+
+    /**
      * Built-in ConfigProcessor implementation for strings.
      */
     ConfigProcessor<String> STRING = new ConfigProcessor<>() {
