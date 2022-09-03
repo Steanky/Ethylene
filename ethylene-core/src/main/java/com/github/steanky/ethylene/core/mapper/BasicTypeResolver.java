@@ -61,27 +61,26 @@ public class BasicTypeResolver implements TypeResolver {
             if (hint.compatible(element)) {
                 return raw;
             }
-            else {
-                //check assignability
-                Class<?> elementType = switch (element.type()) {
-                    case NODE -> raw;
-                    case LIST -> ArrayList.class;
-                    case SCALAR -> {
-                        Object scalar = element.asScalar();
-                        if (scalar == null) {
-                            yield Object.class;
-                        }
 
-                        yield scalar.getClass();
+            //check assignability
+            Class<?> elementType = switch (element.type()) {
+                case NODE -> raw;
+                case LIST -> ArrayList.class;
+                case SCALAR -> {
+                    Object scalar = element.asScalar();
+                    if (scalar == null) {
+                        yield Object.class;
                     }
-                };
 
-                if (!raw.isAssignableFrom(elementType)) {
-                    throw new MapperException("element type " + element.type() + " not compatible with " + type);
+                    yield scalar.getClass();
                 }
+            };
 
-                return elementType;
+            if (!raw.isAssignableFrom(elementType)) {
+                throw new MapperException("element type " + element.type() + " not compatible with " + type);
             }
+
+            return elementType;
         }
 
         ClassEntry cached = cache.get(raw);
