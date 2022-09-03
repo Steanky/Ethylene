@@ -124,6 +124,14 @@ public final class ConfigPrimitive implements ConfigElement {
         return false;
     }
 
+    /**
+     * Equivalent to {@code new ConfigPrimitive(null)}.
+     * @return a new ConfigPrimitive containing null
+     */
+    public static @NotNull ConfigPrimitive nil() {
+        return new ConfigPrimitive(null);
+    }
+
     @Override
     public String toString() {
         return Objects.toString(object);
