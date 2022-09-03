@@ -418,12 +418,12 @@ public interface ConfigProcessor<TData> {
             }
 
             @Override
-            public @NotNull ConfigElement elementFromData(Optional<TData> tData) throws ConfigProcessException {
-                if (tData.isPresent()) {
-                    return ConfigProcessor.this.elementFromData(tData.get());
+            public @NotNull ConfigElement elementFromData(Optional<TData> data) throws ConfigProcessException {
+                if (data.isPresent()) {
+                    return ConfigProcessor.this.elementFromData(data.get());
                 }
 
-                return ConfigPrimitive.nullPrimitive();
+                return ConfigPrimitive.nil();
             }
         };
     }

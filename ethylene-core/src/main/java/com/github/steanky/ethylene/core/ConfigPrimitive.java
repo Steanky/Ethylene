@@ -131,7 +131,7 @@ public final class ConfigPrimitive implements ConfigElement {
      * Equivalent to {@code new ConfigPrimitive(null)}.
      * @return a new ConfigPrimitive containing null
      */
-    public static @NotNull ConfigPrimitive nullPrimitive() {
+    public static @NotNull ConfigPrimitive nil() {
         return new ConfigPrimitive(null);
     }
 }
