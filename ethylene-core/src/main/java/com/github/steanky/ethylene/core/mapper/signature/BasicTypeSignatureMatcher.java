@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.mapper.signature;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.*;
@@ -32,11 +33,10 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
                 continue;
             }
 
-            TypeHinter.Hint signatureHint = signature.typeHint();
+            ElementType signatureHint = signature.typeHint();
             Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
 
-            if (signatureHint == TypeHinter.Hint.CONTAINER_LIKE || !(matchNames || matchTypeHints) || desiredType
-                    .equals(Object.class)) {
+            if (signatureHint == ElementType.LIST || !(matchNames || matchTypeHints)) {
                 return new OrderedSignature(signature, elementCollection, signature.length(providedElement));
             }
 

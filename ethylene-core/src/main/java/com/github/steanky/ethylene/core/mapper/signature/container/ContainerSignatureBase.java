@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.TypeHinter;
@@ -41,8 +42,8 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
-    public TypeHinter.Hint typeHint() {
-        return TypeHinter.Hint.CONTAINER_LIKE;
+    public ElementType typeHint() {
+        return ElementType.LIST;
     }
 
     @Override

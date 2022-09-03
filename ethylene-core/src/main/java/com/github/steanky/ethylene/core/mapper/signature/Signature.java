@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.mapper.signature;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.TypeHinter;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,7 @@ public interface Signature {
 
     int length(@NotNull ConfigElement element);
 
-    TypeHinter.Hint typeHint();
+    ElementType typeHint();
 
     @NotNull Type returnType();
 }

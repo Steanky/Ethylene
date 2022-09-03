@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -43,18 +44,36 @@ public class BasicTypeResolver implements TypeResolver {
         Objects.requireNonNull(element);
 
         Class<?> raw = TypeUtils.getRawType(type, null);
-
         if (raw == null) {
             throw new MapperException("resolved raw type was null for '" + type.getTypeName() + "'");
         }
 
-        TypeHinter.Hint hint = typeHinter.getHint(type);
+        ElementType hint = typeHinter.getHint(raw);
         if (raw.isArray() || raw.isPrimitive()) {
+            if (!hint.compatible(element)) {
+                throw new MapperException("incompatible types: " + hint + " to " + type);
+            }
+
             return raw;
         }
 
         if ((!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(ClassUtils.getName(raw)))) {
+            if (hint.compatible(element)) {
+                return raw;
+            }
+            else {
+                //check assignability
+                Class<?> elementType = switch (element.type()) {
+                    case NODE, SCALAR -> raw;
+                    case LIST -> Collection.class;
+                };
 
+                if (!raw.isAssignableFrom(elementType)) {
+                    throw new MapperException("element type " + element.type() + " not compatible with " + type);
+                }
+
+                return elementType;
+            }
         }
 
         ClassEntry cached = cache.get(raw);

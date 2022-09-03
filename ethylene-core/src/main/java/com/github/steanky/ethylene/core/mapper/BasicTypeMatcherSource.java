@@ -9,22 +9,14 @@ import com.github.steanky.ethylene.core.mapper.signature.container.ArraySignatur
 import com.github.steanky.ethylene.core.mapper.signature.container.CollectionSignature;
 import com.github.steanky.ethylene.core.mapper.signature.container.MapSignature;
 import com.github.steanky.ethylene.core.util.ReflectionUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
 public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
-    private static final TypeVariable<Class<Collection>>[] COLLECTION_TYPE_VARIABLES =
-            Collection.class.getTypeParameters();
-
-    private static final TypeVariable<Class<Map>>[] MAP_TYPE_VARIABLES = Map.class.getTypeParameters();
-
     private final TypeHinter typeHinter;
     private final TypeResolver resolver;
     private final SignatureBuilder objectSignatureBuilder;
@@ -46,7 +38,7 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
         Class<?> resolvedType = resolver.resolveType(type, element);
 
         return switch (typeHinter.getHint(type)) {
-            case CONTAINER_LIKE -> {
+            case LIST -> {
                 if (resolvedType.isArray()) {
                     Signature[] arraySignature = new Signature[] { new ArraySignature(resolvedType.getComponentType()) };
                     yield new BasicTypeSignatureMatcher(arraySignature, typeHinter, false, false);
@@ -64,7 +56,7 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
 
                 throw new MapperException("unexpected container-like type '" + type.getTypeName() + "'");
             }
-            case OBJECT_LIKE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(resolvedType),
+            case NODE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(resolvedType),
                     typeHinter, matchParameterNames, matchParameterTypeHints);
             case SCALAR -> null;
         };
