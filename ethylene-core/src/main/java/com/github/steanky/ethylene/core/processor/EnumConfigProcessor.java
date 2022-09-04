@@ -4,10 +4,11 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -15,14 +16,15 @@ import java.util.function.Function;
  * @param <TEnum> the type of enum to serialize/deserialize
  */
 class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnum> {
-    private final Class<? extends TEnum> enumClass;
+    private Reference<Class<? extends TEnum>> enumClassReference;
+    private final String className;
     private final boolean caseSensitive;
 
     private Function<String, TEnum> lookupFunction;
 
     /**
      * Creates a new EnumConfigProcessor, which will be able to process instances of the provided enum class. The
-     * processor will be case-sensitive.
+     * processor will be case-sensitive. No strong reference to the provided class will be retained.
      * @param enumClass the enum class used to provide a list of enum constants
      */
     EnumConfigProcessor(@NotNull Class<? extends TEnum> enumClass) {
@@ -31,12 +33,13 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
 
     /**
      * Creates a new EnumConfigProcessor, which will be able to process instances of the provided enum class, and with
-     * the provided case sensitivity handling.
+     * the provided case sensitivity handling. No strong reference to the provided class will be retained.
      * @param enumClass the enum class used to provide a list of enum constants
      * @param caseSensitive whether this processor should be case-sensitive
      */
     EnumConfigProcessor(@NotNull Class<? extends TEnum> enumClass, boolean caseSensitive) {
-        this.enumClass = Objects.requireNonNull(enumClass);
+        this.enumClassReference = new WeakReference<>(enumClass);
+        this.className = enumClass.getName();
         this.caseSensitive = caseSensitive;
     }
 
@@ -49,6 +52,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
         String elementString = element.asString();
         TEnum result = lookup(elementString);
         if(result == null) {
+            Class<? extends TEnum> enumClass = getEnumClass();
             throw new ConfigProcessException("No enum constant named '" + elementString + "' in " + enumClass
                     .getTypeName());
         }
@@ -67,6 +71,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
 
     private TEnum lookup(String name) {
         if(lookupFunction == null) {
+            Class<? extends TEnum> enumClass = getEnumClass();
             TEnum[] constants = enumClass.getEnumConstants();
 
             //for tiny enums, we can save a bit of memory by not using a hashmap
@@ -93,5 +98,20 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
         }
 
         return lookupFunction.apply(name);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<? extends TEnum> getEnumClass() {
+        Class<? extends TEnum> cls = enumClassReference.get();
+        if (cls == null) {
+            try {
+                cls = (Class<? extends TEnum>) Class.forName(className);
+                enumClassReference = new WeakReference<>(cls);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return cls;
     }
 }
