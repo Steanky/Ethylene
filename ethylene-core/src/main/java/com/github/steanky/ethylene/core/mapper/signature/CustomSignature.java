@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class CustomSignatureBase implements Signature {
+public class CustomSignature implements Signature {
     private final Collection<Entry<String, Type>> namedTypes;
     private final Type returnType;
     private final boolean hasNames;
     private final Function<? super Object[], ?> creatorFunction;
 
-    public CustomSignatureBase(@NotNull Collection<Entry<String, Type>> namedArgumentTypes, @NotNull Type returnType,
+    public CustomSignature(@NotNull Collection<Entry<String, Type>> namedArgumentTypes, @NotNull Type returnType,
             boolean hasNames, @NotNull Function<? super Object[], ?> creatorFunction) {
         this.namedTypes = List.copyOf(namedArgumentTypes);
         this.returnType = Objects.requireNonNull(returnType);
@@ -41,7 +41,7 @@ public class CustomSignatureBase implements Signature {
     }
 
     @Override
-    public Object makeObject(@NotNull Object[] args) {
+    public Object buildObject(@NotNull Object[] args) {
         return creatorFunction.apply(args);
     }
 

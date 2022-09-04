@@ -4,7 +4,6 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.Token;
-import com.github.steanky.ethylene.core.mapper.TypeHinter;
 import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -15,7 +14,19 @@ import java.util.function.Function;
 public interface Signature {
     @NotNull Iterable<Entry<String, Type>> argumentTypes();
 
-    Object makeObject(@NotNull Object[] args);
+    default boolean hasBuildingObject() {
+        return false;
+    }
+
+    default void initBuildingObject(@NotNull ConfigElement element) {
+        throw new IllegalStateException("unsupported operation");
+    }
+
+    default @NotNull Object getBuildingObject() {
+        throw new IllegalStateException("unsupported operation");
+    }
+
+    Object buildObject(@NotNull Object[] args);
 
     boolean hasArgumentNames();
 
@@ -32,7 +43,7 @@ public interface Signature {
             parameterEntries.add(Entry.of(null, token.get()));
         }
 
-        return new CustomSignatureBase(parameterEntries, returnType.get(), false, constructor);
+        return new CustomSignature(parameterEntries, returnType.get(), false, constructor);
     }
 
     @SafeVarargs
@@ -44,6 +55,6 @@ public interface Signature {
                     Objects.requireNonNull(entry.getSecond(), "entry type").get()));
         }
 
-        return new CustomSignatureBase(parameterEntries, returnType.get(), true, constructor);
+        return new CustomSignature(parameterEntries, returnType.get(), true, constructor);
     }
 }

@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.mapper.signature.container;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -14,6 +15,8 @@ import java.util.Collection;
 public class CollectionSignature extends ContainerSignatureBase {
     private final Constructor<?> constructor;
     private final boolean parameterless;
+
+    private Collection<Object> buildingCollection;
 
     public CollectionSignature(@NotNull Type componentType, @NotNull Type collectionClass) {
         super(componentType, collectionClass);
@@ -36,10 +39,27 @@ public class CollectionSignature extends ContainerSignatureBase {
     }
 
     @Override
-    public Object makeObject(@NotNull Object[] args) {
-        Collection<Object> collection = makeNewCollection(args.length);
-        collection.addAll(Arrays.asList(args));
-        return collection;
+    public void initBuildingObject(@NotNull ConfigElement element) {
+        if(!element.isContainer()) {
+            throw new MapperException("expected container");
+        }
+
+        this.buildingCollection = makeNewCollection(element.asContainer().entryCollection().size());
+    }
+
+    @Override
+    public @NotNull Object getBuildingObject() {
+        if (buildingCollection == null) {
+            throw new MapperException("building object has not been initialized");
+        }
+
+        return buildingCollection;
+    }
+
+    @Override
+    public Object buildObject(@NotNull Object[] args) {
+        buildingCollection.addAll(Arrays.asList(args));
+        return buildingCollection;
     }
 
     @SuppressWarnings("unchecked")

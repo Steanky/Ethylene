@@ -32,7 +32,7 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public Object makeObject(@NotNull Object[] args) {
+    public Object buildObject(@NotNull Object[] args) {
         try {
             //it is the caller's responsibility to check argument length!
             return constructor.newInstance(args);

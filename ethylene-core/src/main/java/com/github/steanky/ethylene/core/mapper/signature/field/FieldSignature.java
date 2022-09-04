@@ -25,6 +25,8 @@ public class FieldSignature implements Signature {
     private List<Field> participatingFields;
     private Collection<Entry<String, Type>> types;
 
+    private Object buildingObject;
+
     public FieldSignature(@NotNull Type type) {
         this.type = Objects.requireNonNull(type);
         this.rawType = TypeUtils.getRawType(type, null);
@@ -121,15 +123,14 @@ public class FieldSignature implements Signature {
     }
 
     @Override
-    public Object makeObject(@NotNull Object[] args) {
+    public Object buildObject(@NotNull Object[] args) {
         try {
-            Object object = parameterlessConstructor.newInstance();
             for (int i = 0; i < args.length; i++) {
-                participatingFields.get(i).set(object, args[i]);
+                participatingFields.get(i).set(buildingObject, args[i]);
             }
 
-            return object;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            return buildingObject;
+        } catch (IllegalAccessException e) {
             throw new MapperException(e);
         }
     }
@@ -152,5 +153,28 @@ public class FieldSignature implements Signature {
     @Override
     public @NotNull Type returnType() {
         return type;
+    }
+
+    @Override
+    public boolean hasBuildingObject() {
+        return true;
+    }
+
+    @Override
+    public void initBuildingObject(@NotNull ConfigElement element) {
+        try {
+            buildingObject = parameterlessConstructor.newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new MapperException(e);
+        }
+    }
+
+    @Override
+    public @NotNull Object getBuildingObject() {
+        if (buildingObject == null) {
+            throw new MapperException("building object has not been initialized");
+        }
+
+        return buildingObject;
     }
 }

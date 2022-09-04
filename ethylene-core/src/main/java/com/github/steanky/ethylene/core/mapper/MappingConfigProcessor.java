@@ -34,7 +34,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             SignatureMatcher rootFactory = typeFactorySource.matcherFor(rootType, element);
             ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
 
-            Mutable<Object> reference = GraphTransformer.process(rootEntry, nodeEntry -> {
+            return (T) GraphTransformer.process(rootEntry, nodeEntry -> {
                         MatchingSignature matchingSignature = nodeEntry.signatureMatcher.signature(nodeEntry.element,
                                 nodeEntry.type);
 
@@ -72,13 +72,12 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 args[i++] = value.getValue();
 
                                 if (i == args.length) {
-                                    nodeEntry.reference.setValue(signature.makeObject(args));
+                                    nodeEntry.reference.setValue(signature.buildObject(args));
                                 }
                             }
                         }));
                     }, potentialContainer -> potentialContainer.element.isContainer(),
-                    scalar -> new MutableObject<>(scalar.element.asScalar()));
-            return (T) reference.getValue();
+                    scalar -> new MutableObject<>(scalar.element.asScalar())).getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
