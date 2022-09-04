@@ -9,6 +9,7 @@ import com.github.steanky.ethylene.core.mapper.signature.container.ArraySignatur
 import com.github.steanky.ethylene.core.mapper.signature.container.CollectionSignature;
 import com.github.steanky.ethylene.core.mapper.signature.container.MapSignature;
 import com.github.steanky.ethylene.core.util.ReflectionUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -35,26 +36,31 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
 
     @Override
     public TypeSignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element) {
-        Class<?> resolvedType = resolver.resolveType(type, element);
+        Type resolvedType = resolver.resolveType(type, element);
 
-        return switch (typeHinter.getHint(type)) {
+        return switch (typeHinter.getHint(resolvedType)) {
             case LIST -> {
-                if (resolvedType.isArray()) {
-                    Signature[] arraySignature = new Signature[] { new ArraySignature(resolvedType.getComponentType()) };
+                if (TypeUtils.isArrayType(resolvedType)) {
+                    Signature[] arraySignature =
+                            new Signature[] { new ArraySignature(TypeUtils.getArrayComponentType(resolvedType)) };
                     yield new BasicTypeSignatureMatcher(arraySignature, typeHinter, false, false);
                 }
-                else if (Collection.class.isAssignableFrom(resolvedType)) {
-                    Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Collection.class);
-                    Signature[] collectionSignature = new Signature[] { new CollectionSignature(types[0], resolvedType) };
-                    yield new BasicTypeSignatureMatcher(collectionSignature, typeHinter, false, false);
-                }
-                else if (Map.class.isAssignableFrom(resolvedType)) {
-                    Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Map.class);
-                    Signature[] mapSignature = new Signature[] { new MapSignature(types[0], types[1], resolvedType) };
-                    yield new BasicTypeSignatureMatcher(mapSignature, typeHinter, false, false);
+                else {
+                    Class<?> rawResolved = TypeUtils.getRawType(resolvedType, null);
+
+                    if (Collection.class.isAssignableFrom(rawResolved)) {
+                        Type[] types = ReflectionUtils.extractGenericTypeParameters(resolvedType, Collection.class);
+                        Signature[] collectionSignature = new Signature[] { new CollectionSignature(types[0], resolvedType) };
+                        yield new BasicTypeSignatureMatcher(collectionSignature, typeHinter, false, false);
+                    }
+                    else if (Map.class.isAssignableFrom(rawResolved)) {
+                        Type[] types = ReflectionUtils.extractGenericTypeParameters(resolvedType, Map.class);
+                        Signature[] mapSignature = new Signature[] { new MapSignature(types[0], types[1], resolvedType) };
+                        yield new BasicTypeSignatureMatcher(mapSignature, typeHinter, false, false);
+                    }
                 }
 
-                throw new MapperException("unexpected container-like type '" + type.getTypeName() + "'");
+                throw new MapperException("unexpected container-like type '" + resolvedType.getTypeName() + "'");
             }
             case NODE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(resolvedType),
                     typeHinter, matchParameterNames, matchParameterTypeHints);

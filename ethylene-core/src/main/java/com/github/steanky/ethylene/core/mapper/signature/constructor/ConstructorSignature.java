@@ -4,7 +4,6 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.MapperException;
-import com.github.steanky.ethylene.core.mapper.TypeHinter;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import org.jetbrains.annotations.NotNull;
 

@@ -10,12 +10,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 
 public class ObjectSignatureBuilder implements SignatureBuilder {
-    public ObjectSignatureBuilder() {
-
-    }
-
     @Override
-    public @NotNull Signature[] buildSignatures(@NotNull Type type) {
+    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
         Class<?> rawType = TypeUtils.getRawType(type, null);
         if (rawType == null) {
             throw new MapperException("raw type was null for " + type);

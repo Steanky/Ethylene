@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ObjectSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
+import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ class MappingConfigProcessorIntegrationTest {
     private final MappingConfigProcessor<List<List<String>>> listListStringProcessor;
     private final MappingConfigProcessor<List<List<String>[]>> reallyStupidProcessor;
     private final MappingConfigProcessor<CustomClass> customClassProcessor;
+    private final MappingConfigProcessor<Object> objectProcessor;
 
     public static class CustomClass {
         private final List<String> strings;
@@ -48,6 +50,7 @@ class MappingConfigProcessorIntegrationTest {
         this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
+        this.objectProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
     }
 
     @Nested
@@ -89,6 +92,12 @@ class MappingConfigProcessorIntegrationTest {
 
             assertArrayEquals(stupidStringArray, stupidString.get(0));
             assertArrayEquals(stupidStringArray2, stupidString.get(1));
+        }
+
+        @Test
+        void integerList() throws ConfigProcessException {
+            Object integerList = objectProcessor.dataFromElement(ConfigList.of(1, 2, 3));
+            assertEquals(List.of(1, 2, 3), integerList);
         }
     }
 

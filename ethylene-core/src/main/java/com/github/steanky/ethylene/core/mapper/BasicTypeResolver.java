@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.*;
@@ -39,7 +40,7 @@ public class BasicTypeResolver implements TypeResolver {
     }
 
     @Override
-    public @NotNull Class<?> resolveType(@NotNull Type type, @NotNull ConfigElement element) {
+    public @NotNull Type resolveType(@NotNull Type type, @NotNull ConfigElement element) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(element);
 
@@ -54,18 +55,21 @@ public class BasicTypeResolver implements TypeResolver {
                 throw new MapperException("incompatible types: " + hint + " to " + type);
             }
 
-            return raw;
+            return type;
         }
 
         if ((!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(ClassUtils.getName(raw)))) {
             if (hint.compatible(element)) {
-                return raw;
+                return type;
             }
 
             //check assignability
-            Class<?> elementType = switch (element.type()) {
+            Type elementType = switch (element.type()) {
                 case NODE -> raw;
-                case LIST -> ArrayList.class;
+                case LIST -> {
+                    Type[] params = ReflectionUtils.extractGenericTypeParameters(type, raw);
+                    yield TypeUtils.parameterize(ArrayList.class, params.length == 0 ? Object.class : params[0]);
+                }
                 case SCALAR -> {
                     Object scalar = element.asScalar();
                     if (scalar == null) {
@@ -76,7 +80,7 @@ public class BasicTypeResolver implements TypeResolver {
                 }
             };
 
-            if (!raw.isAssignableFrom(elementType)) {
+            if (!TypeUtils.isAssignable(elementType, type)) {
                 throw new MapperException("element type " + element.type() + " not compatible with " + type);
             }
 
@@ -103,6 +107,11 @@ public class BasicTypeResolver implements TypeResolver {
                 }
 
                 cache.put(raw, entry);
+
+                if (type instanceof ParameterizedType parameterizedType) {
+                    return TypeUtils.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType));
+                }
+
                 return ref;
             }
         }

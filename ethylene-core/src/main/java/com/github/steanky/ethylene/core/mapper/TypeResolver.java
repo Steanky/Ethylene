@@ -7,5 +7,5 @@ import java.lang.reflect.Type;
 
 @FunctionalInterface
 public interface TypeResolver {
-    @NotNull Class<?> resolveType(@NotNull Type type, @NotNull ConfigElement element);
+    @NotNull Type resolveType(@NotNull Type type, @NotNull ConfigElement element);
 }

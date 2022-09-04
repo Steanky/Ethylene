@@ -38,8 +38,6 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
      * the provided case sensitivity handling.
      *
      * @param enumClass     the enum class used to provide a list of enum constants
-     * the provided case sensitivity handling. No strong reference to the provided class will be retained.
-     * @param enumClass the enum class used to provide a list of enum constants
      * @param caseSensitive whether this processor should be case-sensitive
      */
     EnumConfigProcessor(@NotNull Class<? extends TEnum> enumClass, boolean caseSensitive) {
@@ -76,8 +74,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
 
     private TEnum lookup(String name) {
         if (lookupFunction == null) {
-            Class<? extends TEnum> enumClass = getEnumClass();
-            TEnum[] constants = enumClass.getEnumConstants();
+            TEnum[] constants = getEnumClass().getEnumConstants();
 
             //for tiny enums, we can save a bit of memory by not using a hashmap
             if (constants.length > 10) {
