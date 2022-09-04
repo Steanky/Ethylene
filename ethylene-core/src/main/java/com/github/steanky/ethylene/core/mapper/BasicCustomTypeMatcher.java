@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-public class BasicCustomTypeMatcher implements TypeSignatureMatcher.Source {
+public class BasicCustomTypeMatcher implements SignatureMatcher.Source {
     private final SignatureBuilder customSignatureBuilder;
     private final TypeHinter typeHinter;
     private final boolean matchNames;
@@ -23,12 +23,12 @@ public class BasicCustomTypeMatcher implements TypeSignatureMatcher.Source {
     }
 
     @Override
-    public @Nullable TypeSignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element) {
+    public @Nullable SignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element) {
         Signature[] signatures = customSignatureBuilder.buildSignatures(type);
         if (signatures.length == 0) {
             return null;
         }
 
-        return new BasicTypeSignatureMatcher(signatures, typeHinter, matchNames, matchTypeHints);
+        return new BasicSignatureMatcher(signatures, typeHinter, matchNames, matchTypeHints);
     }
 }

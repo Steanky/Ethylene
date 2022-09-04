@@ -5,7 +5,7 @@ import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.mapper.signature.MatchingSignature;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
-import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
+import com.github.steanky.ethylene.core.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -19,9 +19,9 @@ import java.util.function.BiConsumer;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final Token<T> token;
-    private final TypeSignatureMatcher.Source typeFactorySource;
+    private final SignatureMatcher.Source typeFactorySource;
 
-    public MappingConfigProcessor(@NotNull Token<T> token, @NotNull TypeSignatureMatcher.Source typeFactorySource) {
+    public MappingConfigProcessor(@NotNull Token<T> token, @NotNull SignatureMatcher.Source typeFactorySource) {
         this.token = Objects.requireNonNull(token);
         this.typeFactorySource = Objects.requireNonNull(typeFactorySource);
     }
@@ -31,7 +31,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     public T dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
         try {
             Type rootType = token.get();
-            TypeSignatureMatcher rootFactory = typeFactorySource.matcherFor(rootType, element);
+            SignatureMatcher rootFactory = typeFactorySource.matcherFor(rootType, element);
             ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
 
             Mutable<Object> reference = GraphTransformer.process(rootEntry, nodeEntry -> {
@@ -60,7 +60,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                                 Type nextType = typeEntryIterator.next().getSecond();
                                 ConfigElement nextElement = elementIterator.next();
-                                TypeSignatureMatcher nextMatcher = typeFactorySource.matcherFor(nextType, nextElement);
+                                SignatureMatcher nextMatcher = typeFactorySource.matcherFor(nextType, nextElement);
 
                                 return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
                             }
@@ -89,9 +89,9 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
         return null;
     }
 
-    private record ClassEntry(Type type, ConfigElement element, TypeSignatureMatcher signatureMatcher,
+    private record ClassEntry(Type type, ConfigElement element, SignatureMatcher signatureMatcher,
             Mutable<Object> reference) {
-        private ClassEntry(Type type, ConfigElement configElement, TypeSignatureMatcher typeSignatureProvider) {
+        private ClassEntry(Type type, ConfigElement configElement, SignatureMatcher typeSignatureProvider) {
             this(type, configElement, typeSignatureProvider, new MutableObject<>(null));
         }
     }

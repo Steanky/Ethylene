@@ -6,7 +6,7 @@ import com.github.steanky.ethylene.core.mapper.signature.CustomSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.StaticSignatureBuilderSelector;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
-import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
+import com.github.steanky.ethylene.core.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
@@ -44,9 +44,9 @@ class MappingConfigProcessorIntegrationTest {
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);
 
-        TypeSignatureMatcher.Source custom = new BasicCustomTypeMatcher(new CustomSignatureBuilder(), typeHinter,
+        SignatureMatcher.Source custom = new BasicCustomTypeMatcher(new CustomSignatureBuilder(), typeHinter,
                 false, false);
-        TypeSignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, custom,
+        SignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, custom,
                 new StaticSignatureBuilderSelector(new ConstructorSignatureBuilder()), false,
                 false);
 

@@ -6,11 +6,11 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 
 @FunctionalInterface
-public interface TypeSignatureMatcher {
+public interface SignatureMatcher {
     @NotNull MatchingSignature signature(@NotNull ConfigElement providedElement, @NotNull Type desiredType);
 
     @FunctionalInterface
     interface Source {
-        TypeSignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element);
+        SignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element);
     }
 }

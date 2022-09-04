@@ -11,14 +11,14 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.util.*;
 
-public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
+public class BasicSignatureMatcher implements SignatureMatcher {
     private final Signature[] signatures;
     private final TypeHinter typeHinter;
     private final boolean matchNames;
     private final boolean matchTypeHints;
 
 
-    public BasicTypeSignatureMatcher(@NotNull Signature[] signatures, @NotNull TypeHinter typeHinter,
+    public BasicSignatureMatcher(@NotNull Signature @NotNull [] signatures, @NotNull TypeHinter typeHinter,
             boolean matchNames, boolean matchTypeHints) {
         this.signatures = Objects.requireNonNull(signatures);
         this.typeHinter = Objects.requireNonNull(typeHinter);
@@ -36,15 +36,15 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
             ElementType signatureHint = signature.typeHint();
             Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
 
-            if (signatureHint == ElementType.LIST || !(matchNames || matchTypeHints)) {
-                return new MatchingSignature(signature, elementCollection, signature.length(providedElement));
-            }
-
-            if (!providedElement.isNode() || elementCollection.size() != signature.length(providedElement)) {
+            int length = signature.length(providedElement);
+            if (elementCollection.size() != length) {
                 continue;
             }
 
-            ConfigNode providedNode = providedElement.asNode();
+            if (signatureHint == ElementType.LIST || !(matchNames || matchTypeHints)) {
+                return new MatchingSignature(signature, elementCollection, length);
+            }
+
             boolean hasArgumentNames = signature.hasArgumentNames();
             Iterable<Entry<String, Type>> signatureTypes = signature.argumentTypes();
 
@@ -53,9 +53,14 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
                 Collection<ConfigElement> targetCollection;
                 if (matchNames) {
                     if (!hasArgumentNames) {
-                        targetCollection = providedNode.values();
+                        targetCollection = elementCollection;
                     }
                     else {
+                        if (!providedElement.isNode()) {
+                            continue;
+                        }
+
+                        ConfigNode providedNode = providedElement.asNode();
                         targetCollection = new ArrayList<>(elementCollection.size());
                         for (Entry<String, Type> entry : signatureTypes) {
                             String name = entry.getFirst();
@@ -69,7 +74,7 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
                     }
                 }
                 else {
-                    targetCollection = providedNode.values();
+                    targetCollection = elementCollection;
                 }
 
                 if (matchTypeHints) {
@@ -81,7 +86,7 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
                     }
                 }
 
-                return new MatchingSignature(signature, targetCollection, signature.length(providedElement));
+                return new MatchingSignature(signature, targetCollection, length);
             }
 
         }
