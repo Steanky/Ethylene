@@ -27,7 +27,7 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
     }
 
     @Override
-    public @NotNull OrderedSignature signature(@NotNull ConfigElement providedElement, @NotNull Type desiredType) {
+    public @NotNull MatchingSignature signature(@NotNull ConfigElement providedElement, @NotNull Type desiredType) {
         for (Signature signature : signatures) {
             if (!TypeUtils.isAssignable(signature.returnType(), desiredType)) {
                 continue;
@@ -37,7 +37,7 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
             Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
 
             if (signatureHint == ElementType.LIST || !(matchNames || matchTypeHints)) {
-                return new OrderedSignature(signature, elementCollection, signature.length(providedElement));
+                return new MatchingSignature(signature, elementCollection, signature.length(providedElement));
             }
 
             if (!providedElement.isNode()) {
@@ -81,7 +81,7 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
                     }
                 }
 
-                return new OrderedSignature(signature, targetCollection, signature.length(providedElement));
+                return new MatchingSignature(signature, targetCollection, signature.length(providedElement));
             }
 
         }

@@ -13,8 +13,8 @@ public abstract class CustomSignatureBase implements Signature {
     private final Collection<Entry<String, Type>> namedTypes;
     private final Type returnType;
 
-    public CustomSignatureBase(@NotNull Collection<Entry<String, Type>> namedTypes, @NotNull Type returnType) {
-        this.namedTypes = List.copyOf(namedTypes);
+    public CustomSignatureBase(@NotNull Collection<Entry<String, Type>> namedArgumentTypes, @NotNull Type returnType) {
+        this.namedTypes = List.copyOf(namedArgumentTypes);
         this.returnType = Objects.requireNonNull(returnType);
     }
 

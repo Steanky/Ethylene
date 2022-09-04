@@ -3,11 +3,13 @@ package com.github.steanky.ethylene.core.mapper;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
-import com.github.steanky.ethylene.core.mapper.signature.OrderedSignature;
+import com.github.steanky.ethylene.core.mapper.signature.MatchingSignature;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -32,14 +34,14 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             TypeSignatureMatcher rootFactory = typeFactorySource.matcherFor(rootType, element);
             ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
 
-            Reference reference = GraphTransformer.process(rootEntry, nodeEntry -> {
-                        OrderedSignature orderedSignature = nodeEntry.signatureMatcher.signature(nodeEntry.element,
+            Mutable<Object> reference = GraphTransformer.process(rootEntry, nodeEntry -> {
+                        MatchingSignature matchingSignature = nodeEntry.signatureMatcher.signature(nodeEntry.element,
                                 nodeEntry.type);
 
-                        Signature signature = orderedSignature.signature();
-                        int signatureSize = orderedSignature.size();
+                        Signature signature = matchingSignature.signature();
+                        int signatureSize = matchingSignature.size();
 
-                        Iterator<ConfigElement> elementIterator = orderedSignature.elementIterable().iterator();
+                        Iterator<ConfigElement> elementIterator = matchingSignature.elementIterable().iterator();
                         Iterator<Entry<String, Type>> typeEntryIterator = signature.argumentTypes().iterator();
 
                         Object[] args = new Object[signatureSize];
@@ -66,17 +68,17 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             private int i = 0;
 
                             @Override
-                            public void accept(Object key, Reference value) {
-                                args[i++] = value.ref;
+                            public void accept(Object key, Mutable<Object> value) {
+                                args[i++] = value.getValue();
 
                                 if (i == args.length) {
-                                    nodeEntry.reference.ref = signature.makeObject(args);
+                                    nodeEntry.reference.setValue(signature.makeObject(args));
                                 }
                             }
                         }));
                     }, potentialContainer -> potentialContainer.element.isContainer(),
-                    scalar -> new Reference(scalar.element.asScalar()));
-            return (T) reference.ref;
+                    scalar -> new MutableObject<>(scalar.element.asScalar()));
+            return (T) reference.getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
@@ -87,18 +89,10 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
         return null;
     }
 
-    private record ClassEntry(Type type, ConfigElement element, TypeSignatureMatcher signatureMatcher, Reference reference) {
+    private record ClassEntry(Type type, ConfigElement element, TypeSignatureMatcher signatureMatcher,
+            Mutable<Object> reference) {
         private ClassEntry(Type type, ConfigElement configElement, TypeSignatureMatcher typeSignatureProvider) {
-            this(type, configElement, typeSignatureProvider, new Reference(null));
-        }
-    }
-
-    //a simple mutable reference to an object
-    private static class Reference {
-        private Object ref;
-
-        private Reference(Object ref) {
-            this.ref = ref;
+            this(type, configElement, typeSignatureProvider, new MutableObject<>(null));
         }
     }
 }
