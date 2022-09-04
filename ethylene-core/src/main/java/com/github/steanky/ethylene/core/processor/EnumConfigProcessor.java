@@ -24,7 +24,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
 
     /**
      * Creates a new EnumConfigProcessor, which will be able to process instances of the provided enum class. The
-     * processor will be case-sensitive.
+     * processor will be case-sensitive. No strong reference to the provided class will be retained.
      * @param enumClass the enum class used to provide a list of enum constants
      */
     EnumConfigProcessor(@NotNull Class<? extends TEnum> enumClass) {
@@ -33,7 +33,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
 
     /**
      * Creates a new EnumConfigProcessor, which will be able to process instances of the provided enum class, and with
-     * the provided case sensitivity handling.
+     * the provided case sensitivity handling. No strong reference to the provided class will be retained.
      * @param enumClass the enum class used to provide a list of enum constants
      * @param caseSensitive whether this processor should be case-sensitive
      */
