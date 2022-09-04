@@ -89,9 +89,13 @@ public class BasicTypeResolver implements TypeResolver {
 
         ClassEntry cached = cache.get(raw);
         if (cached != null) {
-            Class<?> target = cached.reference.get();
-            if (target != null) {
-                return target;
+            Class<?> ref = cached.reference.get();
+            if (ref != null) {
+                if (type instanceof ParameterizedType parameterizedType) {
+                    return TypeUtils.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType));
+                }
+
+                return ref;
             }
 
             cache.remove(raw);
