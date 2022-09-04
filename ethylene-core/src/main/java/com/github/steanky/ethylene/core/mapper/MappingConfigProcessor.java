@@ -46,6 +46,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                         Object buildingObject = signature.hasBuildingObject() ?
                                 signature.initBuildingObject(nodeElement) : null;
+                        nodeEntry.reference.setValue(buildingObject);
+
                         Object[] args = new Object[signatureSize];
 
                         return new GraphTransformer.Node<>(nodeEntry, new Iterator<>() {

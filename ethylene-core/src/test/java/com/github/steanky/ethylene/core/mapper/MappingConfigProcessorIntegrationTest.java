@@ -104,6 +104,16 @@ class MappingConfigProcessorIntegrationTest {
             Object integerList = objectProcessor.dataFromElement(ConfigList.of(1, 2, 3));
             assertEquals(List.of(1, 2, 3), integerList);
         }
+
+        @Test
+        void selfReferentialList() throws ConfigProcessException {
+            ConfigList list = ConfigList.of("a");
+            list.add(list);
+
+            List<Object> objectList = objectListProcessor.dataFromElement(list);
+            assertEquals("a", objectList.get(0));
+            assertEquals(objectList, objectList.get(1));
+        }
     }
 
     @Nested
