@@ -24,7 +24,7 @@ public class ObjectSignatureBuilder implements SignatureBuilder {
         int j = 0;
         for (Constructor<?> constructor : allConstructors) {
             if (constructor.canAccess(null)) {
-                signatures[j++] = new ConstructorSignature(constructor);
+                signatures[j++] = new ConstructorSignature(constructor, type);
             }
         }
 

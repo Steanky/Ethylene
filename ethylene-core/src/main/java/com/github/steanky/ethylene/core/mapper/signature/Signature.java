@@ -20,7 +20,7 @@ public interface Signature {
 
     int length(@NotNull ConfigElement element);
 
-    ElementType typeHint();
+    @NotNull ElementType typeHint();
 
     @NotNull Type returnType();
 

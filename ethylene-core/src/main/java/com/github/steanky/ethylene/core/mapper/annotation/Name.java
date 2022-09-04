@@ -1,10 +1,10 @@
-package com.github.steanky.ethylene.core.mapper;
+package com.github.steanky.ethylene.core.mapper.annotation;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
 
-@Target(ElementType.PARAMETER)
+@Target({ElementType.PARAMETER, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Name {

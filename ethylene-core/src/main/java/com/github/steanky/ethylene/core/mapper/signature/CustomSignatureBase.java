@@ -24,7 +24,7 @@ public abstract class CustomSignatureBase implements Signature {
     }
 
     @Override
-    public ElementType typeHint() {
+    public @NotNull ElementType typeHint() {
         return ElementType.NODE;
     }
 

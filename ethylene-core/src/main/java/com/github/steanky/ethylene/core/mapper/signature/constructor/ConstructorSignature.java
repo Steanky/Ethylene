@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.MapperException;
+import com.github.steanky.ethylene.core.mapper.annotation.Name;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,12 +16,14 @@ import java.util.*;
 
 public class ConstructorSignature implements Signature {
     private final Constructor<?> constructor;
+    private final Type genericReturnType;
 
     private boolean matchesNames;
     private Collection<Entry<String, Type>> types;
 
-    public ConstructorSignature(@NotNull Constructor<?> constructor) {
+    public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Type genericReturnType) {
         this.constructor = Objects.requireNonNull(constructor);
+        this.genericReturnType = Objects.requireNonNull(genericReturnType);
     }
 
     @Override
@@ -42,7 +45,6 @@ public class ConstructorSignature implements Signature {
     public boolean hasArgumentNames() {
         //make sure the type collection is generated
         getTypeCollection();
-
         return matchesNames;
     }
 
@@ -52,13 +54,13 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public ElementType typeHint() {
+    public @NotNull ElementType typeHint() {
         return ElementType.NODE;
     }
 
     @Override
     public @NotNull Type returnType() {
-        return constructor.getDeclaringClass();
+        return genericReturnType;
     }
 
     private Collection<Entry<String, Type>> getTypeCollection() {
@@ -75,7 +77,9 @@ public class ConstructorSignature implements Signature {
         if (parameters.length == 1) {
             //alternatively use singleton list
             Parameter first = parameters[0];
-            return types = Collections.singleton(makeEntry(first, matchesNames = first.isNamePresent()));
+            Entry<String, Type> entry = makeEntry(first, first.isNamePresent());
+            matchesNames = entry.getFirst() != null;
+            return types = Collections.singleton(entry);
         }
 
         //use a backing ArrayList for n > 1 length
@@ -84,15 +88,25 @@ public class ConstructorSignature implements Signature {
         Parameter first = parameters[0];
         boolean hasName = matchesNames = first.isNamePresent();
 
-        entryList.add(makeEntry(first, hasName));
+        Entry<String, Type> firstEntry = makeEntry(first, hasName);
+        entryList.add(firstEntry);
+
+        boolean firstNonNullName = firstEntry.getFirst() != null;
         for (int i = 1; i < parameters.length; i++) {
-            entryList.add(makeEntry(parameters[i], hasName));
+            Entry<String, Type> entry = makeEntry(parameters[i], hasName);
+            if (firstNonNullName == (entry.getFirst() == null)) {
+                throw new MapperException("inconsistent parameter naming");
+            }
+
+            entryList.add(entry);
         }
 
         return types = Collections.unmodifiableCollection(entryList);
     }
 
     private static Entry<String, Type> makeEntry(Parameter parameter, boolean hasName) {
-        return Entry.of(hasName ? parameter.getName() : null, parameter.getParameterizedType());
+        Name parameterName = parameter.getAnnotation(Name.class);
+        return Entry.of(hasName ? parameter.getName() : (parameterName != null ? parameter.getName() : null),
+                parameter.getParameterizedType());
     }
 }
