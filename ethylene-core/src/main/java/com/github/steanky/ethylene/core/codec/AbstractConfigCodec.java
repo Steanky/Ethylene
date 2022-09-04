@@ -118,22 +118,22 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
         Map<String, Object> map = new LinkedHashMap<>(size);
-        return new GraphTransformer.Output<>(map, map::put);
+        return new GraphTransformer.Output<>(map, (k, v, b) -> map.put(k, v));
     }
 
     protected @NotNull GraphTransformer.Output<Object, String> makeEncodeCollection(int size) {
         Collection<Object> collection = new ArrayList<>(size);
-        return new GraphTransformer.Output<>(collection, (k, v) -> collection.add(v));
+        return new GraphTransformer.Output<>(collection, (k, v, b) -> collection.add(v));
     }
 
     protected @NotNull GraphTransformer.Output<ConfigElement, String> makeDecodeMap(int size) {
         ConfigNode node = new LinkedConfigNode(size);
-        return new GraphTransformer.Output<>(node, node::put);
+        return new GraphTransformer.Output<>(node, (k, v, b) -> node.put(k, v));
     }
 
     protected @NotNull GraphTransformer.Output<ConfigElement, String> makeDecodeCollection(int size) {
         ConfigList list = new ArrayConfigList(size);
-        return new GraphTransformer.Output<>(list, (k, v) -> list.add(v));
+        return new GraphTransformer.Output<>(list, (k, v, b) -> list.add(v));
     }
 
     /**

@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final Token<T> token;
@@ -35,7 +34,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
 
             return (T) GraphTransformer.process(rootEntry, nodeEntry -> {
-                        MatchingSignature matchingSignature = nodeEntry.signatureMatcher.signature(nodeEntry.element,
+                        ConfigElement nodeElement = nodeEntry.element;
+                        MatchingSignature matchingSignature = nodeEntry.signatureMatcher.signature(nodeElement,
                                 nodeEntry.type);
 
                         Signature signature = matchingSignature.signature();
@@ -44,6 +44,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
                         Iterator<Entry<String, Type>> typeEntryIterator = signature.argumentTypes().iterator();
 
+                        Object buildingObject = signature.hasBuildingObject() ?
+                                signature.initBuildingObject(nodeElement) : null;
                         Object[] args = new Object[signatureSize];
 
                         return new GraphTransformer.Node<>(nodeEntry, new Iterator<>() {
@@ -64,20 +66,20 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                                 return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
                             }
-                        }, new GraphTransformer.Output<>(nodeEntry.reference, new BiConsumer<>() {
+                        }, new GraphTransformer.Output<>(nodeEntry.reference, new GraphTransformer.Accumulator<>() {
                             private int i = 0;
 
                             @Override
-                            public void accept(Object key, Mutable<Object> value) {
+                            public void accept(Object key, Mutable<Object> value, boolean circular) {
                                 args[i++] = value.getValue();
 
                                 if (i == args.length) {
-                                    nodeEntry.reference.setValue(signature.buildObject(args));
+                                    nodeEntry.reference.setValue(signature.buildObject(buildingObject, args));
                                 }
                             }
                         }));
                     }, potentialContainer -> potentialContainer.element.isContainer(),
-                    scalar -> new MutableObject<>(scalar.element.asScalar())).getValue();
+                    scalar -> new MutableObject<>(scalar.element.asScalar()), entry -> entry.element).getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
@@ -90,8 +92,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
     private record ClassEntry(Type type, ConfigElement element, SignatureMatcher signatureMatcher,
             Mutable<Object> reference) {
-        private ClassEntry(Type type, ConfigElement configElement, SignatureMatcher typeSignatureProvider) {
-            this(type, configElement, typeSignatureProvider, new MutableObject<>(null));
+        private ClassEntry(Type type, ConfigElement element, SignatureMatcher signatureMatcher) {
+            this(type, element, signatureMatcher, new MutableObject<>(null));
         }
     }
 }

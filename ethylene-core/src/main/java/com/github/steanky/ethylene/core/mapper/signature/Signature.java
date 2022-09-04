@@ -5,6 +5,8 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.Token;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,15 +20,11 @@ public interface Signature {
         return false;
     }
 
-    default void initBuildingObject(@NotNull ConfigElement element) {
+    default @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
         throw new IllegalStateException("unsupported operation");
     }
 
-    default @NotNull Object getBuildingObject() {
-        throw new IllegalStateException("unsupported operation");
-    }
-
-    Object buildObject(@NotNull Object[] args);
+    Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args);
 
     boolean hasArgumentNames();
 

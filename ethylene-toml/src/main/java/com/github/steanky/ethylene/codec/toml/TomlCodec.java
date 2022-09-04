@@ -75,7 +75,7 @@ public class TomlCodec extends AbstractConfigCodec {
     @Override
     protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
         Config config = TomlFormat.newConfig(() -> new LinkedHashMap<>(size));
-        return new GraphTransformer.Output<>(config, config::add);
+        return new GraphTransformer.Output<>(config, (k, v, b) -> config.add(k, v));
     }
 
     @Override

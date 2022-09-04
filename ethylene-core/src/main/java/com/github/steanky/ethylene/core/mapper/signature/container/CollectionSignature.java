@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.mapper.MapperException;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -15,8 +16,6 @@ import java.util.Collection;
 public class CollectionSignature extends ContainerSignatureBase {
     private final Constructor<?> constructor;
     private final boolean parameterless;
-
-    private Collection<Object> buildingCollection;
 
     public CollectionSignature(@NotNull Type componentType, @NotNull Type collectionClass) {
         super(componentType, collectionClass);
@@ -39,27 +38,26 @@ public class CollectionSignature extends ContainerSignatureBase {
     }
 
     @Override
-    public void initBuildingObject(@NotNull ConfigElement element) {
+    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
         if(!element.isContainer()) {
             throw new MapperException("expected container");
         }
 
-        this.buildingCollection = makeNewCollection(element.asContainer().entryCollection().size());
+        return makeNewCollection(element.asContainer().entryCollection().size());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public @NotNull Object getBuildingObject() {
-        if (buildingCollection == null) {
-            throw new MapperException("building object has not been initialized");
+    public Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args) {
+        if (buildingObject != null) {
+            Collection<Object> buildingCollection = (Collection<Object>) buildingObject;
+            buildingCollection.addAll(Arrays.asList(args));
+            return buildingCollection;
         }
 
-        return buildingCollection;
-    }
-
-    @Override
-    public Object buildObject(@NotNull Object[] args) {
-        buildingCollection.addAll(Arrays.asList(args));
-        return buildingCollection;
+        Collection<Object> collection = makeNewCollection(args.length);
+        collection.addAll(Arrays.asList(args));
+        return collection;
     }
 
     @SuppressWarnings("unchecked")
@@ -68,9 +66,8 @@ public class CollectionSignature extends ContainerSignatureBase {
             if (parameterless) {
                 return (Collection<Object>) constructor.newInstance();
             }
-            else {
-                return (Collection<Object>) constructor.newInstance(size);
-            }
+
+            return (Collection<Object>) constructor.newInstance(size);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new MapperException(e);
         }

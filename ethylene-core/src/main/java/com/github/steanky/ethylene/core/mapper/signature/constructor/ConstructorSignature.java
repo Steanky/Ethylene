@@ -7,6 +7,7 @@ import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.annotation.Name;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -32,7 +33,11 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public Object buildObject(@NotNull Object[] args) {
+    public Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args) {
+        if (buildingObject != null) {
+            throw new MapperException("ConstructorSignature does not support pre-initialized building objects");
+        }
+
         try {
             //it is the caller's responsibility to check argument length!
             return constructor.newInstance(args);

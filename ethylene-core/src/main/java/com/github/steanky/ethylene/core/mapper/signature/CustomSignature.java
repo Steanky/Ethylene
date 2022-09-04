@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -41,7 +42,7 @@ public class CustomSignature implements Signature {
     }
 
     @Override
-    public Object buildObject(@NotNull Object[] args) {
+    public Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args) {
         return creatorFunction.apply(args);
     }
 

@@ -81,13 +81,13 @@ public class HjsonCodec extends AbstractConfigCodec {
     @Override
     protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
         JsonObject object = new JsonObject();
-        return new GraphTransformer.Output<>(object, (k, v) -> object.add(k, (JsonValue) v));
+        return new GraphTransformer.Output<>(object, (k, v, b) -> object.add(k, (JsonValue) v));
     }
 
     @Override
     protected @NotNull GraphTransformer.Output<Object, String> makeEncodeCollection(int size) {
         JsonArray array = new JsonArray();
-        return new GraphTransformer.Output<>(array, (k, v) -> array.add((JsonValue) v));
+        return new GraphTransformer.Output<>(array, (k, v, b) -> array.add((JsonValue) v));
     }
 
     @Override

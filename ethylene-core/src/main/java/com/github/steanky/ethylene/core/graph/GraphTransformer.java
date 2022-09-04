@@ -13,17 +13,18 @@ import java.util.function.Predicate;
  * transformations.
  */
 public final class GraphTransformer {
-    public static <TIn, TOut, TKey> TOut process(TIn input, @NotNull Deque<Node<TIn, TOut, TKey>> stack,
-            @NotNull Map<TIn, TOut> visited,
+    public static <TIn, TOut, TKey, TVisit> TOut process(TIn input, @NotNull Deque<Node<TIn, TOut, TKey>> stack,
+            @NotNull Map<TVisit, TOut> visited,
             @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
             @NotNull Predicate<? super TIn> containerPredicate,
-            @NotNull Function<? super TIn, ? extends TOut> scalarMapper) {
+            @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
+            @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper) {
         if (!containerPredicate.test(input)) {
             return scalarMapper.apply(input);
         }
 
         Node<TIn, TOut, TKey> root = nodeFunction.apply(input);
-        visited.put(input, root.output.data);
+        visited.put(visitKeyMapper.apply(input), root.output.data);
         stack.push(root);
 
         while (!stack.isEmpty()) {
@@ -34,19 +35,19 @@ public final class GraphTransformer {
                 while (node.inputIterator.hasNext()) {
                     Entry<TKey, TIn> entry = node.inputIterator.next();
                     if (!containerPredicate.test(entry.getSecond())) {
-                        node.output.accumulator.accept(entry.getFirst(), scalarMapper.apply(entry.getSecond()));
+                        node.output.accumulator.accept(entry.getFirst(), scalarMapper.apply(entry.getSecond()), false);
                         continue;
                     }
 
                     //handle already-visited non-scalar nodes, to allow proper handling of circular references
-                    TIn in = entry.getSecond();
-                    if (visited.containsKey(in)) {
-                        node.output.accumulator.accept(entry.getFirst(), visited.get(in));
+                    TVisit visit = visitKeyMapper.apply(entry.getSecond());
+                    if (visited.containsKey(visit)) {
+                        node.output.accumulator.accept(entry.getFirst(), visited.get(visit), true);
                         continue;
                     }
 
                     Node<TIn, TOut, TKey> newNode = nodeFunction.apply(entry.getSecond());
-                    visited.put(entry.getSecond(), newNode.output.data);
+                    visited.put(visitKeyMapper.apply(entry.getSecond()), newNode.output.data);
                     stack.push(newNode);
 
                     //this node is unfinished, wait to call the accumulator
@@ -58,7 +59,7 @@ public final class GraphTransformer {
                 stack.pop();
                 Node<TIn, TOut, TKey> old = stack.peek();
                 if (old != null) {
-                    old.output.accumulator.accept(old.result.key, old.result.out);
+                    old.output.accumulator.accept(old.result.key, old.result.out, false);
                 }
             }
         }
@@ -71,7 +72,16 @@ public final class GraphTransformer {
             @NotNull Predicate<? super TIn> containerPredicate,
             @NotNull Function<? super TIn, ? extends TOut> scalarMapper) {
         return process(input, new ArrayDeque<>(), new IdentityHashMap<>(), nodeFunction, containerPredicate,
-                scalarMapper);
+                scalarMapper, Function.identity());
+    }
+
+    public static <TIn, TOut, TKey, TVisit> TOut process(TIn input,
+            @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+            @NotNull Predicate<? super TIn> containerPredicate,
+            @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
+            @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper) {
+        return process(input, new ArrayDeque<>(), new IdentityHashMap<>(), nodeFunction, containerPredicate,
+                scalarMapper, visitKeyMapper);
     }
 
     public static class NodeResult<TKey, TOut> {
@@ -92,5 +102,10 @@ public final class GraphTransformer {
         }
     }
 
-    public record Output<TOut, TKey>(@NotNull TOut data, @NotNull BiConsumer<? super TKey, ? super TOut> accumulator) {}
+    public record Output<TOut, TKey>(@NotNull TOut data, @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {}
+
+    @FunctionalInterface
+    public interface Accumulator<TKey, TOut> {
+        void accept(TKey key, TOut out, boolean circular);
+    }
 }

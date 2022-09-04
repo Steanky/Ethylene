@@ -11,6 +11,7 @@ import com.github.steanky.ethylene.core.mapper.annotation.Widen;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -24,8 +25,6 @@ public class FieldSignature implements Signature {
 
     private List<Field> participatingFields;
     private Collection<Entry<String, Type>> types;
-
-    private Object buildingObject;
 
     public FieldSignature(@NotNull Type type) {
         this.type = Objects.requireNonNull(type);
@@ -123,15 +122,24 @@ public class FieldSignature implements Signature {
     }
 
     @Override
-    public Object buildObject(@NotNull Object[] args) {
+    public Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args) {
         try {
-            for (int i = 0; i < args.length; i++) {
-                participatingFields.get(i).set(buildingObject, args[i]);
+            if (buildingObject != null) {
+                finishObject(buildingObject, args);
+                return buildingObject;
             }
 
-            return buildingObject;
+            Object object = getBuildingObject();
+            finishObject(object, args);
+            return object;
         } catch (IllegalAccessException e) {
             throw new MapperException(e);
+        }
+    }
+
+    private void finishObject(Object buildingObject, Object[] args) throws IllegalAccessException {
+        for (int i = 0; i < args.length; i++) {
+            participatingFields.get(i).set(buildingObject, args[i]);
         }
     }
 
@@ -161,20 +169,15 @@ public class FieldSignature implements Signature {
     }
 
     @Override
-    public void initBuildingObject(@NotNull ConfigElement element) {
+    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
+        return getBuildingObject();
+    }
+
+    private Object getBuildingObject() {
         try {
-            buildingObject = parameterlessConstructor.newInstance();
+            return parameterlessConstructor.newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new MapperException(e);
         }
-    }
-
-    @Override
-    public @NotNull Object getBuildingObject() {
-        if (buildingObject == null) {
-            throw new MapperException("building object has not been initialized");
-        }
-
-        return buildingObject;
     }
 }

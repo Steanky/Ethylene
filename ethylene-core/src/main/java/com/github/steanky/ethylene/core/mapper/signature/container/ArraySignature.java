@@ -4,37 +4,32 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 
 public class ArraySignature extends ContainerSignatureBase {
-    private Object[] array;
-
     public ArraySignature(@NotNull Type componentType) {
         super(componentType, TypeUtils.genericArrayType(componentType));
     }
 
     @Override
-    public void initBuildingObject(@NotNull ConfigElement element) {
+    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
         if(!element.isContainer()) {
             throw new MapperException("expected container");
         }
 
-        this.array = new Object[element.asContainer().elementCollection().size()];
+        return new Object[element.asContainer().elementCollection().size()];
     }
 
+    @SuppressWarnings("SuspiciousSystemArraycopy")
     @Override
-    public @NotNull Object getBuildingObject() {
-        if (array == null) {
-            throw new MapperException("building object has not been initialized");
+    public Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args) {
+        if (buildingObject == null) {
+            return args;
         }
 
-        return array;
-    }
-
-    @Override
-    public Object buildObject(@NotNull Object[] args) {
-        System.arraycopy(args, 0, array, 0, args.length);
-        return array;
+        System.arraycopy(args, 0, buildingObject, 0, args.length);
+        return buildingObject;
     }
 }
