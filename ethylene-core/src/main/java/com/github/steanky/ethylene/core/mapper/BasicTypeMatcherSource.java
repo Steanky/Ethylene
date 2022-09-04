@@ -19,16 +19,19 @@ import java.util.Objects;
 
 public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
     private final TypeHinter typeHinter;
-    private final TypeResolver resolver;
+    private final TypeResolver typeResolver;
+    private final TypeSignatureMatcher.Source customTypeMatcherSource;
     private final SignatureBuilder objectSignatureBuilder;
     private final boolean matchParameterNames;
     private final boolean matchParameterTypeHints;
 
     public BasicTypeMatcherSource(@NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver,
+            @NotNull TypeSignatureMatcher.Source customTypeMatcherSource,
             @NotNull SignatureBuilder objectSignatureBuilder, boolean matchParameterNames,
             boolean matchParameterTypeHints) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
-        this.resolver = Objects.requireNonNull(typeResolver);
+        this.typeResolver = Objects.requireNonNull(typeResolver);
+        this.customTypeMatcherSource = Objects.requireNonNull(customTypeMatcherSource);
         this.objectSignatureBuilder = Objects.requireNonNull(objectSignatureBuilder);
         this.matchParameterNames = matchParameterNames;
         this.matchParameterTypeHints = matchParameterTypeHints;
@@ -36,7 +39,11 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
 
     @Override
     public TypeSignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element) {
-        Type resolvedType = resolver.resolveType(type, element);
+        Type resolvedType = typeResolver.resolveType(type, element);
+        TypeSignatureMatcher customSignatureMatcher = customTypeMatcherSource.matcherFor(resolvedType, element);
+        if (customSignatureMatcher != null) {
+            return customSignatureMatcher;
+        }
 
         return switch (typeHinter.getHint(resolvedType)) {
             case LIST -> {
@@ -62,7 +69,7 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
 
                 throw new MapperException("unexpected container-like type '" + resolvedType.getTypeName() + "'");
             }
-            case NODE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(resolvedType),
+            case NODE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(resolvedType, element),
                     typeHinter, matchParameterNames, matchParameterTypeHints);
             case SCALAR -> null;
         };

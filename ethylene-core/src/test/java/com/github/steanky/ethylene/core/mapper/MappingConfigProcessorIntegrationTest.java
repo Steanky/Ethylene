@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.mapper.signature.CustomSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ObjectSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.TypeSignatureMatcher;
@@ -42,8 +43,10 @@ class MappingConfigProcessorIntegrationTest {
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);
 
-        TypeSignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, signatureBuilder,
+        TypeSignatureMatcher.Source custom = new BasicCustomTypeMatcher(new CustomSignatureBuilder(), typeHinter,
                 false, false);
+        TypeSignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, custom,
+                signatureBuilder, false, false);
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);

@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.mapper.signature.constructor;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
@@ -11,7 +12,7 @@ import java.lang.reflect.Type;
 
 public class ObjectSignatureBuilder implements SignatureBuilder {
     @Override
-    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
+    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type, @NotNull ConfigElement element) {
         Class<?> rawType = TypeUtils.getRawType(type, null);
         if (rawType == null) {
             throw new MapperException("raw type was null for " + type);
