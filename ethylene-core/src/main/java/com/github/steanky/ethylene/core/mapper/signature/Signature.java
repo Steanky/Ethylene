@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.function.Function;
 
 public interface Signature {
@@ -31,22 +32,17 @@ public interface Signature {
             parameterEntries.add(Entry.of(null, token.get()));
         }
 
-        int parameterLength = parameters.length;
-        return new CustomSignatureBase(parameterEntries, returnType.get()) {
-            @Override
-            public Object makeObject(@NotNull Object[] args) {
-                return constructor.apply(args);
-            }
+        return new CustomSignatureBase(parameterEntries, returnType.get(), false, constructor);
+    }
 
-            @Override
-            public boolean hasArgumentNames() {
-                return false;
-            }
+    static @NotNull <T> Signature custom(@NotNull Token<T> returnType, @NotNull Function<? super Object[], ?
+            extends T> constructor, Entry<String, Token<?>> @NotNull ... parameters) {
+        Collection<Entry<String, Type>> parameterEntries = new ArrayList<>(parameters.length);
+        for (Entry<String, Token<?>> entry : parameters) {
+            parameterEntries.add(Entry.of(Objects.requireNonNull(entry.getFirst(), "entry name"),
+                    Objects.requireNonNull(entry.getSecond(), "entry type").get()));
+        }
 
-            @Override
-            public int length(@NotNull ConfigElement element) {
-                return parameterLength;
-            }
-        };
+        return new CustomSignatureBase(parameterEntries, returnType.get(), true, constructor);
     }
 }

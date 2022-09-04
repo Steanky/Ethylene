@@ -7,6 +7,7 @@ import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.annotation.Exclude;
 import com.github.steanky.ethylene.core.mapper.annotation.Include;
 import com.github.steanky.ethylene.core.mapper.annotation.Name;
+import com.github.steanky.ethylene.core.mapper.annotation.Widen;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
@@ -24,11 +25,11 @@ public class FieldSignature implements Signature {
     private List<Field> participatingFields;
     private Collection<Entry<String, Type>> types;
 
-    public FieldSignature(@NotNull Type type, boolean widenAccess) {
+    public FieldSignature(@NotNull Type type) {
         this.type = Objects.requireNonNull(type);
-        this.widenAccess = widenAccess;
-
         this.rawType = TypeUtils.getRawType(type, null);
+        this.widenAccess = rawType.isAnnotationPresent(Widen.class);
+
         this.parameterlessConstructor = getConstructor(rawType, widenAccess);
     }
 
