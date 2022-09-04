@@ -16,25 +16,30 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 
 public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
     private final TypeHinter typeHinter;
     private final TypeResolver typeResolver;
     private final TypeSignatureMatcher.Source customTypeMatcherSource;
-    private final SignatureBuilder objectSignatureBuilder;
+    private final SignatureBuilder.Selector signatureSelector;
     private final boolean matchParameterNames;
     private final boolean matchParameterTypeHints;
 
+    private final Map<Type, TypeSignatureMatcher> signatureCache;
+
     public BasicTypeMatcherSource(@NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver,
             @NotNull TypeSignatureMatcher.Source customTypeMatcherSource,
-            @NotNull SignatureBuilder objectSignatureBuilder, boolean matchParameterNames,
+            @NotNull SignatureBuilder.Selector signatureSelector, boolean matchParameterNames,
             boolean matchParameterTypeHints) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.typeResolver = Objects.requireNonNull(typeResolver);
         this.customTypeMatcherSource = Objects.requireNonNull(customTypeMatcherSource);
-        this.objectSignatureBuilder = Objects.requireNonNull(objectSignatureBuilder);
+        this.signatureSelector = Objects.requireNonNull(signatureSelector);
         this.matchParameterNames = matchParameterNames;
         this.matchParameterTypeHints = matchParameterTypeHints;
+
+        this.signatureCache = new WeakHashMap<>();
     }
 
     @Override
@@ -45,33 +50,33 @@ public class BasicTypeMatcherSource implements TypeSignatureMatcher.Source {
             return customSignatureMatcher;
         }
 
-        return switch (typeHinter.getHint(resolvedType)) {
+        return signatureCache.computeIfAbsent(resolvedType, t -> switch (typeHinter.getHint(t)) {
             case LIST -> {
-                if (TypeUtils.isArrayType(resolvedType)) {
+                if (TypeUtils.isArrayType(t)) {
                     Signature[] arraySignature =
-                            new Signature[] { new ArraySignature(TypeUtils.getArrayComponentType(resolvedType)) };
+                            new Signature[] { new ArraySignature(TypeUtils.getArrayComponentType(t)) };
                     yield new BasicTypeSignatureMatcher(arraySignature, typeHinter, false, false);
                 }
                 else {
-                    Class<?> rawResolved = TypeUtils.getRawType(resolvedType, null);
+                    Class<?> rawResolved = TypeUtils.getRawType(t, null);
 
                     if (Collection.class.isAssignableFrom(rawResolved)) {
-                        Type[] types = ReflectionUtils.extractGenericTypeParameters(resolvedType, Collection.class);
-                        Signature[] collectionSignature = new Signature[] { new CollectionSignature(types[0], resolvedType) };
+                        Type[] types = ReflectionUtils.extractGenericTypeParameters(t, Collection.class);
+                        Signature[] collectionSignature = new Signature[] { new CollectionSignature(types[0], t) };
                         yield new BasicTypeSignatureMatcher(collectionSignature, typeHinter, false, false);
                     }
                     else if (Map.class.isAssignableFrom(rawResolved)) {
-                        Type[] types = ReflectionUtils.extractGenericTypeParameters(resolvedType, Map.class);
-                        Signature[] mapSignature = new Signature[] { new MapSignature(types[0], types[1], resolvedType) };
+                        Type[] types = ReflectionUtils.extractGenericTypeParameters(t, Map.class);
+                        Signature[] mapSignature = new Signature[] { new MapSignature(types[0], types[1], t) };
                         yield new BasicTypeSignatureMatcher(mapSignature, typeHinter, false, false);
                     }
                 }
 
-                throw new MapperException("unexpected container-like type '" + resolvedType.getTypeName() + "'");
+                throw new MapperException("unexpected container-like type '" + t.getTypeName() + "'");
             }
-            case NODE -> new BasicTypeSignatureMatcher(objectSignatureBuilder.buildSignatures(resolvedType, element),
-                    typeHinter, matchParameterNames, matchParameterTypeHints);
+            case NODE -> new BasicTypeSignatureMatcher(signatureSelector.select(t).buildSignatures(t), typeHinter,
+                    matchParameterNames, matchParameterTypeHints);
             case SCALAR -> null;
-        };
+        });
     }
 }

@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.core.mapper.signature;
 
-import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -16,7 +15,7 @@ public class CustomSignatureBuilder implements SignatureBuilder {
     }
 
     @Override
-    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type, @NotNull ConfigElement element) {
+    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
         Collection<Signature> signatureCollection = signatureMap.get(type.getTypeName());
         if (signatureCollection == null) {
             return EMPTY_SIGNATURE_ARRAY;

@@ -35,6 +35,7 @@ public interface Signature {
         return new CustomSignatureBase(parameterEntries, returnType.get(), false, constructor);
     }
 
+    @SafeVarargs
     static @NotNull <T> Signature custom(@NotNull Token<T> returnType, @NotNull Function<? super Object[], ?
             extends T> constructor, Entry<String, Token<?>> @NotNull ... parameters) {
         Collection<Entry<String, Type>> parameterEntries = new ArrayList<>(parameters.length);

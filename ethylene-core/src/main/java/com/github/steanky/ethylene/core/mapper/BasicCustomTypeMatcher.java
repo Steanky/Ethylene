@@ -24,7 +24,7 @@ public class BasicCustomTypeMatcher implements TypeSignatureMatcher.Source {
 
     @Override
     public @Nullable TypeSignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element) {
-        Signature[] signatures = customSignatureBuilder.buildSignatures(type, element);
+        Signature[] signatures = customSignatureBuilder.buildSignatures(type);
         if (signatures.length == 0) {
             return null;
         }
