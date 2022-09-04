@@ -40,8 +40,8 @@ public class BasicTypeSignatureMatcher implements TypeSignatureMatcher {
                 return new MatchingSignature(signature, elementCollection, signature.length(providedElement));
             }
 
-            if (!providedElement.isNode()) {
-                throw new MapperException("expected ConfigNode");
+            if (!providedElement.isNode() || elementCollection.size() != signature.length(providedElement)) {
+                continue;
             }
 
             ConfigNode providedNode = providedElement.asNode();

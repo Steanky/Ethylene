@@ -20,7 +20,7 @@ class MappingConfigProcessorIntegrationTest {
     private final MappingConfigProcessor<List<String>> stringListProcessor;
     private final MappingConfigProcessor<List<Object>> objectListProcessor;
     private final MappingConfigProcessor<List<List<String>>> listListStringProcessor;
-    private final MappingConfigProcessor<List<List<String>[]>> reallyStupidProcessor;
+    private final MappingConfigProcessor<List<ArrayList<String>[]>> reallyStupidProcessor;
     private final MappingConfigProcessor<CustomClass> customClassProcessor;
     private final MappingConfigProcessor<Object> objectProcessor;
 
@@ -84,7 +84,7 @@ class MappingConfigProcessorIntegrationTest {
 
         @Test
         void reallyStupidProcessor() {
-            List<List<String>[]> stupidString = assertDoesNotThrow(() -> reallyStupidProcessor.dataFromElement(
+            List<ArrayList<String>[]> stupidString = assertDoesNotThrow(() -> reallyStupidProcessor.dataFromElement(
                     ConfigList.of(ConfigList.of(ConfigList.of("a", "b", "c"), ConfigList.of("d", "e", "f")),
                             ConfigList.of(ConfigList.of("g", "h", "i"), ConfigList.of("j", "k", "l")))));
 
