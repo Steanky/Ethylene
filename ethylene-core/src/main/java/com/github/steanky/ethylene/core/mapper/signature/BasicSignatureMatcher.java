@@ -45,32 +45,28 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 return new MatchingSignature(signature, elementCollection, length);
             }
 
-            boolean hasArgumentNames = signature.matchesArgumentNames();
             Iterable<Entry<String, Type>> signatureTypes = signature.argumentTypes();
 
             outer:
             {
                 Collection<ConfigElement> targetCollection;
                 if (matchNames) {
-                    if (!hasArgumentNames) {
-                        targetCollection = elementCollection;
+                    if (!providedElement.isNode()) {
+                        continue;
                     }
-                    else {
-                        if (!providedElement.isNode()) {
-                            continue;
+
+                    ConfigNode providedNode = providedElement.asNode();
+                    targetCollection = new ArrayList<>(elementCollection.size());
+
+                    //this ensures that the order is respected when matching names
+                    for (Entry<String, Type> entry : signatureTypes) {
+                        String name = entry.getFirst();
+                        ConfigElement element = providedNode.get(name);
+                        if (element == null) {
+                            break outer;
                         }
 
-                        ConfigNode providedNode = providedElement.asNode();
-                        targetCollection = new ArrayList<>(elementCollection.size());
-                        for (Entry<String, Type> entry : signatureTypes) {
-                            String name = entry.getFirst();
-                            ConfigElement element = providedNode.get(name);
-                            if (element == null) {
-                                break outer;
-                            }
-
-                            targetCollection.add(element);
-                        }
+                        targetCollection.add(element);
                     }
                 }
                 else {
@@ -78,7 +74,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 }
 
                 if (matchTypeHints) {
-                    Iterator<ConfigElement> element = elementCollection.iterator();
+                    Iterator<ConfigElement> element = targetCollection.iterator();
                     for (Entry<String, Type> entry : signatureTypes) {
                         if (!typeHinter.getHint(entry.getSecond()).compatible(element.next())) {
                             break outer;

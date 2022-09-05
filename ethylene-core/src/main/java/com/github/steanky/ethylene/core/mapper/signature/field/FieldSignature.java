@@ -153,6 +153,11 @@ public class FieldSignature implements Signature {
     }
 
     @Override
+    public boolean matchesTypeHints() {
+        return true;
+    }
+
+    @Override
     public int length(@NotNull ConfigElement element) {
         return getTypes().size();
     }
