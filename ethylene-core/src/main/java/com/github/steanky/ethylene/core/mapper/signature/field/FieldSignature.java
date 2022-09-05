@@ -19,33 +19,29 @@ import java.util.*;
 public class FieldSignature implements Signature {
     private final Type type;
     private final Class<?> rawType;
-    private final boolean widenAccess;
 
-    private final Constructor<?> parameterlessConstructor;
-
+    //fields are lazily initialized by getTypes
+    private Constructor<?> parameterlessConstructor;
     private List<Field> participatingFields;
     private Collection<Entry<String, Type>> types;
 
     public FieldSignature(@NotNull Type type) {
         this.type = Objects.requireNonNull(type);
         this.rawType = TypeUtils.getRawType(type, null);
-        this.widenAccess = rawType.isAnnotationPresent(Widen.class);
-
-        this.parameterlessConstructor = getConstructor(rawType, widenAccess);
     }
 
     private static Constructor<?> getConstructor(Class<?> cls, boolean widenAccess) {
         try {
             if (widenAccess) {
-                Constructor<?> constructor = cls.getConstructor();
-                if (!constructor.trySetAccessible()) {
+                Constructor<?> constructor = cls.getDeclaredConstructor();
+                if (!constructor.canAccess(null) && !constructor.trySetAccessible()) {
                     throw new MapperException("failed to widen constructor access " + constructor);
                 }
 
                 return constructor;
             }
 
-            return cls.getDeclaredConstructor();
+            return cls.getConstructor();
         } catch (NoSuchMethodException e) {
             throw new MapperException(e);
         }
@@ -77,15 +73,20 @@ public class FieldSignature implements Signature {
                 throw new MapperException("field '" + field + "' annotated with both @Exclude and @Include");
             }
 
-            if (defaultExclude) { //exclude fields by default, require @Include annotation
+            if (defaultExclude) {
                 if (!field.isAnnotationPresent(Include.class)) {
+                    //exclude fields by default, require @Include annotation
                     continue;
                 }
             }
-            else if (field.isAnnotationPresent(Exclude.class)) { //include fields by default, require @Exclude
+            else if (field.isAnnotationPresent(Exclude.class)) {
+                //include fields by default, require @Exclude
                 continue;
             }
             else if (!widenAccess && (!Modifier.isPublic(modifiers) || Modifier.isFinal(modifiers))) {
+                //if not widening access:
+                //if neither Include nor Exclude is present, assign only public non-final variables
+                //if widening access: try to widen everything by default
                 continue;
             }
 
@@ -105,8 +106,11 @@ public class FieldSignature implements Signature {
             return types;
         }
 
-        participatingFields = getFields(rawType, widenAccess);
-        if (participatingFields.isEmpty()) {
+        boolean widenAccess = rawType.isAnnotationPresent(Widen.class);
+        this.parameterlessConstructor = getConstructor(rawType, widenAccess);
+        this.participatingFields = getFields(rawType, widenAccess);
+
+        if (this.participatingFields.isEmpty()) {
             return types = Collections.emptyList();
         }
 
@@ -128,6 +132,7 @@ public class FieldSignature implements Signature {
     @Override
     public Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args) {
         try {
+            getTypes();
             if (buildingObject != null) {
                 finishObject(buildingObject, args);
                 return buildingObject;

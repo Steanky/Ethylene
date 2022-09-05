@@ -30,16 +30,19 @@ public class BasicTypeHinter implements TypeHinter {
     @Override
     public boolean assignable(@NotNull ConfigElement element, @NotNull Type toType) {
         return switch (element.type()) {
+            //simplest case: if toType is a LIST or SCALAR and the element isn't, we are not assignable
             case NODE -> getHint(toType) == ElementType.NODE;
             case LIST -> {
                 ElementType hint = getHint(toType);
-                //if toType is a map, collection, or array, returns true
                 if (hint == ElementType.LIST) {
+                    //we know we're a map, collection, or array, so we're compatible
                     yield true;
                 }
 
                 //if toType is a superclass of Collection, returns true
-                yield TypeUtils.isAssignable(Collection.class, toType);
+                //match raw types, NOT generics: without calling getRawType, we would always yield false for any
+                //parameterized toType
+                yield TypeUtils.isAssignable(Collection.class, TypeUtils.getRawType(toType, null));
             }
             case SCALAR -> {
                 Object scalar = element.asScalar();
@@ -48,7 +51,8 @@ public class BasicTypeHinter implements TypeHinter {
                     yield true;
                 }
 
-                yield TypeUtils.isAssignable(scalar.getClass(), toType);
+                //simple assignability check
+                yield TypeUtils.isAssignable(scalar.getClass(), TypeUtils.getRawType(toType, null));
             }
         };
     }
