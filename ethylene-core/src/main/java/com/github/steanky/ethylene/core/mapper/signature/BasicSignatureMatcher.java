@@ -31,27 +31,34 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             }
 
             Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
-            int length = signature.length(providedElement);
-            if (elementCollection.size() != length) {
-                continue;
-            }
 
             boolean matchNames = signature.matchesArgumentNames();
             boolean matchTypeHints = signature.matchesTypeHints();
 
             if (!(matchNames || matchTypeHints)) {
+                int length = signature.length(providedElement);
+                if (elementCollection.size() != length) {
+                    continue;
+                }
+
                 return new MatchingSignature(signature, elementCollection, length);
             }
 
-            Iterable<Entry<String, Type>> signatureTypes = signature.argumentTypes();
-
             outer:
             {
+                Iterable<Entry<String, Type>> signatureTypes;
                 Collection<ConfigElement> targetCollection;
                 if (matchNames) {
                     if (!providedElement.isNode()) {
                         continue;
                     }
+
+                    int length = signature.length(providedElement);
+                    if (elementCollection.size() != length) {
+                        continue;
+                    }
+
+                    signatureTypes = signature.argumentTypes();
 
                     ConfigNode providedNode = providedElement.asNode();
                     targetCollection = new ArrayList<>(elementCollection.size());
@@ -73,7 +80,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                 if (matchTypeHints) {
                     Iterator<ConfigElement> elementIterator = targetCollection.iterator();
-                    Iterator<Entry<String, Type>> signatureTypeIterator = signatureTypes.iterator();
+                    Iterator<Entry<String, Type>> signatureTypeIterator = signature.argumentTypes().iterator();
 
                     while (elementIterator.hasNext()) {
                         if (!typeHinter.assignable(elementIterator.next(), signatureTypeIterator.next().getSecond())) {
@@ -82,7 +89,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     }
                 }
 
-                return new MatchingSignature(signature, targetCollection, length);
+                return new MatchingSignature(signature, targetCollection, signature.length(providedElement));
             }
         }
 
