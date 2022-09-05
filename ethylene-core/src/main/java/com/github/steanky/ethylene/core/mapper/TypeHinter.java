@@ -9,5 +9,5 @@ import java.lang.reflect.Type;
 public interface TypeHinter {
     @NotNull ElementType getHint(@NotNull Type type);
 
-    @NotNull Type getPreferredType(@NotNull ConfigElement element, @NotNull Type type);
+    boolean assignable(@NotNull ConfigElement element, @NotNull Type toType);
 }

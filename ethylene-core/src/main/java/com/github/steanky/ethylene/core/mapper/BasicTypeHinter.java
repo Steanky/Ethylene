@@ -28,16 +28,27 @@ public class BasicTypeHinter implements TypeHinter {
     }
 
     @Override
-    public @NotNull Type getPreferredType(@NotNull ConfigElement element, @NotNull Type target) {
+    public boolean assignable(@NotNull ConfigElement element, @NotNull Type toType) {
         return switch (element.type()) {
-            case NODE, LIST -> target;
+            case NODE -> getHint(toType) == ElementType.NODE;
+            case LIST -> {
+                ElementType hint = getHint(toType);
+                //if toType is a map, collection, or array, returns true
+                if (hint == ElementType.LIST) {
+                    yield true;
+                }
+
+                //if toType is a superclass of Collection, returns true
+                yield TypeUtils.isAssignable(Collection.class, toType);
+            }
             case SCALAR -> {
                 Object scalar = element.asScalar();
                 if (scalar == null) {
-                    yield Object.class;
+                    //null is assignable to all types, even non-scalars
+                    yield true;
                 }
 
-                yield scalar.getClass();
+                yield TypeUtils.isAssignable(scalar.getClass(), toType);
             }
         };
     }

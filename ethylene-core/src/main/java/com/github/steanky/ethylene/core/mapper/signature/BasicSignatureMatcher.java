@@ -76,10 +76,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     Iterator<Entry<String, Type>> signatureTypeIterator = signatureTypes.iterator();
 
                     while (elementIterator.hasNext()) {
-                        Type signatureType = signatureTypeIterator.next().getSecond();
-                        Type preferredElementType = typeHinter.getPreferredType(elementIterator.next(), signatureType);
-
-                        if (!TypeUtils.isAssignable(preferredElementType, signatureType)) {
+                        if (!typeHinter.assignable(elementIterator.next(), signatureTypeIterator.next().getSecond())) {
                             break outer;
                         }
                     }
