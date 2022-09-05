@@ -47,7 +47,7 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public boolean hasArgumentNames() {
+    public boolean matchesArgumentNames() {
         //make sure the type collection is generated
         getTypeCollection();
         return matchesNames;
@@ -91,14 +91,16 @@ public class ConstructorSignature implements Signature {
         List<Entry<String, Type>> entryList = new ArrayList<>(parameters.length);
 
         Parameter first = parameters[0];
-        boolean hasName = matchesNames = first.isNamePresent();
 
-        Entry<String, Type> firstEntry = makeEntry(first, hasName);
+        boolean parameterHasName = first.isNamePresent();
+        Entry<String, Type> firstEntry = makeEntry(first, parameterHasName);
+        matchesNames = firstEntry.getFirst() != null;
+
         entryList.add(firstEntry);
 
         boolean firstNonNullName = firstEntry.getFirst() != null;
         for (int i = 1; i < parameters.length; i++) {
-            Entry<String, Type> entry = makeEntry(parameters[i], hasName);
+            Entry<String, Type> entry = makeEntry(parameters[i], parameterHasName);
             if (firstNonNullName == (entry.getFirst() == null)) {
                 throw new MapperException("inconsistent parameter naming");
             }
@@ -109,9 +111,9 @@ public class ConstructorSignature implements Signature {
         return types = Collections.unmodifiableCollection(entryList);
     }
 
-    private static Entry<String, Type> makeEntry(Parameter parameter, boolean hasName) {
+    private static Entry<String, Type> makeEntry(Parameter parameter, boolean parameterHasName) {
         Name parameterName = parameter.getAnnotation(Name.class);
-        return Entry.of(hasName ? parameter.getName() : (parameterName != null ? parameter.getName() : null),
+        return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
                 parameter.getParameterizedType());
     }
 }

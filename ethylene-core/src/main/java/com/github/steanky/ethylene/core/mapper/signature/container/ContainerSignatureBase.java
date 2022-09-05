@@ -36,7 +36,7 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
-    public boolean hasArgumentNames() {
+    public boolean matchesArgumentNames() {
         return false;
     }
 

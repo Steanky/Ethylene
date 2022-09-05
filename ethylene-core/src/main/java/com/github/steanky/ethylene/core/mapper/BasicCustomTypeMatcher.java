@@ -11,15 +11,11 @@ import java.util.Objects;
 public class BasicCustomTypeMatcher implements SignatureMatcher.Source {
     private final SignatureBuilder customSignatureBuilder;
     private final TypeHinter typeHinter;
-    private final boolean matchNames;
-    private final boolean matchTypeHints;
 
     public BasicCustomTypeMatcher(@NotNull SignatureBuilder customSignatureBuilder,
-            @NotNull TypeHinter typeHinter, boolean matchNames, boolean matchTypeHints) {
+            @NotNull TypeHinter typeHinter) {
         this.customSignatureBuilder = Objects.requireNonNull(customSignatureBuilder);
         this.typeHinter = Objects.requireNonNull(typeHinter);
-        this.matchNames = matchNames;
-        this.matchTypeHints = matchTypeHints;
     }
 
     @Override
@@ -29,6 +25,6 @@ public class BasicCustomTypeMatcher implements SignatureMatcher.Source {
             return null;
         }
 
-        return new BasicSignatureMatcher(signatures, typeHinter, matchNames, matchTypeHints);
+        return new BasicSignatureMatcher(signatures, typeHinter);
     }
 }

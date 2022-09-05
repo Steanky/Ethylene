@@ -26,7 +26,11 @@ public interface Signature {
 
     Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args);
 
-    boolean hasArgumentNames();
+    boolean matchesArgumentNames();
+
+    default boolean matchesTypeHints() {
+        return false;
+    }
 
     int length(@NotNull ConfigElement element);
 

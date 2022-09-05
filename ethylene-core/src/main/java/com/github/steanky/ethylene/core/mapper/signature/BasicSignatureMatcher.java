@@ -14,16 +14,11 @@ import java.util.*;
 public class BasicSignatureMatcher implements SignatureMatcher {
     private final Signature[] signatures;
     private final TypeHinter typeHinter;
-    private final boolean matchNames;
-    private final boolean matchTypeHints;
 
 
-    public BasicSignatureMatcher(@NotNull Signature @NotNull [] signatures, @NotNull TypeHinter typeHinter,
-            boolean matchNames, boolean matchTypeHints) {
+    public BasicSignatureMatcher(@NotNull Signature @NotNull [] signatures, @NotNull TypeHinter typeHinter) {
         this.signatures = Objects.requireNonNull(signatures);
         this.typeHinter = Objects.requireNonNull(typeHinter);
-        this.matchNames = matchNames;
-        this.matchTypeHints = matchTypeHints;
     }
 
     @Override
@@ -41,11 +36,14 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 continue;
             }
 
+            boolean matchNames = signature.matchesArgumentNames();
+            boolean matchTypeHints = signature.matchesTypeHints();
+
             if (signatureHint == ElementType.LIST || !(matchNames || matchTypeHints)) {
                 return new MatchingSignature(signature, elementCollection, length);
             }
 
-            boolean hasArgumentNames = signature.hasArgumentNames();
+            boolean hasArgumentNames = signature.matchesArgumentNames();
             Iterable<Entry<String, Type>> signatureTypes = signature.argumentTypes();
 
             outer:

@@ -66,7 +66,8 @@ public class FieldSignature implements Signature {
         }
 
         for (Field field : fields) {
-            if (Modifier.isStatic(field.getModifiers())) {
+            int modifiers = field.getModifiers();
+            if (Modifier.isStatic(modifiers)) {
                 continue;
             }
 
@@ -76,12 +77,15 @@ public class FieldSignature implements Signature {
                 throw new MapperException("field '" + field + "' annotated with both @Exclude and @Include");
             }
 
-            if (defaultExclude) {
+            if (defaultExclude) { //exclude fields by default, require @Include annotation
                 if (!field.isAnnotationPresent(Include.class)) {
                     continue;
                 }
             }
-            else if (field.isAnnotationPresent(Exclude.class)) {
+            else if (field.isAnnotationPresent(Exclude.class)) { //include fields by default, require @Exclude
+                continue;
+            }
+            else if (!widenAccess && (!Modifier.isPublic(modifiers) || Modifier.isFinal(modifiers))) {
                 continue;
             }
 
@@ -144,7 +148,7 @@ public class FieldSignature implements Signature {
     }
 
     @Override
-    public boolean hasArgumentNames() {
+    public boolean matchesArgumentNames() {
         return true;
     }
 

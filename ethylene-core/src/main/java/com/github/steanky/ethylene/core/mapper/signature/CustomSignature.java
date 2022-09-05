@@ -47,7 +47,7 @@ public class CustomSignature implements Signature {
     }
 
     @Override
-    public boolean hasArgumentNames() {
+    public boolean matchesArgumentNames() {
         return hasNames;
     }
 
