@@ -15,9 +15,11 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     private final Signature[] signatures;
     private final TypeHinter typeHinter;
 
-
     public BasicSignatureMatcher(@NotNull Signature @NotNull [] signatures, @NotNull TypeHinter typeHinter) {
-        this.signatures = Objects.requireNonNull(signatures);
+        Signature[] copy = new Signature[signatures.length];
+        System.arraycopy(signatures, 0, copy, 0, signatures.length);
+        Arrays.sort(copy, Comparator.comparing(Signature::priority).reversed());
+        this.signatures = copy;
         this.typeHinter = Objects.requireNonNull(typeHinter);
     }
 
@@ -86,7 +88,6 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                 return new MatchingSignature(signature, targetCollection, length);
             }
-
         }
 
         throw new MapperException("unable to find matching signature for element '" + providedElement);

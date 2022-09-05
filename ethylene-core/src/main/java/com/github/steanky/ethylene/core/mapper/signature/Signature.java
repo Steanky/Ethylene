@@ -38,6 +38,10 @@ public interface Signature {
 
     @NotNull Type returnType();
 
+    default int priority() {
+        return 0;
+    }
+
     static @NotNull <T> Signature custom(@NotNull Token<T> returnType, @NotNull Function<? super Object[], ?
                 extends T> constructor, Token<?> @NotNull ... parameters) {
         Collection<Entry<String, Type>> parameterEntries = new ArrayList<>(parameters.length);
