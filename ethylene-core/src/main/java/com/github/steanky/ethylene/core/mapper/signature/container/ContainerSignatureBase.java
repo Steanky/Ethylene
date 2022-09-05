@@ -41,6 +41,11 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
+    public boolean matchesTypeHints() {
+        return true;
+    }
+
+    @Override
     public @NotNull ElementType typeHint() {
         return ElementType.LIST;
     }

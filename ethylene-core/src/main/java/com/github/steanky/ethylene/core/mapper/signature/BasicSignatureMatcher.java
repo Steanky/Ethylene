@@ -30,9 +30,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 continue;
             }
 
-            ElementType signatureHint = signature.typeHint();
             Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
-
             int length = signature.length(providedElement);
             if (elementCollection.size() != length) {
                 continue;
@@ -41,7 +39,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             boolean matchNames = signature.matchesArgumentNames();
             boolean matchTypeHints = signature.matchesTypeHints();
 
-            if (signatureHint == ElementType.LIST || !(matchNames || matchTypeHints)) {
+            if (!(matchNames || matchTypeHints)) {
                 return new MatchingSignature(signature, elementCollection, length);
             }
 
@@ -74,9 +72,14 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 }
 
                 if (matchTypeHints) {
-                    Iterator<ConfigElement> element = targetCollection.iterator();
-                    for (Entry<String, Type> entry : signatureTypes) {
-                        if (!typeHinter.getHint(entry.getSecond()).compatible(element.next())) {
+                    Iterator<ConfigElement> elementIterator = targetCollection.iterator();
+                    Iterator<Entry<String, Type>> signatureTypeIterator = signatureTypes.iterator();
+
+                    while (elementIterator.hasNext()) {
+                        Type signatureType = signatureTypeIterator.next().getSecond();
+                        Type preferredElementType = typeHinter.getPreferredType(elementIterator.next(), signatureType);
+
+                        if (!TypeUtils.isAssignable(preferredElementType, signatureType)) {
                             break outer;
                         }
                     }
