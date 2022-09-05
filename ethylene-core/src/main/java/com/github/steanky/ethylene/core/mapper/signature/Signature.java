@@ -24,7 +24,7 @@ public interface Signature {
         throw new IllegalStateException("unsupported operation");
     }
 
-    Object buildObject(@Nullable Object buildingObject, @NotNull Object @NotNull [] args);
+    Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args);
 
     boolean matchesArgumentNames();
 

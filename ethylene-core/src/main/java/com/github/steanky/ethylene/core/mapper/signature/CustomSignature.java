@@ -42,7 +42,7 @@ public class CustomSignature implements Signature {
     }
 
     @Override
-    public Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args) {
+    public Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         return creatorFunction.apply(args);
     }
 
