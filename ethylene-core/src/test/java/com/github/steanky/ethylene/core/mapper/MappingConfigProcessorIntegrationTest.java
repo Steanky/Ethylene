@@ -61,7 +61,7 @@ class MappingConfigProcessorIntegrationTest {
 
         SignatureMatcher.Source custom = new BasicCustomTypeMatcher(new CustomSignatureBuilder(), typeHinter);
         SignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, custom,
-                new StaticSignatureBuilderSelector(new ConstructorSignatureBuilder()));
+                new StaticSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);

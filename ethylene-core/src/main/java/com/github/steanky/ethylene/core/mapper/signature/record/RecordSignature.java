@@ -40,7 +40,7 @@ public class RecordSignature implements Signature {
     }
 
     @Override
-    public Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args) {
+    public Object buildObject(@Nullable Object buildingObject, @NotNull Object @NotNull [] args) {
         if (buildingObject != null) {
             throw new MapperException("pre-initialized building objects are not supported");
         }

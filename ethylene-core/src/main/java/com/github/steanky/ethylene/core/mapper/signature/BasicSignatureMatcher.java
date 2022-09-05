@@ -30,17 +30,19 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 continue;
             }
 
-            Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
-
             boolean matchNames = signature.matchesArgumentNames();
+            if (matchNames && !providedElement.isNode()) {
+                continue;
+            }
+
+            Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
+            int length = signature.length(providedElement);
+            if (elementCollection.size() != length) {
+                continue;
+            }
+
             boolean matchTypeHints = signature.matchesTypeHints();
-
             if (!(matchNames || matchTypeHints)) {
-                int length = signature.length(providedElement);
-                if (elementCollection.size() != length) {
-                    continue;
-                }
-
                 return new MatchingSignature(signature, elementCollection, length);
             }
 
@@ -49,15 +51,6 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 Iterable<Entry<String, Type>> signatureTypes;
                 Collection<ConfigElement> targetCollection;
                 if (matchNames) {
-                    if (!providedElement.isNode()) {
-                        continue;
-                    }
-
-                    int length = signature.length(providedElement);
-                    if (elementCollection.size() != length) {
-                        continue;
-                    }
-
                     signatureTypes = signature.argumentTypes();
 
                     ConfigNode providedNode = providedElement.asNode();
@@ -89,7 +82,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     }
                 }
 
-                return new MatchingSignature(signature, targetCollection, signature.length(providedElement));
+                return new MatchingSignature(signature, targetCollection, length);
             }
         }
 

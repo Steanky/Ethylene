@@ -24,7 +24,7 @@ public interface Signature {
         throw new IllegalStateException("unsupported operation");
     }
 
-    Object buildObject(@Nullable Object buildingObject, @NotNull Object[] args);
+    Object buildObject(@Nullable Object buildingObject, @NotNull Object @NotNull [] args);
 
     boolean matchesArgumentNames();
 
@@ -43,7 +43,7 @@ public interface Signature {
     }
 
     static @NotNull <T> Signature custom(@NotNull Token<T> returnType, @NotNull Function<? super Object[], ?
-                extends T> constructor, Token<?> @NotNull ... parameters) {
+                extends T> constructor, @NotNull Token<?> @NotNull ... parameters) {
         Collection<Entry<String, Type>> parameterEntries = new ArrayList<>(parameters.length);
         for (Token<?> token : parameters) {
             parameterEntries.add(Entry.of(null, token.get()));

@@ -11,6 +11,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 
 public class ConstructorSignatureBuilder implements SignatureBuilder {
+    public static final ConstructorSignatureBuilder INSTANCE = new ConstructorSignatureBuilder();
+
+    private ConstructorSignatureBuilder() {}
+
     @Override
     public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
         Class<?> rawType = TypeUtils.getRawType(type, null);
