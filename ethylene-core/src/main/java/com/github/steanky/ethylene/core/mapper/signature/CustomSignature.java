@@ -52,7 +52,7 @@ public class CustomSignature implements Signature {
     }
 
     @Override
-    public int length(@NotNull ConfigElement element) {
+    public int length(@Nullable ConfigElement element) {
         return namedTypes.size();
     }
 }

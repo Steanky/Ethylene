@@ -36,10 +36,68 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             if (providedElement == null) {
                 Objects.requireNonNull(providedObject);
 
-                boolean matchNames = signature.matchesArgumentNames();
-                Iterable<Entry<String, Object>> objects = signature.objectData(providedObject);
+                Collection<Entry<String, Signature.TypedObject>> objectData = signature.objectData(providedObject);
 
-                return new MatchingSignature(signature, null, null, 0);
+                int length = signature.length(null);
+                if (length > -1 && length != objectData.size()) {
+                    continue;
+                }
+
+                boolean matchNames = signature.matchesArgumentNames();
+                boolean matchTypeHints = signature.matchesTypeHints();
+
+                if (!(matchNames || matchTypeHints)) {
+                    Collection<Signature.TypedObject> objects = new ArrayList<>(objectData.size());
+                    for (Entry<String, Signature.TypedObject> objectEntry : objectData) {
+                        objects.add(objectEntry.getSecond());
+                    }
+
+                    return new MatchingSignature(signature, null, objects, objectData.size());
+                }
+
+                outer:
+                {
+                    Collection<Signature.TypedObject> typeCollection;
+                    if (matchNames) {
+                        typeCollection = new ArrayList<>(objectData.size());
+                        Map<String, Signature.TypedObject> objectDataMap = new HashMap<>(objectData.size());
+                        for (Entry<String, Signature.TypedObject> entry : objectData) {
+                            objectDataMap.put(entry.getFirst(), entry.getSecond());
+                        }
+
+                        Iterable<Entry<String, Type>> signatureTypes = signature.argumentTypes();
+                        for (Entry<String, Type> entry : signatureTypes) {
+                            Signature.TypedObject typedObject = objectDataMap.get(entry.getFirst());
+                            if (typedObject == null) {
+                                break outer;
+                            }
+
+                            typeCollection.add(typedObject);
+                        }
+                    }
+                    else {
+                        typeCollection = new ArrayList<>(objectData.size());
+                        for (Entry<String, Signature.TypedObject> entry : objectData) {
+                            typeCollection.add(entry.getSecond());
+                        }
+                    }
+
+                    if (matchTypeHints) {
+                        Iterator<Signature.TypedObject> typeCollectionIterator = typeCollection.iterator();
+                        Iterator<Entry<String, Type>> signatureIterator = signature.argumentTypes().iterator();
+
+                        while (typeCollectionIterator.hasNext()) {
+                            if (typeHinter.getHint(typeCollectionIterator.next().type()) != typeHinter
+                                    .getHint(signatureIterator.next().getSecond())) {
+                                break outer;
+                            }
+                        }
+                    }
+
+                    return new MatchingSignature(signature, null, typeCollection, length);
+                }
+
+                continue;
             }
 
             Objects.requireNonNull(providedElement);

@@ -15,9 +15,12 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public interface Signature {
+    record TypedObject(@NotNull Type type, @NotNull Object value) {}
+
+
     @NotNull Iterable<Entry<String, Type>> argumentTypes();
 
-    default @NotNull Iterable<Entry<String, Object>> objectData(@NotNull Object object) {
+    default @NotNull Collection<Entry<String, TypedObject>> objectData(@NotNull Object object) {
         throw new MapperException("not implemented");
     }
 
@@ -37,7 +40,7 @@ public interface Signature {
         return false;
     }
 
-    int length(@NotNull ConfigElement element);
+    int length(@Nullable ConfigElement element);
 
     @NotNull ElementType typeHint();
 

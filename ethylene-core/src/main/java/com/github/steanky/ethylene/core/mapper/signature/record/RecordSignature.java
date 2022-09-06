@@ -69,7 +69,7 @@ public class RecordSignature implements Signature {
     }
 
     @Override
-    public int length(@NotNull ConfigElement element) {
+    public int length(@Nullable ConfigElement element) {
         getArgumentTypes();
         return length;
     }

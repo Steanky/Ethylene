@@ -59,7 +59,7 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public int length(@NotNull ConfigElement element) {
+    public int length(@Nullable ConfigElement element) {
         return constructor.getParameterCount();
     }
 
