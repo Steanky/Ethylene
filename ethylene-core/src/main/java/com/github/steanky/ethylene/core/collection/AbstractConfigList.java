@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.core.collection;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.util.ConfigElementUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 import java.util.function.IntFunction;
@@ -99,7 +100,7 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
 
     @SuppressWarnings("ReplaceNullCheck") //bad intelliJ, I want to cache the collection object...
     @Override
-    public @NotNull Collection<ConfigEntry> entryCollection() {
+    public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
         if (containerCollection != null) {
             return containerCollection;
         }
@@ -130,7 +131,7 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
     }
 
     @Override
-    public @NotNull Collection<ConfigElement> elementCollection() {
+    public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
         if (elementCollection != null) {
             return elementCollection;
         }

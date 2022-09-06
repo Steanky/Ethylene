@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.core.collection;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.util.ConfigElementUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 import java.util.function.IntFunction;
@@ -104,7 +105,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
     @SuppressWarnings("ReplaceNullCheck")
     @Override
-    public @NotNull Collection<ConfigEntry> entryCollection() {
+    public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
         if (containerCollection != null) {
             return containerCollection;
         }
@@ -137,33 +138,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     }
 
     @Override
-    public @NotNull Collection<ConfigElement> elementCollection() {
-        if (elementCollection != null) {
-            return elementCollection;
-        }
-
-        return elementCollection = new AbstractCollection<>() {
-            @Override
-            public Iterator<ConfigElement> iterator() {
-                return new Iterator<>() {
-                    private final Iterator<ConfigElement> elementIterator = mappings.values().iterator();
-
-                    @Override
-                    public boolean hasNext() {
-                        return elementIterator.hasNext();
-                    }
-
-                    @Override
-                    public ConfigElement next() {
-                        return elementIterator.next();
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return mappings.size();
-            }
-        };
+    public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
+        return mappings.values();
     }
 }

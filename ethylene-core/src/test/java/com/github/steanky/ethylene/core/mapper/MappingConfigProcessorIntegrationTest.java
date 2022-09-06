@@ -62,13 +62,13 @@ class MappingConfigProcessorIntegrationTest {
         SignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, custom,
                 new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
 
-        this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
-        this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
-        this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
-        this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
-        this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
-        this.customNamedClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
-        this.objectProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
+        this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
+        this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
+        this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
+        this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
+        this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
+        this.customNamedClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
+        this.objectProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
     }
 
     @Nested

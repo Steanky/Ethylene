@@ -11,6 +11,7 @@ import com.github.steanky.ethylene.core.mapper.signature.container.MapSignature;
 import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -38,8 +39,7 @@ public class BasicTypeMatcherSource implements SignatureMatcher.Source {
     }
 
     @Override
-    public SignatureMatcher matcherFor(@NotNull Type type, @NotNull ConfigElement element) {
-        Type resolvedType = typeResolver.resolveType(type, element);
+    public SignatureMatcher matcherFor(@NotNull Type resolvedType, @Nullable ConfigElement element) {
         SignatureMatcher customSignatureMatcher = customTypeMatcherSource.matcherFor(resolvedType, element);
         if (customSignatureMatcher != null) {
             return customSignatureMatcher;

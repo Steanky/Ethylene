@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
 import java.util.Map;
@@ -27,7 +28,7 @@ public interface ConfigContainer extends ConfigElement {
      *
      * @return an immutable, read-through collection representing the entries contained in this object
      */
-    @NotNull Collection<ConfigEntry> entryCollection();
+    @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection();
 
-    @NotNull Collection<ConfigElement> elementCollection();
+    @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection();
 }

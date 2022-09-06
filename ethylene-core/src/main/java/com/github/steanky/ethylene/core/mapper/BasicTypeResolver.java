@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -40,9 +41,8 @@ public class BasicTypeResolver implements TypeResolver {
     }
 
     @Override
-    public @NotNull Type resolveType(@NotNull Type type, @NotNull ConfigElement element) {
+    public @NotNull Type resolveType(@NotNull Type type, @Nullable ConfigElement element) {
         Objects.requireNonNull(type);
-        Objects.requireNonNull(element);
 
         Class<?> raw = TypeUtils.getRawType(type, null);
         if (raw == null) {
@@ -51,7 +51,7 @@ public class BasicTypeResolver implements TypeResolver {
 
         ElementType hint = typeHinter.getHint(raw);
         if (raw.isArray() || raw.isPrimitive()) {
-            if (!hint.compatible(element)) {
+            if (element != null && !hint.compatible(element)) {
                 throw new MapperException("incompatible types: " + hint + " to " + type);
             }
 
@@ -59,7 +59,7 @@ public class BasicTypeResolver implements TypeResolver {
         }
 
         if ((!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(ClassUtils.getName(raw)))) {
-            if (hint.compatible(element)) {
+            if (element == null || hint.compatible(element)) {
                 return type;
             }
 

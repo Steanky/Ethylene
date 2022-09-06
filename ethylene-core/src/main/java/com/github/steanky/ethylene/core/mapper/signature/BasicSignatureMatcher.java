@@ -1,15 +1,17 @@
 package com.github.steanky.ethylene.core.mapper.signature;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.*;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class BasicSignatureMatcher implements SignatureMatcher {
     private final Signature[] signatures;
@@ -24,11 +26,23 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     }
 
     @Override
-    public @NotNull MatchingSignature signature(@NotNull ConfigElement providedElement, @NotNull Type desiredType) {
+    public @NotNull MatchingSignature signature(@NotNull Type desiredType, ConfigElement providedElement,
+            Object providedObject) {
         for (Signature signature : signatures) {
-            if (!TypeUtils.isAssignable(signature.returnType(), desiredType)) {
+            if (!signature.returnType().equals(desiredType)) {
                 continue;
             }
+
+            if (providedElement == null) {
+                Objects.requireNonNull(providedObject);
+
+                boolean matchNames = signature.matchesArgumentNames();
+                Iterable<Entry<String, Object>> objects = signature.objectData(providedObject);
+
+                return new MatchingSignature(signature, null, null, 0);
+            }
+
+            Objects.requireNonNull(providedElement);
 
             boolean matchNames = signature.matchesArgumentNames();
             if (matchNames && !providedElement.isNode()) {
@@ -43,7 +57,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
             boolean matchTypeHints = signature.matchesTypeHints();
             if (!(matchNames || matchTypeHints)) {
-                return new MatchingSignature(signature, elementCollection, length);
+                return new MatchingSignature(signature, elementCollection, null, length);
             }
 
             outer:
@@ -82,7 +96,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     }
                 }
 
-                return new MatchingSignature(signature, targetCollection, length);
+                return new MatchingSignature(signature, targetCollection, null, length);
             }
         }
 
