@@ -13,13 +13,14 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
  * Provides support for the YAML format.
  */
 public class YamlCodec extends AbstractConfigCodec {
-    private static final List<String> EXTENSIONS = List.of("yaml", "yml");
+    private static final Set<String> EXTENSIONS = Set.of("yaml", "yml");
 
     private final Supplier<Load> loadSupplier;
     private final Supplier<Dump> dumpSupplier;
@@ -83,7 +84,7 @@ public class YamlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+    public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
     }
 }

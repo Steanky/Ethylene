@@ -102,7 +102,7 @@ public final class GraphTransformer {
         }
     }
 
-    public record Output<TOut, TKey>(@NotNull TOut data, @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {}
+    public record Output<TOut, TKey>(TOut data, @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {}
 
     @FunctionalInterface
     public interface Accumulator<TKey, TOut> {

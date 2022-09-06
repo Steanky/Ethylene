@@ -26,7 +26,7 @@ import java.util.*;
  * in order to provide proper support for dates.
  */
 public class TomlCodec extends AbstractConfigCodec {
-    private static final List<String> EXTENSIONS = List.of("toml");
+    private static final Set<String> EXTENSIONS = Set.of("toml");
 
     private final TomlParser parser;
     private final TomlWriter writer;
@@ -120,7 +120,7 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+    public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
     }
 }

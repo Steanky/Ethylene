@@ -81,7 +81,7 @@ public class BasicTypeResolver implements TypeResolver {
             };
 
             if (!TypeUtils.isAssignable(elementType, type)) {
-                throw new MapperException("element type " + element.type() + " not compatible with " + type);
+                throw new MapperException("element type '" + element.type() + "' not compatible with '" + type + "'");
             }
 
             return elementType;

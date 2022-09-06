@@ -4,10 +4,9 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.mapper.annotation.Name;
+import com.github.steanky.ethylene.core.mapper.signature.BasicSignatureBuilderSelector;
 import com.github.steanky.ethylene.core.mapper.signature.CustomSignatureBuilder;
-import com.github.steanky.ethylene.core.mapper.signature.StaticSignatureBuilderSelector;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
-import com.github.steanky.ethylene.core.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import org.jetbrains.annotations.NotNull;
@@ -61,7 +60,7 @@ class MappingConfigProcessorIntegrationTest {
 
         SignatureMatcher.Source custom = new BasicCustomTypeMatcher(new CustomSignatureBuilder(), typeHinter);
         SignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, custom,
-                new StaticSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
+                new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);
         this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source);

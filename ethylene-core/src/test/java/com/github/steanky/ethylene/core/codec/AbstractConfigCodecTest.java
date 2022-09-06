@@ -52,8 +52,8 @@ class AbstractConfigCodecTest {
 
         testCodec = new AbstractConfigCodec() {
             @Override
-            public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
-                return Collections.emptyList();
+            public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
+                return Collections.emptySet();
             }
 
             @Override

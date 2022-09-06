@@ -13,16 +13,19 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Provides support for the JSON format.
  */
 public class JsonCodec extends AbstractConfigCodec {
+    private static final Set<String> EXTENSIONS = Set.of("json");
+
     /**
      * The default {@link Gson} instance used to read and write data.
      */
     public static final Gson DEFAULT_GSON = new Gson();
-    private static final List<String> EXTENSIONS = List.of("json");
+
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
 
     private final Gson gson;
@@ -63,7 +66,7 @@ public class JsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+    public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
     }
 }

@@ -14,12 +14,13 @@ import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Provides support for HJSON.
  */
 public class HjsonCodec extends AbstractConfigCodec {
-    private static final List<String> EXTENSIONS = List.of("hjson");
+    private static final Set<String> EXTENSIONS = Set.of("hjson");
 
     private final HjsonOptions readOptions;
     private final HjsonOptions writeOptions;
@@ -150,7 +151,7 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+    public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
     }
 }

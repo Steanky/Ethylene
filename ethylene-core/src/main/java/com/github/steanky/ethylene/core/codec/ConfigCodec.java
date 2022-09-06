@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>This interface represents the primary compatibility layer between any specific configuration format and a
@@ -40,14 +41,13 @@ public interface ConfigCodec {
     @NotNull ConfigElement decode(@NotNull InputStream input) throws IOException;
 
     /**
-     * <p>Returns a list of strings representing the preferred file extensions for this codec. The list may be empty,
-     * in
-     * which case no extension should be preferred. Codecs may report any number of extensions. Users of this codec are
-     * not required to respect its preferred extensions.</p>
+     * <p>Returns a set of strings representing the preferred file extensions for this codec. The set may be empty,
+     * in which case no extension should be preferred. Codecs may report any number of extensions. Users of this
+     * codec are not required to respect its preferred extensions.</p>
      *
      * <p>Any reported string should be filesystem-agnostic.</p>
      *
      * @return a list of preferred extensions for this codec, without a leading period
      */
-    @Unmodifiable @NotNull List<String> getPreferredExtensions();
+    @Unmodifiable @NotNull Set<String> getPreferredExtensions();
 }

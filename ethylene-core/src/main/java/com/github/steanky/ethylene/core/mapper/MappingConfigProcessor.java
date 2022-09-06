@@ -1,7 +1,11 @@
 package com.github.steanky.ethylene.core.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigPrimitive;
+import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.mapper.signature.MatchingSignature;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
@@ -88,8 +92,16 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     }
 
     @Override
-    public @NotNull ConfigElement elementFromData(T t) throws ConfigProcessException {
+    public @NotNull ConfigElement elementFromData(T data) throws ConfigProcessException {
+        Type type = token.get();
+        ElementEntry rootEntry = new ElementEntry(type, data);
         return null;
+    }
+
+    private record ElementEntry(Type type, Object object, MutableObject<ConfigElement> element) {
+        private ElementEntry(Type type, Object object) {
+            this(type, object, new MutableObject<>(null));
+        }
     }
 
     private record ClassEntry(Type type, ConfigElement element, SignatureMatcher signatureMatcher,
