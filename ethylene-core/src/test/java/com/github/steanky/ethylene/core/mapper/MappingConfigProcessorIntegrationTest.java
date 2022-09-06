@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.mapper;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -73,6 +75,14 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Lists {
+        @Test
+        void listToElement() throws ConfigProcessException {
+            List<String> stringList = List.of("a", "b", "c");
+            ConfigElement element = stringListProcessor.elementFromData(stringList);
+
+            assertEquals(stringList, element.asList().stream().map(ConfigElement::asString).collect(Collectors.toList()));
+        }
+
         @Test
         void basicStringList() {
             List<String> stringList = assertDoesNotThrow(

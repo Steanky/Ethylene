@@ -52,8 +52,9 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                 outer:
                 {
-                    Collection<Signature.TypedObject> typeCollection = new ArrayList<>(objectData.size());
+                    Collection<Signature.TypedObject> typeCollection;
                     if (matchNames) {
+                        typeCollection = new ArrayList<>(objectData.size());
                         Map<String, Signature.TypedObject> objectDataMap = new HashMap<>(objectData.size());
                         for (Signature.TypedObject entry : objectData) {
                             objectDataMap.put(entry.name(), entry);
@@ -85,7 +86,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                         }
                     }
 
-                    return new MatchingSignature(signature, null, typeCollection, length);
+                    return new MatchingSignature(signature, null, typeCollection, objectData.size());
                 }
 
                 continue;

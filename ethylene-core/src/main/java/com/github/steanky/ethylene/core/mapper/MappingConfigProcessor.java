@@ -99,8 +99,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     @Override
     public @NotNull ConfigElement elementFromData(T data) throws ConfigProcessException {
         try {
-            Type rootType = token.get();
-            SignatureMatcher rootMatcher = signatureMatcherSource.matcherFor(typeResolver.resolveType(rootType, null), null);
+            Type rootType = typeResolver.resolveType(token.get(), null);
+            SignatureMatcher rootMatcher = signatureMatcherSource.matcherFor(rootType, null);
             ElementEntry rootEntry = new ElementEntry(rootType, data, rootMatcher);
 
             return GraphTransformer.process(rootEntry, nodeEntry -> {
@@ -129,10 +129,10 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 i++;
 
                                 Signature.TypedObject typedObject = typedObjectIterator.next();
-                                SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(typeResolver
-                                        .resolveType(typedObject.type(), null), null);
+                                Type objectType = typeResolver.resolveType(typedObject.type(), null);
+                                SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType, null);
 
-                                return Entry.of(typedObject.name(), new ElementEntry(typedObject.type(), typedObject.value(),
+                                return Entry.of(typedObject.name(), new ElementEntry(objectType, typedObject.value(),
                                         thisMatcher));
                             }
                         }, new GraphTransformer.Output<>(nodeEntry.element, (key, value, circular) -> {
@@ -155,7 +155,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private record ElementEntry(Type type, Object object, SignatureMatcher signatureMatcher,
             Mutable<ConfigElement> element) {
         private ElementEntry(Type type, Object object, SignatureMatcher signatureMatcher) {
-            this(type, object, signatureMatcher, null);
+            this(type, object, signatureMatcher, new MutableObject<>(null));
         }
     }
 
