@@ -8,6 +8,7 @@ import com.github.steanky.ethylene.core.mapper.annotation.Name;
 import com.github.steanky.ethylene.core.mapper.annotation.Order;
 import com.github.steanky.ethylene.core.mapper.annotation.Widen;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
+import com.github.steanky.ethylene.core.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +62,7 @@ public class ConstructorSignature implements Signature {
                 }
 
                 field = fields[i++];
-                name = field.getName();
+                name = ReflectionUtils.getFieldName(field);
             }
 
             if (widenAccess && !field.trySetAccessible()) {
@@ -128,13 +129,7 @@ public class ConstructorSignature implements Signature {
         if (matchesNames) {
             namedFields = new HashMap<>(fields.length);
             for (Field field : fields) {
-                Name name = field.getDeclaredAnnotation(Name.class);
-                if (name == null) {
-                    namedFields.put(field.getName(), field);
-                }
-                else {
-                    namedFields.put(name.value(), field);
-                }
+                namedFields.put(ReflectionUtils.getFieldName(field), field);
             }
         }
         else {

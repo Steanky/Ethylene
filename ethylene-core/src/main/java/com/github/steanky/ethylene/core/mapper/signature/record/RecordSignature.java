@@ -42,6 +42,7 @@ public class RecordSignature implements Signature {
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
         initArgumentTypes();
+
         Collection<TypedObject> typedObjects = new ArrayList<>(length);
         RecordComponent[] recordComponents = object.getClass().getRecordComponents();
         for (RecordComponent recordComponent : recordComponents) {

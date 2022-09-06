@@ -45,26 +45,4 @@ public interface Signature {
     default int priority() {
         return 0;
     }
-
-    static @NotNull <T> Signature custom(@NotNull Token<T> returnType, @NotNull Function<? super Object[], ?
-                extends T> constructor, @NotNull Token<?> @NotNull ... parameters) {
-        Collection<Entry<String, Type>> parameterEntries = new ArrayList<>(parameters.length);
-        for (Token<?> token : parameters) {
-            parameterEntries.add(Entry.of(null, token.get()));
-        }
-
-        return new CustomSignature(parameterEntries, returnType.get(), false, constructor);
-    }
-
-    @SafeVarargs
-    static @NotNull <T> Signature custom(@NotNull Token<T> returnType, @NotNull Function<? super Object[], ?
-            extends T> constructor, Entry<String, Token<?>> @NotNull ... parameters) {
-        Collection<Entry<String, Type>> parameterEntries = new ArrayList<>(parameters.length);
-        for (Entry<String, Token<?>> entry : parameters) {
-            parameterEntries.add(Entry.of(Objects.requireNonNull(entry.getFirst(), "entry name"),
-                    Objects.requireNonNull(entry.getSecond(), "entry type").get()));
-        }
-
-        return new CustomSignature(parameterEntries, returnType.get(), true, constructor);
-    }
 }
