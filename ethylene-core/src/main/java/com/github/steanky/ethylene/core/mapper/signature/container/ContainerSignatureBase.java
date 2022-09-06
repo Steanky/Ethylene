@@ -9,6 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
+import java.util.AbstractCollection;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 

@@ -1,8 +1,10 @@
 package com.github.steanky.ethylene.core.util;
 
+import com.github.steanky.ethylene.core.mapper.annotation.Name;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Map;
@@ -29,5 +31,10 @@ public class ReflectionUtils {
         }
 
         return params;
+    }
+
+    public static @NotNull String getFieldName(@NotNull Field field) {
+        Name nameAnnotation = field.getDeclaredAnnotation(Name.class);
+        return nameAnnotation == null ? field.getName() : nameAnnotation.value();
     }
 }

@@ -10,8 +10,10 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 
 public class CollectionSignature extends ContainerSignatureBase {
     private final Constructor<?> constructor;
@@ -35,6 +37,37 @@ public class CollectionSignature extends ContainerSignatureBase {
         }
 
         this.constructor = constructor;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+        Collection<Object> objectCollection = (Collection<Object>) object;
+
+        return new AbstractCollection<>() {
+            @Override
+            public Iterator<TypedObject> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<Object> collectionIterator = objectCollection.iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return collectionIterator.hasNext();
+                    }
+
+                    @Override
+                    public TypedObject next() {
+                        return new TypedObject(null, CollectionSignature.this.entry.getSecond(),
+                                collectionIterator.next());
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return objectCollection.size();
+            }
+        };
     }
 
     @Override

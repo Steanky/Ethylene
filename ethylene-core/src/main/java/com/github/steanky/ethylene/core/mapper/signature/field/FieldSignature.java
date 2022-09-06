@@ -9,6 +9,8 @@ import com.github.steanky.ethylene.core.mapper.annotation.Include;
 import com.github.steanky.ethylene.core.mapper.annotation.Name;
 import com.github.steanky.ethylene.core.mapper.annotation.Widen;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
+import com.github.steanky.ethylene.core.util.ReflectionUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -101,7 +103,7 @@ public class FieldSignature implements Signature {
         return participatingFields;
     }
 
-    private Collection<Entry<String, Type>> getTypes() {
+    private Collection<Entry<String, Type>> initTypes() {
         if (types != null) {
             return types;
         }
@@ -116,9 +118,7 @@ public class FieldSignature implements Signature {
 
         Collection<Entry<String, Type>> typeCollection = new ArrayList<>(participatingFields.size());
         for (Field field : participatingFields) {
-            Name nameAnnotation = field.getDeclaredAnnotation(Name.class);
-            String name = nameAnnotation == null ? field.getName() : nameAnnotation.value();
-            typeCollection.add(Entry.of(name, field.getGenericType()));
+            typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), field.getGenericType()));
         }
 
         return types = Collections.unmodifiableCollection(typeCollection);
@@ -126,13 +126,29 @@ public class FieldSignature implements Signature {
 
     @Override
     public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
-        return getTypes();
+        return initTypes();
+    }
+
+    @Override
+    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+        initTypes();
+        Collection<TypedObject> typedObjects = new ArrayList<>(participatingFields.size());
+        for (Field field : participatingFields) {
+            String name = ReflectionUtils.getFieldName(field);
+
+            try {
+                typedObjects.add(new TypedObject(name, field.getGenericType(), FieldUtils.readField(field, object)));
+            }
+            catch (IllegalAccessException ignored) {}
+        }
+
+        return typedObjects;
     }
 
     @Override
     public Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         try {
-            getTypes();
+            initTypes();
             if (buildingObject != null) {
                 finishObject(buildingObject, args);
                 return buildingObject;
@@ -164,7 +180,7 @@ public class FieldSignature implements Signature {
 
     @Override
     public int length(@Nullable ConfigElement element) {
-        return getTypes().size();
+        return initTypes().size();
     }
 
     @Override

@@ -36,7 +36,22 @@ public class RecordSignature implements Signature {
 
     @Override
     public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
-        return getArgumentTypes();
+        return initArgumentTypes();
+    }
+
+    @Override
+    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+        initArgumentTypes();
+        Collection<TypedObject> typedObjects = new ArrayList<>(length);
+        RecordComponent[] recordComponents = object.getClass().getRecordComponents();
+        for (RecordComponent recordComponent : recordComponents) {
+            try {
+                typedObjects.add(new TypedObject(recordComponent.getName(), recordComponent.getGenericType(),
+                        recordComponent.getAccessor().invoke(object)));
+            } catch (IllegalAccessException | InvocationTargetException ignored) {}
+        }
+
+        return typedObjects;
     }
 
     @Override
@@ -45,7 +60,7 @@ public class RecordSignature implements Signature {
             throw new MapperException("pre-initialized building objects are not supported");
         }
 
-        getArgumentTypes();
+        initArgumentTypes();
         try {
             return canonicalConstructor.newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
@@ -70,7 +85,7 @@ public class RecordSignature implements Signature {
 
     @Override
     public int length(@Nullable ConfigElement element) {
-        getArgumentTypes();
+        initArgumentTypes();
         return length;
     }
 
@@ -84,7 +99,7 @@ public class RecordSignature implements Signature {
         return returnType;
     }
 
-    private Collection<Entry<String, Type>> getArgumentTypes() {
+    private Collection<Entry<String, Type>> initArgumentTypes() {
         if (argumentTypes != null) {
             return argumentTypes;
         }

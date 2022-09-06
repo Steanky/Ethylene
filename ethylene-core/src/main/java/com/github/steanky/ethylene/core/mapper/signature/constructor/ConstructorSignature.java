@@ -5,14 +5,14 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.annotation.Name;
+import com.github.steanky.ethylene.core.mapper.annotation.Order;
+import com.github.steanky.ethylene.core.mapper.annotation.Widen;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 
 public class ConstructorSignature implements Signature {
@@ -22,6 +22,9 @@ public class ConstructorSignature implements Signature {
     private boolean matchesNames;
     private Collection<Entry<String, Type>> types;
 
+    private Field[] fields;
+    private Map<String, Field> namedFields;
+
     public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Type genericReturnType) {
         this.constructor = Objects.requireNonNull(constructor);
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
@@ -29,7 +32,50 @@ public class ConstructorSignature implements Signature {
 
     @Override
     public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
-        return getTypeCollection();
+        return initTypeCollection();
+    }
+
+    @Override
+    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+        initTypeCollection();
+
+        Collection<TypedObject> typedObjects = new ArrayList<>(types.size());
+        Class<?> declaringClass = constructor.getDeclaringClass();
+        boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
+
+        initFields(declaringClass, widenAccess);
+
+        int i = 0;
+        for (Entry<String, Type> typeEntry : types) {
+            Field field;
+            String name;
+            if (matchesNames) {
+                field = namedFields.get(name = typeEntry.getKey());
+                if (field == null) {
+                    break;
+                }
+            }
+            else {
+                if (i == fields.length) {
+                    break;
+                }
+
+                field = fields[i++];
+                name = field.getName();
+            }
+
+            if (widenAccess && !field.trySetAccessible()) {
+                break;
+            }
+
+            try {
+                typedObjects.add(new TypedObject(name, field.getGenericType(), FieldUtils.readField(field, object)));
+            } catch (IllegalAccessException ignored) {
+                break;
+            }
+        }
+
+        return typedObjects;
     }
 
     @Override
@@ -49,7 +95,7 @@ public class ConstructorSignature implements Signature {
     @Override
     public boolean matchesArgumentNames() {
         //make sure the type collection is generated
-        getTypeCollection();
+        initTypeCollection();
         return matchesNames;
     }
 
@@ -73,7 +119,37 @@ public class ConstructorSignature implements Signature {
         return genericReturnType;
     }
 
-    private Collection<Entry<String, Type>> getTypeCollection() {
+    private void initFields(Class<?> declaringClass, boolean widenAccess) {
+        if (fields != null) {
+            return;
+        }
+
+        fields = widenAccess ? declaringClass.getDeclaredFields() : declaringClass.getFields();
+        if (matchesNames) {
+            namedFields = new HashMap<>(fields.length);
+            for (Field field : fields) {
+                Name name = field.getDeclaredAnnotation(Name.class);
+                if (name == null) {
+                    namedFields.put(field.getName(), field);
+                }
+                else {
+                    namedFields.put(name.value(), field);
+                }
+            }
+        }
+        else {
+            Arrays.sort(fields, Comparator.comparing(field -> {
+                Order order = field.getAnnotation(Order.class);
+                if (order != null) {
+                    return order.value();
+                }
+
+                return 0;
+            }));
+        }
+    }
+
+    private Collection<Entry<String, Type>> initTypeCollection() {
         if (types != null) {
             return types;
         }

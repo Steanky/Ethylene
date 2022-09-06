@@ -10,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
+import java.util.AbstractCollection;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 public class MapSignature extends ContainerSignatureBase {
@@ -39,6 +42,36 @@ public class MapSignature extends ContainerSignatureBase {
 
     private static Type makeMapComponentType(Type keyType, Type valueType) {
         return TypeUtils.parameterize(Map.Entry.class, keyType, valueType);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+        Map<Object, Object> map = (Map<Object, Object>) object;
+
+        return new AbstractCollection<>() {
+            @Override
+            public Iterator<TypedObject> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<Map.Entry<Object, Object>> entryIterator = map.entrySet().iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return entryIterator.hasNext();
+                    }
+
+                    @Override
+                    public TypedObject next() {
+                        return new TypedObject(null, MapSignature.this.entry.getSecond(), entryIterator.next());
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return map.size();
+            }
+        };
     }
 
     @Override

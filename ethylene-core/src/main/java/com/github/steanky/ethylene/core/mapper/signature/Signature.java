@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.core.mapper.signature;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
-import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,9 +18,7 @@ public interface Signature {
 
     @NotNull Iterable<Entry<String, Type>> argumentTypes();
 
-    default @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
-        throw new MapperException("not implemented");
-    }
+    @NotNull Collection<TypedObject> objectData(@NotNull Object object);
 
     default boolean hasBuildingObject() {
         return false;
