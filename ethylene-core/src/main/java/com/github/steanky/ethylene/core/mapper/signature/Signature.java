@@ -15,8 +15,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public interface Signature {
-    record TypedObject(@NotNull Type type, @NotNull Object value) {}
-
+    record TypedObject(@Nullable String name, @NotNull Type type, @NotNull Object value) {}
 
     @NotNull Iterable<Entry<String, Type>> argumentTypes();
 

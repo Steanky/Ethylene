@@ -3,7 +3,10 @@ package com.github.steanky.ethylene.core.mapper;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.ArrayConfigList;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.mapper.signature.MatchingSignature;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
@@ -96,33 +99,58 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
     @Override
     public @NotNull ConfigElement elementFromData(T data) throws ConfigProcessException {
-        Type type = token.get();
-        SignatureMatcher rootMatcher = typeFactorySource.matcherFor(typeResolver.resolveType(type, null), null);
-        ElementEntry rootEntry = new ElementEntry(type, data, rootMatcher);
+        try {
+            Type type = token.get();
+            SignatureMatcher rootMatcher = typeFactorySource.matcherFor(typeResolver.resolveType(type, null), null);
+            ElementEntry rootEntry = new ElementEntry(type, data, rootMatcher);
 
-        return GraphTransformer.process(rootEntry, nodeEntry -> {
-            MatchingSignature typeSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type,
-                    null, nodeEntry.object);
+            return GraphTransformer.process(rootEntry, nodeEntry -> {
+                        Object nodeObject = nodeEntry.object;
+                        MatchingSignature typeSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type,
+                                null, nodeObject);
+                        Signature signature = typeSignature.signature();
+                        int size = typeSignature.size();
 
-            return new GraphTransformer.Node<>(nodeEntry, new Iterator<>() {
-                @Override
-                public boolean hasNext() {
-                    return false;
-                }
+                        ConfigContainer target = signature.typeHint() == ElementType.LIST ? new ArrayConfigList(size) :
+                                new LinkedConfigNode(size);
+                        nodeEntry.element.setValue(target);
 
-                @Override
-                public Entry<Object, ElementEntry> next() {
-                    return null;
-                }
-            }, new GraphTransformer.Output<>(nodeEntry.element, new GraphTransformer.Accumulator<>() {
-                @Override
-                public void accept(Object key, Mutable<? extends ConfigElement> value, boolean circular) {
+                        Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
 
-                }
-            }));
-        }, potentialContainer -> typeHinter.getHint(potentialContainer.type) != ElementType.SCALAR,
-                scalar -> new MutableObject<>(new ConfigPrimitive(scalar.object)),
-                entry -> entry.object).getValue();
+                        return new GraphTransformer.Node<ElementEntry, Mutable<ConfigElement>, String>(nodeEntry, new Iterator<>() {
+                            private int i = 0;
+
+                            @Override
+                            public boolean hasNext() {
+                                return i < size;
+                            }
+
+                            @Override
+                            public Entry<String, ElementEntry> next() {
+                                i++;
+
+                                Signature.TypedObject typedObject = typedObjectIterator.next();
+                                SignatureMatcher thisMatcher = typeFactorySource.matcherFor(typeResolver.resolveType(type,
+                                        null), null);
+
+                                return Entry.of(typedObject.name(), new ElementEntry(typedObject.type(), typedObject.value(),
+                                        thisMatcher));
+                            }
+                        }, new GraphTransformer.Output<>(nodeEntry.element, (key, value, circular) -> {
+                            if (key == null) {
+                                target.asList().add(value.getValue());
+                            }
+                            else {
+                                target.asNode().put(key, value.getValue());
+                            }
+                        }));
+                    }, potentialContainer -> typeHinter.getHint(potentialContainer.type) != ElementType.SCALAR,
+                    scalar -> new MutableObject<>(new ConfigPrimitive(scalar.object)),
+                    entry -> entry.object).getValue();
+        }
+        catch (Exception e) {
+            throw new ConfigProcessException(e);
+        }
     }
 
     private record ElementEntry(Type type, Object object, SignatureMatcher signatureMatcher,
