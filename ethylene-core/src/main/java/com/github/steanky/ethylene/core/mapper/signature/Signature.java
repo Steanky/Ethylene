@@ -19,7 +19,7 @@ public interface Signature {
 
     @NotNull Iterable<Entry<String, Type>> argumentTypes();
 
-    default @NotNull Collection<Entry<String, TypedObject>> objectData(@NotNull Object object) {
+    default @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
         throw new MapperException("not implemented");
     }
 

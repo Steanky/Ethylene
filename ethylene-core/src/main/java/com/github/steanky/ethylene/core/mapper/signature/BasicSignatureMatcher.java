@@ -36,7 +36,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             if (providedElement == null) {
                 Objects.requireNonNull(providedObject);
 
-                Collection<Entry<String, Signature.TypedObject>> objectData = signature.objectData(providedObject);
+                Collection<Signature.TypedObject> objectData = signature.objectData(providedObject);
 
                 int length = signature.length(null);
                 if (length > -1 && length != objectData.size()) {
@@ -47,12 +47,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 boolean matchTypeHints = signature.matchesTypeHints();
 
                 if (!(matchNames || matchTypeHints)) {
-                    Collection<Signature.TypedObject> objects = new ArrayList<>(objectData.size());
-                    for (Entry<String, Signature.TypedObject> objectEntry : objectData) {
-                        objects.add(objectEntry.getSecond());
-                    }
-
-                    return new MatchingSignature(signature, null, objects, objectData.size());
+                    return new MatchingSignature(signature, null, objectData, objectData.size());
                 }
 
                 outer:
@@ -60,8 +55,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     Collection<Signature.TypedObject> typeCollection = new ArrayList<>(objectData.size());
                     if (matchNames) {
                         Map<String, Signature.TypedObject> objectDataMap = new HashMap<>(objectData.size());
-                        for (Entry<String, Signature.TypedObject> entry : objectData) {
-                            objectDataMap.put(entry.getFirst(), entry.getSecond());
+                        for (Signature.TypedObject entry : objectData) {
+                            objectDataMap.put(entry.name(), entry);
                         }
 
                         Iterable<Entry<String, Type>> signatureTypes = signature.argumentTypes();
@@ -75,9 +70,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                         }
                     }
                     else {
-                        for (Entry<String, Signature.TypedObject> entry : objectData) {
-                            typeCollection.add(entry.getSecond());
-                        }
+                        typeCollection = objectData;
                     }
 
                     if (matchTypeHints) {
