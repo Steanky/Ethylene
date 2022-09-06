@@ -2,7 +2,9 @@ package com.github.steanky.ethylene.core.mapper.signature.record;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.annotation.Widen;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
@@ -53,6 +55,11 @@ public class RecordSignature implements Signature {
         }
 
         return typedObjects;
+    }
+
+    @Override
+    public @NotNull ConfigContainer initContainer(int sizeHint) {
+        return new LinkedConfigNode(sizeHint);
     }
 
     @Override

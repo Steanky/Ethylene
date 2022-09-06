@@ -2,7 +2,9 @@ package com.github.steanky.ethylene.core.mapper.signature.constructor;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.annotation.Name;
 import com.github.steanky.ethylene.core.mapper.annotation.Order;
@@ -77,6 +79,11 @@ public class ConstructorSignature implements Signature {
         }
 
         return typedObjects;
+    }
+
+    @Override
+    public @NotNull ConfigContainer initContainer(int sizeHint) {
+        return new LinkedConfigNode(sizeHint);
     }
 
     @Override

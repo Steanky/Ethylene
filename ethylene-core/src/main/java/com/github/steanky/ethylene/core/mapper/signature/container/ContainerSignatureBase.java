@@ -2,6 +2,8 @@ package com.github.steanky.ethylene.core.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.ArrayConfigList;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
@@ -36,6 +38,11 @@ public abstract class ContainerSignatureBase implements Signature {
                 return entry;
             }
         };
+    }
+
+    @Override
+    public @NotNull ConfigContainer initContainer(int sizeHint) {
+        return new ArrayConfigList(sizeHint);
     }
 
     @Override

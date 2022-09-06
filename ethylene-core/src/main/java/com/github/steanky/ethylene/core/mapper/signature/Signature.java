@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.mapper.signature;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.Token;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +20,8 @@ public interface Signature {
     @NotNull Iterable<Entry<String, Type>> argumentTypes();
 
     @NotNull Collection<TypedObject> objectData(@NotNull Object object);
+
+    @NotNull ConfigContainer initContainer(int sizeHint);
 
     default boolean hasBuildingObject() {
         return false;

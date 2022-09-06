@@ -84,6 +84,30 @@ class MappingConfigProcessorIntegrationTest {
         }
 
         @Test
+        void nullArrayElements() throws ConfigProcessException {
+            List<String> stringList = new ArrayList<>(3);
+            stringList.add(null);
+            stringList.add("string");
+            stringList.add(null);
+
+            ConfigElement element = stringListProcessor.elementFromData(stringList);
+            assertEquals(stringList, element.asList().stream().map(ConfigElement::asScalar).collect(Collectors.toList()));
+        }
+
+        @Test
+        void listListString() throws ConfigProcessException {
+            List<List<String>> topLevel = new ArrayList<>();
+            List<String> first = List.of("a", "b");
+            List<String> second = List.of("c");
+            topLevel.add(null);
+            topLevel.add(first);
+            topLevel.add(second);
+            ConfigElement element = listListStringProcessor.elementFromData(topLevel);
+
+            System.out.println(element);
+        }
+
+        @Test
         void basicStringList() {
             List<String> stringList = assertDoesNotThrow(
                     () -> stringListProcessor.dataFromElement(ConfigList.of("a", "b", "c")));

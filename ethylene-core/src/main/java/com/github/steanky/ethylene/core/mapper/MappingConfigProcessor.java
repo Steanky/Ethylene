@@ -110,13 +110,13 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         Signature signature = typeSignature.signature();
                         int size = typeSignature.size();
 
-                        ConfigContainer target = signature.typeHint() == ElementType.LIST ? new ArrayConfigList(size) :
-                                new LinkedConfigNode(size);
+                        ConfigContainer target = signature.initContainer(size);
                         nodeEntry.element.setValue(target);
 
                         Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
 
-                        return new GraphTransformer.Node<ElementEntry, Mutable<ConfigElement>, String>(nodeEntry, new Iterator<>() {
+                        return new GraphTransformer.Node<ElementEntry, Mutable<ConfigElement>, String>(nodeEntry,
+                                new Iterator<>() {
                             private int i = 0;
 
                             @Override
@@ -136,14 +136,16 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                         thisMatcher));
                             }
                         }, new GraphTransformer.Output<>(nodeEntry.element, (key, value, circular) -> {
-                            if (key == null) {
+                            if (target.isList()) {
                                 target.asList().add(value.getValue());
                             }
                             else {
                                 target.asNode().put(key, value.getValue());
                             }
                         }));
-                    }, potentialContainer -> typeHinter.getHint(potentialContainer.type) != ElementType.SCALAR,
+                    }, potentialContainer ->
+                            potentialContainer.object != null && typeHinter.getHint(potentialContainer.type) !=
+                                    ElementType.SCALAR,
                     scalar -> new MutableObject<>(new ConfigPrimitive(scalar.object)),
                     entry -> entry.object).getValue();
         }

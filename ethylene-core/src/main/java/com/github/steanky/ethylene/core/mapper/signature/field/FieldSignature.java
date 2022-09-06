@@ -2,11 +2,12 @@ package com.github.steanky.ethylene.core.mapper.signature.field;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.core.mapper.MapperException;
 import com.github.steanky.ethylene.core.mapper.annotation.Exclude;
 import com.github.steanky.ethylene.core.mapper.annotation.Include;
-import com.github.steanky.ethylene.core.mapper.annotation.Name;
 import com.github.steanky.ethylene.core.mapper.annotation.Widen;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import com.github.steanky.ethylene.core.util.ReflectionUtils;
@@ -143,6 +144,11 @@ public class FieldSignature implements Signature {
         }
 
         return typedObjects;
+    }
+
+    @Override
+    public @NotNull ConfigContainer initContainer(int sizeHint) {
+        return new LinkedConfigNode(sizeHint);
     }
 
     @Override
