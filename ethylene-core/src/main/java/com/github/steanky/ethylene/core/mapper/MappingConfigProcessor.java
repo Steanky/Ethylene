@@ -23,14 +23,14 @@ import java.util.Objects;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final Token<T> token;
-    private final SignatureMatcher.Source typeFactorySource;
+    private final SignatureMatcher.Source signatureMatcherSource;
     private final TypeHinter typeHinter;
     private final TypeResolver typeResolver;
 
-    public MappingConfigProcessor(@NotNull Token<T> token, @NotNull SignatureMatcher.Source typeFactorySource,
+    public MappingConfigProcessor(@NotNull Token<T> token, @NotNull SignatureMatcher.Source signatureMatcherSource,
             @NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver) {
         this.token = Objects.requireNonNull(token);
-        this.typeFactorySource = Objects.requireNonNull(typeFactorySource);
+        this.signatureMatcherSource = Objects.requireNonNull(signatureMatcherSource);
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.typeResolver = Objects.requireNonNull(typeResolver);
     }
@@ -40,10 +40,9 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     public T dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
         try {
             Type rootType = typeResolver.resolveType(token.get(), element);
-            SignatureMatcher rootFactory = typeFactorySource.matcherFor(rootType, element);
-            ClassEntry rootEntry = new ClassEntry(rootType, element, rootFactory);
+            SignatureMatcher rootFactory = signatureMatcherSource.matcherFor(rootType, element);
 
-            return (T) GraphTransformer.process(rootEntry, nodeEntry -> {
+            return (T) GraphTransformer.process(new ClassEntry(rootType, element, rootFactory), nodeEntry -> {
                         ConfigElement nodeElement = nodeEntry.element;
                         MatchingSignature matchingSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type,
                                 nodeElement, null);
@@ -74,7 +73,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                                 ConfigElement nextElement = elementIterator.next();
                                 Type nextType = typeResolver.resolveType(typeEntryIterator.next().getSecond(), nextElement);
-                                SignatureMatcher nextMatcher = typeFactorySource.matcherFor(nextType, nextElement);
+                                SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType, nextElement);
 
                                 return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
                             }
@@ -100,9 +99,9 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     @Override
     public @NotNull ConfigElement elementFromData(T data) throws ConfigProcessException {
         try {
-            Type type = token.get();
-            SignatureMatcher rootMatcher = typeFactorySource.matcherFor(typeResolver.resolveType(type, null), null);
-            ElementEntry rootEntry = new ElementEntry(type, data, rootMatcher);
+            Type rootType = token.get();
+            SignatureMatcher rootMatcher = signatureMatcherSource.matcherFor(typeResolver.resolveType(rootType, null), null);
+            ElementEntry rootEntry = new ElementEntry(rootType, data, rootMatcher);
 
             return GraphTransformer.process(rootEntry, nodeEntry -> {
                         Object nodeObject = nodeEntry.object;
@@ -130,8 +129,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 i++;
 
                                 Signature.TypedObject typedObject = typedObjectIterator.next();
-                                SignatureMatcher thisMatcher = typeFactorySource.matcherFor(typeResolver.resolveType(type,
-                                        null), null);
+                                SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(typeResolver
+                                        .resolveType(typedObject.type(), null), null);
 
                                 return Entry.of(typedObject.name(), new ElementEntry(typedObject.type(), typedObject.value(),
                                         thisMatcher));
