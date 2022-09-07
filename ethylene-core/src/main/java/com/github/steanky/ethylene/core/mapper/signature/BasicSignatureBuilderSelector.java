@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.mapper.signature;
 
 import com.github.steanky.ethylene.core.mapper.annotation.Builder;
+import com.github.steanky.ethylene.core.mapper.annotation.BuilderType;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.record.RecordSignatureBuilder;
@@ -8,20 +9,30 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 
 public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector {
     private final SignatureBuilder defaultBuilder;
+    private final Map<Class<?>, SignatureBuilder> builderTypeMap;
 
     public BasicSignatureBuilderSelector(@NotNull SignatureBuilder defaultBuilder) {
         this.defaultBuilder = Objects.requireNonNull(defaultBuilder);
+        this.builderTypeMap = new WeakHashMap<>();
     }
 
     @Override
     public @NotNull SignatureBuilder select(@NotNull Type type) {
-        Builder builderAnnotation = TypeUtils.getRawType(type, null).getAnnotation(Builder.class);
+        Class<?> rawType = TypeUtils.getRawType(type, null);
+        Builder builderAnnotation = rawType.getAnnotation(Builder.class);
         if (builderAnnotation == null) {
-            return defaultBuilder;
+            SignatureBuilder signatureBuilder = builderTypeMap.get(rawType);
+            if (signatureBuilder == null && rawType.isRecord()) {
+                return RecordSignatureBuilder.INSTANCE;
+            }
+
+            return signatureBuilder == null ? defaultBuilder : signatureBuilder;
         }
 
         return switch (builderAnnotation.value()) {
@@ -29,5 +40,9 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
             case CONSTRUCTOR -> ConstructorSignatureBuilder.INSTANCE;
             case RECORD -> RecordSignatureBuilder.INSTANCE;
         };
+    }
+
+    public void registerSignaturePreference(@NotNull Class<?> type, @NotNull SignatureBuilder signatureBuilder) {
+        builderTypeMap.put(type, signatureBuilder);
     }
 }

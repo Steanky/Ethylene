@@ -68,8 +68,13 @@ class MappingConfigProcessorIntegrationTest {
         private boolean bool;
         private AccessWidenedFieldClass selfReference;
 
+        @Exclude
+        private final String excludedField = "excluded";
+
         private AccessWidenedFieldClass() {}
     }
+
+    public record SimpleRecord(List<String> stringList, boolean value) {}
 
     public MappingConfigProcessorIntegrationTest() {
         typeHinter = new BasicTypeHinter();
@@ -185,6 +190,18 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Objects {
+        @Test
+        void recordBuilder() throws ConfigProcessException {
+            ConfigProcessor<SimpleRecord> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
+                    typeHinter, typeResolver);
+
+            ConfigNode dataNode = ConfigNode.of("stringList", ConfigList.of("a", "b", "c"),
+                    "value", true);
+
+            SimpleRecord simpleRecord = processor.dataFromElement(dataNode);
+            assertEquals(new SimpleRecord(List.of("a", "b", "c"), true), simpleRecord);
+        }
+
         @Test
         void accessWidenedFieldConstructor() throws ConfigProcessException {
             ConfigProcessor<AccessWidenedFieldClass> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
