@@ -4,12 +4,13 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.mapper.annotation.Name;
+import com.github.steanky.ethylene.core.mapper.annotation.*;
 import com.github.steanky.ethylene.core.mapper.signature.BasicSignatureBuilderSelector;
 import com.github.steanky.ethylene.core.mapper.signature.CustomSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,10 +22,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("unchecked")
 class MappingConfigProcessorIntegrationTest {
+    private final TypeHinter typeHinter;
+    private final BasicTypeResolver typeResolver;
+    private final SignatureMatcher.Source customSource;
+    private final SignatureMatcher.Source source;
+
     private final MappingConfigProcessor<List<String>> stringListProcessor;
     private final MappingConfigProcessor<List<Object>> objectListProcessor;
     private final MappingConfigProcessor<List<List<String>>> listListStringProcessor;
-    private final MappingConfigProcessor<List<ArrayList<String>[]>> reallyStupidProcessor;
+    private final MappingConfigProcessor<List<Collection<String>[]>> reallyStupidProcessor;
     private final MappingConfigProcessor<CustomClass> customClassProcessor;
     private final MappingConfigProcessor<CustomNamedClass> customNamedClassProcessor;
     private final MappingConfigProcessor<Object> objectProcessor;
@@ -54,14 +60,25 @@ class MappingConfigProcessorIntegrationTest {
         }
     }
 
+    @Widen
+    @Include
+    @Builder(BuilderType.FIELD)
+    public static class AccessWidenedFieldClass {
+        private String string;
+        private boolean bool;
+        private AccessWidenedFieldClass selfReference;
+
+        private AccessWidenedFieldClass() {}
+    }
+
     public MappingConfigProcessorIntegrationTest() {
-        TypeHinter typeHinter = new BasicTypeHinter();
-        BasicTypeResolver typeResolver = new BasicTypeResolver(typeHinter);
+        typeHinter = new BasicTypeHinter();
+        typeResolver = new BasicTypeResolver(typeHinter);
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);
 
-        SignatureMatcher.Source custom = new BasicCustomTypeMatcher(new CustomSignatureBuilder(), typeHinter);
-        SignatureMatcher.Source source = new BasicTypeMatcherSource(typeHinter, typeResolver, custom,
+        customSource = new BasicCustomTypeMatcher(new CustomSignatureBuilder(), typeHinter);
+        source = new BasicTypeMatcherSource(typeHinter, typeResolver, customSource,
                 new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
@@ -95,16 +112,15 @@ class MappingConfigProcessorIntegrationTest {
         }
 
         @Test
-        void listListString() throws ConfigProcessException {
+        void listListString() {
             List<List<String>> topLevel = new ArrayList<>();
             List<String> first = List.of("a", "b");
             List<String> second = List.of("c");
             topLevel.add(null);
             topLevel.add(first);
             topLevel.add(second);
-            ConfigElement element = listListStringProcessor.elementFromData(topLevel);
 
-            System.out.println(element);
+            assertDoesNotThrow(() -> listListStringProcessor.elementFromData(topLevel));
         }
 
         @Test
@@ -133,7 +149,7 @@ class MappingConfigProcessorIntegrationTest {
 
         @Test
         void reallyStupidProcessor() {
-            List<ArrayList<String>[]> stupidString = assertDoesNotThrow(() -> reallyStupidProcessor.dataFromElement(
+            List<Collection<String>[]> stupidString = assertDoesNotThrow(() -> reallyStupidProcessor.dataFromElement(
                     ConfigList.of(ConfigList.of(ConfigList.of("a", "b", "c"), ConfigList.of("d", "e", "f")),
                             ConfigList.of(ConfigList.of("g", "h", "i"), ConfigList.of("j", "k", "l")))));
 
@@ -169,6 +185,33 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Objects {
+        @Test
+        void accessWidenedFieldConstructor() throws ConfigProcessException {
+            ConfigProcessor<AccessWidenedFieldClass> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
+                    typeHinter, typeResolver);
+
+            ConfigNode dataNode = ConfigNode.of("string", "value", "bool", true, "selfReference", null);
+            AccessWidenedFieldClass obj = processor.dataFromElement(dataNode);
+
+            assertTrue(obj.bool);
+            assertEquals("value", obj.string);
+        }
+
+        @Test
+        void selfReferentialAccessWidenedFieldConstructor() throws ConfigProcessException {
+            ConfigProcessor<AccessWidenedFieldClass> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
+                    typeHinter, typeResolver);
+
+            ConfigNode dataNode = ConfigNode.of("string", "value", "bool", true);
+            dataNode.put("selfReference", dataNode);
+
+            AccessWidenedFieldClass obj = processor.dataFromElement(dataNode);
+
+            assertTrue(obj.bool);
+            assertEquals("value", obj.string);
+            assertSame(obj, obj.selfReference);
+        }
+
         @Test
         void customObject() {
             ConfigNode node = ConfigNode.of("strings", ConfigList.of("a", "b", "c"), "value", 69,

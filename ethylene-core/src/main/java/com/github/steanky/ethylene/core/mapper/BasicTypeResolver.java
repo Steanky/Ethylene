@@ -73,7 +73,8 @@ public class BasicTypeResolver implements TypeResolver {
                 case SCALAR -> {
                     Object scalar = element.asScalar();
                     if (scalar == null) {
-                        yield Object.class;
+                        //null is assignable to anything
+                        yield type;
                     }
 
                     yield scalar.getClass();
@@ -120,7 +121,8 @@ public class BasicTypeResolver implements TypeResolver {
             }
         }
 
-        throw new MapperException("no concrete type found for '" + type.getTypeName() + "'");
+        //no type resolution found (but maybe we can still find a suitable signature later)
+        return type;
     }
 
     public void registerTypeImplementation(@NotNull Class<?> superclass, @NotNull Class<?> implementation) {

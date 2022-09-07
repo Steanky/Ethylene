@@ -23,12 +23,12 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
         }
 
         boolean widenAccess = rawType.isAnnotationPresent(Widen.class);
-        Constructor<?>[] allConstructors = widenAccess ? rawType.getDeclaredConstructors() : rawType.getConstructors();
-        Signature[] signatures = new Signature[allConstructors.length];
+        Constructor<?>[] candidateConstructors = widenAccess ? rawType.getDeclaredConstructors() : rawType.getConstructors();
+        Signature[] signatures = new Signature[candidateConstructors.length];
         int j = 0;
-        for (Constructor<?> constructor : allConstructors) {
+        for (Constructor<?> constructor : candidateConstructors) {
             if (widenAccess) {
-                if (!constructor.canAccess(null) && !constructor.trySetAccessible()) {
+                if (!constructor.trySetAccessible()) {
                     continue;
                 }
             }

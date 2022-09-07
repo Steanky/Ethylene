@@ -7,7 +7,6 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.core.mapper.Token;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,6 +52,16 @@ public interface Signature {
         return 0;
     }
 
+    static <T> Builder<T> builder(@NotNull Token<T> type, @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
+            @NotNull Collection<Entry<String, Type>> argumentTypes,
+            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor) {
+        return new Builder<>(constructor, type, argumentTypes, objectSignatureExtractor);
+    }
+
+    static @NotNull TypedObject typed(@Nullable String name, @NotNull Type type, @NotNull Object value) {
+        return new TypedObject(name, type, value);
+    }
+
     class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ?> constructor;
         private final Type returnType;
@@ -73,7 +82,7 @@ public interface Signature {
             }
         };
 
-        public Builder(@NotNull BiFunction<? super T, ? super Object[], ?> constructor,
+        Builder(@NotNull BiFunction<? super T, ? super Object[], ?> constructor,
                 @NotNull Token<T> type, @NotNull Collection<Entry<String, Type>> argumentTypes,
                 @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor) {
             this.constructor = Objects.requireNonNull(constructor);

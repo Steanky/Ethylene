@@ -51,7 +51,7 @@ public class FieldSignature implements Signature {
     }
 
     private static List<Field> getFields(Class<?> cls, boolean widenAccess) {
-        Field[] fields = cls.getDeclaredFields();
+        Field[] fields = widenAccess ? cls.getDeclaredFields() : cls.getFields();
         ArrayList<Field> participatingFields = new ArrayList<>(fields.length);
 
         boolean defaultExclude = cls.isAnnotationPresent(Exclude.class);
@@ -65,6 +65,10 @@ public class FieldSignature implements Signature {
         }
 
         for (Field field : fields) {
+            if (!field.getDeclaringClass().equals(cls)) {
+                continue;
+            }
+
             int modifiers = field.getModifiers();
             if (Modifier.isStatic(modifiers)) {
                 continue;
