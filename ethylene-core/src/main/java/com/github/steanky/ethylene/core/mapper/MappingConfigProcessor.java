@@ -3,10 +3,8 @@ package com.github.steanky.ethylene.core.mapper;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ElementType;
-import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
-import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import com.github.steanky.ethylene.core.mapper.signature.MatchingSignature;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
@@ -19,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
@@ -69,7 +68,9 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                             @Override
                             public Entry<Object, ClassEntry> next() {
-                                i++;
+                                if (i++ == signatureSize) {
+                                    throw new NoSuchElementException();
+                                }
 
                                 ConfigElement nextElement = elementIterator.next();
                                 Type nextType = typeResolver.resolveType(typeEntryIterator.next().getSecond(), nextElement);
@@ -126,7 +127,9 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                             @Override
                             public Entry<String, ElementEntry> next() {
-                                i++;
+                                if (i++ == size) {
+                                    throw new NoSuchElementException();
+                                }
 
                                 Signature.TypedObject typedObject = typedObjectIterator.next();
                                 Type objectType = typeResolver.resolveType(typedObject.type(), null);
