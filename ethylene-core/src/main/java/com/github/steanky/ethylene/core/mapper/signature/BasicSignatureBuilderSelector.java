@@ -19,8 +19,7 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
 
     @Override
     public @NotNull SignatureBuilder select(@NotNull Type type) {
-        Class<?> rawType = TypeUtils.getRawType(type, null);
-        Builder builderAnnotation = rawType.getAnnotation(Builder.class);
+        Builder builderAnnotation = TypeUtils.getRawType(type, null).getAnnotation(Builder.class);
         if (builderAnnotation == null) {
             return defaultBuilder;
         }

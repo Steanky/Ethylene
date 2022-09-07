@@ -20,7 +20,7 @@ public class MapSignature extends ContainerSignatureBase {
     private final Constructor<?> constructor;
 
     public MapSignature(@NotNull Type keyType, @NotNull Type valueType, @NotNull Type mapType) {
-        super(makeMapComponentType(keyType, valueType), mapType);
+        super(TypeUtils.parameterize(Map.Entry.class, keyType, valueType), mapType);
         Class<?> mapClass = TypeUtils.getRawType(mapType, null);
 
         Class<?> rawClass = TypeUtils.getRawType(mapClass, null);
@@ -38,10 +38,6 @@ public class MapSignature extends ContainerSignatureBase {
         }
 
         this.constructor = constructor;
-    }
-
-    private static Type makeMapComponentType(Type keyType, Type valueType) {
-        return TypeUtils.parameterize(Map.Entry.class, keyType, valueType);
     }
 
     @SuppressWarnings("unchecked")

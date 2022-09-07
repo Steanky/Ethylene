@@ -22,6 +22,7 @@ public class ConstructorSignature implements Signature {
     private final Constructor<?> constructor;
     private final Type genericReturnType;
 
+    //fields are initialized lazily by initTypeCollection and initFields
     private boolean matchesNames;
     private Collection<Entry<String, Type>> types;
 

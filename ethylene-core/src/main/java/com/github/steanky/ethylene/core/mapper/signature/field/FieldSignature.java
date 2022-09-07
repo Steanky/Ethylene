@@ -23,7 +23,7 @@ public class FieldSignature implements Signature {
     private final Type type;
     private final Class<?> rawType;
 
-    //fields are lazily initialized by getTypes
+    //fields are lazily initialized by initTypes
     private Constructor<?> parameterlessConstructor;
     private List<Field> participatingFields;
     private Collection<Entry<String, Type>> types;

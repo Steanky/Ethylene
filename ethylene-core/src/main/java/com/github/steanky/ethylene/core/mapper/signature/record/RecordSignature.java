@@ -22,7 +22,7 @@ public class RecordSignature implements Signature {
     private final Type returnType;
     private final Class<?> raw;
 
-    //fields are lazily initialized by getArgumentTypes()
+    //fields are lazily initialized by initArgumentTypes
     private int length;
     private Constructor<?> canonicalConstructor;
     private Collection<Entry<String, Type>> argumentTypes;
