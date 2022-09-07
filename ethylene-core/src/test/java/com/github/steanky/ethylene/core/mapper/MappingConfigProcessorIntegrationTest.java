@@ -7,6 +7,7 @@ import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.mapper.annotation.*;
 import com.github.steanky.ethylene.core.mapper.signature.BasicSignatureBuilderSelector;
 import com.github.steanky.ethylene.core.mapper.signature.CustomSignatureBuilder;
+import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
@@ -74,7 +75,7 @@ class MappingConfigProcessorIntegrationTest {
         private AccessWidenedFieldClass() {}
     }
 
-    public record SimpleRecord(List<String> stringList, boolean value) {}
+    public record SimpleRecord(boolean value, List<String> stringList) {}
 
     public MappingConfigProcessorIntegrationTest() {
         typeHinter = new BasicTypeHinter();
@@ -82,7 +83,9 @@ class MappingConfigProcessorIntegrationTest {
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);
 
-        customSource = new BasicCustomTypeMatcher(new CustomSignatureBuilder(), typeHinter);
+        CustomSignatureBuilder customSignatureBuilder = new CustomSignatureBuilder(new BasicTypeResolver(typeHinter));
+
+        customSource = new BasicCustomTypeMatcher(customSignatureBuilder, typeHinter);
         source = new BasicTypeMatcherSource(typeHinter, typeResolver, customSource,
                 new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
 
@@ -199,7 +202,7 @@ class MappingConfigProcessorIntegrationTest {
                     "value", true);
 
             SimpleRecord simpleRecord = processor.dataFromElement(dataNode);
-            assertEquals(new SimpleRecord(List.of("a", "b", "c"), true), simpleRecord);
+            assertEquals(new SimpleRecord( true, List.of("a", "b", "c")), simpleRecord);
         }
 
         @Test
