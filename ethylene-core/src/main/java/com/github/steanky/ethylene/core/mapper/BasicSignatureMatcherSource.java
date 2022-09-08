@@ -18,6 +18,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
+    private static final Signature[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
+
     private final TypeHinter typeHinter;
     private final SignatureBuilder.Selector signatureSelector;
 
@@ -35,12 +37,12 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     @Override
     public SignatureMatcher matcherFor(@NotNull Type resolvedType, @Nullable ConfigElement element) {
         return signatureCache.computeIfAbsent(resolvedType, type -> {
-            Class<?> raw = TypeUtils.getRawType(type, null);
+            Class<?> raw = ReflectionUtils.rawType(type);
 
             for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
                 Set<Signature> signatures = customSignatures.get(superclass);
                 if (signatures != null) {
-                    return new BasicSignatureMatcher(signatures.toArray(new Signature[0]), typeHinter);
+                    return new BasicSignatureMatcher(signatures.toArray(EMPTY_SIGNATURE_ARRAY), typeHinter);
                 }
             }
 
@@ -73,7 +75,7 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     }
 
     public void registerCustomSignature(@NotNull Signature signature) {
-        customSignatures.computeIfAbsent(TypeUtils.getRawType(signature.returnType(), null), o ->
+        customSignatures.computeIfAbsent(ReflectionUtils.rawType(signature.returnType()), ignored ->
                 new HashSet<>(2)).add(signature);
     }
 }

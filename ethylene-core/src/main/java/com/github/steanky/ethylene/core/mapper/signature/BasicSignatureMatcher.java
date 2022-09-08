@@ -29,11 +29,11 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     public @NotNull MatchingSignature signature(@NotNull Type desiredType, ConfigElement providedElement,
             Object providedObject) {
         for (Signature signature : signatures) {
-            if (providedElement == null) {
-                if (!TypeUtils.isAssignable(desiredType, signature.returnType())) {
-                    continue;
-                }
+            if (!TypeUtils.isAssignable(signature.returnType(), desiredType)) {
+                continue;
+            }
 
+            if (providedElement == null) {
                 //object -> ConfigElement
                 Objects.requireNonNull(providedObject);
 
@@ -90,10 +90,6 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     return new MatchingSignature(signature, null, typeCollection, objectData.size());
                 }
 
-                continue;
-            }
-
-            if (!TypeUtils.isAssignable(desiredType, signature.returnType())) {
                 continue;
             }
 

@@ -37,4 +37,13 @@ public class ReflectionUtils {
         Name nameAnnotation = field.getDeclaredAnnotation(Name.class);
         return nameAnnotation == null ? field.getName() : nameAnnotation.value();
     }
+
+    public static @NotNull Class<?> rawType(@NotNull Type type) {
+        Class<?> cls = TypeUtils.getRawType(type, null);
+        if (cls == null) {
+            throw new IllegalArgumentException("invalid type: " + type.getTypeName());
+        }
+
+        return cls;
+    }
 }

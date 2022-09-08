@@ -64,6 +64,10 @@ public interface Signature {
         return new TypedObject(name, type, value);
     }
 
+    static @NotNull TypedObject typed(@NotNull Type type, @NotNull Object value) {
+        return new TypedObject(null, type, value);
+    }
+
     class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ?> constructor;
         private final Type returnType;

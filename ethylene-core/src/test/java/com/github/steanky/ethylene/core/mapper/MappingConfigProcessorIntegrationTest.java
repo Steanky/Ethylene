@@ -188,9 +188,10 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Objects {
+        @SuppressWarnings("rawtypes")
         @Test
         void customSignature() throws ConfigProcessException {
-            Signature mapEntry = Signature.builder(new Token<Map.Entry<?, ?>>() {}, (entry, objects) -> {
+            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) -> {
                 return Map.entry(objects[0], objects[1]);
             }, (entry) -> {
                 return List.of(Signature.typed("key", Object.class, entry.getKey()), Signature.typed("value",
