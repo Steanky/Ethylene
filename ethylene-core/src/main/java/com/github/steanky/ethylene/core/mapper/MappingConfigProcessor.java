@@ -146,9 +146,11 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 target.asNode().put(key, value.getValue());
                             }
                         }));
-                    }, potentialContainer ->
-                            potentialContainer.object != null && typeHinter.getHint(potentialContainer.type) !=
-                                    ElementType.SCALAR,
+                    }, potentialContainer -> {
+                        //runtime type is passed to TypeHinter: this should be safe since it doesn't care about generics
+                        return potentialContainer.object != null && typeHinter.getHint(potentialContainer.object
+                                .getClass()) != ElementType.SCALAR;
+                    },
                     scalar -> new MutableObject<>(new ConfigPrimitive(scalar.object)),
                     entry -> entry.object).getValue();
         }

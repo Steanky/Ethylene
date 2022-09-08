@@ -11,8 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -52,10 +52,12 @@ public interface Signature {
         return 0;
     }
 
-    static <T> Builder<T> builder(@NotNull Token<T> type, @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
-            @NotNull Collection<Entry<String, Type>> argumentTypes,
-            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor) {
-        return new Builder<>(constructor, type, argumentTypes, objectSignatureExtractor);
+    @SafeVarargs
+    static <T> Builder<T> builder(@NotNull Token<T> type,
+            @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
+            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+            @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
+        return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
     }
 
     static @NotNull TypedObject typed(@Nullable String name, @NotNull Type type, @NotNull Object value) {
@@ -65,15 +67,20 @@ public interface Signature {
     class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ?> constructor;
         private final Type returnType;
-        private final Collection<Entry<String, Type>> argumentTypes;
         private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
+        private final Collection<Entry<String, Type>> argumentTypes;
 
         private int priority;
         private boolean matchNames;
         private boolean matchTypeHints;
         private ElementType typeHint = ElementType.NODE;
         private Function<? super ConfigElement, ?> buildingObjectInitializer;
-        private ToIntFunction<? super ConfigElement> lengthFunction;
+        private ToIntFunction<? super ConfigElement> lengthFunction = new ToIntFunction<>() {
+            @Override
+            public int applyAsInt(ConfigElement value) {
+                return argumentTypes.size();
+            }
+        };
         private IntFunction<? extends ConfigContainer> containerFunction = (IntFunction<ConfigContainer>) value -> {
             if (typeHint == ElementType.LIST) {
                 return new ArrayConfigList(value);
@@ -82,13 +89,18 @@ public interface Signature {
             }
         };
 
-        Builder(@NotNull BiFunction<? super T, ? super Object[], ?> constructor,
-                @NotNull Token<T> type, @NotNull Collection<Entry<String, Type>> argumentTypes,
-                @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor) {
+        @SafeVarargs
+        Builder(@NotNull Token<T> returnType, @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
+                @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+                @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
-            this.returnType = Objects.requireNonNull(type).get();
-            this.argumentTypes = List.copyOf(argumentTypes);
+            this.returnType = Objects.requireNonNull(returnType).get();
             this.objectSignatureExtractor = Objects.requireNonNull(objectSignatureExtractor);
+
+            this.argumentTypes = new ArrayList<>(arguments.length);
+            for (Entry<String, Token<?>> entry : arguments) {
+                argumentTypes.add(Entry.of(entry.getFirst(), entry.getSecond().get()));
+            }
         }
 
         public @NotNull Builder<T> withPriority(int priority) {
@@ -111,7 +123,8 @@ public interface Signature {
             return this;
         }
 
-        public @NotNull Builder<T> withBuildingObjectInitializer(@NotNull Function<? super ConfigElement, ?> buildingObjectInitializer) {
+        public @NotNull Builder<T> withBuildingObjectInitializer(
+                @NotNull Function<? super ConfigElement, ?> buildingObjectInitializer) {
             this.buildingObjectInitializer = Objects.requireNonNull(buildingObjectInitializer);
             return this;
         }

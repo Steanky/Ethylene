@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.core.mapper.signature;
 
 import com.github.steanky.ethylene.core.mapper.annotation.Builder;
-import com.github.steanky.ethylene.core.mapper.annotation.BuilderType;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.record.RecordSignatureBuilder;

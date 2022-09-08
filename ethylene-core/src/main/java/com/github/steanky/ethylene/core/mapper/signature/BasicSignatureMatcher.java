@@ -29,11 +29,12 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     public @NotNull MatchingSignature signature(@NotNull Type desiredType, ConfigElement providedElement,
             Object providedObject) {
         for (Signature signature : signatures) {
-            if (!signature.returnType().equals(desiredType)) {
-                continue;
-            }
-
             if (providedElement == null) {
+                if (!TypeUtils.isAssignable(desiredType, signature.returnType())) {
+                    continue;
+                }
+
+                //object -> ConfigElement
                 Objects.requireNonNull(providedObject);
 
                 Collection<Signature.TypedObject> objectData = signature.objectData(providedObject);
@@ -92,6 +93,11 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 continue;
             }
 
+            if (!TypeUtils.isAssignable(desiredType, signature.returnType())) {
+                continue;
+            }
+
+            //ConfigElement - object
             Objects.requireNonNull(providedElement);
 
             boolean matchNames = signature.matchesArgumentNames();
@@ -150,6 +156,6 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             }
         }
 
-        throw new MapperException("unable to find matching signature for element '" + providedElement);
+        throw new MapperException("unable to find matching signature for element '" + providedElement + "'");
     }
 }

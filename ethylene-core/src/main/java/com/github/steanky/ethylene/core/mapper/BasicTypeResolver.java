@@ -19,12 +19,12 @@ import java.util.function.Supplier;
 
 public class BasicTypeResolver implements TypeResolver {
     private final TypeHinter typeHinter;
-    private final Map<String, ClassEntry> types;
+    private final Map<Class<?>, ClassEntry> types;
     private final Map<Class<?>, ClassEntry> cache;
 
     public BasicTypeResolver(@NotNull TypeHinter typeHinter, int initialCapacity) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
-        types = new HashMap<>(initialCapacity);
+        types = new WeakHashMap<>(initialCapacity);
         cache = new WeakHashMap<>(initialCapacity);
     }
 
@@ -58,7 +58,40 @@ public class BasicTypeResolver implements TypeResolver {
             return type;
         }
 
-        if ((!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(ClassUtils.getName(raw)))) {
+        ClassEntry cached = cache.get(raw);
+        if (cached != null) {
+            Class<?> ref = cached.reference.get();
+            if (ref != null) {
+                if (type instanceof ParameterizedType parameterizedType) {
+                    return TypeUtils.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType));
+                }
+
+                return ref;
+            }
+
+            cache.remove(raw);
+        }
+
+        for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
+            ClassEntry entry = types.get(superclass);
+            if (entry != null) {
+                Class<?> ref = entry.reference.get();
+                if (ref == null) {
+                    ref = forName(entry.name, type::getTypeName);
+                    entry.reference = new WeakReference<>(ref);
+                }
+
+                cache.put(raw, entry);
+
+                if (type instanceof ParameterizedType parameterizedType) {
+                    return TypeUtils.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType));
+                }
+
+                return ref;
+            }
+        }
+
+        if (!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(raw)) {
             if (element == null || hint.compatible(element)) {
                 return type;
             }
@@ -88,39 +121,6 @@ public class BasicTypeResolver implements TypeResolver {
             return elementType;
         }
 
-        ClassEntry cached = cache.get(raw);
-        if (cached != null) {
-            Class<?> ref = cached.reference.get();
-            if (ref != null) {
-                if (type instanceof ParameterizedType parameterizedType) {
-                    return TypeUtils.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType));
-                }
-
-                return ref;
-            }
-
-            cache.remove(raw);
-        }
-
-        for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
-            ClassEntry entry = types.get(ClassUtils.getName(superclass));
-            if (entry != null) {
-                Class<?> ref = entry.reference.get();
-                if (ref == null) {
-                    ref = forName(entry.name, type::getTypeName);
-                    entry.reference = new WeakReference<>(ref);
-                }
-
-                cache.put(raw, entry);
-
-                if (type instanceof ParameterizedType parameterizedType) {
-                    return TypeUtils.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType));
-                }
-
-                return ref;
-            }
-        }
-
         //no type resolution found (but maybe we can still find a suitable signature later)
         return type;
     }
@@ -132,12 +132,8 @@ public class BasicTypeResolver implements TypeResolver {
                             superclass.getName() + "'");
         }
 
-        if (Modifier.isAbstract(implementation.getModifiers())) {
-            throw new MapperException("implementation must not be abstract");
-        }
-
         ClassEntry newEntry = new ClassEntry(ClassUtils.getName(implementation), implementation);
-        if (types.putIfAbsent(ClassUtils.getName(superclass), newEntry) != null) {
+        if (types.putIfAbsent(superclass, newEntry) != null) {
             throw new MapperException("there is already an implementation type registered for class '" + superclass
                     .getName() + "'");
         }

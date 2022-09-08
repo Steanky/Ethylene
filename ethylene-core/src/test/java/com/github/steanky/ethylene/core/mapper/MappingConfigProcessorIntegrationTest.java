@@ -4,9 +4,9 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.mapper.annotation.*;
 import com.github.steanky.ethylene.core.mapper.signature.BasicSignatureBuilderSelector;
-import com.github.steanky.ethylene.core.mapper.signature.CustomSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.Signature;
 import com.github.steanky.ethylene.core.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.core.mapper.signature.SignatureMatcher;
@@ -25,8 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MappingConfigProcessorIntegrationTest {
     private final TypeHinter typeHinter;
     private final BasicTypeResolver typeResolver;
-    private final SignatureMatcher.Source customSource;
-    private final SignatureMatcher.Source source;
+    private final BasicSignatureMatcherSource source;
 
     private final MappingConfigProcessor<List<String>> stringListProcessor;
     private final MappingConfigProcessor<List<Object>> objectListProcessor;
@@ -82,11 +81,7 @@ class MappingConfigProcessorIntegrationTest {
         typeResolver = new BasicTypeResolver(typeHinter);
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);
-
-        CustomSignatureBuilder customSignatureBuilder = new CustomSignatureBuilder(new BasicTypeResolver(typeHinter));
-
-        customSource = new BasicCustomTypeMatcher(customSignatureBuilder, typeHinter);
-        source = new BasicTypeMatcherSource(typeHinter, typeResolver, customSource,
+        source = new BasicSignatureMatcherSource(typeHinter,
                 new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
@@ -193,6 +188,36 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Objects {
+        @Test
+        void customSignature() throws ConfigProcessException {
+            Signature mapEntry = Signature.builder(new Token<Map.Entry<?, ?>>() {}, (entry, objects) -> {
+                return Map.entry(objects[0], objects[1]);
+            }, (entry) -> {
+                return List.of(Signature.typed("key", Object.class, entry.getKey()), Signature.typed("value",
+                        Object.class, entry.getValue()));
+            }, Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
+                    .matchingTypeHints()
+                    .matchingNames()
+                    .build();
+
+            source.registerCustomSignature(mapEntry);
+
+            ConfigProcessor<Map.Entry<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {},
+                    source, typeHinter, typeResolver);
+
+            ConfigNode node = ConfigNode.of("key", 10, "value", "string_value");
+            Map.Entry<Integer, String> entry = processor.dataFromElement(node);
+
+            assertEquals(10, entry.getKey());
+            assertEquals("string_value", entry.getValue());
+
+            ConfigElement element = processor.elementFromData(Map.entry(10, "vegetals"));
+            assertTrue(element.isNode());
+
+            assertEquals(10, element.getNumberOrThrow("key").intValue());
+            assertEquals("vegetals", element.getStringOrThrow("value"));
+        }
+
         @Test
         void recordBuilder() throws ConfigProcessException {
             ConfigProcessor<SimpleRecord> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
