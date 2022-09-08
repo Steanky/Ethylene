@@ -22,14 +22,10 @@ public class BasicTypeResolver implements TypeResolver {
     private final Map<Class<?>, ClassEntry> types;
     private final Map<Class<?>, ClassEntry> cache;
 
-    public BasicTypeResolver(@NotNull TypeHinter typeHinter, int initialCapacity) {
-        this.typeHinter = Objects.requireNonNull(typeHinter);
-        types = new WeakHashMap<>(initialCapacity);
-        cache = new WeakHashMap<>(initialCapacity);
-    }
-
     public BasicTypeResolver(@NotNull TypeHinter typeHinter) {
-        this(typeHinter, 4);
+        this.typeHinter = Objects.requireNonNull(typeHinter);
+        types = new WeakHashMap<>();
+        cache = new WeakHashMap<>();
     }
 
     private static Class<?> forName(String className, Supplier<String> nameSupplier) {
