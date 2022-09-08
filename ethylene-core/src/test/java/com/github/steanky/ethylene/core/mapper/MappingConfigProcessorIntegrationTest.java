@@ -81,6 +81,7 @@ class MappingConfigProcessorIntegrationTest {
         typeResolver = new BasicTypeResolver(typeHinter);
         typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
         typeResolver.registerTypeImplementation(Set.class, HashSet.class);
+        typeResolver.registerTypeImplementation(Map.class, HashMap.class);
         source = new BasicSignatureMatcherSource(typeHinter,
                 new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
 
@@ -188,6 +189,30 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Objects {
+        @Test
+        void map() throws ConfigProcessException {
+            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) -> {
+                        return Map.entry(objects[0], objects[1]);
+                    }, (entry) -> {
+                        return List.of(Signature.typed("key", Object.class, entry.getKey()), Signature.typed("value",
+                                Object.class, entry.getValue()));
+                    }, Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
+                    .matchingTypeHints()
+                    .matchingNames()
+                    .build();
+            source.registerCustomSignature(mapEntry);
+
+            ConfigProcessor<Map<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {},
+                    source, typeHinter, typeResolver);
+
+            ConfigList map = ConfigList.of(ConfigNode.of("key", 0, "value", "first"),
+                    ConfigNode.of("key", 1, "value", "second"));
+
+            Map<Integer, String> data = processor.dataFromElement(map);
+            assertEquals("first", data.get(0));
+            assertEquals("second", data.get(1));
+        }
+
         @SuppressWarnings("rawtypes")
         @Test
         void customSignature() throws ConfigProcessException {
