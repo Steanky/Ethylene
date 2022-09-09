@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.codec.toml;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Date;
@@ -31,6 +32,11 @@ public class ConfigDate implements ConfigElement {
     public @NotNull String asString() {
         //override asString to avoid requiring the user to handle Date objects directly
         return date.toString();
+    }
+
+    @Override
+    public ElementType type() {
+        return ElementType.SCALAR;
     }
 
     @Override

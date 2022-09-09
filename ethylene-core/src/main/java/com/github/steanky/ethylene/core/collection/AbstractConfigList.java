@@ -98,45 +98,38 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
         return ConfigElementUtils.toString(this);
     }
 
-    @SuppressWarnings("ReplaceNullCheck") //bad intelliJ, I want to cache the collection object...
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-        if (containerCollection != null) {
-            return containerCollection;
-        }
-
-        return containerCollection = new AbstractCollection<>() {
-            @Override
-            public Iterator<ConfigEntry> iterator() {
-                return new Iterator<>() {
-                    private final Iterator<ConfigElement> elementIterator = list.iterator();
-
+        return Objects.requireNonNullElseGet(containerCollection,
+                () -> containerCollection = new AbstractCollection<>() {
                     @Override
-                    public boolean hasNext() {
-                        return elementIterator.hasNext();
+                    public Iterator<ConfigEntry> iterator() {
+                        return new Iterator<>() {
+                            private final Iterator<ConfigElement> elementIterator = list.iterator();
+
+                            @Override
+                            public boolean hasNext() {
+                                return elementIterator.hasNext();
+                            }
+
+                            @Override
+                            public ConfigEntry next() {
+                                return new ConfigEntry(null, elementIterator.next());
+                            }
+                        };
                     }
 
                     @Override
-                    public ConfigEntry next() {
-                        return new ConfigEntry(null, elementIterator.next());
+                    public int size() {
+                        return list.size();
                     }
-                };
-            }
+                });
 
-            @Override
-            public int size() {
-                return list.size();
-            }
-        };
     }
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        if (elementCollection != null) {
-            return elementCollection;
-        }
-
-        return elementCollection = new AbstractCollection<>() {
+        return Objects.requireNonNullElseGet(elementCollection, () -> elementCollection  = new AbstractCollection<>() {
             @Override
             public Iterator<ConfigElement> iterator() {
                 return new Iterator<>() {
@@ -158,6 +151,6 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
             public int size() {
                 return list.size();
             }
-        };
+        });
     }
 }
