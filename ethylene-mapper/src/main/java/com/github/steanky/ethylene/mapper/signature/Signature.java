@@ -146,15 +146,11 @@ public interface Signature {
 
         public @NotNull Signature build() {
             Collection<Entry<String, Type>> argumentTypes = Collections.unmodifiableCollection(this.argumentTypes);
-            Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor =
-                    this.objectSignatureExtractor;
             IntFunction<? extends ConfigContainer> containerFunction = this.containerFunction;
             ToIntFunction<? super ConfigElement> lengthFunction = this.lengthFunction;
-            BiFunction<? super T, ? super Object[], ?> constructor = this.constructor;
             boolean matchNames = this.matchNames;
             boolean matchTypeHints = this.matchTypeHints;
             ElementType typeHint = this.typeHint;
-            Type returnType = this.returnType;
             int priority = this.priority;
             Function<? super ConfigElement, ?> buildingObjectInitializer = this.buildingObjectInitializer;
 

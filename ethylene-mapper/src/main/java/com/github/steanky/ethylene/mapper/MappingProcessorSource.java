@@ -19,6 +19,17 @@ public interface MappingProcessorSource {
     }
 
     class Builder {
+        @SuppressWarnings("rawtypes")
+        private static final Signature MAP_ENTRY_SIGNATURE =
+                Signature.builder(new Token<Map.Entry>() {}, (entry, objects) ->
+                        Map.entry(objects[0], objects[1]), (entry) ->
+                        List.of(Signature.type("key", Token.OBJECT, entry.getKey()),
+                                Signature.type("value", Token.OBJECT, entry.getValue())),
+                                Entry.of("key", Token.OBJECT), Entry.of("value", Token.OBJECT))
+                .matchingTypeHints()
+                .matchingNames()
+                .build();
+
         private SignatureMatcher.Source signatureMatcherSource;
         private TypeHinter typeHinter = new BasicTypeHinter();
         private SignatureBuilder.Selector signatureBuilderSelector;
@@ -83,15 +94,8 @@ public interface MappingProcessorSource {
             return this;
         }
 
-        @SuppressWarnings("rawtypes")
         public @NotNull Builder withStandardSignatures() {
-            withCustomSignature(Signature.builder(new Token<Map.Entry>() {}, (entry, objects) ->
-                            Map.entry(objects[0], objects[1]), (entry) ->
-                            List.of(Signature.type("key", new Token<>() {}, entry.getKey()), Signature.type("value",
-                                    new Token<>() {}, entry.getValue())), Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
-                    .matchingTypeHints()
-                    .matchingNames()
-                    .build());
+            withCustomSignature(MAP_ENTRY_SIGNATURE);
             return this;
         }
 

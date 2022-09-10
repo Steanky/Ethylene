@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -27,7 +28,17 @@ import java.util.function.Supplier;
 //T is NOT unused, it is inspected reflectively on Token instantiation!
 @SuppressWarnings("unused")
 public abstract class Token<T> implements Supplier<Type> {
+    public static final Token<Object> OBJECT = new Token<>() {};
+
     private final Type type;
+
+    private Token(@NotNull Type type) {
+        if (type instanceof TypeVariable<?> typeVariable) {
+            type = typeVariable.getBounds()[0];
+        }
+
+        this.type = Objects.requireNonNull(type);
+    }
 
     /**
      * Constructs a new Token representing a (often generic) type.
@@ -59,6 +70,10 @@ public abstract class Token<T> implements Supplier<Type> {
         }
 
         this.type = target;
+    }
+
+    public static @NotNull Token<?> of(@NotNull Type type) {
+        return new Token<>(type) {};
     }
 
     public final @NotNull Type get() {
