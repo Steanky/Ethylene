@@ -13,10 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -105,10 +102,36 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             if (fileKey != null) {
                 return fileKey;
             }
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+            //if we got an exception, we probably can't read symlinks either, so just return
+            return path.normalize().toString();
+        }
 
-        //if we can't use the file key, fall back on the normalized path string
-        //this is not ideal as it can lead to issue with symbolic links
-        return path.normalize().toString();
+        //if we can't use the file key because system support is lacking, and no error occurred, make a best-effort
+        //attempt to handle them ourselves based on normalized path name
+        Path root = path;
+        if (Files.isSymbolicLink(root)) {
+            //for keeping track of the paths we visit
+            Set<String> visited = Collections.newSetFromMap(new IdentityHashMap<>(2));
+            visited.add(root.normalize().toString());
+
+            do {
+                try {
+                    Path old = root;
+                    root = Files.readSymbolicLink(root);
+                    String identifier = root.normalize().toString();
+                    if (visited.contains(identifier)) {
+                        //cycle detected
+                        return old.normalize().toString();
+                    }
+
+                    visited.add(identifier);
+                } catch (IOException e) {
+                    return root.normalize().toString();
+                }
+            } while (Files.isSymbolicLink(root));
+        }
+
+        return root.normalize().toString();
     }
 }
