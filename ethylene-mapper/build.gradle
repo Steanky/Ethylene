@@ -1,0 +1,10 @@
+plugins {
+    id 'ethylene.library-conventions'
+}
+
+group 'com.github.steanky'
+
+dependencies {
+    api project(':ethylene-core')
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+}
