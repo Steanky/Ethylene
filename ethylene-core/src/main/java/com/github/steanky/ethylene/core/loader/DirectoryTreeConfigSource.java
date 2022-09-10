@@ -33,13 +33,13 @@ public class DirectoryTreeConfigSource implements ConfigSource {
         return CompletableFuture.completedFuture(GraphTransformer.process(path, directoryEntry -> {
             List<Path> pathList;
             try(Stream<Path> paths = Files.walk(directoryEntry, 0, FileVisitOption.FOLLOW_LINKS)) {
-                pathList = paths.toList();
+                pathList = paths.filter(path -> Files.isDirectory(path) || (hasExtension(path) && codecResolver
+                        .hasCodec(getExtension(path)))).toList();
             } catch (IOException e) {
                 pathList = Collections.emptyList();
             }
 
             ConfigNode node = new LinkedConfigNode(pathList.size());
-
             List<Path> finalPathList = pathList;
             return new GraphTransformer.Node<>(directoryEntry, new Iterator<>() {
                 private final Iterator<Path> pathIterator = finalPathList.listIterator();
@@ -59,7 +59,6 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                             .put(s, configElement)));
         }, Files::isDirectory, entry -> {
             String extension = getExtension(entry);
-
             if (codecResolver.hasCodec(extension)) {
                 try {
                     return Configuration.read(entry, codecResolver.resolve(extension));
@@ -73,6 +72,10 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     @Override
     public @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element) {
         return null;
+    }
+
+    private static boolean hasExtension(Path path) {
+        return !getExtension(path).isEmpty();
     }
 
     private static String getExtension(Path path) {
@@ -119,13 +122,13 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 try {
                     Path old = root;
                     root = Files.readSymbolicLink(root);
-                    String identifier = root.normalize().toString();
-                    if (visited.contains(identifier)) {
+                    String targetIdentifier = root.normalize().toString();
+                    if (visited.contains(targetIdentifier)) {
                         //cycle detected
                         return old.normalize().toString();
                     }
 
-                    visited.add(identifier);
+                    visited.add(targetIdentifier);
                 } catch (IOException e) {
                     return root.normalize().toString();
                 }
