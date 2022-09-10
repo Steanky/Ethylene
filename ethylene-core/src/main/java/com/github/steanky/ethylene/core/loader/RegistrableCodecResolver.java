@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class RegistrableCodecResolver implements CodecResolver {
     private final Map<String, ConfigCodec> codecMap;
@@ -29,8 +30,14 @@ public class RegistrableCodecResolver implements CodecResolver {
     }
 
     public void registerCodec(@NotNull ConfigCodec codec) {
-        for (String name : codec.getPreferredExtensions()) {
-            codecMap.put(name, codec);
+        Set<String> extensions = codec.getPreferredExtensions();
+        if (extensions.isEmpty()) {
+            codecMap.put("", codec);
+        }
+        else {
+            for (String name : extensions) {
+                codecMap.put(name, codec);
+            }
         }
     }
 }

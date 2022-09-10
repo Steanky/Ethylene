@@ -18,14 +18,15 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 public class DirectoryTreeConfigSource implements ConfigSource {
-    private static final char EXTENSION_SEPARATOR = '.';
-
     private final Path path;
     private final CodecResolver codecResolver;
+    private final ExtensionExtractor extensionExtractor;
 
-    public DirectoryTreeConfigSource(@NotNull Path path, @NotNull CodecResolver codecResolver) {
+    public DirectoryTreeConfigSource(@NotNull Path path, @NotNull CodecResolver codecResolver,
+            @NotNull ExtensionExtractor extensionExtractor) {
         this.path = Objects.requireNonNull(path);
         this.codecResolver = Objects.requireNonNull(codecResolver);
+        this.extensionExtractor = Objects.requireNonNull(extensionExtractor);
     }
 
     @Override
@@ -33,8 +34,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
         return CompletableFuture.completedFuture(GraphTransformer.process(path, directoryEntry -> {
             List<Path> pathList;
             try(Stream<Path> paths = Files.walk(directoryEntry, 0, FileVisitOption.FOLLOW_LINKS)) {
-                pathList = paths.filter(path -> Files.isDirectory(path) || (hasExtension(path) && codecResolver
-                        .hasCodec(getExtension(path)))).toList();
+                pathList = paths.filter(path -> Files.isDirectory(path) || (codecResolver.hasCodec(extensionExtractor
+                        .getExtension(path)))).toList();
             } catch (IOException e) {
                 pathList = Collections.emptyList();
             }
@@ -52,13 +53,13 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 @Override
                 public Entry<String, Path> next() {
                     Path path = pathIterator.next();
-                    return Entry.of(getName(path), path);
+                    return Entry.of(extensionExtractor.getName(path), path);
                 }
             }, new GraphTransformer.Output<>(node,
                     (GraphTransformer.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node
                             .put(s, configElement)));
         }, Files::isDirectory, entry -> {
-            String extension = getExtension(entry);
+            String extension = extensionExtractor.getExtension(entry);
             if (codecResolver.hasCodec(extension)) {
                 try {
                     return Configuration.read(entry, codecResolver.resolve(extension));
@@ -72,31 +73,6 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     @Override
     public @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element) {
         return null;
-    }
-
-    private static boolean hasExtension(Path path) {
-        return !getExtension(path).isEmpty();
-    }
-
-    private static String getExtension(Path path) {
-        String name = path.getFileName().toString();
-        int separatorIndex = name.lastIndexOf(EXTENSION_SEPARATOR);
-        if (separatorIndex == -1) {
-            return "";
-        }
-
-        return name.substring(separatorIndex + 1);
-    }
-
-    private static String getName(Path path) {
-        String name = path.getFileName().toString();
-
-        int separatorIndex = name.lastIndexOf(EXTENSION_SEPARATOR);
-        if (separatorIndex == -1 || Files.isDirectory(path)) {
-            return name;
-        }
-
-        return name.substring(0, separatorIndex);
     }
 
     private static Object getKey(Path path) {
