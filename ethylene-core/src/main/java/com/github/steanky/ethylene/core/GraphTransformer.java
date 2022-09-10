@@ -1,4 +1,4 @@
-package com.github.steanky.ethylene.core.graph;
+package com.github.steanky.ethylene.core;
 
 import com.github.steanky.ethylene.core.collection.Entry;
 import org.jetbrains.annotations.NotNull;

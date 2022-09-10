@@ -1,6 +1,6 @@
 package com.github.steanky.ethylene.codec.json;
 
-import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;

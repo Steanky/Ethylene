@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.core.loader;
 
 import com.github.steanky.ethylene.core.bridge.ConfigSource;
-import com.github.steanky.ethylene.core.codec.ConfigCodec;
+import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.NotNull;
 

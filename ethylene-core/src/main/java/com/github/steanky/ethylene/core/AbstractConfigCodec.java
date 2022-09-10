@@ -1,9 +1,6 @@
-package com.github.steanky.ethylene.core.codec;
+package com.github.steanky.ethylene.core;
 
-import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.*;
-import com.github.steanky.ethylene.core.graph.GraphTransformer;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.codec;
 
+import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;

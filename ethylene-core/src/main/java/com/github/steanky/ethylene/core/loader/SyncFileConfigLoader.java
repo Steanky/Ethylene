@@ -1,6 +1,6 @@
 package com.github.steanky.ethylene.core.loader;
 
-import com.github.steanky.ethylene.core.codec.ConfigCodec;
+import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;

@@ -5,7 +5,7 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
-import com.github.steanky.ethylene.core.graph.GraphTransformer;
+import com.github.steanky.ethylene.core.GraphTransformer;
 import com.github.steanky.ethylene.mapper.signature.MatchingSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureMatcher;

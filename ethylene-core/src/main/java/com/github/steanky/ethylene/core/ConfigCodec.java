@@ -1,4 +1,4 @@
-package com.github.steanky.ethylene.core.codec;
+package com.github.steanky.ethylene.core;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigNode;

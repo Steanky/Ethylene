@@ -2,7 +2,7 @@ package com.github.steanky.ethylene.core.loader;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.bridge.ConfigSource;
-import com.github.steanky.ethylene.core.codec.ConfigCodec;
+import com.github.steanky.ethylene.core.ConfigCodec;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;

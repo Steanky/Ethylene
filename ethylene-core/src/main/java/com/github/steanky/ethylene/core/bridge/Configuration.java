@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.core.bridge;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.codec.ConfigCodec;
+import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.core.util.FutureUtils;

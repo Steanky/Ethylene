@@ -1,6 +1,6 @@
 package com.github.steanky.ethylene.codec.yaml;
 
-import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.snakeyaml.engine.v2.api.*;

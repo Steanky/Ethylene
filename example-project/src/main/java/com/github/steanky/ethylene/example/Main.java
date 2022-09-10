@@ -5,7 +5,7 @@ import com.github.steanky.ethylene.codec.toml.ConfigDate;
 import com.github.steanky.ethylene.codec.toml.TomlCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.bridge.Configuration;
-import com.github.steanky.ethylene.core.codec.ConfigCodec;
+import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;

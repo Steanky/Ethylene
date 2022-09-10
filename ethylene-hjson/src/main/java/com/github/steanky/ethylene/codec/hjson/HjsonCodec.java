@@ -2,9 +2,9 @@ package com.github.steanky.ethylene.codec.hjson;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
-import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.collection.Entry;
-import com.github.steanky.ethylene.core.graph.GraphTransformer;
+import com.github.steanky.ethylene.core.GraphTransformer;
 import org.hjson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
