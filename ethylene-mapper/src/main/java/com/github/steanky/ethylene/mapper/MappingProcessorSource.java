@@ -38,6 +38,7 @@ public interface MappingProcessorSource {
 
         private Set<Signature> customSignatures;
         private Set<Entry<Class<?>, Class<?>>> typeImplementations;
+        private Set<Entry<Class<?>, SignatureBuilder>> signaturePreferences;
 
         Builder() {}
 
@@ -84,6 +85,17 @@ public interface MappingProcessorSource {
             }
 
             typeImplementations.add(Entry.of(superclass, implementation));
+            return this;
+        }
+
+        public @NotNull Builder withSignaturePreference(@NotNull Class<?> type, @NotNull SignatureBuilder builder) {
+            Objects.requireNonNull(type);
+            Objects.requireNonNull(builder);
+            if (signaturePreferences == null) {
+                signaturePreferences = new HashSet<>(4);
+            }
+
+            signaturePreferences.add(Entry.of(type, builder));
             return this;
         }
 
@@ -134,6 +146,12 @@ public interface MappingProcessorSource {
             if (typeImplementations != null) {
                 for (Entry<Class<?>, Class<?>> entry : typeImplementations) {
                     resolver.registerTypeImplementation(entry.getFirst(), entry.getSecond());
+                }
+            }
+
+            if (signaturePreferences != null) {
+                for (Entry<Class<?>, SignatureBuilder> preference : signaturePreferences) {
+                    signatureBuilderSelector.registerSignaturePreference(preference.getFirst(), preference.getSecond());
                 }
             }
 

@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 //T is NOT unused, it is inspected reflectively on Token instantiation!
 @SuppressWarnings("unused")
 public abstract class Token<T> implements Supplier<Type> {
-    public static final Token<Object> OBJECT = new Token<>() {};
+    public static final Token<Object> OBJECT = new Token<>(Object.class) {};
 
     private final Type type;
 
