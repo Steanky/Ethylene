@@ -4,7 +4,7 @@ import com.github.steanky.ethylene.codec.json.JsonCodec;
 import com.github.steanky.ethylene.codec.toml.ConfigDate;
 import com.github.steanky.ethylene.codec.toml.TomlCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.bridge.ConfigBridges;
+import com.github.steanky.ethylene.core.bridge.Configuration;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
@@ -78,7 +78,7 @@ public class Main {
      */
     public static void json() throws IOException {
         //interprets JSON_STRING as json
-        ConfigNode node = ConfigBridges.read(JSON_STRING, new JsonCodec()).asNode();
+        ConfigNode node = Configuration.read(JSON_STRING, new JsonCodec()).asNode();
 
         //everything below here works exactly the same regardless of what kind of file format you're using!
 
@@ -124,7 +124,7 @@ public class Main {
      */
     public static void toml() throws IOException {
         //interprets TOML_STRING as toml
-        ConfigNode node = ConfigBridges.read(TOML_STRING, new TomlCodec()).asNode();
+        ConfigNode node = Configuration.read(TOML_STRING, new TomlCodec()).asNode();
 
         //prints "toml string" without quotes
         System.out.println(node.get("string").asString());

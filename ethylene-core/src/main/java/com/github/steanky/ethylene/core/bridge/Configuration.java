@@ -18,17 +18,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * Contains static utility methods relating to {@link ConfigBridge}. Many of these can be used to conveniently read data
+ * Contains static utility methods relating to {@link ConfigSource}. Many of these can be used to conveniently read data
  * from or write to various sources.
  */
-public final class ConfigBridges {
-    private ConfigBridges() {
+public final class Configuration {
+    private Configuration() {
         throw new AssertionError("Why would you try to do this?");
     }
 
-    private static ConfigBridge fromStreamsInternal(Callable<InputStream> inputCallable,
+    private static ConfigSource fromStreamsInternal(Callable<InputStream> inputCallable,
             Callable<OutputStream> outputCallable, ConfigCodec codec) {
-        return new ConfigBridge() {
+        return new ConfigSource() {
             @Override
             public @NotNull CompletableFuture<ConfigElement> read() {
                 return FutureUtils.completeCallableSync(() -> codec.decode(inputCallable.call()));
@@ -67,7 +67,7 @@ public final class ConfigBridges {
      * invoked once per read/write attempt, and the returned stream will be closed after the operation completes.</p>
      *
      * <p>If either Callable throws an {@link IOException} when it is called (by an invocation to
-     * {@link ConfigBridge#read()} or {@link ConfigBridge#write(ConfigElement)} on the returned ConfigBridge), it will
+     * {@link ConfigSource#read()} or {@link ConfigSource#write(ConfigElement)} on the returned ConfigBridge), it will
      * be rethrown when {@link Future#get()} is called. If the exception thrown is any other type, a new IOException
      * instance will be created with the actual exception set as the cause, then thrown.</p>
      *
@@ -79,7 +79,7 @@ public final class ConfigBridges {
      * @return a ConfigBridge implementation which reads/writes from the given input/output streams
      * @throws NullPointerException if any of the arguments are null
      */
-    public static @NotNull ConfigBridge fromStreams(@NotNull Callable<InputStream> inputCallable,
+    public static @NotNull ConfigSource fromStreams(@NotNull Callable<InputStream> inputCallable,
             @NotNull Callable<OutputStream> outputCallable, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(inputCallable);
         Objects.requireNonNull(outputCallable);
@@ -100,7 +100,7 @@ public final class ConfigBridges {
      * file
      * @throws NullPointerException if any of the arguments are null
      */
-    public static @NotNull ConfigBridge fromPath(@NotNull Path path, @NotNull ConfigCodec codec) {
+    public static @NotNull ConfigSource fromPath(@NotNull Path path, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
 
@@ -109,7 +109,7 @@ public final class ConfigBridges {
 
     /**
      * Utility method to read a {@link ConfigElement} from an {@link InputStream}, using the given {@link ConfigCodec}
-     * for decoding. This method uses {@link ConfigBridges#fromStreams(Callable, Callable, ConfigCodec)} to produce a
+     * for decoding. This method uses {@link Configuration#fromStreams(Callable, Callable, ConfigCodec)} to produce a
      * ConfigBridge implementation that is immediately read from.
      *
      * @param inputStream the InputStream to read from
@@ -127,7 +127,7 @@ public final class ConfigBridges {
     }
 
     /**
-     * Works similarly to {@link ConfigBridges#read(InputStream, ConfigCodec)}, but uses the given
+     * Works similarly to {@link Configuration#read(InputStream, ConfigCodec)}, but uses the given
      * {@link ConfigProcessor} to process the resulting {@link  ConfigElement}.
      *
      * @param inputStream the InputStream to read from
@@ -165,7 +165,7 @@ public final class ConfigBridges {
     }
 
     /**
-     * Same as {@link ConfigBridges#write(OutputStream, ConfigCodec, ConfigElement)}, but uses the given
+     * Same as {@link Configuration#write(OutputStream, ConfigCodec, ConfigElement)}, but uses the given
      * {@link ConfigProcessor} to process the given {@link ConfigElement}.
      *
      * @param outputStream the OutputStream to write to
@@ -184,7 +184,7 @@ public final class ConfigBridges {
     }
 
     /**
-     * Same as {@link ConfigBridges#read(InputStream, ConfigCodec)}, but uses a {@link ByteArrayInputStream} constructed
+     * Same as {@link Configuration#read(InputStream, ConfigCodec)}, but uses a {@link ByteArrayInputStream} constructed
      * from the provided string, assuming a UTF-8 encoding.
      *
      * @param input the string to read from
@@ -201,7 +201,7 @@ public final class ConfigBridges {
     }
 
     /**
-     * Works similarly to {@link ConfigBridges#read(String, ConfigCodec)}, but uses the given {@link ConfigProcessor} to
+     * Works similarly to {@link Configuration#read(String, ConfigCodec)}, but uses the given {@link ConfigProcessor} to
      * process the resulting {@link  ConfigElement}.
      *
      * @param input     the string to read from
@@ -243,7 +243,7 @@ public final class ConfigBridges {
     }
 
     /**
-     * Same as {@link ConfigBridges#write(ConfigElement, ConfigCodec)}, but uses the given {@link ConfigProcessor} to
+     * Same as {@link Configuration#write(ConfigElement, ConfigCodec)}, but uses the given {@link ConfigProcessor} to
      * process the given {@link ConfigElement}.
      *
      * @param codec     the codec to use to encode the data
@@ -265,7 +265,7 @@ public final class ConfigBridges {
 
 
     /**
-     * Same as {@link ConfigBridges#read(InputStream, ConfigCodec)}, but uses a {@link InputStream} constructed from the
+     * Same as {@link Configuration#read(InputStream, ConfigCodec)}, but uses a {@link InputStream} constructed from the
      * provided {@link Path}.
      *
      * @param path  the path pointing to the file to read from
@@ -282,7 +282,7 @@ public final class ConfigBridges {
     }
 
     /**
-     * Works similarly to {@link ConfigBridges#read(Path, ConfigCodec)}, but uses the given {@link ConfigProcessor} to
+     * Works similarly to {@link Configuration#read(Path, ConfigCodec)}, but uses the given {@link ConfigProcessor} to
      * process the resulting {@link ConfigElement}.
      *
      * @param path      the file path to read from
@@ -319,7 +319,7 @@ public final class ConfigBridges {
     }
 
     /**
-     * Same as {@link ConfigBridges#write(Path, ConfigElement, ConfigCodec)}, but uses the given {@link ConfigProcessor}
+     * Same as {@link Configuration#write(Path, ConfigElement, ConfigCodec)}, but uses the given {@link ConfigProcessor}
      * to process the given {@link ConfigElement}.
      *
      * @param path      the path to write to

@@ -1,6 +1,6 @@
 package com.github.steanky.ethylene.core;
 
-import com.github.steanky.ethylene.core.processor.ConfigLoader;
+import com.github.steanky.ethylene.core.loader.ConfigLoader;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;

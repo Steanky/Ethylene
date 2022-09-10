@@ -1,7 +1,8 @@
-package com.github.steanky.ethylene.core.processor;
+package com.github.steanky.ethylene.core.loader;
 
-import com.github.steanky.ethylene.core.bridge.ConfigBridge;
+import com.github.steanky.ethylene.core.bridge.ConfigSource;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
@@ -14,7 +15,7 @@ import java.util.Objects;
  * behavior).</p>
  *
  * <p>This class is only instantiated internally because there is some potential for misuse; i.e. it is possible for a
- * user to provide a {@link ConfigBridge} implementation that is not at all related to the given Path.</p>
+ * user to provide a {@link ConfigSource} implementation that is not at all related to the given Path.</p>
  *
  * @param <TData> the type of data object
  */
@@ -32,7 +33,7 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
      * @throws IllegalArgumentException if path represents a directory
      */
     FileConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
-            @NotNull ConfigBridge bridge, @NotNull Path path) {
+            @NotNull ConfigSource bridge, @NotNull Path path) {
         super(processor, defaultData, bridge);
         this.path = Objects.requireNonNull(path);
     }

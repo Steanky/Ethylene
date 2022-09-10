@@ -1,7 +1,8 @@
-package com.github.steanky.ethylene.core.processor;
+package com.github.steanky.ethylene.core.loader;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.bridge.ConfigBridge;
+import com.github.steanky.ethylene.core.bridge.ConfigSource;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TData> {
     private final ConfigProcessor<TData> processor;
     private final TData defaultData;
-    private final ConfigBridge bridge;
+    private final ConfigSource bridge;
 
     /**
      * Constructs a new instance of ProcessingConfigLoader from the given {@link ConfigProcessor} and default data
@@ -27,10 +28,10 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
      *
      * @param processor   the processor to use
      * @param defaultData the default data object
-     * @param bridge      the {@link ConfigBridge} used for reading/writing data
+     * @param bridge      the {@link ConfigSource} used for reading/writing data
      */
     public ProcessingConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
-            @NotNull ConfigBridge bridge) {
+            @NotNull ConfigSource bridge) {
         this.processor = Objects.requireNonNull(processor);
         this.defaultData = Objects.requireNonNull(defaultData);
         this.bridge = Objects.requireNonNull(bridge);

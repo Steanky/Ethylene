@@ -20,7 +20,7 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
      * @param objects the object array to create a ConfigList from
      * @return a new, mutable ConfigList implementation
      */
-    static @NotNull ConfigList of(Object... objects) {
+    static @NotNull ConfigList of(Object @NotNull ... objects) {
         Objects.requireNonNull(objects);
 
         if (objects.length == 0) {

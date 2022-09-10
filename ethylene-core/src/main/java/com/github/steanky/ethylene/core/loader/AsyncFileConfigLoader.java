@@ -1,6 +1,7 @@
-package com.github.steanky.ethylene.core.processor;
+package com.github.steanky.ethylene.core.loader;
 
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +29,7 @@ public class AsyncFileConfigLoader<TData> extends FileConfigLoader<TData> {
      */
     public AsyncFileConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
             @NotNull Path path, @NotNull ConfigCodec codec, @NotNull Executor executor) {
-        super(processor, defaultData, new FileCodecConfigBridge(path, codec) {
+        super(processor, defaultData, new FileCodecConfigSource(path, codec) {
             @Override
             protected @NotNull <TReturn> CompletableFuture<TReturn> makeFuture(@NotNull Callable<TReturn> callable) {
                 return FutureUtils.completeCallableAsync(callable, executor);

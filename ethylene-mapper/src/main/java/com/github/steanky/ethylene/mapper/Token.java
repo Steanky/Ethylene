@@ -34,10 +34,11 @@ public abstract class Token<T> implements Supplier<Type> {
 
     private Token(@NotNull Type type) {
         if (type instanceof TypeVariable<?> typeVariable) {
-            type = typeVariable.getBounds()[0];
+            this.type = typeVariable.getBounds()[0];
         }
-
-        this.type = Objects.requireNonNull(type);
+        else {
+            this.type = Objects.requireNonNull(type);
+        }
     }
 
     /**

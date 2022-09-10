@@ -1,7 +1,7 @@
-package com.github.steanky.ethylene.core.processor;
+package com.github.steanky.ethylene.core.loader;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.bridge.ConfigBridge;
+import com.github.steanky.ethylene.core.bridge.ConfigSource;
 import com.github.steanky.ethylene.core.codec.ConfigCodec;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,9 +12,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Internal {@link ConfigBridge} implementation used by {@link AsyncFileConfigLoader} and {@link SyncFileConfigLoader}.
+ * Internal {@link ConfigSource} implementation used by {@link AsyncFileConfigLoader} and {@link SyncFileConfigLoader}.
  */
-abstract class FileCodecConfigBridge implements ConfigBridge {
+abstract class FileCodecConfigSource implements ConfigSource {
     private final Path path;
     private final ConfigCodec codec;
 
@@ -24,7 +24,7 @@ abstract class FileCodecConfigBridge implements ConfigBridge {
      * @param path  the path to use
      * @param codec the codec to use
      */
-    FileCodecConfigBridge(@NotNull Path path, @NotNull ConfigCodec codec) {
+    FileCodecConfigSource(@NotNull Path path, @NotNull ConfigCodec codec) {
         this.path = Objects.requireNonNull(path);
         this.codec = Objects.requireNonNull(codec);
     }

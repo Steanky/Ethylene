@@ -12,10 +12,10 @@ import java.util.concurrent.CompletableFuture;
  * {@link CompletableFuture} is used to provide a common interface between synchronous and non-synchronous usage.</p>
  *
  * <p>For consistent behavior between synchronous and non-synchronous implementations, simply calling
- * {@link ConfigBridge#read()} or {@link ConfigBridge#write(ConfigElement)} should not throw any {@link IOException}s,
+ * {@link ConfigSource#read()} or {@link ConfigSource#write(ConfigElement)} should not throw any {@link IOException}s,
  * even if one occurred. This exception will be raised when {@link CompletableFuture#get()} is invoked later.</p>
  */
-public interface ConfigBridge {
+public interface ConfigSource {
     /**
      * Loads a {@link ConfigElement} object from this loader's source. Asynchronous implementations may choose to load
      * ConfigElement objects on another thread; in which case this method should return immediately.
