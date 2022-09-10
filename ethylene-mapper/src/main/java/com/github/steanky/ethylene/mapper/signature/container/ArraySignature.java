@@ -56,7 +56,7 @@ public class ArraySignature extends ContainerSignatureBase {
 
     @SuppressWarnings("SuspiciousSystemArraycopy")
     @Override
-    public Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         if (buildingObject == null) {
             return args;
         }

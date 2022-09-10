@@ -82,7 +82,7 @@ public class CollectionSignature extends ContainerSignatureBase {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             Collection<Object> buildingCollection = (Collection<Object>) buildingObject;
             buildingCollection.addAll(Arrays.asList(args));

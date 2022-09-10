@@ -92,7 +92,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
         Path root = path;
         if (Files.isSymbolicLink(root)) {
             //for keeping track of the paths we visit
-            Set<String> visited = Collections.newSetFromMap(new IdentityHashMap<>(2));
+            Set<String> visited = Collections.newSetFromMap(new HashMap<>(2));
             visited.add(root.normalize().toString());
 
             do {

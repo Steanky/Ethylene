@@ -88,7 +88,7 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             throw new MapperException("ConstructorSignature does not support pre-initialized building objects");
         }

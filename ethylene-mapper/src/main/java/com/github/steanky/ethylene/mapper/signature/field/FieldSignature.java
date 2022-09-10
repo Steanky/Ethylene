@@ -155,7 +155,7 @@ public class FieldSignature implements Signature {
     }
 
     @Override
-    public Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         try {
             initTypes();
             if (buildingObject != null) {

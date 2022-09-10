@@ -82,7 +82,7 @@ public class MapSignature extends ContainerSignatureBase {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             Map<Object, Object> buildingMap = (Map<Object, Object>) buildingObject;
             finishMap(buildingMap, args);

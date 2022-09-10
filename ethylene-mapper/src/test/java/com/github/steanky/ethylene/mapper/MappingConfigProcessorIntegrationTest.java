@@ -61,7 +61,7 @@ class MappingConfigProcessorIntegrationTest {
 
     @Widen
     @Include
-    @Builder(BuilderType.FIELD)
+    @Builder(Builder.BuilderType.FIELD)
     public static class AccessWidenedFieldClass {
         private String string;
         private boolean bool;

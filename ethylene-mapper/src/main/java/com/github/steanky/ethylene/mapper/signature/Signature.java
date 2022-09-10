@@ -37,7 +37,7 @@ public interface Signature {
         throw new IllegalStateException("unsupported operation");
     }
 
-    Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args);
+    @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args);
 
     boolean matchesArgumentNames();
 
@@ -173,7 +173,7 @@ public interface Signature {
 
                 @SuppressWarnings("unchecked")
                 @Override
-                public Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+                public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
                     return constructor.apply((T) buildingObject, args);
                 }
 

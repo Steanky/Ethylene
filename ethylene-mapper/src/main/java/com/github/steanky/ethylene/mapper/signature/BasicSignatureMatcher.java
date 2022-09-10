@@ -42,11 +42,12 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     continue;
                 }
 
+                length = objectData.size();
                 boolean matchNames = signature.matchesArgumentNames();
                 boolean matchTypeHints = signature.matchesTypeHints();
 
                 if (!(matchNames || matchTypeHints)) {
-                    return new MatchingSignature(signature, null, objectData, objectData.size());
+                    return new MatchingSignature(signature, null, objectData, length);
                 }
 
                 outer:
@@ -85,7 +86,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                         }
                     }
 
-                    return new MatchingSignature(signature, null, typeCollection, objectData.size());
+                    return new MatchingSignature(signature, null, typeCollection, length);
                 }
 
                 continue;
