@@ -40,6 +40,8 @@ public interface MappingProcessorSource {
         private Set<Entry<Class<?>, Class<?>>> typeImplementations;
         private Set<Entry<Class<?>, SignatureBuilder>> signaturePreferences;
 
+        private boolean used;
+
         Builder() {}
 
         public @NotNull Builder withSignatureMatcherSource(@NotNull SignatureMatcher.Source source) {
@@ -134,6 +136,12 @@ public interface MappingProcessorSource {
         }
 
         public @NotNull MappingProcessorSource build() {
+            if (used) {
+                throw new IllegalStateException("builder has already been used");
+            }
+
+            used = true;
+
             SignatureMatcher.Source source = makeSource();
             if (customSignatures != null) {
                 for (Signature customSignature : customSignatures) {
