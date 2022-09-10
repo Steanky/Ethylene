@@ -1,13 +1,12 @@
 package com.github.steanky.ethylene.core.loader;
 
+import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.GraphTransformer;
 import com.github.steanky.ethylene.core.bridge.ConfigSource;
 import com.github.steanky.ethylene.core.bridge.Configuration;
-import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.collection.Entry;
-import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.github.steanky.ethylene.core.collection.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -21,6 +20,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     private final Path path;
     private final CodecResolver codecResolver;
     private final ExtensionExtractor extensionExtractor;
+
+    private record OutputEntry(Path path, ConfigElement element) {}
 
     public DirectoryTreeConfigSource(@NotNull Path path, @NotNull CodecResolver codecResolver,
             @NotNull ExtensionExtractor extensionExtractor) {
@@ -42,7 +43,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
             ConfigNode node = new LinkedConfigNode(pathList.size());
             List<Path> finalPathList = pathList;
-            return new GraphTransformer.Node<>(directoryEntry, new Iterator<>() {
+            return new GraphTransformer.Node<>(new Iterator<>() {
                 private final Iterator<Path> pathIterator = finalPathList.listIterator();
 
                 @Override
@@ -72,7 +73,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
     @Override
     public @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element) {
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     private static Object getKey(Path path) {

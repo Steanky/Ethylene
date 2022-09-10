@@ -51,11 +51,11 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             @NotNull ConfigElement target) {
         if (target.isNode()) {
             ConfigNode elementNode = target.asNode();
-            return new GraphTransformer.Node<>(target, elementNode.entryCollection().iterator(),
+            return new GraphTransformer.Node<>(elementNode.entryCollection().iterator(),
                     makeEncodeMap(elementNode.size()));
         } else if (target.isList()) {
             ConfigList elementList = target.asList();
-            return new GraphTransformer.Node<>(target, elementList.entryCollection().iterator(),
+            return new GraphTransformer.Node<>(elementList.entryCollection().iterator(),
                     makeEncodeCollection(elementList.size()));
         }
 
@@ -64,7 +64,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof Map<?, ?> map) {
-            return new GraphTransformer.Node<>(target, new Iterator<>() {
+            return new GraphTransformer.Node<>(new Iterator<>() {
                 private final Iterator<? extends Map.Entry<?, ?>> iterator = map.entrySet().iterator();
 
                 @Override
@@ -79,7 +79,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
             }, makeDecodeMap(map.size()));
         } else if (target instanceof List<?> list) {
-            return new GraphTransformer.Node<>(target, new Iterator<>() {
+            return new GraphTransformer.Node<>(new Iterator<>() {
                 private final Iterator<?> backing = list.iterator();
 
                 @Override
@@ -95,7 +95,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         } else if (target.getClass().isArray()) {
             Object[] array = (Object[]) target;
 
-            return new GraphTransformer.Node<>(target, new Iterator<>() {
+            return new GraphTransformer.Node<>(new Iterator<>() {
                 private int i = 0;
 
                 @Override

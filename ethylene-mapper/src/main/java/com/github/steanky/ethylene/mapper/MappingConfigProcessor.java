@@ -58,7 +58,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                         Object[] args = new Object[signatureSize];
 
-                        return new GraphTransformer.Node<>(nodeEntry, new Iterator<>() {
+                        return new GraphTransformer.Node<>(new Iterator<>() {
                             private int i = 0;
 
                             @Override
@@ -121,8 +121,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                         Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
 
-                        return new GraphTransformer.Node<ElementEntry, Mutable<ConfigElement>, String>(nodeEntry,
-                                new Iterator<>() {
+                        return new GraphTransformer.Node<ElementEntry, Mutable<ConfigElement>, String>(new Iterator<>() {
                             private int i = 0;
 
                             @Override
