@@ -30,7 +30,7 @@ public class FieldSignature implements Signature {
 
     public FieldSignature(@NotNull Type type) {
         this.type = Objects.requireNonNull(type);
-        this.rawType = TypeUtils.getRawType(type, null);
+        this.rawType = ReflectionUtils.rawType(type);
     }
 
     private static Constructor<?> getConstructor(Class<?> cls, boolean widenAccess) {

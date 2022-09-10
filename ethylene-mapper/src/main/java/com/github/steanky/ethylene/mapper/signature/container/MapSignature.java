@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
@@ -21,9 +22,9 @@ public class MapSignature extends ContainerSignatureBase {
 
     public MapSignature(@NotNull Type keyType, @NotNull Type valueType, @NotNull Type mapType) {
         super(TypeUtils.parameterize(Map.Entry.class, keyType, valueType), mapType);
-        Class<?> mapClass = TypeUtils.getRawType(mapType, null);
+        Class<?> mapClass = ReflectionUtils.rawType(mapType);
 
-        Class<?> rawClass = TypeUtils.getRawType(mapClass, null);
+        Class<?> rawClass = ReflectionUtils.rawType(mapClass);
         Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass, int.class);
         if (constructor == null) {
             constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass);

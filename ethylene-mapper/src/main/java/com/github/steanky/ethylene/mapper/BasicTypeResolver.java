@@ -39,11 +39,7 @@ public class BasicTypeResolver implements TypeResolver {
     public @NotNull Type resolveType(@NotNull Type type, @Nullable ConfigElement element) {
         Objects.requireNonNull(type);
 
-        Class<?> raw = TypeUtils.getRawType(type, null);
-        if (raw == null) {
-            throw new MapperException("resolved raw type was null for '" + type.getTypeName() + "'");
-        }
-
+        Class<?> raw = ReflectionUtils.rawType(type);
         ElementType hint = typeHinter.getHint(raw);
         if (raw.isArray() || raw.isPrimitive()) {
             if (element != null && !hint.compatible(element)) {

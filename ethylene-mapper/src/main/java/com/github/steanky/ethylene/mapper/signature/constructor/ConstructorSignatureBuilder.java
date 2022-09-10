@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
+import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,10 +18,7 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
 
     @Override
     public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
-        Class<?> rawType = TypeUtils.getRawType(type, null);
-        if (rawType == null) {
-            throw new MapperException("raw type was null for " + type);
-        }
+        Class<?> rawType = ReflectionUtils.rawType(type);
 
         boolean widenAccess = rawType.isAnnotationPresent(Widen.class);
         Constructor<?>[] candidateConstructors = widenAccess ? rawType.getDeclaredConstructors() : rawType.getConstructors();

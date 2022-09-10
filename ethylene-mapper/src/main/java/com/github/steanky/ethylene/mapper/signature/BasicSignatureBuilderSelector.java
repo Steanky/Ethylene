@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.mapper.annotation.Builder;
 import com.github.steanky.ethylene.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.signature.record.RecordSignatureBuilder;
+import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +24,7 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
 
     @Override
     public @NotNull SignatureBuilder select(@NotNull Type type) {
-        Class<?> rawType = TypeUtils.getRawType(type, null);
+        Class<?> rawType = ReflectionUtils.rawType(type);
         Builder builderAnnotation = rawType.getAnnotation(Builder.class);
         if (builderAnnotation == null) {
             SignatureBuilder signatureBuilder = builderTypeMap.get(rawType);

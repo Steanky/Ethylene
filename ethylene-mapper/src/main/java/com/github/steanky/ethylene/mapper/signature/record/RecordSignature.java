@@ -8,6 +8,7 @@ import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +30,7 @@ public class RecordSignature implements Signature {
 
     public RecordSignature(@NotNull Type returnType) {
         this.returnType = Objects.requireNonNull(returnType);
-        this.raw = TypeUtils.getRawType(returnType, null);
+        this.raw = ReflectionUtils.rawType(returnType);
 
         if (!raw.isRecord()) {
             throw new MapperException("expected record: " + returnType);
