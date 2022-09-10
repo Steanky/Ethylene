@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -60,12 +61,12 @@ public interface Signature {
         return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
     }
 
-    static @NotNull TypedObject typed(@Nullable String name, @NotNull Type type, @NotNull Object value) {
-        return new TypedObject(name, type, value);
+    static @NotNull TypedObject type(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
+        return new TypedObject(name, type.get(), value);
     }
 
-    static @NotNull TypedObject typed(@NotNull Type type, @NotNull Object value) {
-        return new TypedObject(null, type, value);
+    static @NotNull TypedObject type(@NotNull Token<?> type, @NotNull Object value) {
+        return new TypedObject(null, type.get(), value);
     }
 
     class Builder<T> {
@@ -144,6 +145,19 @@ public interface Signature {
         }
 
         public @NotNull Signature build() {
+            Collection<Entry<String, Type>> argumentTypes = Collections.unmodifiableCollection(this.argumentTypes);
+            Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor =
+                    this.objectSignatureExtractor;
+            IntFunction<? extends ConfigContainer> containerFunction = this.containerFunction;
+            ToIntFunction<? super ConfigElement> lengthFunction = this.lengthFunction;
+            BiFunction<? super T, ? super Object[], ?> constructor = this.constructor;
+            boolean matchNames = this.matchNames;
+            boolean matchTypeHints = this.matchTypeHints;
+            ElementType typeHint = this.typeHint;
+            Type returnType = this.returnType;
+            int priority = this.priority;
+            Function<? super ConfigElement, ?> buildingObjectInitializer = this.buildingObjectInitializer;
+
             return new Signature() {
                 @Override
                 public @NotNull Iterable<Entry<String, Type>> argumentTypes() {

@@ -12,7 +12,6 @@ import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,7 +36,7 @@ public class FieldSignature implements Signature {
         try {
             if (widenAccess) {
                 Constructor<?> constructor = cls.getDeclaredConstructor();
-                if (!constructor.canAccess(null) && !constructor.trySetAccessible()) {
+                if (!constructor.trySetAccessible()) {
                     throw new MapperException("failed to widen constructor access " + constructor);
                 }
 

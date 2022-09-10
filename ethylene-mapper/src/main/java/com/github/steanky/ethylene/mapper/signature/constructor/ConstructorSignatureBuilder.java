@@ -12,6 +12,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 
 public class ConstructorSignatureBuilder implements SignatureBuilder {
+    private static final Signature[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
     public static final ConstructorSignatureBuilder INSTANCE = new ConstructorSignatureBuilder();
 
     private ConstructorSignatureBuilder() {}
@@ -32,6 +33,10 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
             }
 
             signatures[j++] = new ConstructorSignature(constructor, type);
+        }
+
+        if (j == 0) {
+            return EMPTY_SIGNATURE_ARRAY;
         }
 
         if (j < signatures.length) {

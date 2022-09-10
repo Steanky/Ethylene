@@ -188,13 +188,14 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Objects {
+        @SuppressWarnings("rawtypes")
         @Test
         void map() throws ConfigProcessException {
             Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) -> {
                         return Map.entry(objects[0], objects[1]);
                     }, (entry) -> {
-                        return List.of(Signature.typed("key", Object.class, entry.getKey()), Signature.typed("value",
-                                Object.class, entry.getValue()));
+                        return List.of(Signature.type("key", new Token<>() {}, entry.getKey()), Signature.type("value",
+                                new Token<>() {}, entry.getValue()));
                     }, Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
                     .matchingTypeHints()
                     .matchingNames()
@@ -218,8 +219,8 @@ class MappingConfigProcessorIntegrationTest {
             Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) -> {
                 return Map.entry(objects[0], objects[1]);
             }, (entry) -> {
-                return List.of(Signature.typed("key", Object.class, entry.getKey()), Signature.typed("value",
-                        Object.class, entry.getValue()));
+                return List.of(Signature.type("key", new Token<>() {}, entry.getKey()), Signature.type("value",
+                        new Token<>() {}, entry.getValue()));
             }, Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
                     .matchingTypeHints()
                     .matchingNames()

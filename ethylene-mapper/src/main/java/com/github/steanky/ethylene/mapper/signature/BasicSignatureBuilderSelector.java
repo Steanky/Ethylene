@@ -5,7 +5,6 @@ import com.github.steanky.ethylene.mapper.signature.constructor.ConstructorSigna
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.signature.record.RecordSignatureBuilder;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -42,7 +41,10 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
         };
     }
 
+    @Override
     public void registerSignaturePreference(@NotNull Class<?> type, @NotNull SignatureBuilder signatureBuilder) {
+        Objects.requireNonNull(type);
+        Objects.requireNonNull(signatureBuilder);
         builderTypeMap.put(type, signatureBuilder);
     }
 }

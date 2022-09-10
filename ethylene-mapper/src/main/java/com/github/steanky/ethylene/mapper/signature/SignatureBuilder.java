@@ -8,8 +8,9 @@ import java.lang.reflect.Type;
 public interface SignatureBuilder {
     @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type);
 
-    @FunctionalInterface
     interface Selector {
         @NotNull SignatureBuilder select(@NotNull Type type);
+
+        void registerSignaturePreference(@NotNull Class<?> type, @NotNull SignatureBuilder signatureBuilder);
     }
 }

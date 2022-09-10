@@ -87,8 +87,8 @@ public interface MappingProcessorSource {
         public @NotNull Builder withStandardSignatures() {
             withCustomSignature(Signature.builder(new Token<Map.Entry>() {}, (entry, objects) ->
                             Map.entry(objects[0], objects[1]), (entry) ->
-                            List.of(Signature.typed("key", Object.class, entry.getKey()), Signature.typed("value",
-                    Object.class, entry.getValue())), Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
+                            List.of(Signature.type("key", new Token<>() {}, entry.getKey()), Signature.type("value",
+                                    new Token<>() {}, entry.getValue())), Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
                     .matchingTypeHints()
                     .matchingNames()
                     .build());
