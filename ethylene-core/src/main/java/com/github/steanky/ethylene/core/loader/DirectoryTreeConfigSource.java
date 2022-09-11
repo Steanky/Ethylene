@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.core.loader;
 
-import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.GraphTransformer;
@@ -38,7 +37,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 pathList = paths.filter(path -> Files.isDirectory(path) || (codecResolver.hasCodec(extensionExtractor
                         .getExtension(path)))).toList();
             } catch (IOException e) {
-                pathList = Collections.emptyList();
+                pathList = List.of();
             }
 
             ConfigNode node = new LinkedConfigNode(pathList.size());
@@ -67,7 +66,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 } catch (IOException ignored) {}
             }
 
-            return ConfigPrimitive.nil();
+            return ConfigPrimitive.NULL;
         }, DirectoryTreeConfigSource::getKey));
     }
 

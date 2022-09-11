@@ -11,7 +11,9 @@ import java.util.Objects;
  * primitives as well as String are compatible.
  */
 public final class ConfigPrimitive implements ConfigElement {
-    private Object object;
+    public static final ConfigPrimitive NULL = new ConfigPrimitive(null);
+
+    private final Object object;
 
     /**
      * Creates a new ConfigPrimitive instance wrapping the provided {@link Object}. The object may only subclass one of
@@ -92,16 +94,6 @@ public final class ConfigPrimitive implements ConfigElement {
         return object;
     }
 
-    /**
-     * Sets the object wrapped by this ConfigPrimitive.
-     *
-     * @param object the new object
-     * @throws IllegalArgumentException if the provided object is not a valid type
-     */
-    public void setObject(@Nullable Object object) {
-        this.object = validateType(object);
-    }
-
     @Override
     public int hashCode() {
         return Objects.hashCode(object);
@@ -122,14 +114,6 @@ public final class ConfigPrimitive implements ConfigElement {
         }
 
         return false;
-    }
-
-    /**
-     * Equivalent to {@code new ConfigPrimitive(null)}.
-     * @return a new ConfigPrimitive containing null
-     */
-    public static @NotNull ConfigPrimitive nil() {
-        return new ConfigPrimitive(null);
     }
 
     @Override

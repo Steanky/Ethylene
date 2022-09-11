@@ -118,7 +118,7 @@ public class RecordSignature implements Signature {
         RecordComponent[] recordComponents = raw.getRecordComponents();
         if (recordComponents.length == 0) {
             canonicalConstructor = getConstructor(widenAccess);
-            return argumentTypes = Collections.emptyList();
+            return argumentTypes = List.of();
         }
 
         if (recordComponents.length == 1) {
@@ -126,7 +126,7 @@ public class RecordSignature implements Signature {
 
             length = 1;
             canonicalConstructor = getConstructor(widenAccess, component.getType());
-            return argumentTypes = Collections.singleton(Entry.of(component.getName(), component.getGenericType()));
+            return argumentTypes = List.of(Entry.of(component.getName(), component.getGenericType()));
         }
 
         List<Entry<String, Type>> underlyingList = new ArrayList<>(recordComponents.length);

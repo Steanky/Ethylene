@@ -436,7 +436,7 @@ public interface ConfigProcessor<TData> {
                     return ConfigProcessor.this.elementFromData(data.get());
                 }
 
-                return ConfigPrimitive.nil();
+                return ConfigPrimitive.NULL;
             }
         };
     }

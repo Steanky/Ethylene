@@ -159,7 +159,7 @@ public class ConstructorSignature implements Signature {
 
         if (constructor.getParameterCount() == 0) {
             //use empty list if we can
-            return types = Collections.emptyList();
+            return types = List.of();
         }
 
         Parameter[] parameters = constructor.getParameters();
@@ -168,7 +168,7 @@ public class ConstructorSignature implements Signature {
             Parameter first = parameters[0];
             Entry<String, Type> entry = makeEntry(first, first.isNamePresent());
             matchesNames = entry.getFirst() != null;
-            return types = Collections.singleton(entry);
+            return types = List.of(entry);
         }
 
         //use a backing ArrayList for n > 1 length

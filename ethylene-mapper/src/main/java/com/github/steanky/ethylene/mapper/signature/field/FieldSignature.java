@@ -117,7 +117,7 @@ public class FieldSignature implements Signature {
         this.participatingFields = getFields(rawType, widenAccess);
 
         if (this.participatingFields.isEmpty()) {
-            return types = Collections.emptyList();
+            return types = List.of();
         }
 
         Collection<Entry<String, Type>> typeCollection = new ArrayList<>(participatingFields.size());
