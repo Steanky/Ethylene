@@ -31,7 +31,8 @@ public interface MappingProcessorSource {
                 .build();
 
         private SignatureMatcher.Source signatureMatcherSource;
-        private TypeHinter typeHinter = new BasicTypeHinter();
+        private TypeHinter typeHinter = BasicTypeHinter.INSTANCE;
+        private ScalarSource scalarSource = BasicScalarSource.INSTANCE;
         private SignatureBuilder.Selector signatureBuilderSelector;
         private SignatureBuilder defaultBuilder;
         private TypeResolver typeResolver;
@@ -51,6 +52,11 @@ public interface MappingProcessorSource {
 
         public @NotNull Builder withTypeHinter(@NotNull TypeHinter typeHinter) {
             this.typeHinter = Objects.requireNonNull(typeHinter);
+            return this;
+        }
+
+        public @NotNull Builder withScalarSource(@NotNull ScalarSource scalarSource) {
+            this.scalarSource = Objects.requireNonNull(scalarSource);
             return this;
         }
 
@@ -157,6 +163,8 @@ public interface MappingProcessorSource {
                 }
             }
 
+            ScalarSource scalarSource = this.scalarSource;
+
             if (signaturePreferences != null) {
                 for (Entry<Class<?>, SignatureBuilder> preference : signaturePreferences) {
                     signatureBuilderSelector.registerSignaturePreference(preference.getFirst(), preference.getSecond());
@@ -166,7 +174,7 @@ public interface MappingProcessorSource {
             return new MappingProcessorSource() {
                 @Override
                 public @NotNull <T> ConfigProcessor<T> processorFor(@NotNull Token<T> token) {
-                    return new MappingConfigProcessor<>(token, source, hinter, resolver);
+                    return new MappingConfigProcessor<>(token, source, hinter, resolver, scalarSource);
                 }
             };
         }

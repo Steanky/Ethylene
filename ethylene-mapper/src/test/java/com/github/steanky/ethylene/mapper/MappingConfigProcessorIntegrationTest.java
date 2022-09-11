@@ -25,6 +25,7 @@ class MappingConfigProcessorIntegrationTest {
     private final TypeHinter typeHinter;
     private final BasicTypeResolver typeResolver;
     private final BasicSignatureMatcherSource source;
+    private final ScalarSource scalarSource = BasicScalarSource.INSTANCE;
 
     private final MappingConfigProcessor<List<String>> stringListProcessor;
     private final MappingConfigProcessor<List<Object>> objectListProcessor;
@@ -84,13 +85,13 @@ class MappingConfigProcessorIntegrationTest {
         source = new BasicSignatureMatcherSource(typeHinter,
                 new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
 
-        this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
-        this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
-        this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
-        this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
-        this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
-        this.customNamedClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
-        this.objectProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver);
+        this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
+        this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
+        this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
+        this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
+        this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
+        this.customNamedClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
+        this.objectProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
     }
 
     @Nested
@@ -203,7 +204,7 @@ class MappingConfigProcessorIntegrationTest {
             source.registerCustomSignature(mapEntry);
 
             ConfigProcessor<Map<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {},
-                    source, typeHinter, typeResolver);
+                    source, typeHinter, typeResolver, scalarSource);
 
             ConfigList map = ConfigList.of(ConfigNode.of("key", 0, "value", "first"),
                     ConfigNode.of("key", 1, "value", "second"));
@@ -229,7 +230,7 @@ class MappingConfigProcessorIntegrationTest {
             source.registerCustomSignature(mapEntry);
 
             ConfigProcessor<Map.Entry<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {},
-                    source, typeHinter, typeResolver);
+                    source, typeHinter, typeResolver, scalarSource);
 
             ConfigNode node = ConfigNode.of("key", 10, "value", "string_value");
             Map.Entry<Integer, String> entry = processor.dataFromElement(node);
@@ -247,7 +248,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void recordBuilder() throws ConfigProcessException {
             ConfigProcessor<SimpleRecord> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
-                    typeHinter, typeResolver);
+                    typeHinter, typeResolver, scalarSource);
 
             ConfigNode dataNode = ConfigNode.of("stringList", ConfigList.of("a", "b", "c"),
                     "value", true);
@@ -259,7 +260,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void accessWidenedFieldConstructor() throws ConfigProcessException {
             ConfigProcessor<AccessWidenedFieldClass> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
-                    typeHinter, typeResolver);
+                    typeHinter, typeResolver, scalarSource);
 
             ConfigNode dataNode = ConfigNode.of("string", "value", "bool", true, "selfReference", null);
             AccessWidenedFieldClass obj = processor.dataFromElement(dataNode);
@@ -271,7 +272,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void selfReferentialAccessWidenedFieldConstructor() throws ConfigProcessException {
             ConfigProcessor<AccessWidenedFieldClass> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
-                    typeHinter, typeResolver);
+                    typeHinter, typeResolver, scalarSource);
 
             ConfigNode dataNode = ConfigNode.of("string", "value", "bool", true);
             dataNode.put("selfReference", dataNode);

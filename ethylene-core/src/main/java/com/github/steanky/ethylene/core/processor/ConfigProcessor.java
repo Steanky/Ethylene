@@ -279,7 +279,7 @@ public interface ConfigProcessor<TData> {
      * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects
      */
     default <M extends Map<String, TData>> @NotNull ConfigProcessor<M> mapProcessor(
-            @NotNull IntFunction<M> mapFunction) {
+            @NotNull IntFunction<? extends M> mapFunction) {
         Objects.requireNonNull(mapFunction, "mapFunction");
 
         return new ConfigProcessor<>() {

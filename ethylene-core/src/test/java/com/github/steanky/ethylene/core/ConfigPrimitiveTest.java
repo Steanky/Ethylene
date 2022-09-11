@@ -74,20 +74,4 @@ class ConfigPrimitiveTest {
         assertThrows(IllegalStateException.class, string::asList);
         assertThrows(IllegalStateException.class, string::asNode);
     }
-
-    @Test
-    void setObjectChangesType() {
-        ConfigPrimitive string = new ConfigPrimitive("this is a string");
-        string.setObject(null);
-
-        assertTrue(string.isNull());
-
-        assertSame(null, string.asScalar());
-
-        assertThrows(IllegalStateException.class, string::asString);
-        assertThrows(IllegalStateException.class, string::asBoolean);
-        assertThrows(IllegalStateException.class, string::asNumber);
-        assertThrows(IllegalStateException.class, string::asList);
-        assertThrows(IllegalStateException.class, string::asNode);
-    }
 }

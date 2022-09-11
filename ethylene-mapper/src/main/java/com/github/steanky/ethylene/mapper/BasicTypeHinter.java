@@ -11,6 +11,10 @@ import java.util.Collection;
 import java.util.Map;
 
 public class BasicTypeHinter implements TypeHinter {
+    public static final TypeHinter INSTANCE = new BasicTypeHinter();
+
+    protected BasicTypeHinter() {}
+
     @Override
     public @NotNull ElementType getHint(@NotNull Type type) {
         if (TypeUtils.isAssignable(type, Map.class) || TypeUtils.isAssignable(type, Collection.class) ||

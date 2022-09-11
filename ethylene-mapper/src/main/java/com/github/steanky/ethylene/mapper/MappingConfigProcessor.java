@@ -25,13 +25,15 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final SignatureMatcher.Source signatureMatcherSource;
     private final TypeHinter typeHinter;
     private final TypeResolver typeResolver;
+    private final ScalarSource scalarSource;
 
     public MappingConfigProcessor(@NotNull Token<T> token, @NotNull SignatureMatcher.Source signatureMatcherSource,
-            @NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver) {
+            @NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver, @NotNull ScalarSource scalarSource) {
         this.token = Objects.requireNonNull(token);
         this.signatureMatcherSource = Objects.requireNonNull(signatureMatcherSource);
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.typeResolver = Objects.requireNonNull(typeResolver);
+        this.scalarSource = Objects.requireNonNull(scalarSource);
     }
 
     @SuppressWarnings("unchecked")
@@ -155,7 +157,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         return potentialContainer.object != null && typeHinter.getHint(potentialContainer.object
                                 .getClass()) != ElementType.SCALAR;
                     },
-                    scalar -> new MutableObject<>(new ConfigPrimitive(scalar.object)),
+                    scalar -> new MutableObject<>(scalarSource.make(scalar.object)),
                     entry -> entry.object).getValue();
         }
         catch (Exception e) {
