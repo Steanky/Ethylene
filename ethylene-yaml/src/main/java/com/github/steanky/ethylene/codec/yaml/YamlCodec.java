@@ -20,15 +20,15 @@ import java.util.function.Supplier;
  * Provides support for the YAML format.
  */
 public class YamlCodec extends AbstractConfigCodec {
-    private static final Set<String> EXTENSIONS = Set.of("yaml", "yml");
+    private static final String PREFERRED_EXTENSION = "yml";
+    private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION, "yaml");
 
     private final Supplier<Load> loadSupplier;
     private final Supplier<Dump> dumpSupplier;
 
     /**
      * <p>Creates a new YamlCodec that will use the given {@link Supplier} objects to produce {@link Load} and
-     * {@link Dump}
-     * objects (used to read and write YAML, respectively).</p>
+     * {@link Dump} objects (used to read and write YAML, respectively).</p>
      *
      * <p>Note that users should ensure the suppliers always return new objects, as each Load and Dump instance may
      * only be used to read or write once.</p>
@@ -86,5 +86,10 @@ public class YamlCodec extends AbstractConfigCodec {
     @Override
     public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
+    }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return PREFERRED_EXTENSION;
     }
 }

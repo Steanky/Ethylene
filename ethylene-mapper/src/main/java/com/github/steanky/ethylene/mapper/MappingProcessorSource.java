@@ -1,34 +1,30 @@
 package com.github.steanky.ethylene.mapper;
 
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.signature.BasicSignatureBuilderSelector;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
-import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 public interface MappingProcessorSource {
-    <TData> @NotNull ConfigProcessor<TData> processorFor(@NotNull Token<TData> token);
-
     static Builder builder() {
         return new Builder();
     }
 
+    <TData> @NotNull ConfigProcessor<TData> processorFor(@NotNull Token<TData> token);
+
     class Builder {
         @SuppressWarnings("rawtypes")
-        private static final Signature MAP_ENTRY_SIGNATURE =
-                Signature.builder(new Token<Map.Entry>() {}, (entry, objects) ->
-                        Map.entry(objects[0], objects[1]), (entry) ->
-                        List.of(Signature.type("key", Token.OBJECT, entry.getKey()),
-                                Signature.type("value", Token.OBJECT, entry.getValue())),
-                                Entry.of("key", Token.OBJECT), Entry.of("value", Token.OBJECT))
-                .matchingTypeHints()
-                .matchingNames()
-                .build();
+        private static final Signature MAP_ENTRY_SIGNATURE = Signature.builder(new Token<Map.Entry>() {},
+                (entry, objects) -> Map.entry(objects[0], objects[1]),
+                (entry) -> List.of(Signature.type("key", Token.OBJECT, entry.getKey()),
+                        Signature.type("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
+                Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
 
         private SignatureMatcher.Source signatureMatcherSource;
         private TypeHinter typeHinter = BasicTypeHinter.INSTANCE;

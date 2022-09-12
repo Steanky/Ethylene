@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.core.bridge;
 
-import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigCodec;
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.core.util.FutureUtils;
@@ -62,24 +62,24 @@ public final class Configuration {
     }
 
     /**
-     * <p>Produces a ConfigBridge implementation which will use input/output streams generated from the provided
+     * <p>Produces a ConfigSource implementation which will use input/output streams generated from the provided
      * {@link Callable}s, using the provided {@link ConfigCodec} to read/write to these streams. Each Callable will be
      * invoked once per read/write attempt, and the returned stream will be closed after the operation completes.</p>
      *
      * <p>If either Callable throws an {@link IOException} when it is called (by an invocation to
-     * {@link ConfigSource#read()} or {@link ConfigSource#write(ConfigElement)} on the returned ConfigBridge), it will
+     * {@link ConfigSource#read()} or {@link ConfigSource#write(ConfigElement)} on the returned ConfigSource), it will
      * be rethrown when {@link Future#get()} is called. If the exception thrown is any other type, a new IOException
      * instance will be created with the actual exception set as the cause, then thrown.</p>
      *
-     * <p>The produced ConfigBridge instance is synchronous.</p>
+     * <p>The produced ConfigSource instance is synchronous.</p>
      *
      * @param inputCallable  the callable which produces {@link InputStream} instances for reading
      * @param outputCallable the callable which produces {@link OutputStream} instances for writing
      * @param codec          the codec used to encode/decode from the streams
-     * @return a ConfigBridge implementation which reads/writes from the given input/output streams
+     * @return a ConfigSource implementation which reads/writes from the given input/output streams
      * @throws NullPointerException if any of the arguments are null
      */
-    public static @NotNull ConfigSource fromStreams(@NotNull Callable<InputStream> inputCallable,
+    public static @NotNull ConfigSource sourceFromStreams(@NotNull Callable<InputStream> inputCallable,
             @NotNull Callable<OutputStream> outputCallable, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(inputCallable);
         Objects.requireNonNull(outputCallable);
@@ -89,18 +89,18 @@ public final class Configuration {
     }
 
     /**
-     * <p>Produces a ConfigBridge implementation capable of reading and writing to the given file path.</p>
+     * <p>Produces a ConfigSource implementation capable of reading and writing to the given file path.</p>
      *
      * <p>If the file is invalid or cannot be read from, {@link IOException}s will be thrown when attempts are made to
-     * read objects from the ConfigBridge.</p>
+     * read objects from the ConfigSource.</p>
      *
      * @param path  a path pointing to the file read from and written to
      * @param codec the codec used to read/write from this file
-     * @return a ConfigBridge implementation which can read/write {@link ConfigElement} objects from and to the given
+     * @return a ConfigSource implementation which can read/write {@link ConfigElement} objects from and to the given
      * file
      * @throws NullPointerException if any of the arguments are null
      */
-    public static @NotNull ConfigSource fromPath(@NotNull Path path, @NotNull ConfigCodec codec) {
+    public static @NotNull ConfigSource sourceFromPath(@NotNull Path path, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
 
@@ -109,8 +109,8 @@ public final class Configuration {
 
     /**
      * Utility method to read a {@link ConfigElement} from an {@link InputStream}, using the given {@link ConfigCodec}
-     * for decoding. This method uses {@link Configuration#fromStreams(Callable, Callable, ConfigCodec)} to produce a
-     * ConfigBridge implementation that is immediately read from.
+     * for decoding. This method uses {@link Configuration#sourceFromStreams(Callable, Callable, ConfigCodec)} to
+     * produce a ConfigSource implementation that is immediately read from.
      *
      * @param inputStream the InputStream to read from
      * @param codec       the ConfigCodec which will be used to decode the input data

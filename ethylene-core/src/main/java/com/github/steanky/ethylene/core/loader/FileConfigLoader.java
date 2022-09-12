@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.core.loader;
 
-import com.github.steanky.ethylene.core.bridge.ConfigSource;
 import com.github.steanky.ethylene.core.ConfigCodec;
+import com.github.steanky.ethylene.core.bridge.ConfigSource;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
      * @param processor   the processor used to marshal data
      * @param defaultData the default data object
      * @param path        the path to read data from and write defaults to
-     * @param bridge      the ConfigBridge used to read/write data
+     * @param bridge      the ConfigSource used to read/write data
      * @throws IllegalArgumentException if path represents a directory
      */
     FileConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,

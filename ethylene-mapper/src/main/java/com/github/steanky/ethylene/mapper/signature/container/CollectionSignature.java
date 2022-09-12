@@ -4,7 +4,6 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,8 +31,7 @@ public class CollectionSignature extends ContainerSignatureBase {
             }
 
             parameterless = true;
-        }
-        else {
+        } else {
             parameterless = false;
         }
 
@@ -73,7 +71,7 @@ public class CollectionSignature extends ContainerSignatureBase {
 
     @Override
     public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-        if(!element.isContainer()) {
+        if (!element.isContainer()) {
             throw new MapperException("expected container");
         }
 

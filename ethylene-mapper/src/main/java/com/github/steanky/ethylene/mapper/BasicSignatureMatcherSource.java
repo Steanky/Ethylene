@@ -26,7 +26,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     private final Map<Type, SignatureMatcher> signatureCache;
     private final Map<Class<?>, Set<Signature>> customSignatures;
 
-    public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter, @NotNull SignatureBuilder.Selector signatureSelector) {
+    public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter,
+            @NotNull SignatureBuilder.Selector signatureSelector) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.signatureSelector = Objects.requireNonNull(signatureSelector);
 
@@ -49,33 +50,32 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
             return switch (typeHinter.getHint(type)) {
                 case LIST -> {
                     if (TypeUtils.isArrayType(type)) {
-                        Signature[] arraySignature =
-                                new Signature[] { new ArraySignature(TypeUtils.getArrayComponentType(type)) };
+                        Signature[] arraySignature = new Signature[] {
+                                new ArraySignature(TypeUtils.getArrayComponentType(type))};
                         yield new BasicSignatureMatcher(arraySignature, typeHinter);
-                    }
-                    else {
+                    } else {
                         if (Collection.class.isAssignableFrom(raw)) {
                             Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Collection.class);
-                            Signature[] collectionSignature = new Signature[] { new CollectionSignature(types[0], type) };
+                            Signature[] collectionSignature = new Signature[] {new CollectionSignature(types[0], type)};
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
-                        }
-                        else if (Map.class.isAssignableFrom(raw)) {
+                        } else if (Map.class.isAssignableFrom(raw)) {
                             Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Map.class);
-                            Signature[] mapSignature = new Signature[] { new MapSignature(types[0], types[1], type) };
+                            Signature[] mapSignature = new Signature[] {new MapSignature(types[0], types[1], type)};
                             yield new BasicSignatureMatcher(mapSignature, typeHinter);
                         }
                     }
 
                     throw new MapperException("unexpected container-like type '" + type.getTypeName() + "'");
                 }
-                case NODE -> new BasicSignatureMatcher(signatureSelector.select(type).buildSignatures(type), typeHinter);
+                case NODE ->
+                        new BasicSignatureMatcher(signatureSelector.select(type).buildSignatures(type), typeHinter);
                 case SCALAR -> null;
             };
         });
     }
 
     public void registerCustomSignature(@NotNull Signature signature) {
-        customSignatures.computeIfAbsent(ReflectionUtils.rawType(signature.returnType()), ignored ->
-                new HashSet<>(2)).add(signature);
+        customSignatures.computeIfAbsent(ReflectionUtils.rawType(signature.returnType()), ignored -> new HashSet<>(2))
+                .add(signature);
     }
 }

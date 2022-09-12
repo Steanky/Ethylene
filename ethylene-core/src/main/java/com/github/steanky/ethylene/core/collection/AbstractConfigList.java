@@ -7,13 +7,11 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 import java.util.function.IntFunction;
-import java.util.function.Predicate;
 
 /**
  * <p>Contains functionality and methods common to many {@link ConfigList} implementations. This abstract class does
- * not
- * define any abstract methods. Its main use is to enable concrete implementations to specify what kind of backing list
- * should be used.</p>
+ * not define any abstract methods. Its main use is to enable concrete implementations to specify what kind of backing
+ * list should be used.</p>
  *
  * <p>Subclasses must take care to ensure that the list used to construct this object does not contain null elements at
  * any point. Therefore, the backing list should not be exposed anywhere where it may be accidentally used. See
@@ -44,11 +42,11 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      * This helper method can be used to construct a list with the same elements as a collection. If the collection
      * contains any null values, a {@link NullPointerException} will be thrown.
      *
-     * @param collection     the collection whose elements will be added to the new list
-     * @param listSupplier   the supplier used to create the new list from the size of the original collection
+     * @param collection   the collection whose elements will be added to the new list
+     * @param listSupplier the supplier used to create the new list from the size of the original collection
      * @return a list, constructed by the supplier, and containing the same elements as collection
-     * @throws NullPointerException     if any of the arguments are null, collection contains any null elements, or
-     *                                  listSupplier returns null
+     * @throws NullPointerException if any of the arguments are null, collection contains any null elements, or
+     *                              listSupplier returns null
      */
     protected static @NotNull List<ConfigElement> constructList(@NotNull Collection<? extends ConfigElement> collection,
             @NotNull IntFunction<? extends List<ConfigElement>> listSupplier) {
@@ -129,7 +127,7 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        return Objects.requireNonNullElseGet(elementCollection, () -> elementCollection  = new AbstractCollection<>() {
+        return Objects.requireNonNullElseGet(elementCollection, () -> elementCollection = new AbstractCollection<>() {
             @Override
             public Iterator<ConfigElement> iterator() {
                 return new Iterator<>() {

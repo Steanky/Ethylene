@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.RandomAccess;
-import java.util.function.Predicate;
 
 /**
  * An implementation of {@link ConfigList} based off of {@link ArrayList}, with similar performance and other
@@ -23,8 +22,8 @@ public class ArrayConfigList extends AbstractConfigList implements RandomAccess 
     /**
      * Constructs a new ArrayConfigList backed an {@link ArrayList} containing the same elements as the provided
      * {@link Collection}. This builder uses
-     * {@link AbstractConfigList#constructList(Collection, java.util.function.IntFunction)} to validate that
-     * the list has no null elements.
+     * {@link AbstractConfigList#constructList(Collection, java.util.function.IntFunction)} to validate that the list
+     * has no null elements.
      *
      * @param collection the collection to copy elements from
      */

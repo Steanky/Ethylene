@@ -92,11 +92,11 @@ configuration data.
 To read some configuration data from a source (let's say a file, `/tmp/config.json`), you can do something like this:
 
 ```java
-ConfigNode node = ConfigBridges.read(new File("/tmp/config.json"), new JsonCodec()).asNode();
+ConfigNode node = Configuration.read(new File("/tmp/config.json"), new JsonCodec()).asNode();
 ```
 
 The `node` object will contain the data stored in the file we just read from. Ethylene knew how to interpret that data
-because the codec we supplied, `JsonCodec`, is designed for that purpose. If the file contained some other kind of
+because the codec we supplied, `JsonCodec`, is designed to interpret JSON. If the file contained some other kind of
 format — say, YAML — you'd want to use a `YamlCodec` instance from the `ethylene-yaml` module.
 
 Now, let's assume that our file contains the following json:
@@ -115,7 +115,7 @@ Now, let's assume that our file contains the following json:
 In order to access the value associated with `string`, we can do the following:
 
 ```java
-String string = node.get("string").asString();
+String string=node.get("string").asString();
 ```
 
 `string`, as expected, will be equal to "This is a string!"
@@ -124,36 +124,36 @@ Here are some of the other ways you can access data:
 
 ```java
 //number == 100
-int number = node.get("number").asNumber().intValue();
+int number=node.get("number").asNumber().intValue();
 
-//nested objects, like developer, are themselves ConfigNode objects
-ConfigNode developer = node.get("developer").asNode();
+        //nested objects, like developer, are themselves ConfigNode objects
+        ConfigNode developer=node.get("developer").asNode();
 
-//name.equals("Steanky")
-String name = developer.get("name");
+        //name.equals("Steanky")
+        String name=developer.get("name");
 
-//support for lists
-ConfigList list = developer.get("repositories").asList();
+        //support for lists
+        ConfigList list=developer.get("repositories").asList();
 
-//repository.equals("Polymer")
-String repository = list.get(1).asString();
+        //repository.equals("Polymer")
+        String repository=list.get(1).asString();
 
-//you can also directly access nested elements using getElement and providing a "path array" representing member names:
-//name.equals("Steanky")
-String name = node.getElement("developer", "name").asString();
+        //you can also directly access nested elements using getElement and providing a "path array" representing member names:
+        //name.equals("Steanky")
+        String name=node.getElement("developer","name").asString();
 
-//you can freely mix string keys and indices to access elements in lists using a path array:
-//polymer.equals("Polymer")
-String polymer = node.getElement("developer", "repositories", 1).asString();
+        //you can freely mix string keys and indices to access elements in lists using a path array:
+        //polymer.equals("Polymer")
+        String polymer=node.getElement("developer","repositories",1).asString();
 
-//ConfigNode and ConfigList objects are fully integrated into Java's type system. they implement Map<String, ConfigElement> and List<ConfigElement>, respectively:
-Map<String, ConfigElement> exampleMap = developer;
-List<ConfigElement> exampleList = list;
+        //ConfigNode and ConfigList objects are fully integrated into Java's type system. they implement Map<String, ConfigElement> and List<ConfigElement>, respectively:
+        Map<String, ConfigElement> exampleMap=developer;
+        List<ConfigElement> exampleList=list;
 
-//they're also mutable:
-list.remove(0); //removes "Ethylene"
-developer.put("age", new ConfigPrimitive(69)); //adds an age field
-developer.clear(); //clears all entries from developer
+        //they're also mutable:
+        list.remove(0); //removes "Ethylene"
+        developer.put("age",new ConfigPrimitive(69)); //adds an age field
+        developer.clear(); //clears all entries from developer
 ```
 
 For additional examples, check out the `example-project` module.

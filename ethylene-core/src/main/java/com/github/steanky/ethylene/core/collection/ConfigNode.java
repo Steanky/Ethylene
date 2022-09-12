@@ -71,6 +71,11 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
         return this;
     }
 
+    @Override
+    default @NotNull ElementType type() {
+        return ElementType.NODE;
+    }
+
     /**
      * Convenience overload for {@link ConfigNode#put(Object, Object)}. The provided string value will be wrapped in a
      * new {@link ConfigPrimitive} and added to this node.
@@ -113,10 +118,5 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      */
     default void putBoolean(@NotNull String key, boolean value) {
         put(key, new ConfigPrimitive(value));
-    }
-
-    @Override
-    default @NotNull ElementType type() {
-        return ElementType.NODE;
     }
 }

@@ -1,10 +1,10 @@
 package com.github.steanky.ethylene.codec.hjson;
 
+import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
-import com.github.steanky.ethylene.core.AbstractConfigCodec;
-import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.collection.Entry;
 import org.hjson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +19,8 @@ import java.util.Set;
  * Provides support for HJSON.
  */
 public class HjsonCodec extends AbstractConfigCodec {
-    private static final Set<String> EXTENSIONS = Set.of("hjson");
+    private static final String PREFERRED_EXTENSION = "hjson";
+    private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
 
     private final HjsonOptions readOptions;
     private final HjsonOptions writeOptions;
@@ -152,5 +153,10 @@ public class HjsonCodec extends AbstractConfigCodec {
     @Override
     public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
+    }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return PREFERRED_EXTENSION;
     }
 }

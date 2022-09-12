@@ -49,6 +49,11 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
         return this;
     }
 
+    @Override
+    default @NotNull ElementType type() {
+        return ElementType.LIST;
+    }
+
     /**
      * Convenience overload for {@link ConfigList#add(Object)}. The provided string value will be wrapped in a new
      * {@link ConfigPrimitive} and added to this list.
@@ -87,10 +92,5 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
      */
     default void addBoolean(boolean value) {
         add(new ConfigPrimitive(value));
-    }
-
-    @Override
-    default @NotNull ElementType type() {
-        return ElementType.LIST;
     }
 }

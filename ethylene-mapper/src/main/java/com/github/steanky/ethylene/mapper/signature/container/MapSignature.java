@@ -33,8 +33,7 @@ public class MapSignature extends ContainerSignatureBase {
             }
 
             parameterless = true;
-        }
-        else {
+        } else {
             parameterless = false;
         }
 
@@ -73,7 +72,7 @@ public class MapSignature extends ContainerSignatureBase {
 
     @Override
     public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-        if(!element.isContainer()) {
+        if (!element.isContainer()) {
             throw new MapperException("expected container");
         }
 
@@ -97,7 +96,7 @@ public class MapSignature extends ContainerSignatureBase {
     @SuppressWarnings("unchecked")
     private void finishMap(Map<Object, Object> map, Object[] args) {
         for (Object object : args) {
-            Map.Entry<Object, Object> entry = (Map.Entry<Object, Object>)object;
+            Map.Entry<Object, Object> entry = (Map.Entry<Object, Object>) object;
             map.put(entry.getKey(), entry.getValue());
         }
     }
@@ -105,8 +104,8 @@ public class MapSignature extends ContainerSignatureBase {
     @SuppressWarnings("unchecked")
     private Map<Object, Object> getMap(int size) {
         try {
-            return parameterless ? (Map<Object, Object>) constructor.newInstance() : (Map<Object, Object>) constructor
-                    .newInstance(size);
+            return parameterless ? (Map<Object, Object>) constructor.newInstance() :
+                    (Map<Object, Object>) constructor.newInstance(size);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new MapperException(e);
         }

@@ -43,6 +43,11 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
+    public boolean hasBuildingObject() {
+        return true;
+    }
+
+    @Override
     public boolean matchesArgumentNames() {
         return false;
     }
@@ -50,16 +55,6 @@ public abstract class ContainerSignatureBase implements Signature {
     @Override
     public boolean matchesTypeHints() {
         return true;
-    }
-
-    @Override
-    public @NotNull ElementType typeHint() {
-        return ElementType.LIST;
-    }
-
-    @Override
-    public @NotNull Type returnType() {
-        return containerType;
     }
 
     @Override
@@ -72,7 +67,12 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
-    public boolean hasBuildingObject() {
-        return true;
+    public @NotNull ElementType typeHint() {
+        return ElementType.LIST;
+    }
+
+    @Override
+    public @NotNull Type returnType() {
+        return containerType;
     }
 }

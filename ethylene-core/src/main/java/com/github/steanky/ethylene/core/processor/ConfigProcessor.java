@@ -416,11 +416,12 @@ public interface ConfigProcessor<TData> {
     }
 
     /**
-     * Creates a new ConfigProcessor capable of processing optional data. If this ConfigProcessor's {@code
-     * dataFromElement} method returns null, the returned processor's optional will be empty, else it will contain the
-     * value returned from {@code dataFromElement}. Likewise, when calling {@code elementFromData} with the given
-     * optional, if empty, a null-holding {@link ConfigPrimitive} instance will be returned, otherwise, the element
-     * will contain the result of calling {@code elementFromData}.
+     * Creates a new ConfigProcessor capable of processing optional data. If this ConfigProcessor's
+     * {@code dataFromElement} method returns null, the returned processor's optional will be empty, else it will
+     * contain the value returned from {@code dataFromElement}. Likewise, when calling {@code elementFromData} with the
+     * given optional, if empty, a null-holding {@link ConfigPrimitive} instance will be returned, otherwise, the
+     * element will contain the result of calling {@code elementFromData}.
+     *
      * @return a ConfigProcessor capable of processing optional data
      */
     default @NotNull ConfigProcessor<Optional<TData>> optionalProcessor() {

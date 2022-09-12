@@ -7,10 +7,10 @@ import com.electronwill.nightconfig.core.io.WritingException;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import com.electronwill.nightconfig.toml.TomlParser;
 import com.electronwill.nightconfig.toml.TomlWriter;
-import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
-import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.collection.Entry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -26,7 +26,8 @@ import java.util.*;
  * in order to provide proper support for dates.
  */
 public class TomlCodec extends AbstractConfigCodec {
-    private static final Set<String> EXTENSIONS = Set.of("toml");
+    private static final String PREFERRED_EXTENSION = "toml";
+    private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
 
     private final TomlParser parser;
     private final TomlWriter writer;
@@ -122,5 +123,10 @@ public class TomlCodec extends AbstractConfigCodec {
     @Override
     public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
+    }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return PREFERRED_EXTENSION;
     }
 }

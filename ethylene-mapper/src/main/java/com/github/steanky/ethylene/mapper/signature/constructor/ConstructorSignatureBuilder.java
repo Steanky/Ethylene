@@ -1,19 +1,17 @@
 package com.github.steanky.ethylene.mapper.signature.constructor;
 
-import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 
 public class ConstructorSignatureBuilder implements SignatureBuilder {
-    private static final Signature[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
     public static final ConstructorSignatureBuilder INSTANCE = new ConstructorSignatureBuilder();
+    private static final Signature[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
 
     private ConstructorSignatureBuilder() {}
 
@@ -22,7 +20,8 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
         Class<?> rawType = ReflectionUtils.rawType(type);
 
         boolean widenAccess = rawType.isAnnotationPresent(Widen.class);
-        Constructor<?>[] candidateConstructors = widenAccess ? rawType.getDeclaredConstructors() : rawType.getConstructors();
+        Constructor<?>[] candidateConstructors =
+                widenAccess ? rawType.getDeclaredConstructors() : rawType.getConstructors();
         Signature[] signatures = new Signature[candidateConstructors.length];
         int j = 0;
         for (Constructor<?> constructor : candidateConstructors) {

@@ -9,7 +9,6 @@ import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,7 +51,8 @@ public class RecordSignature implements Signature {
             try {
                 typedObjects.add(new TypedObject(recordComponent.getName(), recordComponent.getGenericType(),
                         recordComponent.getAccessor().invoke(object)));
-            } catch (IllegalAccessException | InvocationTargetException ignored) {}
+            } catch (IllegalAccessException | InvocationTargetException ignored) {
+            }
         }
 
         return typedObjects;
@@ -61,6 +61,11 @@ public class RecordSignature implements Signature {
     @Override
     public @NotNull ConfigContainer initContainer(int sizeHint) {
         return new LinkedConfigNode(sizeHint);
+    }
+
+    @Override
+    public boolean hasBuildingObject() {
+        return false;
     }
 
     @Override
@@ -80,11 +85,6 @@ public class RecordSignature implements Signature {
     @Override
     public boolean matchesArgumentNames() {
         return true;
-    }
-
-    @Override
-    public boolean hasBuildingObject() {
-        return false;
     }
 
     @Override
@@ -143,7 +143,7 @@ public class RecordSignature implements Signature {
         return argumentTypes = Collections.unmodifiableCollection(underlyingList);
     }
 
-    private Constructor<?> getConstructor(boolean widenAccess, Class<?> ... types) {
+    private Constructor<?> getConstructor(boolean widenAccess, Class<?>... types) {
         try {
             if (widenAccess) {
                 Constructor<?> constructor = raw.getDeclaredConstructor(types);

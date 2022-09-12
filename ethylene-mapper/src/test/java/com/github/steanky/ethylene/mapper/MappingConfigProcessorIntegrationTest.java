@@ -5,12 +5,12 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.processor.ConfigProcessException;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.annotation.*;
 import com.github.steanky.ethylene.mapper.signature.BasicSignatureBuilderSelector;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.constructor.ConstructorSignatureBuilder;
-import com.github.steanky.ethylene.core.processor.ConfigProcessException;
-import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -34,6 +34,31 @@ class MappingConfigProcessorIntegrationTest {
     private final MappingConfigProcessor<CustomClass> customClassProcessor;
     private final MappingConfigProcessor<CustomNamedClass> customNamedClassProcessor;
     private final MappingConfigProcessor<Object> objectProcessor;
+
+    public MappingConfigProcessorIntegrationTest() {
+        typeHinter = new BasicTypeHinter();
+        typeResolver = new BasicTypeResolver(typeHinter);
+        typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
+        typeResolver.registerTypeImplementation(Set.class, HashSet.class);
+        typeResolver.registerTypeImplementation(Map.class, HashMap.class);
+        source = new BasicSignatureMatcherSource(typeHinter,
+                new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
+
+        this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver,
+                scalarSource);
+        this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver,
+                scalarSource);
+        this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver,
+                scalarSource);
+        this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver,
+                scalarSource);
+        this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver,
+                scalarSource);
+        this.customNamedClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter,
+                typeResolver, scalarSource);
+        this.objectProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver,
+                scalarSource);
+    }
 
     public static class CustomClass {
         private final List<String> strings;
@@ -64,35 +89,16 @@ class MappingConfigProcessorIntegrationTest {
     @Include
     @Builder(Builder.BuilderType.FIELD)
     public static class AccessWidenedFieldClass {
+        @Exclude
+        private final String excludedField = "excluded";
         private String string;
         private boolean bool;
         private AccessWidenedFieldClass selfReference;
-
-        @Exclude
-        private final String excludedField = "excluded";
 
         private AccessWidenedFieldClass() {}
     }
 
     public record SimpleRecord(boolean value, List<String> stringList) {}
-
-    public MappingConfigProcessorIntegrationTest() {
-        typeHinter = new BasicTypeHinter();
-        typeResolver = new BasicTypeResolver(typeHinter);
-        typeResolver.registerTypeImplementation(Collection.class, ArrayList.class);
-        typeResolver.registerTypeImplementation(Set.class, HashSet.class);
-        typeResolver.registerTypeImplementation(Map.class, HashMap.class);
-        source = new BasicSignatureMatcherSource(typeHinter,
-                new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE));
-
-        this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
-        this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
-        this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
-        this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
-        this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
-        this.customNamedClassProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
-        this.objectProcessor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter, typeResolver, scalarSource);
-    }
 
     @Nested
     class Lists {
@@ -101,7 +107,8 @@ class MappingConfigProcessorIntegrationTest {
             List<String> stringList = List.of("a", "b", "c");
             ConfigElement element = stringListProcessor.elementFromData(stringList);
 
-            assertEquals(stringList, element.asList().stream().map(ConfigElement::asString).collect(Collectors.toList()));
+            assertEquals(stringList,
+                    element.asList().stream().map(ConfigElement::asString).collect(Collectors.toList()));
         }
 
         @Test
@@ -112,7 +119,8 @@ class MappingConfigProcessorIntegrationTest {
             stringList.add(null);
 
             ConfigElement element = stringListProcessor.elementFromData(stringList);
-            assertEquals(stringList, element.asList().stream().map(ConfigElement::asScalar).collect(Collectors.toList()));
+            assertEquals(stringList,
+                    element.asList().stream().map(ConfigElement::asScalar).collect(Collectors.toList()));
         }
 
         @Test
@@ -192,19 +200,14 @@ class MappingConfigProcessorIntegrationTest {
         @SuppressWarnings("rawtypes")
         @Test
         void map() throws ConfigProcessException {
-            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) -> {
-                        return Map.entry(objects[0], objects[1]);
-                    }, (entry) -> {
-                        return List.of(Signature.type("key", new Token<>() {}, entry.getKey()), Signature.type("value",
-                                new Token<>() {}, entry.getValue()));
-                    }, Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
-                    .matchingTypeHints()
-                    .matchingNames()
-                    .build();
+            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) ->
+                            Map.entry(objects[0], objects[1]), (entry) -> List.of(Signature.type("key", new Token<>() {}, entry.getKey()),
+                    Signature.type("value", new Token<>() {}, entry.getValue())), Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {})).matchingTypeHints()
+                    .matchingNames().build();
             source.registerCustomSignature(mapEntry);
 
-            ConfigProcessor<Map<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {},
-                    source, typeHinter, typeResolver, scalarSource);
+            ConfigProcessor<Map<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
+                    typeHinter, typeResolver, scalarSource);
 
             ConfigList map = ConfigList.of(ConfigNode.of("key", 0, "value", "first"),
                     ConfigNode.of("key", 1, "value", "second"));
@@ -217,15 +220,9 @@ class MappingConfigProcessorIntegrationTest {
         @SuppressWarnings("rawtypes")
         @Test
         void customSignature() throws ConfigProcessException {
-            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) -> {
-                return Map.entry(objects[0], objects[1]);
-            }, (entry) -> {
-                return List.of(Signature.type("key", new Token<>() {}, entry.getKey()), Signature.type("value",
-                        new Token<>() {}, entry.getValue()));
-            }, Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {}))
-                    .matchingTypeHints()
-                    .matchingNames()
-                    .build();
+            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) -> Map.entry(objects[0], objects[1]), (entry) -> List.of(Signature.type("key", new Token<>() {}, entry.getKey()),
+                    Signature.type("value", new Token<>() {}, entry.getValue())), Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {})).matchingTypeHints()
+                    .matchingNames().build();
 
             source.registerCustomSignature(mapEntry);
 
@@ -247,14 +244,13 @@ class MappingConfigProcessorIntegrationTest {
 
         @Test
         void recordBuilder() throws ConfigProcessException {
-            ConfigProcessor<SimpleRecord> processor = new MappingConfigProcessor<>(new Token<>() {}, source,
-                    typeHinter, typeResolver, scalarSource);
+            ConfigProcessor<SimpleRecord> processor = new MappingConfigProcessor<>(new Token<>() {}, source, typeHinter,
+                    typeResolver, scalarSource);
 
-            ConfigNode dataNode = ConfigNode.of("stringList", ConfigList.of("a", "b", "c"),
-                    "value", true);
+            ConfigNode dataNode = ConfigNode.of("stringList", ConfigList.of("a", "b", "c"), "value", true);
 
             SimpleRecord simpleRecord = processor.dataFromElement(dataNode);
-            assertEquals(new SimpleRecord( true, List.of("a", "b", "c")), simpleRecord);
+            assertEquals(new SimpleRecord(true, List.of("a", "b", "c")), simpleRecord);
         }
 
         @Test
@@ -286,8 +282,8 @@ class MappingConfigProcessorIntegrationTest {
 
         @Test
         void customObject() {
-            ConfigNode node = ConfigNode.of("strings", ConfigList.of("a", "b", "c"), "value", 69,
-                    "intSet", ConfigList.of(1, 2, 3));
+            ConfigNode node = ConfigNode.of("strings", ConfigList.of("a", "b", "c"), "value", 69, "intSet",
+                    ConfigList.of(1, 2, 3));
             CustomClass custom = assertDoesNotThrow(() -> customClassProcessor.dataFromElement(node));
 
             assertEquals(List.of("a", "b", "c"), custom.strings);
@@ -297,8 +293,8 @@ class MappingConfigProcessorIntegrationTest {
 
         @Test
         void customNamedObject() {
-            ConfigNode node = ConfigNode.of("strings", ConfigList.of("a", "b", "c"), "value", 69,
-                    "intSet", ConfigList.of(1, 2, 3));
+            ConfigNode node = ConfigNode.of("strings", ConfigList.of("a", "b", "c"), "value", 69, "intSet",
+                    ConfigList.of(1, 2, 3));
             CustomNamedClass custom = assertDoesNotThrow(() -> customNamedClassProcessor.dataFromElement(node));
 
             assertEquals(List.of("a", "b", "c"), custom.strings);

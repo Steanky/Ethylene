@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.core;
 
-import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -8,7 +7,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -42,12 +40,22 @@ public interface ConfigCodec {
 
     /**
      * <p>Returns a set of strings representing the preferred file extensions for this codec. The set may be empty,
-     * in which case no extension should be preferred. Codecs may report any number of extensions. Users of this
-     * codec are not required to respect its preferred extensions.</p>
+     * in which case no extension should be preferred. Codecs may report any number of extensions. Users of this codec
+     * are not required to respect its preferred extensions when reading or writing to files.</p>
      *
      * <p>Any reported string should be filesystem-agnostic.</p>
      *
      * @return a list of preferred extensions for this codec, without a leading period
      */
     @Unmodifiable @NotNull Set<String> getPreferredExtensions();
+
+    /**
+     * Returns a non-null string representing the single preferred extension that should (but is not required to) be
+     * used when saving configuration data to a file using this codec. If this codec does not report any preferred
+     * extensions, the returned string must be empty. In general, if non-empty, the string reported by this method
+     * should be contained in the set of strings returned by {@link ConfigCodec#getPreferredExtensions()}.
+     *
+     * @return the preferred extension, without any leading period, or an empty string
+     */
+    @NotNull String getPreferredExtension();
 }

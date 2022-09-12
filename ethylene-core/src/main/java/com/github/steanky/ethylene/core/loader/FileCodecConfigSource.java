@@ -1,8 +1,8 @@
 package com.github.steanky.ethylene.core.loader;
 
+import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.bridge.ConfigSource;
-import com.github.steanky.ethylene.core.ConfigCodec;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
@@ -19,7 +19,7 @@ abstract class FileCodecConfigSource implements ConfigSource {
     private final ConfigCodec codec;
 
     /**
-     * Constructs a new FileCodecConfigBridge from the provided {@link Path} and {@link ConfigCodec}.
+     * Constructs a new FileCodecConfigSource from the provided {@link Path} and {@link ConfigCodec}.
      *
      * @param path  the path to use
      * @param codec the codec to use

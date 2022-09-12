@@ -160,6 +160,7 @@ public interface ConfigElement {
 
     /**
      * Returns the type of this ConfigElement.
+     *
      * @return the type of this ConfigElement
      */
     default ElementType type() {

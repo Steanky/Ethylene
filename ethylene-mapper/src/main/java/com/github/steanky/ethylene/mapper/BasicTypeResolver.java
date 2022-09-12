@@ -13,7 +13,10 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.WeakHashMap;
 import java.util.function.Supplier;
 
 public class BasicTypeResolver implements TypeResolver {
@@ -125,8 +128,8 @@ public class BasicTypeResolver implements TypeResolver {
 
         ClassEntry newEntry = new ClassEntry(ClassUtils.getName(implementation), implementation);
         if (types.putIfAbsent(superclass, newEntry) != null) {
-            throw new MapperException("there is already an implementation type registered for class '" + superclass
-                    .getName() + "'");
+            throw new MapperException(
+                    "there is already an implementation type registered for class '" + superclass.getName() + "'");
         }
 
         cache.put(superclass, newEntry);

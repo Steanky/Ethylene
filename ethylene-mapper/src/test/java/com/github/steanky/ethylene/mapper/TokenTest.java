@@ -16,10 +16,6 @@ class TokenTest {
     private static final List<? extends String> upperBoundedGeneric = null;
     private static final List<? super String> lowerBoundedGeneric = null;
 
-    static class Token2<T, Integer> extends Token<T> {
-
-    }
-
     @Test
     void multiTypeParameterSubclassThrows() {
         assertThrows(IllegalStateException.class, () -> new Token2<>() {});
@@ -77,5 +73,9 @@ class TokenTest {
     void parameterlessConstructionThrowsException() {
         //noinspection rawtypes
         assertThrows(IllegalStateException.class, () -> new Token() {});
+    }
+
+    static class Token2<T, Integer> extends Token<T> {
+
     }
 }

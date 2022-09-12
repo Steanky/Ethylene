@@ -21,7 +21,21 @@ import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
 public interface Signature {
-    record TypedObject(@Nullable String name, @NotNull Type type, @NotNull Object value) {}
+    @SafeVarargs
+    static <T> Builder<T> builder(@NotNull Token<T> type,
+            @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
+            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+            @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
+        return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
+    }
+
+    static @NotNull TypedObject type(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
+        return new TypedObject(name, type.get(), value);
+    }
+
+    static @NotNull TypedObject type(@NotNull Token<?> type, @NotNull Object value) {
+        return new TypedObject(null, type.get(), value);
+    }
 
     @NotNull Iterable<Entry<String, Type>> argumentTypes();
 
@@ -53,21 +67,7 @@ public interface Signature {
         return 0;
     }
 
-    @SafeVarargs
-    static <T> Builder<T> builder(@NotNull Token<T> type,
-            @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
-            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
-            @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
-        return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
-    }
-
-    static @NotNull TypedObject type(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
-        return new TypedObject(name, type.get(), value);
-    }
-
-    static @NotNull TypedObject type(@NotNull Token<?> type, @NotNull Object value) {
-        return new TypedObject(null, type.get(), value);
-    }
+    record TypedObject(@Nullable String name, @NotNull Type type, @NotNull Object value) {}
 
     class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ?> constructor;
@@ -139,7 +139,8 @@ public interface Signature {
             return this;
         }
 
-        public @NotNull Builder<T> withContainerFunction(@NotNull IntFunction<? extends ConfigContainer> containerFunction) {
+        public @NotNull Builder<T> withContainerFunction(
+                @NotNull IntFunction<? extends ConfigContainer> containerFunction) {
             this.containerFunction = Objects.requireNonNull(containerFunction);
             return this;
         }
@@ -163,12 +164,22 @@ public interface Signature {
                 @SuppressWarnings("unchecked")
                 @Override
                 public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
-                    return objectSignatureExtractor.apply((T)object);
+                    return objectSignatureExtractor.apply((T) object);
                 }
 
                 @Override
                 public @NotNull ConfigContainer initContainer(int sizeHint) {
                     return containerFunction.apply(sizeHint);
+                }
+
+                @Override
+                public boolean hasBuildingObject() {
+                    return buildingObjectInitializer != null;
+                }
+
+                @Override
+                public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
+                    return buildingObjectInitializer.apply(element);
                 }
 
                 @SuppressWarnings("unchecked")
@@ -209,16 +220,6 @@ public interface Signature {
                 @Override
                 public int priority() {
                     return priority;
-                }
-
-                @Override
-                public boolean hasBuildingObject() {
-                    return buildingObjectInitializer != null;
-                }
-
-                @Override
-                public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-                    return buildingObjectInitializer.apply(element);
                 }
             };
         }

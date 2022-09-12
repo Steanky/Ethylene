@@ -12,6 +12,8 @@ import java.util.Date;
 public class TomlTypeHinter extends BasicTypeHinter {
     public static final TypeHinter INSTANCE = new TomlTypeHinter();
 
+    private TomlTypeHinter() {}
+
     @Override
     public @NotNull ElementType getHint(@NotNull Type type) {
         if (TypeUtils.isAssignable(type, Date.class)) {

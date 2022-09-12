@@ -33,8 +33,7 @@ public class RegistrableCodecResolver implements CodecResolver {
         Set<String> extensions = codec.getPreferredExtensions();
         if (extensions.isEmpty()) {
             codecMap.put("", codec);
-        }
-        else {
+        } else {
             for (String name : extensions) {
                 codecMap.put(name, codec);
             }

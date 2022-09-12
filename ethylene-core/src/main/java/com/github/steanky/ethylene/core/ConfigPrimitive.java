@@ -95,6 +95,11 @@ public final class ConfigPrimitive implements ConfigElement {
     }
 
     @Override
+    public @NotNull ElementType type() {
+        return ElementType.SCALAR;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hashCode(object);
     }
@@ -119,10 +124,5 @@ public final class ConfigPrimitive implements ConfigElement {
     @Override
     public String toString() {
         return Objects.toString(object);
-    }
-
-    @Override
-    public @NotNull ElementType type() {
-        return ElementType.SCALAR;
     }
 }

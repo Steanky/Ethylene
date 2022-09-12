@@ -18,13 +18,12 @@ import java.util.Set;
  * Provides support for the JSON format.
  */
 public class JsonCodec extends AbstractConfigCodec {
-    private static final Set<String> EXTENSIONS = Set.of("json");
-
     /**
      * The default {@link Gson} instance used to read and write data.
      */
     public static final Gson DEFAULT_GSON = new Gson();
-
+    private static final String PREFERRED_EXTENSION = "json";
+    private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
 
     private final Gson gson;
@@ -67,5 +66,10 @@ public class JsonCodec extends AbstractConfigCodec {
     @Override
     public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
+    }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return PREFERRED_EXTENSION;
     }
 }

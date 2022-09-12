@@ -69,8 +69,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                             typeCollection.add(typedObject);
                         }
-                    }
-                    else {
+                    } else {
                         typeCollection = objectData;
                     }
 
@@ -79,8 +78,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                         Iterator<Entry<String, Type>> signatureIterator = signature.argumentTypes().iterator();
 
                         while (typeCollectionIterator.hasNext()) {
-                            if (typeHinter.getHint(typeCollectionIterator.next().type()) != typeHinter
-                                    .getHint(signatureIterator.next().getSecond())) {
+                            if (typeHinter.getHint(typeCollectionIterator.next().type()) !=
+                                    typeHinter.getHint(signatureIterator.next().getSecond())) {
                                 break outer;
                             }
                         }
@@ -131,8 +130,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                         targetCollection.add(element);
                     }
-                }
-                else {
+                } else {
                     targetCollection = elementCollection;
                 }
 

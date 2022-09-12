@@ -7,7 +7,6 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 import java.util.function.IntFunction;
-import java.util.function.Predicate;
 
 /**
  * <p>Contains functionality and methods common to {@link ConfigNode} implementations. This abstract class does not
@@ -26,7 +25,6 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     protected final Map<String, ConfigElement> mappings;
 
     private Collection<ConfigEntry> containerCollection;
-    private Collection<ConfigElement> elementCollection;
 
     /**
      * Construct a new AbstractConfigNode using the provided mappings.
@@ -42,10 +40,10 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      * This helper method can be used to construct a map with the same elements as another map. If the given map
      * contains any null keys or values, a {@link NullPointerException} will be thrown.
      *
-     * @param map            the map whose elements will be added to the returned map
-     * @param mapSupplier    the supplier used to create the new map from the size of the original map
+     * @param map         the map whose elements will be added to the returned map
+     * @param mapSupplier the supplier used to create the new map from the size of the original map
      * @return a new map, constructed by the supplier, and containing the same elements as map
-     * @throws NullPointerException     if any of the arguments are null, or map contains any null keys or values
+     * @throws NullPointerException if any of the arguments are null, or map contains any null keys or values
      */
     protected static @NotNull Map<String, ConfigElement> constructMap(
             @NotNull Map<? extends String, ? extends ConfigElement> map,
@@ -114,8 +112,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
             @Override
             public Iterator<ConfigEntry> iterator() {
                 return new Iterator<>() {
-                    private final Iterator<Entry<String, ConfigElement>> entryIterator = mappings.entrySet()
-                            .iterator();
+                    private final Iterator<Entry<String, ConfigElement>> entryIterator = mappings.entrySet().iterator();
 
                     @Override
                     public boolean hasNext() {
@@ -139,6 +136,6 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        return mappings.values();
+        return Collections.unmodifiableCollection(mappings.values());
     }
 }

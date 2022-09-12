@@ -17,10 +17,9 @@ import java.util.function.Function;
  * @param <TEnum> the type of enum to serialize/deserialize
  */
 class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnum> {
-    private Reference<Class<? extends TEnum>> enumClassReference;
     private final String className;
     private final boolean caseSensitive;
-
+    private Reference<Class<? extends TEnum>> enumClassReference;
     private Function<String, TEnum> lookupFunction;
 
     /**
@@ -54,10 +53,10 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
 
         String elementString = element.asString();
         TEnum result = lookup(elementString);
-        if(result == null) {
+        if (result == null) {
             Class<? extends TEnum> enumClass = getEnumClass();
-            throw new ConfigProcessException("No enum constant named '" + elementString + "' in " + enumClass
-                    .getTypeName());
+            throw new ConfigProcessException(
+                    "No enum constant named '" + elementString + "' in " + enumClass.getTypeName());
         }
 
         return result;

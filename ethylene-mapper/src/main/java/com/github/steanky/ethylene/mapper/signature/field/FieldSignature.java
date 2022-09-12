@@ -84,12 +84,10 @@ public class FieldSignature implements Signature {
                     //exclude fields by default, require @Include annotation
                     continue;
                 }
-            }
-            else if (field.isAnnotationPresent(Exclude.class)) {
+            } else if (field.isAnnotationPresent(Exclude.class)) {
                 //include fields by default, require @Exclude
                 continue;
-            }
-            else if (!widenAccess && (!Modifier.isPublic(modifiers) || Modifier.isFinal(modifiers))) {
+            } else if (!widenAccess && (!Modifier.isPublic(modifiers) || Modifier.isFinal(modifiers))) {
                 //if not widening access:
                 //if neither Include nor Exclude is present, assign only public non-final variables
                 //if widening access: try to widen everything by default
@@ -142,8 +140,8 @@ public class FieldSignature implements Signature {
 
             try {
                 typedObjects.add(new TypedObject(name, field.getGenericType(), FieldUtils.readField(field, object)));
+            } catch (IllegalAccessException ignored) {
             }
-            catch (IllegalAccessException ignored) {}
         }
 
         return typedObjects;
@@ -152,6 +150,16 @@ public class FieldSignature implements Signature {
     @Override
     public @NotNull ConfigContainer initContainer(int sizeHint) {
         return new LinkedConfigNode(sizeHint);
+    }
+
+    @Override
+    public boolean hasBuildingObject() {
+        return true;
+    }
+
+    @Override
+    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
+        return getBuildingObject();
     }
 
     @Override
@@ -168,12 +176,6 @@ public class FieldSignature implements Signature {
             return object;
         } catch (IllegalAccessException e) {
             throw new MapperException(e);
-        }
-    }
-
-    private void finishObject(Object buildingObject, Object[] args) throws IllegalAccessException {
-        for (int i = 0; i < args.length; i++) {
-            participatingFields.get(i).set(buildingObject, args[i]);
         }
     }
 
@@ -202,14 +204,10 @@ public class FieldSignature implements Signature {
         return type;
     }
 
-    @Override
-    public boolean hasBuildingObject() {
-        return true;
-    }
-
-    @Override
-    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-        return getBuildingObject();
+    private void finishObject(Object buildingObject, Object[] args) throws IllegalAccessException {
+        for (int i = 0; i < args.length; i++) {
+            participatingFields.get(i).set(buildingObject, args[i]);
+        }
     }
 
     private Object getBuildingObject() {

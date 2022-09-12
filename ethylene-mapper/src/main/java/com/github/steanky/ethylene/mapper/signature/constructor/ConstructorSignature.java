@@ -34,6 +34,12 @@ public class ConstructorSignature implements Signature {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
     }
 
+    private static Entry<String, Type> makeEntry(Parameter parameter, boolean parameterHasName) {
+        Name parameterName = parameter.getAnnotation(Name.class);
+        return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
+                parameter.getParameterizedType());
+    }
+
     @Override
     public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
         return initTypeCollection();
@@ -58,8 +64,7 @@ public class ConstructorSignature implements Signature {
                 if (field == null) {
                     break;
                 }
-            }
-            else {
+            } else {
                 if (i == fields.length) {
                     break;
                 }
@@ -139,8 +144,7 @@ public class ConstructorSignature implements Signature {
             for (Field field : fields) {
                 namedFields.put(ReflectionUtils.getFieldName(field), field);
             }
-        }
-        else {
+        } else {
             Arrays.sort(fields, Comparator.comparing(field -> {
                 Order order = field.getAnnotation(Order.class);
                 if (order != null) {
@@ -193,11 +197,5 @@ public class ConstructorSignature implements Signature {
         }
 
         return types = Collections.unmodifiableCollection(entryList);
-    }
-
-    private static Entry<String, Type> makeEntry(Parameter parameter, boolean parameterHasName) {
-        Name parameterName = parameter.getAnnotation(Name.class);
-        return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
-                parameter.getParameterizedType());
     }
 }
