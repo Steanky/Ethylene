@@ -78,9 +78,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                     return Entry.of(next.getKey().toString(), next.getValue());
                 }
             }, makeDecodeMap(map.size()));
-        } else if (target instanceof List<?> list) {
+        } else if (target instanceof Collection<?> collection) {
             return new GraphTransformer.Node<>(new Iterator<>() {
-                private final Iterator<?> backing = list.iterator();
+                private final Iterator<?> backing = collection.iterator();
 
                 @Override
                 public boolean hasNext() {
@@ -91,7 +91,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 public Entry<String, Object> next() {
                     return Entry.of(null, backing.next());
                 }
-            }, makeDecodeCollection(list.size()));
+            }, makeDecodeCollection(collection.size()));
         } else if (target.getClass().isArray()) {
             Object[] array = (Object[]) target;
 

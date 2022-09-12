@@ -15,18 +15,18 @@ public class RegistrableCodecResolver implements CodecResolver {
     }
 
     @Override
-    public @NotNull ConfigCodec resolve(@NotNull String name) {
-        ConfigCodec codec = codecMap.get(name);
+    public @NotNull ConfigCodec resolve(@NotNull String extension) {
+        ConfigCodec codec = codecMap.get(extension);
         if (codec == null) {
-            throw new IllegalArgumentException("unregistered codec named " + name);
+            throw new IllegalArgumentException("unregistered codec with extension " + extension);
         }
 
         return codec;
     }
 
     @Override
-    public boolean hasCodec(@NotNull String name) {
-        return codecMap.containsKey(name);
+    public boolean hasCodec(@NotNull String extension) {
+        return codecMap.containsKey(extension);
     }
 
     public void registerCodec(@NotNull ConfigCodec codec) {
@@ -34,8 +34,8 @@ public class RegistrableCodecResolver implements CodecResolver {
         if (extensions.isEmpty()) {
             codecMap.put("", codec);
         } else {
-            for (String name : extensions) {
-                codecMap.put(name, codec);
+            for (String extension : extensions) {
+                codecMap.put(extension, codec);
             }
         }
     }

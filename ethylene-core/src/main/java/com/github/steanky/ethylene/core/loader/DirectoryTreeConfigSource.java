@@ -160,9 +160,14 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                             String name = Objects.requireNonNull(entry.getFirst());
                             ConfigElement configElement = entry.getSecond();
 
+                            if (!configElement.isNode()) {
+                                continue;
+                            }
+
                             Path dirPath = normalizedPath.resolve(name);
                             if (!existingPaths.contains(dirPath)) {
-                                paths.add(new PathInfo(normalizedPath.resolve(name + preferredExtension), configElement));
+                                paths.add(new PathInfo(normalizedPath.resolve(name + preferredExtension),
+                                        configElement));
                                 continue;
                             }
 
@@ -183,23 +188,22 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                                 return Entry.of(null, new OutputEntry(pathInfo.path, pathInfo.element));
                             }
                         });
-                    }, potentialContainer -> Files.isDirectory(potentialContainer.path) && potentialContainer.element
-                            .isNode(),
+                    }, potentialContainer -> Files.isDirectory(potentialContainer.path) && potentialContainer
+                            .element.isNode(),
                     scalar -> {
+                        //actually write the data to a specific file
                         exceptionHolder.call(() -> {
                             ConfigCodec codec;
-                            if (Files.exists(scalar.path) && !Files.isDirectory(scalar.path)) {
-                                String extension = extensionExtractor.getExtension(scalar.path);
-                                if (codecResolver.hasCodec(extension)) {
-                                    codec = codecResolver.resolve(extension);
-                                } else {
-                                    codec = defaultCodec;
-                                }
+
+                            String extension = extensionExtractor.getExtension(scalar.path);
+                            if (codecResolver.hasCodec(extension)) {
+                                codec = codecResolver.resolve(extension);
                             } else {
                                 codec = defaultCodec;
                             }
 
-
+                            Path parent = scalar.path.getParent();
+                            Files.createDirectories(parent);
                             Configuration.write(scalar.path, scalar.element, codec);
                         });
 

@@ -12,7 +12,7 @@ public class ExceptionHolder<TErr extends Throwable> {
         this.exception = null;
     }
 
-    public void setOrSuppress(TErr throwable) {
+    public void setOrSuppress(@NotNull TErr throwable) {
         if (exception == null) {
             exception = throwable;
         }
