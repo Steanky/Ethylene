@@ -41,9 +41,7 @@ public class BasicTypeHinter implements TypeHinter {
                 }
 
                 //if toType is a superclass of Collection, returns true
-                //match raw types, NOT generics: without calling getRawType, we would always yield false for any
-                //parameterized toType
-                yield TypeUtils.isAssignable(Collection.class, TypeUtils.getRawType(toType, null));
+                yield TypeUtils.isAssignable(Collection.class, toType);
             }
             case SCALAR -> {
                 Object scalar = element.asScalar();
@@ -53,7 +51,7 @@ public class BasicTypeHinter implements TypeHinter {
                 }
 
                 //simple assignability check
-                yield TypeUtils.isAssignable(scalar.getClass(), TypeUtils.getRawType(toType, null));
+                yield TypeUtils.isAssignable(scalar.getClass(), toType);
             }
         };
     }

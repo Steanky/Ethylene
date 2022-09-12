@@ -53,7 +53,8 @@ public interface ConfigCodec {
      * Returns a non-null string representing the single preferred extension that should (but is not required to) be
      * used when saving configuration data to a file using this codec. If this codec does not report any preferred
      * extensions, the returned string must be empty. In general, if non-empty, the string reported by this method
-     * should be contained in the set of strings returned by {@link ConfigCodec#getPreferredExtensions()}.
+     * should be contained in the set of strings returned by {@link ConfigCodec#getPreferredExtensions()}. Conversely,
+     * if {@link ConfigCodec#getPreferredExtensions()} is empty, this string should be non-empty, and vice-versa.
      *
      * @return the preferred extension, without any leading period, or an empty string
      */

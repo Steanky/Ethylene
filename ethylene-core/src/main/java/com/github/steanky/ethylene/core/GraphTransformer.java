@@ -40,7 +40,7 @@ public final class GraphTransformer {
 
         Node<TIn, TOut, TKey> rootNode = nodeFunction.apply(rootInput);
 
-        //can't iterate an empty node, so just return null
+        //can't iterate an empty node, so just return its data immediately
         if (isEmpty(rootNode)) {
             return rootNode.output.data;
         }
@@ -70,8 +70,8 @@ public final class GraphTransformer {
                 //check containsKey, null values are allowed in the map
                 if (visited.containsKey(visit)) {
                     //already-visited references are immediately added to the accumulator
-                    //if these references are nodes, they might not have been visited already
-                    //it might not even be possible to ensure that they are visited, in the case of circular references
+                    //if these references are nodes, their output might not have been fully constructed yet
+                    //it might not even be possible to ensure that it is constructed, in the case of circular references
                     //therefore, immediately add them to the accumulator, and let it know the reference is circular
                     if (hasOutput) {
                         node.output.accumulator.accept(entry.getFirst(), visited.get(visit), true);

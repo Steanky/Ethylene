@@ -28,21 +28,26 @@ import java.util.stream.Stream;
 public class DirectoryTreeConfigSource implements ConfigSource {
     private final Path rootPath;
     private final CodecResolver codecResolver;
-    private final ExtensionExtractor extensionExtractor;
+    private final PathNameInspector pathNameInspector;
     private final ConfigCodec defaultCodec;
     private final String preferredExtension;
     private final Executor executor;
 
     public DirectoryTreeConfigSource(@NotNull Path rootPath, @NotNull CodecResolver codecResolver,
-            @NotNull ExtensionExtractor extensionExtractor, @NotNull ConfigCodec defaultCodec,
+            @NotNull PathNameInspector pathNameInspector, @NotNull ConfigCodec defaultCodec,
             @Nullable Executor executor) {
         this.rootPath = Objects.requireNonNull(rootPath);
         this.codecResolver = Objects.requireNonNull(codecResolver);
-        this.extensionExtractor = Objects.requireNonNull(extensionExtractor);
+        this.pathNameInspector = Objects.requireNonNull(pathNameInspector);
         this.defaultCodec = Objects.requireNonNull(defaultCodec);
         this.preferredExtension = defaultCodec.getPreferredExtension().isEmpty() ? "" :
                 "." + defaultCodec.getPreferredExtension();
-        this.executor = Objects.requireNonNull(executor);
+        this.executor = executor;
+    }
+
+    public DirectoryTreeConfigSource(@NotNull Path rootPath, @NotNull CodecResolver codecResolver,
+            @NotNull PathNameInspector pathNameInspector, @NotNull ConfigCodec defaultCodec) {
+        this(rootPath, codecResolver, pathNameInspector, defaultCodec, null);
     }
 
     private static Object getKey(Path path) {
@@ -94,7 +99,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 List<Path> pathList = exceptionHolder.supply(() -> {
                     try (Stream<Path> paths = Files.walk(directoryEntry, 0, FileVisitOption.FOLLOW_LINKS)) {
                         return paths.filter(path -> !path.equals(directoryEntry) && (Files.isDirectory(path) ||
-                                codecResolver.hasCodec(extensionExtractor.getExtension(path)))).toList();
+                                codecResolver.hasCodec(pathNameInspector.getExtension(path)))).toList();
                     }
                 }, List::of);
 
@@ -110,13 +115,13 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                     @Override
                     public Entry<String, Path> next() {
                         Path path = pathIterator.next();
-                        return Entry.of(extensionExtractor.getName(path), path);
+                        return Entry.of(pathNameInspector.getName(path), path);
                     }
                 }, new GraphTransformer.Output<>(node,
                         (GraphTransformer.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(s,
                                 configElement)));
             }, Files::isDirectory, entry -> {
-                String extension = extensionExtractor.getExtension(entry);
+                String extension = pathNameInspector.getExtension(entry);
                 if (codecResolver.hasCodec(extension)) {
                     return exceptionHolder.supply(() -> Configuration.read(entry, codecResolver.resolve(extension)),
                             () -> ConfigPrimitive.NULL);
@@ -139,7 +144,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             }
 
             ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>();
-            GraphTransformer.process(new OutputEntry(rootPath, element), containerEntry -> {
+            GraphTransformer.process(new OutputInfo(rootPath, element), containerEntry -> {
+                        exceptionHolder.call(() -> Files.createDirectories(containerEntry.path));
                         Path normalizedPath = containerEntry.path.normalize();
 
                         Set<Path> existingPaths = exceptionHolder.supply(() -> {
@@ -160,46 +166,43 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         }, Set::of);
 
                         ConfigNode node = containerEntry.element.asNode();
-                        List<PathInfo> paths = new ArrayList<>(node.size());
+                        List<Entry<Object, OutputInfo>> paths = new ArrayList<>(node.size());
 
                         for (ConfigEntry entry : node.entryCollection()) {
                             ConfigElement configElement = entry.getSecond();
-
-                            if (!configElement.isNode()) {
-                                //we can't explore this node further, it has non-node children
-                                //just write the entire ConfigElement
-                                exceptionHolder.call(() -> writeElementWithPreferredExtension(node, normalizedPath));
-                                return GraphTransformer.emptyNode();
-                            }
-
                             String elementName = Objects.requireNonNull(entry.getFirst());
-
                             Path expectedPath = normalizedPath.resolve(elementName);
-                            paths.add(new PathInfo(existingPaths.contains(expectedPath) ? expectedPath : normalizedPath
-                                    .resolve(elementName + preferredExtension), configElement));
+                            paths.add(Entry.of(null, new OutputInfo(existingPaths.contains(expectedPath) ? expectedPath
+                                    : normalizedPath.resolve(elementName + preferredExtension), configElement)));
                         }
 
-                        return new GraphTransformer.Node<>(new Iterator<>() {
-                            private final Iterator<PathInfo> pathInfoIterator = paths.iterator();
+                        //this node has no output (not necessary as we're creating a tree in the filesystem instead of
+                        //doing it in-memory
+                        return new GraphTransformer.Node<>(paths.iterator(), new GraphTransformer.Output<>(containerEntry,
+                                (o, info, circular) -> {
+                                    exceptionHolder.call(() -> writeElement(info.element, info.path));
+                                }));
+                    }, potentialContainer -> {
+                        if (!potentialContainer.element.isNode()) {
+                            return false;
+                        }
 
-                            @Override
-                            public boolean hasNext() {
-                                return pathInfoIterator.hasNext();
+                        ConfigNode node = potentialContainer.element.asNode();
+                        for (ConfigEntry entry : node.entryCollection()) {
+                            if (!entry.getValue().isNode()) {
+                                return false;
                             }
+                        }
 
-                            @Override
-                            public Entry<Object, OutputEntry> next() {
-                                PathInfo pathInfo = pathInfoIterator.next();
-                                return Entry.of(null, new OutputEntry(pathInfo.path, pathInfo.element));
-                            }
-                        });
-                    }, potentialContainer -> Files.isDirectory(potentialContainer.path) && potentialContainer
-                            .element.isNode(),
+                        return true;
+                    },
                     scalar -> {
                         //actually write the data to a specific file
                         //the path is assumed to already have an extension
-                        exceptionHolder.call(() -> writeElement(scalar.element, scalar.path));
-                        return null;
+                        //scalar.element will always be a ConfigNode, this is checked before processing and in the node
+                        //function
+                        //exceptionHolder.call(() -> writeElement(scalar.element, scalar.path));
+                        return scalar;
                     }, entry -> getKey(entry.path), new HashMap<>(), new ArrayDeque<>());
 
             exceptionHolder.throwIfPresent();
@@ -214,7 +217,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     }
 
     private void writeElement(ConfigElement element, Path path) throws IOException {
-        String extension = extensionExtractor.getExtension(path);
+        String extension = pathNameInspector.getExtension(path);
 
         ConfigCodec codec;
         if (codecResolver.hasCodec(extension)) {
@@ -227,29 +230,5 @@ public class DirectoryTreeConfigSource implements ConfigSource {
         Configuration.write(path, element, codec);
     }
 
-    private record OutputEntry(Path path, ConfigElement element) {}
-
-    private record PathInfo(Path path, ConfigElement element) {
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-
-            if (obj == this) {
-                return true;
-            }
-
-            if (obj instanceof PathInfo pathInfo) {
-                return path.equals(pathInfo.path);
-            }
-
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return path.hashCode();
-        }
-    }
+    private record OutputInfo(Path path, ConfigElement element) {}
 }

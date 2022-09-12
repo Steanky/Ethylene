@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 
-public class BasicExtensionExtractor implements ExtensionExtractor {
+public class BasicPathNameInspector implements PathNameInspector {
     private static final char EXTENSION_SEPARATOR = '.';
     private static final String EMPTY_STRING = "";
 
