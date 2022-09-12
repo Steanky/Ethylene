@@ -6,10 +6,14 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.GraphTransformer;
 import com.github.steanky.ethylene.core.bridge.ConfigSource;
 import com.github.steanky.ethylene.core.bridge.Configuration;
+import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.github.steanky.ethylene.core.util.ExceptionHolder;
+import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -18,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
 public class DirectoryTreeConfigSource implements ConfigSource {
@@ -25,13 +30,19 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     private final CodecResolver codecResolver;
     private final ExtensionExtractor extensionExtractor;
     private final ConfigCodec defaultCodec;
+    private final String preferredExtension;
+    private final Executor executor;
 
     public DirectoryTreeConfigSource(@NotNull Path rootPath, @NotNull CodecResolver codecResolver,
-            @NotNull ExtensionExtractor extensionExtractor, @NotNull ConfigCodec defaultCodec) {
+            @NotNull ExtensionExtractor extensionExtractor, @NotNull ConfigCodec defaultCodec,
+            @Nullable Executor executor) {
         this.rootPath = Objects.requireNonNull(rootPath);
         this.codecResolver = Objects.requireNonNull(codecResolver);
         this.extensionExtractor = Objects.requireNonNull(extensionExtractor);
         this.defaultCodec = Objects.requireNonNull(defaultCodec);
+        this.preferredExtension = defaultCodec.getPreferredExtension().isEmpty() ? "" :
+                "." + defaultCodec.getPreferredExtension();
+        this.executor = Objects.requireNonNull(executor);
     }
 
     private static Object getKey(Path path) {
@@ -76,110 +87,153 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
     @Override
     public @NotNull CompletableFuture<ConfigElement> read() {
-        return CompletableFuture.completedFuture(GraphTransformer.process(rootPath, directoryEntry -> {
-            List<Path> pathList;
-            try (Stream<Path> paths = Files.walk(directoryEntry, 0, FileVisitOption.FOLLOW_LINKS)) {
-                pathList = paths.filter(path -> Files.isDirectory(path) ||
-                        (codecResolver.hasCodec(extensionExtractor.getExtension(path)))).toList();
-            } catch (IOException e) {
-                pathList = List.of();
-            }
+        return FutureUtils.completeCallable(() -> {
+            ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>();
 
-            ConfigNode node = new LinkedConfigNode(pathList.size());
-            List<Path> finalPathList = pathList;
-            return new GraphTransformer.Node<>(new Iterator<>() {
-                private final Iterator<Path> pathIterator = finalPathList.listIterator();
+            ConfigElement element = GraphTransformer.process(rootPath, directoryEntry -> {
+                List<Path> pathList = exceptionHolder.supply(() -> {
+                    try (Stream<Path> paths = Files.walk(directoryEntry, 0, FileVisitOption.FOLLOW_LINKS)) {
+                        return paths.filter(path -> !path.equals(directoryEntry) && (Files.isDirectory(path) ||
+                                codecResolver.hasCodec(extensionExtractor.getExtension(path)))).toList();
+                    }
+                }, List::of);
 
-                @Override
-                public boolean hasNext() {
-                    return pathIterator.hasNext();
+                ConfigNode node = new LinkedConfigNode(pathList.size());
+                return new GraphTransformer.Node<>(new Iterator<>() {
+                    private final Iterator<Path> pathIterator = pathList.listIterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return pathIterator.hasNext();
+                    }
+
+                    @Override
+                    public Entry<String, Path> next() {
+                        Path path = pathIterator.next();
+                        return Entry.of(extensionExtractor.getName(path), path);
+                    }
+                }, new GraphTransformer.Output<>(node,
+                        (GraphTransformer.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(s,
+                                configElement)));
+            }, Files::isDirectory, entry -> {
+                String extension = extensionExtractor.getExtension(entry);
+                if (codecResolver.hasCodec(extension)) {
+                    return exceptionHolder.supply(() -> Configuration.read(entry, codecResolver.resolve(extension)),
+                            () -> ConfigPrimitive.NULL);
                 }
 
-                @Override
-                public Entry<String, Path> next() {
-                    Path path = pathIterator.next();
-                    return Entry.of(extensionExtractor.getName(path), path);
-                }
-            }, new GraphTransformer.Output<>(node,
-                    (GraphTransformer.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(s,
-                            configElement)));
-        }, Files::isDirectory, entry -> {
-            String extension = extensionExtractor.getExtension(entry);
-            if (codecResolver.hasCodec(extension)) {
-                try {
-                    return Configuration.read(entry, codecResolver.resolve(extension));
-                } catch (IOException ignored) {
-                }
-            }
+                return ConfigPrimitive.NULL;
+            }, DirectoryTreeConfigSource::getKey, new HashMap<>(), new ArrayDeque<>());
 
-            return ConfigPrimitive.NULL;
-        }, DirectoryTreeConfigSource::getKey, new HashMap<>(), new ArrayDeque<>()));
+            exceptionHolder.throwIfPresent();
+            return element;
+        }, executor);
     }
 
     @Override
     public @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element) {
-        GraphTransformer.process(new OutputEntry(rootPath, element), containerEntry -> {
-                    try {
-                        Files.createDirectories(containerEntry.path);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+        return FutureUtils.completeCallable(() -> {
+            ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>();
+            GraphTransformer.process(new OutputEntry(rootPath, element), containerEntry -> {
+                        Path normalizedPath = containerEntry.path.normalize();
 
-                    ConfigNode node = containerEntry.element.asNode();
-                    List<PathInfo> matchingPaths;
-                    try (Stream<Path> paths = Files.walk(containerEntry.path, 0, FileVisitOption.FOLLOW_LINKS)) {
-                        matchingPaths = new ArrayList<>();
-                        for (Path path : (Iterable<? extends Path>) paths::iterator) {
-                            if (!Files.isDirectory(path)) {
-                                matchingPaths.add(new PathInfo(path, false));
-                            } else if (node.containsKey(path.getFileName().toString())) {
-                                matchingPaths.add(new PathInfo(path, false));
+                        Set<Path> existingPaths = exceptionHolder.supply(() -> {
+                            Set<Path> newPaths;
+                            try (Stream<Path> paths = Files.walk(normalizedPath, 0, FileVisitOption.FOLLOW_LINKS)) {
+                                newPaths = new HashSet<>();
+                                for (Path path : (Iterable<? extends Path>) paths::iterator) {
+                                    if (path.equals(normalizedPath)) {
+                                        //Files.walk includes the root entry
+                                        continue;
+                                    }
+
+                                    newPaths.add(path);
+                                }
                             }
-                        }
-                    } catch (IOException e) {
-                        matchingPaths = List.of();
-                    }
 
-                    List<PathInfo> finalMatchingPaths = matchingPaths;
-                    return new GraphTransformer.Node<>(new Iterator<>() {
-                        private final Iterator<PathInfo> pathInfoIterator = finalMatchingPaths.listIterator();
+                            return newPaths;
+                        }, Set::of);
 
-                        @Override
-                        public boolean hasNext() {
-                            return false;
+                        ConfigNode node = containerEntry.element.asNode();
+                        List<PathInfo> paths = new ArrayList<>(node.size());
+                        for (ConfigEntry entry : node.entryCollection()) {
+                            String name = Objects.requireNonNull(entry.getFirst());
+                            ConfigElement configElement = entry.getSecond();
+
+                            Path dirPath = normalizedPath.resolve(name);
+                            if (!existingPaths.contains(dirPath)) {
+                                paths.add(new PathInfo(normalizedPath.resolve(name + preferredExtension), configElement));
+                                continue;
+                            }
+
+                            paths.add(new PathInfo(dirPath, configElement));
                         }
 
-                        @Override
-                        public Entry<Object, OutputEntry> next() {
-                            return null;
-                        }
-                    }, new GraphTransformer.Output<>(containerEntry, GraphTransformer.emptyAccumulator()));
-                }, potentialContainer -> Files.isDirectory(potentialContainer.path) && potentialContainer.element.isNode(),
-                scalar -> {
-                    try {
-                        ConfigCodec codec;
-                        if (Files.exists(scalar.path) && !Files.isDirectory(scalar.path)) {
-                            String extension = extensionExtractor.getExtension(scalar.path);
-                            if (codecResolver.hasCodec(extension)) {
-                                codec = codecResolver.resolve(extension);
+                        return new GraphTransformer.Node<>(new Iterator<>() {
+                            private final Iterator<PathInfo> pathInfoIterator = paths.iterator();
+
+                            @Override
+                            public boolean hasNext() {
+                                return pathInfoIterator.hasNext();
+                            }
+
+                            @Override
+                            public Entry<Object, OutputEntry> next() {
+                                PathInfo pathInfo = pathInfoIterator.next();
+                                return Entry.of(null, new OutputEntry(pathInfo.path, pathInfo.element));
+                            }
+                        });
+                    }, potentialContainer -> Files.isDirectory(potentialContainer.path) && potentialContainer.element
+                            .isNode(),
+                    scalar -> {
+                        exceptionHolder.call(() -> {
+                            ConfigCodec codec;
+                            if (Files.exists(scalar.path) && !Files.isDirectory(scalar.path)) {
+                                String extension = extensionExtractor.getExtension(scalar.path);
+                                if (codecResolver.hasCodec(extension)) {
+                                    codec = codecResolver.resolve(extension);
+                                } else {
+                                    codec = defaultCodec;
+                                }
                             } else {
                                 codec = defaultCodec;
                             }
-                        } else {
-                            codec = defaultCodec;
-                        }
 
-                        Configuration.write(scalar.path, scalar.element, codec);
-                    } catch (IOException ignored) {
-                    }
 
-                    return scalar;
-                }, entry -> getKey(entry.path), new HashMap<>(), new ArrayDeque<>());
+                            Configuration.write(scalar.path, scalar.element, codec);
+                        });
 
-        return CompletableFuture.completedFuture(null);
+                        return null;
+                    }, entry -> getKey(entry.path), new HashMap<>(), new ArrayDeque<>());
+
+            exceptionHolder.throwIfPresent();
+            return null;
+        }, executor);
     }
 
     private record OutputEntry(Path path, ConfigElement element) {}
 
-    private record PathInfo(Path path, boolean isDirectory) {}
+    private record PathInfo(Path path, ConfigElement element) {
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            if (obj == this) {
+                return true;
+            }
+
+            if (obj instanceof PathInfo pathInfo) {
+                return path.equals(pathInfo.path);
+            }
+
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return path.hashCode();
+        }
+    }
 }

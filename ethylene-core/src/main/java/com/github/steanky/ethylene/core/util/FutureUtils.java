@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.util;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -60,6 +61,25 @@ public final class FutureUtils {
         }
 
         return future;
+    }
+
+    /**
+     * Completes the given callable. Asynchronicity (or lack thereof) is determined by the provided Executor, which if
+     * non-null will be used to asynchronously execute the callable. This case is semantically identical to
+     * {@link FutureUtils#completeCallableAsync(Callable, Executor)}. Otherwise, if non-null, this method is equivalent
+     * to {@link FutureUtils#completeCallableSync(Callable)}.
+     * @param callable the callable to invoke
+     * @param executor the executor used to run the callable asynchronously
+     * @return a {@link CompletableFuture} from the given Callable
+     * @param <TCall> the kind object returned by the callable
+     */
+    public static <TCall> CompletableFuture<TCall> completeCallable(@NotNull Callable<? extends TCall> callable,
+            @Nullable Executor executor) {
+        if (executor == null) {
+            return completeCallableSync(callable);
+        }
+
+        return completeCallableAsync(callable, executor);
     }
 
     /**

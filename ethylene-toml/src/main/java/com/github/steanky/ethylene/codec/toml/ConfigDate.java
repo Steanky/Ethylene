@@ -10,8 +10,9 @@ import java.util.Objects;
 /**
  * A ConfigElement wrapping a date, required since dates have first-class support in TOML.
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class ConfigDate implements ConfigElement {
-    private Date date;
+    private final Date date;
 
     /**
      * Construct a new ConfigDate wrapping the provided {@link Date}.
@@ -56,15 +57,5 @@ public class ConfigDate implements ConfigElement {
      */
     public @NotNull Date getDate() {
         return date;
-    }
-
-    /**
-     * Sets the {@link Date} wrapped by this ConfigDate object.
-     *
-     * @param date the date to set
-     * @throws NullPointerException if date is null
-     */
-    public void setDate(@NotNull Date date) {
-        this.date = Objects.requireNonNull(date);
     }
 }

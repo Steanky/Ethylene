@@ -13,6 +13,7 @@ import java.util.function.Predicate;
  */
 public final class GraphTransformer {
     private static final Accumulator<?, ?> EMPTY_ACCUMULATOR = (Accumulator<Object, Object>) (o, o2, circular) -> {};
+    private static final Output<?, ?> EMPTY_OUTPUT = new Output<>(null, EMPTY_ACCUMULATOR);
 
     public static <TIn, TOut, TKey, TVisit> TOut process(TIn rootInput,
             @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
@@ -31,12 +32,15 @@ public final class GraphTransformer {
         while (!stack.isEmpty()) {
             Node<TIn, TOut, TKey> node = stack.peek();
 
+            boolean hasOutput = node.output != EMPTY_OUTPUT;
             boolean unfinished = false;
             while (node.inputIterator.hasNext()) {
                 Entry<TKey, TIn> entry = node.inputIterator.next();
                 if (!containerPredicate.test(entry.getSecond())) {
                     //nodes that aren't containers have no children, so we can immediately add them to the accumulator
-                    node.output.accumulator.accept(entry.getFirst(), scalarMapper.apply(entry.getSecond()), false);
+                    if (hasOutput) {
+                        node.output.accumulator.accept(entry.getFirst(), scalarMapper.apply(entry.getSecond()), false);
+                    }
                     continue;
                 }
 
@@ -44,7 +48,9 @@ public final class GraphTransformer {
                 TVisit visit = visitKeyMapper.apply(entry.getSecond());
                 if (visited.containsKey(visit)) {
                     //circular references are immediately added to the accumulator
-                    node.output.accumulator.accept(entry.getFirst(), visited.get(visit), true);
+                    if (hasOutput) {
+                        node.output.accumulator.accept(entry.getFirst(), visited.get(visit), true);
+                    }
                     continue;
                 }
 
@@ -53,17 +59,22 @@ public final class GraphTransformer {
                 stack.push(newNode);
 
                 //this node is unfinished, wait to call the accumulator
-                node.result.key = entry.getFirst();
-                node.result.out = newNode.output.data;
-                unfinished = true;
+                if (hasOutput) {
+                    node.result.key = entry.getFirst();
+                    node.result.out = newNode.output.data;
+                    unfinished = true;
+                }
                 break;
             }
 
             if (!unfinished) {
                 stack.pop();
-                Node<TIn, TOut, TKey> old = stack.peek();
-                if (old != null) {
-                    old.output.accumulator.accept(old.result.key, old.result.out, false);
+
+                if (hasOutput) {
+                    Node<TIn, TOut, TKey> old = stack.peek();
+                    if (old != null) {
+                        old.output.accumulator.accept(old.result.key, old.result.out, false);
+                    }
                 }
             }
         }
@@ -89,8 +100,8 @@ public final class GraphTransformer {
     }
 
     @SuppressWarnings("unchecked")
-    public static <TKey, TOut> @NotNull Accumulator<TKey, TOut> emptyAccumulator() {
-        return (Accumulator<TKey, TOut>) EMPTY_ACCUMULATOR;
+    public static <TKey, TOut> @NotNull Output<TKey, TOut> emptyOutput() {
+        return (Output<TKey, TOut>) EMPTY_OUTPUT;
     }
 
     @FunctionalInterface
@@ -107,6 +118,10 @@ public final class GraphTransformer {
             @NotNull Output<TOut, TKey> output, @NotNull NodeResult<TKey, TOut> result) {
         public Node(@NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator, @NotNull Output<TOut, TKey> output) {
             this(inputIterator, output, new NodeResult<>());
+        }
+
+        public Node(@NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator) {
+            this(inputIterator, emptyOutput(), new NodeResult<>());
         }
     }
 
