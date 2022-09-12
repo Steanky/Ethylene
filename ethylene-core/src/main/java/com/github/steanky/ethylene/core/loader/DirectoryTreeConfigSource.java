@@ -133,6 +133,11 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     @Override
     public @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element) {
         return FutureUtils.completeCallable(() -> {
+            if (!element.isNode()) {
+                writeElementWithPreferredExtension(element, rootPath);
+                return null;
+            }
+
             ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>();
             GraphTransformer.process(new OutputEntry(rootPath, element), containerEntry -> {
                         Path normalizedPath = containerEntry.path.normalize();
@@ -156,22 +161,22 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
                         ConfigNode node = containerEntry.element.asNode();
                         List<PathInfo> paths = new ArrayList<>(node.size());
+
                         for (ConfigEntry entry : node.entryCollection()) {
-                            String name = Objects.requireNonNull(entry.getFirst());
                             ConfigElement configElement = entry.getSecond();
 
                             if (!configElement.isNode()) {
-                                continue;
+                                //we can't explore this node further, it has non-node children
+                                //just write the entire ConfigElement
+                                exceptionHolder.call(() -> writeElementWithPreferredExtension(node, normalizedPath));
+                                return GraphTransformer.emptyNode();
                             }
 
-                            Path dirPath = normalizedPath.resolve(name);
-                            if (!existingPaths.contains(dirPath)) {
-                                paths.add(new PathInfo(normalizedPath.resolve(name + preferredExtension),
-                                        configElement));
-                                continue;
-                            }
+                            String elementName = Objects.requireNonNull(entry.getFirst());
 
-                            paths.add(new PathInfo(dirPath, configElement));
+                            Path expectedPath = normalizedPath.resolve(elementName);
+                            paths.add(new PathInfo(existingPaths.contains(expectedPath) ? expectedPath : normalizedPath
+                                    .resolve(elementName + preferredExtension), configElement));
                         }
 
                         return new GraphTransformer.Node<>(new Iterator<>() {
@@ -192,27 +197,34 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                             .element.isNode(),
                     scalar -> {
                         //actually write the data to a specific file
-                        exceptionHolder.call(() -> {
-                            ConfigCodec codec;
-
-                            String extension = extensionExtractor.getExtension(scalar.path);
-                            if (codecResolver.hasCodec(extension)) {
-                                codec = codecResolver.resolve(extension);
-                            } else {
-                                codec = defaultCodec;
-                            }
-
-                            Path parent = scalar.path.getParent();
-                            Files.createDirectories(parent);
-                            Configuration.write(scalar.path, scalar.element, codec);
-                        });
-
+                        //the path is assumed to already have an extension
+                        exceptionHolder.call(() -> writeElement(scalar.element, scalar.path));
                         return null;
                     }, entry -> getKey(entry.path), new HashMap<>(), new ArrayDeque<>());
 
             exceptionHolder.throwIfPresent();
             return null;
         }, executor);
+    }
+
+    private void writeElementWithPreferredExtension(ConfigElement element, Path parent) throws IOException {
+        String filename = parent.getFileName().toString();
+        Path filePath = parent.resolve(filename + preferredExtension);
+        writeElement(element, filePath);
+    }
+
+    private void writeElement(ConfigElement element, Path path) throws IOException {
+        String extension = extensionExtractor.getExtension(path);
+
+        ConfigCodec codec;
+        if (codecResolver.hasCodec(extension)) {
+            codec = codecResolver.resolve(extension);
+        } else {
+            codec = defaultCodec;
+        }
+
+        Files.createDirectories(path.getParent());
+        Configuration.write(path, element, codec);
     }
 
     private record OutputEntry(Path path, ConfigElement element) {}

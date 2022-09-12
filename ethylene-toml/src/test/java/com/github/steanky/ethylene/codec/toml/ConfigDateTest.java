@@ -34,11 +34,4 @@ class ConfigDateTest {
     void correctObject() {
         assertSame(DATE, testDate.asScalar());
     }
-
-    @Test
-    void setChangesDate() {
-        Date newDate = new Date(4789422);
-        testDate.setDate(newDate);
-        assertSame(newDate, testDate.getDate());
-    }
 }

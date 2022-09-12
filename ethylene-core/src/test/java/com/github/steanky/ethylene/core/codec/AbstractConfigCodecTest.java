@@ -58,6 +58,11 @@ class AbstractConfigCodecTest {
             }
 
             @Override
+            public @NotNull String getPreferredExtension() {
+                return "";
+            }
+
+            @Override
             protected @NotNull Object readObject(@NotNull InputStream input) {
                 return root;
             }
