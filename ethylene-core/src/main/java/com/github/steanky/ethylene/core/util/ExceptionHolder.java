@@ -14,8 +14,7 @@ public class ExceptionHolder<TErr extends Throwable> {
 
         if (exception == null) {
             exception = throwable;
-        }
-        else {
+        } else {
             exception.addSuppressed(throwable);
         }
     }

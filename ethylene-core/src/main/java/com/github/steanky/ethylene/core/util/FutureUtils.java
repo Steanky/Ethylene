@@ -68,10 +68,11 @@ public final class FutureUtils {
      * non-null will be used to asynchronously execute the callable. This case is semantically identical to
      * {@link FutureUtils#completeCallableAsync(Callable, Executor)}. Otherwise, if non-null, this method is equivalent
      * to {@link FutureUtils#completeCallableSync(Callable)}.
+     *
      * @param callable the callable to invoke
      * @param executor the executor used to run the callable asynchronously
+     * @param <TCall>  the kind object returned by the callable
      * @return a {@link CompletableFuture} from the given Callable
-     * @param <TCall> the kind object returned by the callable
      */
     public static <TCall> CompletableFuture<TCall> completeCallable(@NotNull Callable<? extends TCall> callable,
             @Nullable Executor executor) {

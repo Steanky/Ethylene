@@ -15,11 +15,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import javax.print.attribute.standard.MediaSize;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.time.temporal.Temporal;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Provides support for the TOML format. This class overrides
@@ -89,7 +92,7 @@ public class TomlCodec extends AbstractConfigCodec {
     @Override
     protected @Nullable Object serializeElement(@NotNull ConfigElement element) {
         if (element instanceof ConfigDate configDate) {
-            return configDate.getDate();
+            return configDate.getTemporal();
         }
 
         return super.serializeElement(element);
@@ -97,7 +100,7 @@ public class TomlCodec extends AbstractConfigCodec {
 
     @Override
     protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
-        if (object instanceof Date date) {
+        if (object instanceof Temporal date) {
             return new ConfigDate(date);
         }
 

@@ -200,9 +200,11 @@ class MappingConfigProcessorIntegrationTest {
         @SuppressWarnings("rawtypes")
         @Test
         void map() throws ConfigProcessException {
-            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) ->
-                            Map.entry(objects[0], objects[1]), (entry) -> List.of(Signature.type("key", new Token<>() {}, entry.getKey()),
-                    Signature.type("value", new Token<>() {}, entry.getValue())), Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {})).matchingTypeHints()
+            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {},
+                            (entry, objects) -> Map.entry(objects[0], objects[1]),
+                            (entry) -> List.of(Signature.type("key", new Token<>() {}, entry.getKey()),
+                                    Signature.type("value", new Token<>() {}, entry.getValue())),
+                            Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {})).matchingTypeHints()
                     .matchingNames().build();
             source.registerCustomSignature(mapEntry);
 
@@ -220,8 +222,11 @@ class MappingConfigProcessorIntegrationTest {
         @SuppressWarnings("rawtypes")
         @Test
         void customSignature() throws ConfigProcessException {
-            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {}, (entry, objects) -> Map.entry(objects[0], objects[1]), (entry) -> List.of(Signature.type("key", new Token<>() {}, entry.getKey()),
-                    Signature.type("value", new Token<>() {}, entry.getValue())), Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {})).matchingTypeHints()
+            Signature mapEntry = Signature.builder(new Token<Map.Entry>() {},
+                            (entry, objects) -> Map.entry(objects[0], objects[1]),
+                            (entry) -> List.of(Signature.type("key", new Token<>() {}, entry.getKey()),
+                                    Signature.type("value", new Token<>() {}, entry.getValue())),
+                            Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {})).matchingTypeHints()
                     .matchingNames().build();
 
             source.registerCustomSignature(mapEntry);

@@ -6,7 +6,7 @@ import com.github.steanky.ethylene.mapper.BasicScalarSource;
 import com.github.steanky.ethylene.mapper.ScalarSource;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Date;
+import java.time.temporal.Temporal;
 
 public class TomlScalarSource extends BasicScalarSource {
     public static final ScalarSource INSTANCE = new TomlScalarSource();
@@ -15,8 +15,8 @@ public class TomlScalarSource extends BasicScalarSource {
 
     @Override
     public @NotNull ConfigElement make(@NotNull Object data) {
-        if (data instanceof Date date) {
-            return new ConfigDate(date);
+        if (data instanceof Temporal temporal) {
+            return new ConfigDate(temporal);
         }
 
         return super.make(data);

@@ -4,24 +4,21 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Date;
+import java.time.temporal.Temporal;
 import java.util.Objects;
 
-/**
- * A ConfigElement wrapping a date, required since dates have first-class support in TOML.
- */
 @SuppressWarnings("ClassCanBeRecord")
 public class ConfigDate implements ConfigElement {
-    private final Date date;
+    private final Temporal temporal;
 
     /**
-     * Construct a new ConfigDate wrapping the provided {@link Date}.
+     * Construct a new ConfigDate wrapping the provided {@link Temporal}.
      *
-     * @param date the date to wrap
+     * @param temporal the date to wrap
      * @throws NullPointerException if date is null
      */
-    public ConfigDate(@NotNull Date date) {
-        this.date = Objects.requireNonNull(date);
+    public ConfigDate(@NotNull Temporal temporal) {
+        this.temporal = Objects.requireNonNull(temporal);
     }
 
     @Override
@@ -32,7 +29,7 @@ public class ConfigDate implements ConfigElement {
     @Override
     public @NotNull String asString() {
         //override asString to avoid requiring the user to handle Date objects directly
-        return date.toString();
+        return temporal.toString();
     }
 
     @Override
@@ -42,7 +39,7 @@ public class ConfigDate implements ConfigElement {
 
     @Override
     public @NotNull Object asScalar() {
-        return date;
+        return temporal;
     }
 
     @Override
@@ -51,11 +48,11 @@ public class ConfigDate implements ConfigElement {
     }
 
     /**
-     * Gets the date wrapped by this ConfigDate object.
+     * Gets the {@link Temporal} wrapped by this ConfigDate object.
      *
-     * @return the wrapped date
+     * @return the wrapped Temporal
      */
-    public @NotNull Date getDate() {
-        return date;
+    public @NotNull Temporal getTemporal() {
+        return temporal;
     }
 }

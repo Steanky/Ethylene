@@ -62,8 +62,8 @@ public final class Configuration {
             throws IOException {
         ElementType type = element.type();
         if (!codec.supportedTopLevelTypes().contains(type)) {
-            throw new IOException("Top-level elements of type '" + type + "' not supported by '" + codec.getName() +
-                    "' codec");
+            throw new IOException(
+                    "Top-level elements of type '" + type + "' not supported by '" + codec.getName() + "' codec");
         }
 
         fromStreamsInternal(InputStream::nullInputStream, () -> outputStream, codec).write(element);
