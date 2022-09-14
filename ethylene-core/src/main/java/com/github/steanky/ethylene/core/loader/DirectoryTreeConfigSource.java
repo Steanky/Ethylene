@@ -36,7 +36,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     private final CodecResolver codecResolver;
     private final PathNameInspector pathNameInspector;
     private final ConfigCodec preferredCodec;
-    private final String preferredExtensionWithoutDot;
+    private final String preferredExtensionName;
     private final String preferredExtension;
     private final Executor executor;
     private final boolean supportSymlinks;
@@ -50,9 +50,9 @@ public class DirectoryTreeConfigSource implements ConfigSource {
         this.pathNameInspector = Objects.requireNonNull(pathNameInspector);
         this.preferredCodec = Objects.requireNonNull(preferredCodec);
 
-        this.preferredExtensionWithoutDot = preferredCodec.getPreferredExtension();
-        this.preferredExtension = preferredExtensionWithoutDot.isEmpty() ? preferredExtensionWithoutDot :
-                "." + preferredExtensionWithoutDot;
+        this.preferredExtensionName = preferredCodec.getPreferredExtension();
+        this.preferredExtension = preferredExtensionName.isEmpty() ? preferredExtensionName :
+                "." + preferredExtensionName;
         this.executor = executor;
         this.supportSymlinks = supportSymlinks;
         this.fileVisitOptions = supportSymlinks ? new FileVisitOption[] {FileVisitOption.FOLLOW_LINKS} :
@@ -228,7 +228,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                             Path preferred = null;
                             for (Path path : targets) {
                                 String extension = pathNameInspector.getExtension(path);
-                                if (preferredExtensionWithoutDot.equals(extension)) {
+                                if (preferredExtensionName.equals(extension)) {
                                     preferred = path;
                                     break;
                                 }
