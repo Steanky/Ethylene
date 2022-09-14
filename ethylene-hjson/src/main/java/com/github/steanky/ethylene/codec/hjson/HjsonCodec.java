@@ -26,6 +26,9 @@ public class HjsonCodec extends AbstractConfigCodec {
     private final HjsonOptions readOptions;
     private final HjsonOptions writeOptions;
 
+    private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
+    private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+
     /**
      * Creates a new HjsonCodec instance using the given {@link HjsonOptions} for reading and writing.
      *
@@ -33,6 +36,7 @@ public class HjsonCodec extends AbstractConfigCodec {
      * @param writeOptions the options used when writing
      */
     public HjsonCodec(@NotNull HjsonOptions readOptions, @NotNull HjsonOptions writeOptions) {
+        super(ENCODE_OPTIONS, DECODE_OPTIONS);
         this.readOptions = Objects.requireNonNull(readOptions);
         this.writeOptions = Objects.requireNonNull(writeOptions);
     }

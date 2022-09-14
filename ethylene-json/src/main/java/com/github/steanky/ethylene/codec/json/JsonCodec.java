@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.codec.json;
 
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.GraphTransformer;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -30,6 +31,9 @@ public class JsonCodec extends AbstractConfigCodec {
 
     private final Gson gson;
 
+    private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
+    private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+
     /**
      * Creates a new JsonCodec using the provided {@link Gson} instance to read and write data.
      *
@@ -37,6 +41,7 @@ public class JsonCodec extends AbstractConfigCodec {
      * @throws NullPointerException if gson is null
      */
     public JsonCodec(@NotNull Gson gson) {
+        super(ENCODE_OPTIONS, DECODE_OPTIONS);
         this.gson = Objects.requireNonNull(gson);
     }
 
@@ -44,6 +49,7 @@ public class JsonCodec extends AbstractConfigCodec {
      * Creates a new JsonCodec using the default {@link Gson} ({@link JsonCodec#DEFAULT_GSON}) to read and write data.
      */
     public JsonCodec() {
+        super(ENCODE_OPTIONS, DECODE_OPTIONS);
         this.gson = DEFAULT_GSON;
     }
 

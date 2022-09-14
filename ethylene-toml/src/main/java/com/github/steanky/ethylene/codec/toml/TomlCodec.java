@@ -37,10 +37,14 @@ public class TomlCodec extends AbstractConfigCodec {
     private final TomlParser parser;
     private final TomlWriter writer;
 
+    private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
+    private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+
     /**
      * Creates a new TomlCodec with default values.
      */
     public TomlCodec() {
+        super(ENCODE_OPTIONS, DECODE_OPTIONS);
         this.parser = new TomlParser();
         this.writer = new TomlWriter();
     }
@@ -52,6 +56,7 @@ public class TomlCodec extends AbstractConfigCodec {
      * @param writer the TomlWriter used to write TOML
      */
     public TomlCodec(@NotNull TomlParser parser, @NotNull TomlWriter writer) {
+        super(ENCODE_OPTIONS, DECODE_OPTIONS);
         this.parser = Objects.requireNonNull(parser);
         this.writer = Objects.requireNonNull(writer);
     }

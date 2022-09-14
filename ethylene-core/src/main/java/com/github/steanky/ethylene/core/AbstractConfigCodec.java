@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * <p>This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
@@ -20,10 +21,13 @@ import java.util.*;
  * natively supported by this class.</p>
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
-    /**
-     * Empty constructor, for use by subclasses.
-     */
-    protected AbstractConfigCodec() {}
+    private final int graphTransformerEncodeOptions;
+    private final int graphTransformerDecodeOptions;
+
+    protected AbstractConfigCodec(int graphTransformerEncodeOptions, int graphTransformerDecodeOptions) {
+        this.graphTransformerEncodeOptions = graphTransformerEncodeOptions;
+        this.graphTransformerDecodeOptions = graphTransformerDecodeOptions;
+    }
 
     @Override
     public void encode(@NotNull ConfigElement element, @NotNull OutputStream output) throws IOException {
@@ -32,8 +36,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
         try (output) {
             writeObject(
-                    GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement),
-                    output);
+                    GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
+                            Function.identity(), IdentityHashMap::new, new ArrayDeque<>(),
+                            graphTransformerEncodeOptions), output);
         }
     }
 
@@ -43,7 +48,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
         try (input) {
             return GraphTransformer.process(readObject(input), this::makeDecodeNode, this::isContainer,
-                    this::deserializeObject);
+                    this::deserializeObject, Function.identity(), IdentityHashMap::new, new ArrayDeque<>(),
+                    graphTransformerDecodeOptions);
         }
     }
 

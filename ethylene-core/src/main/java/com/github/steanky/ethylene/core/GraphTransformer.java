@@ -18,6 +18,11 @@ public final class GraphTransformer {
      */
     public static final class Options {
         /**
+         * All options are disabled.
+         */
+        public static final int NONE = 0;
+
+        /**
          * Default options: enable reference tracking (but do not track scalar references), perform a depth-first
          * search, and lazily accumulate unfinished nodes.
          */
@@ -30,10 +35,10 @@ public final class GraphTransformer {
         public static final int REFERENCE_TRACKING = 1;
 
         /**
-         * Enables support for tracking scalar references. This will cause both node and scalar references to be
-         * tracked.
+         * Enables support for tracking scalar references. This option will do nothing if the REFERENCE_TRACKING flag
+         * is not also set.
          */
-        public static final int TRACK_SCALAR_REFERENCE = 3;
+        public static final int TRACK_SCALAR_REFERENCE = 2;
 
         /**
          * Causes graphs to be processed in a depth-first manner.
@@ -45,6 +50,11 @@ public final class GraphTransformer {
          * child's child nodes have been added.
          */
         public static final int LAZY_ACCUMULATION = 8;
+
+        /**
+         * Equivalent to using both REFERENCE_TRACKING and TRACK_SCALAR_REFERENCE.
+         */
+        public static final int TRACK_ALL_REFERENCES = 3;
 
         private static boolean hasOption(int options, int option) {
             return (options & option) != 0;
