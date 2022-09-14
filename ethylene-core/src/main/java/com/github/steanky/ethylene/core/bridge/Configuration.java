@@ -58,14 +58,15 @@ public final class Configuration {
         }
     }
 
-    private static void writeInternal(OutputStream outputStream, ConfigElement element, ConfigCodec codec)
-            throws IOException {
+    private static void checkType(ConfigElement element, ConfigCodec codec) throws IOException {
         ElementType type = element.type();
         if (!codec.supportedTopLevelTypes().contains(type)) {
             throw new IOException(
                     "Top-level elements of type '" + type + "' not supported by '" + codec.getName() + "' codec");
         }
+    }
 
+    private static void writeInternal(OutputStream outputStream, ConfigElement element, ConfigCodec codec) {
         fromStreamsInternal(InputStream::nullInputStream, () -> outputStream, codec).write(element);
     }
 
@@ -168,6 +169,7 @@ public final class Configuration {
         Objects.requireNonNull(outputStream);
         Objects.requireNonNull(codec);
         Objects.requireNonNull(element);
+        checkType(element, codec);
 
         writeInternal(outputStream, element, codec);
     }
@@ -188,7 +190,10 @@ public final class Configuration {
         Objects.requireNonNull(outputStream);
         Objects.requireNonNull(codec);
 
-        writeInternal(outputStream, processor.elementFromData(data), codec);
+        ConfigElement element = processor.elementFromData(data);
+        checkType(element, codec);
+
+        writeInternal(outputStream, element, codec);
     }
 
     /**
@@ -244,6 +249,7 @@ public final class Configuration {
     public static @NotNull String write(@NotNull ConfigElement element, @NotNull ConfigCodec codec) throws IOException {
         Objects.requireNonNull(element);
         Objects.requireNonNull(codec);
+        checkType(element, codec);
 
         OutputStream outputStream = new ByteArrayOutputStream();
         writeInternal(outputStream, element, codec);
@@ -266,8 +272,11 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(processor);
 
+        ConfigElement element = processor.elementFromData(data);
+        checkType(element, codec);
+
         OutputStream outputStream = new ByteArrayOutputStream();
-        writeInternal(outputStream, processor.elementFromData(data), codec);
+        writeInternal(outputStream, element, codec);
         return outputStream.toString();
     }
 
@@ -323,6 +332,7 @@ public final class Configuration {
         Objects.requireNonNull(element);
         Objects.requireNonNull(codec);
 
+        checkType(element, codec);
         writeInternal(Files.newOutputStream(path), element, codec);
     }
 
@@ -343,6 +353,9 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(processor);
 
-        writeInternal(Files.newOutputStream(path), processor.elementFromData(data), codec);
+        ConfigElement element = processor.elementFromData(data);
+        checkType(element, codec);
+
+        writeInternal(Files.newOutputStream(path), element, codec);
     }
 }
