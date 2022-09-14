@@ -15,13 +15,16 @@ import java.util.function.Supplier;
  */
 public final class GraphTransformer {
     public static final class Options {
+        /**
+         * Default options: circular references supported, scalar references are not tracked, and depth-first traversal.
+         */
         public static final int DEFAULT = 0;
 
         public static final int DISABLE_CIRCULAR_REF_SUPPORT = 1;
         public static final int CIRCULAR_REF_FOR_SCALAR = 2;
         public static final int BREADTH_FIRST = 4;
 
-        public static boolean hasOption(int options, int option) {
+        static boolean hasOption(int options, int option) {
             return (options & option) != 0;
         }
     }
@@ -85,21 +88,26 @@ public final class GraphTransformer {
                     if (hasOutput) {
                         TIn second = entry.getSecond();
                         TOut out;
+                        boolean circular;
                         if (circularRefSupport && circularRefForScalar) {
                             TVisit visit = visitKeyMapper.apply(second);
                             if (visited.containsKey(visit)) {
                                 out = visited.get(visit);
+                                circular = true;
                             }
                             else {
                                 out = scalarMapper.apply(second);
+                                circular = false;
                             }
                         }
                         else {
                             out = scalarMapper.apply(second);
+                            circular = false;
                         }
 
-                        node.output.accumulator.accept(entry.getFirst(), out, false);
+                        node.output.accumulator.accept(entry.getFirst(), out, circular);
                     }
+
                     continue;
                 }
 
