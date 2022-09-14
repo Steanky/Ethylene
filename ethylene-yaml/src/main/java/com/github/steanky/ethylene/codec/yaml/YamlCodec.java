@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.codec.yaml;
 
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.snakeyaml.engine.v2.api.*;
@@ -10,16 +11,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
  * Provides support for the YAML format.
  */
 public class YamlCodec extends AbstractConfigCodec {
+    private static final String NAME = "YAML";
     private static final String PREFERRED_EXTENSION = "yml";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION, "yaml");
 
@@ -91,5 +90,16 @@ public class YamlCodec extends AbstractConfigCodec {
     @Override
     public @NotNull String getPreferredExtension() {
         return PREFERRED_EXTENSION;
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return NAME;
+    }
+
+    @Override
+    public @NotNull EnumSet<ElementType> supportedTopLevelTypes() {
+        //always return a new set, EnumSet static methods produce modifiable collections
+        return EnumSet.allOf(ElementType.class);
     }
 }

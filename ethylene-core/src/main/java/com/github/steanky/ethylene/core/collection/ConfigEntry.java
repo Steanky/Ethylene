@@ -26,7 +26,7 @@ public final class ConfigEntry implements Entry<String, ConfigElement> {
     }
 
     @Override
-    public @Nullable String getFirst() {
+    public String getFirst() {
         return key;
     }
 

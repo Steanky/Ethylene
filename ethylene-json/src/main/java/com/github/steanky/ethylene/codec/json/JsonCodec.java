@@ -22,6 +22,8 @@ public class JsonCodec extends AbstractConfigCodec {
      * The default {@link Gson} instance used to read and write data.
      */
     public static final Gson DEFAULT_GSON = new Gson();
+
+    private static final String NAME = "JSON";
     private static final String PREFERRED_EXTENSION = "json";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
@@ -71,5 +73,10 @@ public class JsonCodec extends AbstractConfigCodec {
     @Override
     public @NotNull String getPreferredExtension() {
         return PREFERRED_EXTENSION;
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return NAME;
     }
 }

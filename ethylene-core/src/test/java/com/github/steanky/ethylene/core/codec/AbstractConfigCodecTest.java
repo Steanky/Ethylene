@@ -63,6 +63,11 @@ class AbstractConfigCodecTest {
             }
 
             @Override
+            public @NotNull String getName() {
+                return "test";
+            }
+
+            @Override
             protected @NotNull Object readObject(@NotNull InputStream input) {
                 return root;
             }

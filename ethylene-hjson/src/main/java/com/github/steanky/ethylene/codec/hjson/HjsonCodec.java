@@ -19,6 +19,7 @@ import java.util.Set;
  * Provides support for HJSON.
  */
 public class HjsonCodec extends AbstractConfigCodec {
+    private static final String NAME = "HJSON";
     private static final String PREFERRED_EXTENSION = "hjson";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
 
@@ -158,5 +159,10 @@ public class HjsonCodec extends AbstractConfigCodec {
     @Override
     public @NotNull String getPreferredExtension() {
         return PREFERRED_EXTENSION;
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return NAME;
     }
 }

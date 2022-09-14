@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.EnumSet;
 import java.util.Set;
 
 /**
@@ -59,4 +60,10 @@ public interface ConfigCodec {
      * @return the preferred extension, without any leading period, or an empty string
      */
     @NotNull String getPreferredExtension();
+
+    @NotNull String getName();
+
+    default @NotNull EnumSet<ElementType> supportedTopLevelTypes() {
+        return EnumSet.of(ElementType.NODE);
+    }
 }

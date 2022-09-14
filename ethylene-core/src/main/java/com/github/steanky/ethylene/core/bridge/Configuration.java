@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.bridge;
 
 import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.core.util.FutureUtils;
@@ -57,7 +58,14 @@ public final class Configuration {
         }
     }
 
-    private static void writeInternal(OutputStream outputStream, ConfigElement element, ConfigCodec codec) {
+    private static void writeInternal(OutputStream outputStream, ConfigElement element, ConfigCodec codec)
+            throws IOException {
+        ElementType type = element.type();
+        if (!codec.supportedTopLevelTypes().contains(type)) {
+            throw new IOException("Top-level elements of type '" + type + "' not supported by '" + codec.getName() +
+                    "' codec");
+        }
+
         fromStreamsInternal(InputStream::nullInputStream, () -> outputStream, codec).write(element);
     }
 

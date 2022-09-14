@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import javax.print.attribute.standard.MediaSize;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +27,7 @@ import java.util.*;
  * in order to provide proper support for dates.
  */
 public class TomlCodec extends AbstractConfigCodec {
+    private static final String NAME = "TOML";
     private static final String PREFERRED_EXTENSION = "toml";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
 
@@ -128,5 +130,10 @@ public class TomlCodec extends AbstractConfigCodec {
     @Override
     public @NotNull String getPreferredExtension() {
         return PREFERRED_EXTENSION;
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return NAME;
     }
 }
