@@ -144,7 +144,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
                 return ConfigPrimitive.NULL;
             }, entry -> getKey(entry, supportSymlinks), HashMap::new, new ArrayDeque<>(),
-                    GraphTransformer.Options.CIRCULAR_REF_FOR_SCALAR);
+                    GraphTransformer.Options.TRACK_SCALAR_REFERENCE);
 
             exceptionHolder.throwIfPresent();
             return element;
@@ -266,7 +266,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
                 return potentialContainer.isDirectory;
             }, Function.identity(), entry -> entry.element, IdentityHashMap::new, new ArrayDeque<>(),
-                    GraphTransformer.Options.CIRCULAR_REF_FOR_SCALAR);
+                    GraphTransformer.Options.TRACK_SCALAR_REFERENCE);
 
             exceptionHolder.throwIfPresent();
             return null;

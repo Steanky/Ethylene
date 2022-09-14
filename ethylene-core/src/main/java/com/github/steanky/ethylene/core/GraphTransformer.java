@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.core;
 import com.github.steanky.ethylene.core.collection.Entry;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -14,17 +13,40 @@ import java.util.function.Supplier;
  * transformations.
  */
 public final class GraphTransformer {
+    /**
+     * Bit flags for setting various options.
+     */
     public static final class Options {
         /**
-         * Default options: circular references supported, scalar references are not tracked, and depth-first traversal.
+         * Default options: enable reference tracking (but do not track scalar references), perform a depth-first
+         * search, and lazily accumulate unfinished nodes.
          */
-        public static final int DEFAULT = 0;
+        public static final int DEFAULT = 0b1101;
 
-        public static final int DISABLE_CIRCULAR_REF_SUPPORT = 1;
-        public static final int CIRCULAR_REF_FOR_SCALAR = 2;
-        public static final int BREADTH_FIRST = 4;
+        /**
+         * Enables support for reference tracking. If this is enabled, all node references will be tracked, whereas
+         * scalar references <i>can</i> be tracked only if their corresponding option flag is set.
+         */
+        public static final int REFERENCE_TRACKING = 1;
 
-        static boolean hasOption(int options, int option) {
+        /**
+         * Enables support for tracking scalar references. This will cause both node and scalar references to be
+         * tracked.
+         */
+        public static final int TRACK_SCALAR_REFERENCE = 3;
+
+        /**
+         * Causes graphs to be processed in a depth-first manner.
+         */
+        public static final int DEPTH_FIRST = 4;
+
+        /**
+         * Enables lazy accumulation of nodes. Child nodes will only be added to their parent accumulator when all the
+         * child's child nodes have been added.
+         */
+        public static final int LAZY_ACCUMULATION = 8;
+
+        private static boolean hasOption(int options, int option) {
             return (options & option) != 0;
         }
     }
@@ -63,11 +85,13 @@ public final class GraphTransformer {
             return rootNode.output.data;
         }
 
-        boolean circularRefSupport = !Options.hasOption(flags, Options.DISABLE_CIRCULAR_REF_SUPPORT);
-        boolean circularRefForScalar = Options.hasOption(flags, Options.CIRCULAR_REF_FOR_SCALAR);
-        boolean breadthFirst = Options.hasOption(flags, Options.BREADTH_FIRST);
+        boolean circularRefSupport = Options.hasOption(flags, Options.REFERENCE_TRACKING);
+        boolean trackScalarReference = Options.hasOption(flags, Options.TRACK_SCALAR_REFERENCE);
+        boolean depthFirst = Options.hasOption(flags, Options.DEPTH_FIRST);
+        boolean lazyAccumulation = Options.hasOption(flags, Options.LAZY_ACCUMULATION);
 
         //don't initialize the visitation map if there is no support for circular references
+        //make sure usages of this map check circularRefSupport to avoid NPE
         Map<TVisit, TOut> visited = null;
         if (circularRefSupport) {
             visited = visitedSupplier.get();
@@ -76,11 +100,13 @@ public final class GraphTransformer {
 
         stack.push(rootNode);
         while (!stack.isEmpty()) {
+            boolean peek = lazyAccumulation || depthFirst;
+
             //guaranteed to be non-empty (empty nodes are never added to the stack)
-            Node<TIn, TOut, TKey> node = breadthFirst ? stack.pop() : stack.peek();
+            Node<TIn, TOut, TKey> node = peek ? stack.peek() : stack.pop();
 
             boolean hasOutput = hasOutput(node);
-            boolean unfinished = false;
+            boolean finished = true;
             while (node.inputIterator.hasNext()) {
                 Entry<TKey, TIn> entry = node.inputIterator.next();
                 if (!containerPredicate.test(entry.getSecond())) {
@@ -89,7 +115,9 @@ public final class GraphTransformer {
                         TIn second = entry.getSecond();
                         TOut out;
                         boolean circular;
-                        if (circularRefSupport && circularRefForScalar) {
+
+                        //keep track of scalar references in the same way as nodes, if enabled
+                        if (circularRefSupport && trackScalarReference) {
                             TVisit visit = visitKeyMapper.apply(second);
                             if (visited.containsKey(visit)) {
                                 out = visited.get(visit);
@@ -143,28 +171,40 @@ public final class GraphTransformer {
                     continue;
                 }
 
-                //newNode will be processed next
+                //if depth-first, newNode is the next node to be processed
+                //if breadth-first, nodes further to the end of this node's iterator will be processed first
                 stack.push(newNode);
 
-                if (!breadthFirst) {
-                    if (hasOutput) {
+                if (hasOutput) {
+                    if (lazyAccumulation) {
                         //set the current node's result key and out fields
                         node.result.key = entry.getFirst();
                         node.result.out = newNode.output.data;
-                        unfinished = true;
                     }
+                    else {
+                        node.output.accumulator.accept(entry.getFirst(), newNode.output.data, false);
+                    }
+                }
 
+                //depthFirst also means we've only peeked the top node!
+                if (depthFirst) {
+                    //if depth-first, try to process the next node
+                    //we are "unfinished" at this point because we have a child node (newNode)
+                    finished = false;
                     break;
                 }
             }
 
-            if (!unfinished && !breadthFirst) {
+            if (finished && peek) {
                 //remove the finished node
                 stack.pop();
 
-                Node<TIn, TOut, TKey> old = stack.peek();
-                if (old != null && hasOutput(old)) {
-                    old.output.accumulator.accept(old.result.key, old.result.out, false);
+                if (lazyAccumulation) {
+                    //if lazy, it means we have to add a child node to "old", if it exists
+                    Node<TIn, TOut, TKey> old = stack.peek();
+                    if (old != null && hasOutput(old)) {
+                        old.output.accumulator.accept(old.result.key, old.result.out, false);
+                    }
                 }
             }
         }
