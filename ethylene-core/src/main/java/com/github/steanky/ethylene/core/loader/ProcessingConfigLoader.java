@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TData> {
     private final ConfigProcessor<TData> processor;
     private final TData defaultData;
-    private final ConfigSource bridge;
+    private final ConfigSource source;
 
     /**
      * Constructs a new instance of ProcessingConfigLoader from the given {@link ConfigProcessor} and default data
@@ -28,13 +28,13 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
      *
      * @param processor   the processor to use
      * @param defaultData the default data object
-     * @param bridge      the {@link ConfigSource} used for reading/writing data
+     * @param source      the {@link ConfigSource} used for reading/writing data
      */
     public ProcessingConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
-            @NotNull ConfigSource bridge) {
+            @NotNull ConfigSource source) {
         this.processor = Objects.requireNonNull(processor);
         this.defaultData = Objects.requireNonNull(defaultData);
-        this.bridge = Objects.requireNonNull(bridge);
+        this.source = Objects.requireNonNull(source);
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
         if (isAbsent()) {
             //elementFromData will run synchronously in all cases, bridge::write MAY run asynchronously
             return FutureUtils.completeCallableSync(() -> processor.elementFromData(defaultData))
-                    .thenCompose(bridge::write);
+                    .thenCompose(source::write);
         }
 
         return CompletableFuture.completedFuture(null);
@@ -51,14 +51,14 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
     @Override
     public @NotNull CompletableFuture<TData> load() {
         //bridge.read() MAY run asynchronously, dataFromElement will always run synchronously
-        return bridge.read()
+        return source.read()
                 .thenCompose(element -> FutureUtils.completeCallableSync(() -> processor.dataFromElement(element)));
     }
 
     @Override
     public @NotNull CompletableFuture<Void> write(@NotNull TData data) {
         return FutureUtils.completeCallableSync(() -> processor.elementFromData(defaultData))
-                .thenCompose(bridge::write);
+                .thenCompose(source::write);
     }
 
     /**

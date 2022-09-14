@@ -35,10 +35,15 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(output);
 
         try (output) {
-            writeObject(
-                    GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
-                            Function.identity(), IdentityHashMap::new, new ArrayDeque<>(),
-                            graphTransformerEncodeOptions), output);
+            ElementType type = element.type();
+            if (!supportedTopLevelTypes().contains(type)) {
+                throw new IOException(
+                        "Top-level elements of type '" + type + "' not supported by '" + getName() + "' codec");
+            }
+
+            writeObject(GraphTransformer.process(element, this::makeEncodeNode, this::isContainer,
+                    this::serializeElement, Function.identity(), IdentityHashMap::new, new ArrayDeque<>(),
+                    graphTransformerEncodeOptions), output);
         }
     }
 
