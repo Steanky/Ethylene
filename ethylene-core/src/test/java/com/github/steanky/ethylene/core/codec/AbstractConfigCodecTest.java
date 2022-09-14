@@ -52,7 +52,8 @@ class AbstractConfigCodecTest {
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> subRoot = new HashMap<>();
 
-        testCodec = new AbstractConfigCodec(GraphTransformer.Options.REFERENCE_TRACKING, GraphTransformer.Options.REFERENCE_TRACKING) {
+        testCodec = new AbstractConfigCodec(GraphTransformer.Options.REFERENCE_TRACKING,
+                GraphTransformer.Options.REFERENCE_TRACKING) {
             @Override
             public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
                 return Set.of();
