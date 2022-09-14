@@ -6,8 +6,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
- * High level interface for loading configuration data from some in, and writing <i>default</i> configuration data to
- * that in.
+ * High level interface for loading configuration data from some source, and writing <i>default</i> configuration data
+ * to that source.
  *
  * @param <TData> the type of data loaded from the configuration
  */

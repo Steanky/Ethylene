@@ -27,7 +27,7 @@ public final class GraphTransformer {
          * Default options: enable reference tracking (but do not track scalar references), perform a depth-first
          * search, and lazily accumulate unfinished nodes.
          */
-        public static final int DEFAULT = 0b1101;
+        public static final int DEFAULT = 13;
 
         /**
          * Enables support for reference tracking. If this is enabled, all node references will be tracked, whereas
