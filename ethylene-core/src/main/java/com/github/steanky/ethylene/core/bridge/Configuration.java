@@ -46,16 +46,7 @@ public final class Configuration {
     }
 
     private static ConfigElement readInternal(InputStream inputStream, ConfigCodec codec) throws IOException {
-        try {
-            return fromStreamsInternal(() -> inputStream, OutputStream::nullOutputStream, codec).read().get();
-        } catch (ExecutionException | InterruptedException exception) {
-            Throwable cause = exception.getCause();
-            if (cause instanceof IOException ioException) {
-                throw ioException;
-            } else {
-                throw new IOException(cause);
-            }
-        }
+        return codec.decode(inputStream);
     }
 
     private static void checkType(ConfigElement element, ConfigCodec codec) throws IOException {
@@ -66,8 +57,9 @@ public final class Configuration {
         }
     }
 
-    private static void writeInternal(OutputStream outputStream, ConfigElement element, ConfigCodec codec) {
-        fromStreamsInternal(InputStream::nullInputStream, () -> outputStream, codec).write(element);
+    private static void writeInternal(OutputStream outputStream, ConfigElement element, ConfigCodec codec)
+            throws IOException {
+        codec.encode(element, outputStream);
     }
 
     /**

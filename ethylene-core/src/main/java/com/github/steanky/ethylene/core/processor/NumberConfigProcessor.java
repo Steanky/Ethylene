@@ -13,7 +13,7 @@ import java.util.function.Function;
  * @param <TNumber> the subclass of Number to convert
  */
 class NumberConfigProcessor<TNumber extends Number> implements ConfigProcessor<TNumber> {
-    private final Function<Number, TNumber> converter;
+    private final Function<? super Number, ? extends TNumber> converter;
 
     /**
      * Creates a new instance of this class using the provided conversion function, which will generally be used to
@@ -21,7 +21,7 @@ class NumberConfigProcessor<TNumber extends Number> implements ConfigProcessor<T
      *
      * @param converter the conversion function
      */
-    NumberConfigProcessor(@NotNull Function<Number, TNumber> converter) {
+    NumberConfigProcessor(@NotNull Function<? super Number, ? extends TNumber> converter) {
         this.converter = Objects.requireNonNull(converter);
     }
 

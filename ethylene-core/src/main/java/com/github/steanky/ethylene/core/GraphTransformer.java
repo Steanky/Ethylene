@@ -122,6 +122,8 @@ public final class GraphTransformer {
             boolean finished = true;
             while (node.inputIterator.hasNext()) {
                 Entry<TKey, TIn> entry = node.inputIterator.next();
+
+                //if not a container, then we have a scalar
                 if (!containerPredicate.test(entry.getSecond())) {
                     //nodes that aren't containers have no children, so we can immediately add them to the accumulator
                     if (hasOutput) {
