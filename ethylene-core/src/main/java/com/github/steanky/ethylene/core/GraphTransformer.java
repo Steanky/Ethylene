@@ -18,7 +18,8 @@ public final class GraphTransformer {
      */
     public static final class Options {
         /**
-         * All options are disabled.
+         * All options are disabled. This corresponds to a breadth-first graph transform with no reference tracking of
+         * any sort, and no lazy accumulation.
          */
         public static final int NONE = 0;
 
@@ -30,7 +31,9 @@ public final class GraphTransformer {
 
         /**
          * Enables support for reference tracking. If this is enabled, all node references will be tracked, whereas
-         * scalar references <i>can</i> be tracked only if their corresponding option flag is set.
+         * scalar references <i>can</i> be tracked only if their corresponding option flag is set. Warning: when this
+         * option is disabled, any circular references in the input data structure will cause an infinite loop and
+         * eventually an OOM.
          */
         public static final int REFERENCE_TRACKING = 1;
 
@@ -63,7 +66,7 @@ public final class GraphTransformer {
 
     private static final Accumulator<?, ?> EMPTY_ACCUMULATOR = (Accumulator<Object, Object>) (o, o2, circular) -> {};
     private static final Output<?, ?> EMPTY_OUTPUT = new Output<>(null, EMPTY_ACCUMULATOR);
-    private static final Node<Object, Object, Object> EMPTY_NODE = new Node<>(new Iterator<>() {
+    private static final Node<?, ?, ?> EMPTY_NODE = new Node<>(new Iterator<>() {
         @Override
         public boolean hasNext() {
             return false;
@@ -173,7 +176,7 @@ public final class GraphTransformer {
 
                 if (isEmpty(newNode)) {
                     if (hasOutput) {
-                        //call the accumulator right away, empty nodes are not unfinished
+                        //call the accumulator right away, empty nodes cannot have children
                         node.output.accumulator.accept(entry.getFirst(), newNode.output.data, false);
                     }
 

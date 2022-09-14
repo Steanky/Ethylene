@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -28,6 +29,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DirectoryTreeConfigSource implements ConfigSource {
+    private static final LinkOption[] EMPTY_LINK_OPTION_ARRAY = new LinkOption[0];
+    private static final FileVisitOption[] EMPTY_FILE_VISIT_OPTION_ARRAY = new FileVisitOption[0];
+
     private final Path rootPath;
     private final CodecResolver codecResolver;
     private final PathNameInspector pathNameInspector;
@@ -36,6 +40,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     private final String preferredExtension;
     private final Executor executor;
     private final boolean supportSymlinks;
+    private final FileVisitOption[] fileVisitOptions;
 
     public DirectoryTreeConfigSource(@NotNull Path rootPath, @NotNull CodecResolver codecResolver,
             @NotNull PathNameInspector pathNameInspector, @NotNull ConfigCodec preferredCodec,
@@ -50,13 +55,17 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 "." + preferredExtensionWithoutDot;
         this.executor = executor;
         this.supportSymlinks = supportSymlinks;
+        this.fileVisitOptions = supportSymlinks ? new FileVisitOption[] {FileVisitOption.FOLLOW_LINKS} :
+                EMPTY_FILE_VISIT_OPTION_ARRAY;
     }
 
     private static Object getKey(Path path, boolean followSymlinks) {
         try {
             //try to use file keys if possible (supported by the system & accessible by us)
             //readAttributes follows symlinks (so a symlink to a file and the file itself will have the same key)
-            Object fileKey = Files.readAttributes(path, BasicFileAttributes.class).fileKey();
+            LinkOption[] options = followSymlinks ? EMPTY_LINK_OPTION_ARRAY : new LinkOption[]
+                    {LinkOption.NOFOLLOW_LINKS};
+            Object fileKey = Files.readAttributes(path, BasicFileAttributes.class, options).fileKey();
             if (fileKey != null) {
                 return fileKey;
             }
@@ -113,7 +122,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 //gets all files that are directories, not the current path, or a file with an extension we can
                 //understand
                 List<Path> pathList = exceptionHolder.supply(() -> {
-                    try (Stream<Path> paths = Files.walk(directoryEntry, 0, FileVisitOption.FOLLOW_LINKS)) {
+                    try (Stream<Path> paths = Files.walk(directoryEntry, 1, fileVisitOptions)) {
                         return paths.filter(path -> filterPath(directoryEntry, path)).toList();
                     }
                 }, List::of);
@@ -176,7 +185,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 //get paths currently in the folder
                 //if there's an exception, existingPaths will be empty
                 Set<Path> existingPaths = exceptionHolder.supply(() -> {
-                    try (Stream<Path> paths = Files.walk(normalizedPath, 0, FileVisitOption.FOLLOW_LINKS)) {
+                    try (Stream<Path> paths = Files.walk(normalizedPath, 1, fileVisitOptions)) {
                         //like when reading, include all directories, and ignore files whose extensions we don't
                         //recognize
                         return paths.filter(path -> filterPath(normalizedPath, path)).collect(Collectors.toSet());
@@ -246,9 +255,13 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                             //symlinks when indicated to do so by the circular flag
                             OutputInfo actualInfo = actualIterator.next().getSecond();
 
-                            if (circular) {
-                                //make a symlink to the target file/directory instead of making a new one
-                                exceptionHolder.call(() -> Files.createSymbolicLink(actualInfo.path, outputInfo.path));
+                            if (circular && supportSymlinks) {
+                                //make a symlink to the target file/directory instead of making a copy
+                                //strip the extension if the link target is a directory
+                                Path link = outputInfo.isDirectory ? actualInfo.path.getParent()
+                                        .resolve(pathNameInspector.getName(actualInfo.path)) : actualInfo.path;
+
+                                exceptionHolder.call(() -> Files.createSymbolicLink(link, outputInfo.path));
                             } else if (!outputInfo.isDirectory) {
                                 //if outputInfo is a directory, no need to bother writing anything
                                 //(it will be created when its appropriate node is initialized)
