@@ -7,7 +7,7 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
-import java.util.Date;
+import java.time.temporal.Temporal;
 
 public class TomlTypeHinter extends BasicTypeHinter {
     public static final TypeHinter INSTANCE = new TomlTypeHinter();
@@ -16,7 +16,7 @@ public class TomlTypeHinter extends BasicTypeHinter {
 
     @Override
     public @NotNull ElementType getHint(@NotNull Type type) {
-        if (TypeUtils.isAssignable(type, Date.class)) {
+        if (TypeUtils.isAssignable(type, Temporal.class)) {
             return ElementType.SCALAR;
         }
 

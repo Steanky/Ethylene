@@ -248,7 +248,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                             if (circular) {
                                 //make a symlink to the target file/directory instead of making a new one
                                 exceptionHolder.call(() -> Files.createSymbolicLink(actualInfo.path, outputInfo.path));
-                            } else if (!outputInfo.writeDirectory) {
+                            } else if (!outputInfo.isDirectory) {
                                 //if outputInfo is a directory, no need to bother writing anything
                                 //(it will be created when its appropriate node is initialized)
                                 String extension = pathNameInspector.getExtension(actualInfo.path);
@@ -263,7 +263,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                     return false;
                 }
 
-                return potentialContainer.writeDirectory;
+                return potentialContainer.isDirectory;
             }, Function.identity(), entry -> getKey(entry.path, supportSymlinks), new HashMap<>(), new ArrayDeque<>());
 
             exceptionHolder.throwIfPresent();
@@ -271,5 +271,5 @@ public class DirectoryTreeConfigSource implements ConfigSource {
         }, executor);
     }
 
-    private record OutputInfo(Path path, ConfigElement element, boolean writeDirectory) {}
+    private record OutputInfo(Path path, ConfigElement element, boolean isDirectory) {}
 }
