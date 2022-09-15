@@ -6,13 +6,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 
+@FunctionalInterface
 public interface SignatureMatcher {
     @NotNull MatchingSignature signature(@NotNull Type desiredType, ConfigElement providedElement,
             Object providedObject);
 
+    @FunctionalInterface
     interface Source {
         SignatureMatcher matcherFor(@NotNull Type type, @Nullable ConfigElement element);
-
-        void registerCustomSignature(@NotNull Signature signature);
     }
 }

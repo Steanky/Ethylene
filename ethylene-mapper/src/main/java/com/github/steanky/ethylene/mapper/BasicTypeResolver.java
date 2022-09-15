@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -13,10 +14,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Objects;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class BasicTypeResolver implements TypeResolver {
@@ -24,17 +22,33 @@ public class BasicTypeResolver implements TypeResolver {
     private final Map<Class<?>, ClassEntry> types;
     private final Map<Class<?>, ClassEntry> cache;
 
-    public BasicTypeResolver(@NotNull TypeHinter typeHinter) {
+    public BasicTypeResolver(@NotNull TypeHinter typeHinter,
+            @NotNull Collection<Entry<Class<?>, Class<?>>> typeImplementations) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
-        types = new WeakHashMap<>();
-        cache = new WeakHashMap<>();
+        types = new WeakHashMap<>(typeImplementations.size());
+        cache = new WeakHashMap<>(typeImplementations.size());
+
+        registerTypeImplementations(typeImplementations);
     }
 
-    private static Class<?> forName(String className, Supplier<String> nameSupplier) {
-        try {
-            return ClassUtils.getClass(className);
-        } catch (ClassNotFoundException e) {
-            throw new MapperException("got invalid concrete type when resolving '" + nameSupplier.get() + "'", e);
+    private void registerTypeImplementations(Collection<Entry<Class<?>, Class<?>>> typeImplementations) {
+        for (Entry<Class<?>, Class<?>> entry : typeImplementations) {
+            Class<?> implementation = entry.getFirst();
+            Class<?> superclass = entry.getSecond();
+
+            if (!TypeUtils.isAssignable(implementation, superclass)) {
+                throw new MapperException(
+                        "Implementation class '" + implementation.getName() + "' is not assignable to superclass '" +
+                                superclass.getName() + "'");
+            }
+
+            ClassEntry newEntry = new ClassEntry(ClassUtils.getName(implementation), implementation);
+            if (types.putIfAbsent(superclass, newEntry) != null) {
+                throw new MapperException("There is already an implementation type registered for class '" + superclass
+                        .getName() + "'");
+            }
+
+            cache.put(superclass, newEntry);
         }
     }
 
@@ -46,7 +60,7 @@ public class BasicTypeResolver implements TypeResolver {
         ElementType hint = typeHinter.getHint(raw);
         if (raw.isArray() || raw.isPrimitive()) {
             if (element != null && !hint.compatible(element)) {
-                throw new MapperException("incompatible types: " + hint + " to " + type);
+                throw new MapperException("Incompatible type assignment '" + hint + "' to '" + type + "'");
             }
 
             return type;
@@ -71,8 +85,7 @@ public class BasicTypeResolver implements TypeResolver {
             if (entry != null) {
                 Class<?> ref = entry.reference.get();
                 if (ref == null) {
-                    ref = forName(entry.name, type::getTypeName);
-                    entry.reference = new WeakReference<>(ref);
+                    throw new MapperException("Class '" + entry.name + "' no longer exists");
                 }
 
                 cache.put(raw, entry);
@@ -109,7 +122,7 @@ public class BasicTypeResolver implements TypeResolver {
             };
 
             if (!TypeUtils.isAssignable(elementType, type)) {
-                throw new MapperException("element type '" + element.type() + "' not compatible with '" + type + "'");
+                throw new MapperException("Element type '" + element.type() + "' not compatible with '" + type + "'");
             }
 
             return elementType;
@@ -119,25 +132,9 @@ public class BasicTypeResolver implements TypeResolver {
         return type;
     }
 
-    public void registerTypeImplementation(@NotNull Class<?> superclass, @NotNull Class<?> implementation) {
-        if (!TypeUtils.isAssignable(implementation, superclass)) {
-            throw new MapperException(
-                    "implementation class '" + implementation.getName() + "' is not assignable to " + "superclass '" +
-                            superclass.getName() + "'");
-        }
-
-        ClassEntry newEntry = new ClassEntry(ClassUtils.getName(implementation), implementation);
-        if (types.putIfAbsent(superclass, newEntry) != null) {
-            throw new MapperException(
-                    "there is already an implementation type registered for class '" + superclass.getName() + "'");
-        }
-
-        cache.put(superclass, newEntry);
-    }
-
     private static class ClassEntry {
         private final String name;
-        private Reference<Class<?>> reference;
+        private final Reference<Class<?>> reference;
 
         private ClassEntry(String name, Class<?> type) {
             this.name = name;

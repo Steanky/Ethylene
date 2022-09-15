@@ -10,7 +10,7 @@ import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
-import com.github.steanky.ethylene.core.util.ExceptionHolder;
+import com.github.steanky.ethylene.core.util.ExceptionHandler;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -117,11 +117,11 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 return ConfigPrimitive.NULL;
             }
 
-            ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>(IOException.class);
+            ExceptionHandler<IOException> exceptionHandler = new ExceptionHandler<>(IOException.class);
             ConfigElement element = GraphTransformer.process(rootPath, directoryEntry -> {
                 //gets all files that are directories, not the current path, or a file with an extension we can
                 //understand
-                List<Path> pathList = exceptionHolder.get(() -> {
+                List<Path> pathList = exceptionHandler.get(() -> {
                     try (Stream<Path> paths = Files.walk(directoryEntry, 1, fileVisitOptions)) {
                         return paths.filter(path -> filterPath(directoryEntry, path)).toList();
                     }
@@ -147,7 +147,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             }, Files::isDirectory, entry -> {
                 String extension = pathNameInspector.getExtension(entry);
                 if (codecResolver.hasCodec(extension)) {
-                    return exceptionHolder.get(() -> Configuration.read(entry, codecResolver.resolve(extension)),
+                    return exceptionHandler.get(() -> Configuration.read(entry, codecResolver.resolve(extension)),
                             () -> ConfigPrimitive.NULL);
                 }
 
@@ -155,7 +155,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             }, entry -> getKey(entry, supportSymlinks), HashMap::new, new ArrayDeque<>(),
                     GraphTransformer.Options.TRACK_ALL_REFERENCES);
 
-            exceptionHolder.throwIfPresent();
+            exceptionHandler.throwIfPresent();
             return element;
         }, executor);
     }
@@ -177,14 +177,14 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 return null;
             }
 
-            ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>(IOException.class);
+            ExceptionHandler<IOException> exceptionHandler = new ExceptionHandler<>(IOException.class);
             GraphTransformer.process(new OutputInfo(rootPath, element, true), containerEntry -> {
-                exceptionHolder.run(() -> Files.createDirectories(containerEntry.path));
+                exceptionHandler.run(() -> Files.createDirectories(containerEntry.path));
                 Path normalizedPath = containerEntry.path.normalize();
 
                 //get paths currently in the folder
                 //if there's an exception, existingPaths will be empty
-                Set<Path> existingPaths = exceptionHolder.get(() -> {
+                Set<Path> existingPaths = exceptionHandler.get(() -> {
                     try (Stream<Path> paths = Files.walk(normalizedPath, 1, fileVisitOptions)) {
                         //like when reading, include all directories, and ignore files whose extensions we don't
                         //recognize
@@ -260,13 +260,13 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                                 Path link = outputInfo.isDirectory ? actualInfo.path.getParent()
                                         .resolve(pathNameInspector.getName(actualInfo.path)) : actualInfo.path;
 
-                                exceptionHolder.run(() -> Files.createSymbolicLink(link, outputInfo.path));
+                                exceptionHandler.run(() -> Files.createSymbolicLink(link, outputInfo.path));
                             } else if (!outputInfo.isDirectory) {
                                 //if outputInfo is a directory, no need to bother writing anything
                                 //(it will be created when its appropriate node is initialized)
                                 String extension = pathNameInspector.getExtension(actualInfo.path);
 
-                                exceptionHolder.run(() -> Configuration.write(actualInfo.path, actualInfo.element,
+                                exceptionHandler.run(() -> Configuration.write(actualInfo.path, actualInfo.element,
                                         codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) :
                                                 preferredCodec));
                             }
@@ -280,7 +280,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             }, Function.identity(), entry -> entry.element, IdentityHashMap::new, new ArrayDeque<>(),
                     GraphTransformer.Options.TRACK_ALL_REFERENCES);
 
-            exceptionHolder.throwIfPresent();
+            exceptionHandler.throwIfPresent();
             return null;
         }, executor);
     }

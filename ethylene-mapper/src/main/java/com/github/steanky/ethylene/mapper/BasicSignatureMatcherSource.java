@@ -27,12 +27,21 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     private final Map<Class<?>, Set<Signature>> customSignatures;
 
     public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter,
-            @NotNull SignatureBuilder.Selector signatureSelector) {
+            @NotNull SignatureBuilder.Selector signatureSelector, @NotNull Collection<Signature> customSignatures) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.signatureSelector = Objects.requireNonNull(signatureSelector);
 
         this.signatureCache = new WeakHashMap<>();
-        this.customSignatures = new WeakHashMap<>();
+        this.customSignatures = new WeakHashMap<>(customSignatures.size());
+
+        registerCustomSignatures(customSignatures);
+    }
+
+    private void registerCustomSignatures(Collection<Signature> signatures) {
+        for (Signature signature : signatures) {
+            customSignatures.computeIfAbsent(ReflectionUtils.rawType(signature.returnType()), ignored ->
+                    new HashSet<>(2)).add(signature);
+        }
     }
 
     @Override
@@ -72,10 +81,5 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
                 case SCALAR -> null;
             };
         });
-    }
-
-    public void registerCustomSignature(@NotNull Signature signature) {
-        customSignatures.computeIfAbsent(ReflectionUtils.rawType(signature.returnType()), ignored -> new HashSet<>(2))
-                .add(signature);
     }
 }

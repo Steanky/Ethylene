@@ -6,8 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 
+@FunctionalInterface
 public interface TypeResolver {
     @NotNull Type resolveType(@NotNull Type type, @Nullable ConfigElement configElement);
-
-    void registerTypeImplementation(@NotNull Class<?> superclass, @NotNull Class<?> implementation);
 }

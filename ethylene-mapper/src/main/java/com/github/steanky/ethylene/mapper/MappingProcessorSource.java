@@ -10,9 +10,10 @@ import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.Function;
 
 public interface MappingProcessorSource {
-    static Builder builder() {
+    static @NotNull Builder builder() {
         return new Builder();
     }
 
@@ -26,28 +27,50 @@ public interface MappingProcessorSource {
                         Signature.type("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
                 Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
 
-        private SignatureMatcher.Source signatureMatcherSource;
+        private final Collection<Signature> customSignatures = new HashSet<>();
+        private final Collection<Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
+        private final Collection<Entry<Class<?>, SignatureBuilder>> signatureBuilderPreferences = new HashSet<>();
+
         private TypeHinter typeHinter = BasicTypeHinter.INSTANCE;
+        private SignatureBuilder defaultBuilder = FieldSignatureBuilder.INSTANCE;
         private ScalarSource scalarSource = BasicScalarSource.INSTANCE;
-        private SignatureBuilder.Selector signatureBuilderSelector;
-        private SignatureBuilder defaultBuilder;
-        private TypeResolver typeResolver;
 
-        private Set<Signature> customSignatures;
-        private Set<Entry<Class<?>, Class<?>>> typeImplementations;
-        private Set<Entry<Class<?>, SignatureBuilder>> signaturePreferences;
-
-        private boolean used;
+        private Function<? super Collection<Signature>, ? extends SignatureMatcher.Source>
+                signatureMatcherSourceFunction = customSignatures -> new BasicSignatureMatcherSource(typeHinter,
+                getSignatureBuilderSelector(), customSignatures);
+        private Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector>
+                signatureBuilderSelectorFunction = signaturePreferences ->
+                new BasicSignatureBuilderSelector(defaultBuilder, signaturePreferences);
+        private Function<? super Collection<Entry<Class<?>, Class<?>>>, ? extends TypeResolver> typeResolverFunction =
+                typeImplementations -> new BasicTypeResolver(typeHinter, typeImplementations);
 
         Builder() {}
 
-        public @NotNull Builder withSignatureMatcherSource(@NotNull SignatureMatcher.Source source) {
-            this.signatureMatcherSource = Objects.requireNonNull(source);
+        private SignatureBuilder.Selector getSignatureBuilderSelector() {
+            return signatureBuilderSelectorFunction.apply(signatureBuilderPreferences);
+        }
+
+        public @NotNull Builder withStandardSignatures() {
+            customSignatures.add(MAP_ENTRY_SIGNATURE);
             return this;
         }
 
-        public @NotNull Builder withTypeHinter(@NotNull TypeHinter typeHinter) {
-            this.typeHinter = Objects.requireNonNull(typeHinter);
+        public @NotNull Builder withStandardTypeImplementations() {
+            typeImplementations.add(Entry.of(ArrayList.class, Collection.class));
+            typeImplementations.add(Entry.of(HashMap.class, Map.class));
+            typeImplementations.add(Entry.of(HashSet.class, Set.class));
+            return this;
+        }
+
+        public @NotNull Builder withSignatureBuilderSelectorFunction(
+                @NotNull Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector> function) {
+            this.signatureBuilderSelectorFunction = Objects.requireNonNull(function);
+            return this;
+        }
+
+        public @NotNull Builder withTypeResolverFunction(
+                @NotNull Function<? super Collection<Entry<Class<?>, Class<?>>>, ? extends TypeResolver> function) {
+            this.typeResolverFunction = Objects.requireNonNull(function);
             return this;
         }
 
@@ -56,116 +79,46 @@ public interface MappingProcessorSource {
             return this;
         }
 
-        public @NotNull Builder withSignatureBuilderSelector(@NotNull SignatureBuilder.Selector selector) {
-            this.signatureBuilderSelector = Objects.requireNonNull(selector);
-            return this;
-        }
-
         public @NotNull Builder withDefaultBuilder(@NotNull SignatureBuilder defaultBuilder) {
             this.defaultBuilder = Objects.requireNonNull(defaultBuilder);
             return this;
         }
 
-        public @NotNull Builder withTypeResolver(@NotNull TypeResolver typeResolver) {
-            this.typeResolver = Objects.requireNonNull(typeResolver);
+        public @NotNull Builder withSignatureMatcherSourceFunction(@NotNull Function<? super Collection<Signature>,
+                ? extends SignatureMatcher.Source> function) {
+            this.signatureMatcherSourceFunction = Objects.requireNonNull(function);
+            return this;
+        }
+
+        public @NotNull Builder withTypeHinter(@NotNull TypeHinter typeHinter) {
+            Objects.requireNonNull(typeHinter);
+            this.typeHinter = Objects.requireNonNull(typeHinter);
             return this;
         }
 
         public @NotNull Builder withCustomSignature(@NotNull Signature signature) {
-            Objects.requireNonNull(signature);
-            if (customSignatures == null) {
-                customSignatures = new HashSet<>(4);
-            }
-
-            customSignatures.add(signature);
+            customSignatures.add(Objects.requireNonNull(signature));
             return this;
         }
 
-        public @NotNull Builder withTypeImplementation(@NotNull Class<?> superclass, @NotNull Class<?> implementation) {
-            Objects.requireNonNull(superclass);
-            Objects.requireNonNull(implementation);
-            if (typeImplementations == null) {
-                typeImplementations = new HashSet<>(4);
-            }
-
-            typeImplementations.add(Entry.of(superclass, implementation));
+        public @NotNull Builder withTypeImplementation(@NotNull Class<?> implementation, @NotNull Class<?> superclass) {
+            typeImplementations.add(Entry.of(Objects.requireNonNull(implementation), Objects
+                    .requireNonNull(superclass)));
             return this;
         }
 
-        public @NotNull Builder withSignaturePreference(@NotNull Class<?> type, @NotNull SignatureBuilder builder) {
-            Objects.requireNonNull(type);
-            Objects.requireNonNull(builder);
-            if (signaturePreferences == null) {
-                signaturePreferences = new HashSet<>(4);
-            }
-
-            signaturePreferences.add(Entry.of(type, builder));
+        public @NotNull Builder withSignatureBuilderPreference(@NotNull Class<?> type,
+                @NotNull SignatureBuilder signatureBuilder) {
+            signatureBuilderPreferences.add(Entry.of(Objects.requireNonNull(type), Objects
+                    .requireNonNull(signatureBuilder)));
             return this;
-        }
-
-        public @NotNull Builder withStandardTypeImplementations() {
-            withTypeImplementation(Collection.class, ArrayList.class);
-            withTypeImplementation(Set.class, HashSet.class);
-            withTypeImplementation(Map.class, HashMap.class);
-            return this;
-        }
-
-        public @NotNull Builder withStandardSignatures() {
-            withCustomSignature(MAP_ENTRY_SIGNATURE);
-            return this;
-        }
-
-        private SignatureMatcher.Source makeSource() {
-            return Objects.requireNonNullElseGet(signatureMatcherSource,
-                    () -> signatureMatcherSource = new BasicSignatureMatcherSource(typeHinter, makeSelector()));
-
-        }
-
-        private SignatureBuilder.Selector makeSelector() {
-            return Objects.requireNonNullElseGet(signatureBuilderSelector,
-                    () -> signatureBuilderSelector = new BasicSignatureBuilderSelector(makeDefaultBuilder()));
-
-        }
-
-        private SignatureBuilder makeDefaultBuilder() {
-            return Objects.requireNonNullElseGet(defaultBuilder, () -> defaultBuilder = FieldSignatureBuilder.INSTANCE);
-
-        }
-
-        private TypeResolver makeTypeResolver() {
-            return Objects.requireNonNullElseGet(typeResolver, () -> typeResolver = new BasicTypeResolver(typeHinter));
-
         }
 
         public @NotNull MappingProcessorSource build() {
-            if (used) {
-                throw new IllegalStateException("builder has already been used");
-            }
-
-            used = true;
-
-            SignatureMatcher.Source source = makeSource();
-            if (customSignatures != null) {
-                for (Signature customSignature : customSignatures) {
-                    source.registerCustomSignature(customSignature);
-                }
-            }
-
-            TypeHinter hinter = typeHinter;
-            TypeResolver resolver = makeTypeResolver();
-            if (typeImplementations != null) {
-                for (Entry<Class<?>, Class<?>> entry : typeImplementations) {
-                    resolver.registerTypeImplementation(entry.getFirst(), entry.getSecond());
-                }
-            }
-
+            SignatureMatcher.Source source = signatureMatcherSourceFunction.apply(customSignatures);
+            TypeHinter hinter = this.typeHinter;
+            TypeResolver resolver = typeResolverFunction.apply(typeImplementations);
             ScalarSource scalarSource = this.scalarSource;
-
-            if (signaturePreferences != null) {
-                for (Entry<Class<?>, SignatureBuilder> preference : signaturePreferences) {
-                    signatureBuilderSelector.registerSignaturePreference(preference.getFirst(), preference.getSecond());
-                }
-            }
 
             return new MappingProcessorSource() {
                 @Override

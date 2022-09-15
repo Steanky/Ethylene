@@ -12,9 +12,9 @@ import java.util.function.Supplier;
  * operation should not prevent the others from running. To this end, it contains convenience methods which accept
  * variations of various interfaces in the {@link java.util.function} package which throw exceptions.
  *
- * @param <TErr> the type of exception handled by this holder
+ * @param <TErr> the type of exception to be handled
  */
-public class ExceptionHolder<TErr extends Exception> {
+public class ExceptionHandler<TErr extends Exception> {
     private final Class<TErr> exceptionClass;
 
     private TErr exception;
@@ -24,7 +24,7 @@ public class ExceptionHolder<TErr extends Exception> {
      *
      * @param exceptionClass the upper bound for exceptions
      */
-    public ExceptionHolder(@NotNull Class<TErr> exceptionClass) {
+    public ExceptionHandler(@NotNull Class<TErr> exceptionClass) {
         this.exceptionClass = Objects.requireNonNull(exceptionClass);
     }
 
@@ -68,7 +68,7 @@ public class ExceptionHolder<TErr extends Exception> {
 
     /**
      * Calls {@link ThrowingRunnable#run()} on the given function. If it throws an exception, it will be handled with
-     * similar semantics to calling {@link ExceptionHolder#setOrSuppress(Exception)}.
+     * similar semantics to calling {@link ExceptionHandler#setOrSuppress(Exception)}.
      *
      * @param runnable the runnable to call
      */
@@ -84,7 +84,7 @@ public class ExceptionHolder<TErr extends Exception> {
 
     /**
      * Calls {@link ThrowingSupplier#get()} on the given function. If it throws an exception, it will be handled with
-     * similar semantics to calling {@link ExceptionHolder#setOrSuppress(Exception)}, and the default {@link Supplier}
+     * similar semantics to calling {@link ExceptionHandler#setOrSuppress(Exception)}, and the default {@link Supplier}
      * will be used to provide the return value of the function. If no exception is thrown, the return value of the
      * ThrowingSupplier is used.
      *
@@ -111,7 +111,7 @@ public class ExceptionHolder<TErr extends Exception> {
 
     /**
      * Calls {@link ThrowingFunction#apply(Object)} on the given function. If it throws an exception, it will be handled
-     * with similar semantics to calling {@link ExceptionHolder#setOrSuppress(Exception)}, and the default
+     * with similar semantics to calling {@link ExceptionHandler#setOrSuppress(Exception)}, and the default
      * {@link Supplier} will be used to provide the return value of the function. If no exception is thrown, the return
      * value of the ThrowingFunction is used.
      *
@@ -144,7 +144,12 @@ public class ExceptionHolder<TErr extends Exception> {
             setOrSuppress(exceptionClass.cast(exception));
         }
         else if (exception instanceof RuntimeException runtimeException) {
+            //we don't handle runtime exceptions, but they can still occur
             throw runtimeException;
+        }
+        else {
+            //should not happen under normal use
+            throw new IllegalStateException("Unexpected exception type", exception);
         }
     }
 }
