@@ -2,6 +2,8 @@ package com.github.steanky.ethylene.mapper;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -30,13 +32,13 @@ import java.util.function.Supplier;
 public abstract class Token<T> implements Supplier<Type> {
     public static final Token<Object> OBJECT = new Token<>(Object.class) {};
 
-    private final Type type;
+    private final Reference<Type> typeReference;
 
     private Token(@NotNull Type type) {
         if (type instanceof TypeVariable<?> typeVariable) {
-            this.type = typeVariable.getBounds()[0];
+            this.typeReference = new WeakReference<>(typeVariable.getBounds()[0]);
         } else {
-            this.type = Objects.requireNonNull(type);
+            this.typeReference = new WeakReference<>(Objects.requireNonNull(type));
         }
     }
 
@@ -56,33 +58,37 @@ public abstract class Token<T> implements Supplier<Type> {
         Type[] types = parameterizedType.getActualTypeArguments();
         if (types.length != 1) {
             throw new IllegalStateException(
-                    "Expected 1 type parameter, found " + types.length + " for class " + getClass().getTypeName());
+                    "Expected 1 type parameter, found " + types.length + " for '" + getClass().getTypeName() + "'");
         }
 
         Type target = types[0];
         if (target == null) {
             //second sanity check, probably completely unnecessary, JVM might have blown up
-            throw new IllegalStateException("Expected non-null type parameter for class " + getClass().getTypeName());
+            throw new IllegalStateException("Expected non-null type parameter for '" + getClass().getTypeName() + "'");
         }
 
         if (target instanceof TypeVariable<?> typeVariable) {
             target = typeVariable.getBounds()[0];
         }
 
-        this.type = target;
+        this.typeReference = new WeakReference<>(target);
     }
-
     public static @NotNull Token<?> of(@NotNull Type type) {
         return new Token<>(type) {};
     }
 
     public final @NotNull Type get() {
+        Type type = typeReference.get();
+        if (type == null) {
+            throw new IllegalStateException("The type referred to by this token no longer exists");
+        }
+
         return type;
     }
 
     @Override
     public final int hashCode() {
-        return type.hashCode();
+        return Objects.hashCode(typeReference.get());
     }
 
     @Override
@@ -96,7 +102,7 @@ public abstract class Token<T> implements Supplier<Type> {
         }
 
         if (obj instanceof Token<?> other) {
-            return type.equals(other.type);
+            return Objects.equals(typeReference.get(), other.typeReference.get());
         }
 
         return false;
@@ -104,6 +110,6 @@ public abstract class Token<T> implements Supplier<Type> {
 
     @Override
     public final String toString() {
-        return "Token{type=" + type + "}";
+        return "Token{type=" + typeReference.get() + "}";
     }
 }

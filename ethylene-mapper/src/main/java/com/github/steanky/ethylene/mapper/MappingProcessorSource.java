@@ -38,9 +38,11 @@ public interface MappingProcessorSource {
         private Function<? super Collection<Signature>, ? extends SignatureMatcher.Source>
                 signatureMatcherSourceFunction = customSignatures -> new BasicSignatureMatcherSource(typeHinter,
                 getSignatureBuilderSelector(), customSignatures);
+
         private Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector>
                 signatureBuilderSelectorFunction = signaturePreferences ->
                 new BasicSignatureBuilderSelector(defaultBuilder, signaturePreferences);
+
         private Function<? super Collection<Entry<Class<?>, Class<?>>>, ? extends TypeResolver> typeResolverFunction =
                 typeImplementations -> new BasicTypeResolver(typeHinter, typeImplementations);
 

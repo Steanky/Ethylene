@@ -41,7 +41,7 @@ public class ReflectionUtils {
     public static @NotNull Class<?> rawType(@NotNull Type type) {
         Class<?> cls = TypeUtils.getRawType(type, null);
         if (cls == null) {
-            throw new IllegalArgumentException("invalid type: " + type.getTypeName());
+            throw new IllegalArgumentException("Invalid type '" + type.getTypeName() + "'");
         }
 
         return cls;

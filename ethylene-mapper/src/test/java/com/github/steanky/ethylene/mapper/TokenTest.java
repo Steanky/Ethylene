@@ -2,9 +2,14 @@ package com.github.steanky.ethylene.mapper;
 
 import org.junit.jupiter.api.Test;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -15,6 +20,8 @@ class TokenTest {
     private static final List<String>[] genericArray = null;
     private static final List<? extends String> upperBoundedGeneric = null;
     private static final List<? super String> lowerBoundedGeneric = null;
+
+    private record ConstructorReferenceHolder(Reference<Class<?>> classReference, Constructor<?> constructor) {}
 
     @Test
     void multiTypeParameterSubclassThrows() {
