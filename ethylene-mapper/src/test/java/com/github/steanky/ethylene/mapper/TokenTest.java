@@ -21,8 +21,6 @@ class TokenTest {
     private static final List<? extends String> upperBoundedGeneric = null;
     private static final List<? super String> lowerBoundedGeneric = null;
 
-    private record ConstructorReferenceHolder(Reference<Class<?>> classReference, Constructor<?> constructor) {}
-
     @Test
     void multiTypeParameterSubclassThrows() {
         assertThrows(IllegalStateException.class, () -> new Token2<>() {});

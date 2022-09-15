@@ -31,6 +31,15 @@ import java.util.function.Supplier;
 @SuppressWarnings("unused")
 public abstract class Token<T> implements Supplier<Type> {
     public static final Token<Object> OBJECT = new Token<>(Object.class) {};
+    public static final Token<String> STRING = new Token<>(String.class) {};
+    public static final Token<Long> LONG = new Token<>(Long.class) {};
+    public static final Token<Double> DOUBLE = new Token<>(Double.class) {};
+    public static final Token<Integer> INTEGER = new Token<>(Integer.class) {};
+    public static final Token<Float> FLOAT = new Token<>(Float.class) {};
+    public static final Token<Short> SHORT = new Token<>(Short.class) {};
+    public static final Token<Character> CHARACTER = new Token<>(Character.class) {};
+    public static final Token<Byte> BYTE = new Token<>(Byte.class) {};
+    public static final Token<Boolean> BOOLEAN = new Token<>(Boolean.class) {};
 
     private final Reference<Type> typeReference;
 
