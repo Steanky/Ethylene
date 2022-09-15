@@ -101,14 +101,9 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         return ConfigElementUtils.toString(this);
     }
 
-    @SuppressWarnings("ReplaceNullCheck")
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-        if (containerCollection != null) {
-            return containerCollection;
-        }
-
-        return containerCollection = new AbstractCollection<>() {
+        return Objects.requireNonNullElseGet(containerCollection, () -> containerCollection = new AbstractCollection<>() {
             @Override
             public Iterator<ConfigEntry> iterator() {
                 return new Iterator<>() {
@@ -131,7 +126,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
             public int size() {
                 return mappings.size();
             }
-        };
+        });
     }
 
     @Override

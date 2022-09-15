@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.codec.toml.mapper;
 
 import com.github.steanky.ethylene.codec.toml.ConfigDate;
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.bridge.Configuration;
 import com.github.steanky.ethylene.mapper.BasicScalarSource;
 import com.github.steanky.ethylene.mapper.ScalarSource;
 import org.jetbrains.annotations.NotNull;

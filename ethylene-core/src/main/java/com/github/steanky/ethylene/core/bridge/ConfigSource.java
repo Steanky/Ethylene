@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * <p>Reads and writes {@link ConfigElement} objects to and from an implementation-defined in. This in may be
+ * <p>Reads and writes {@link ConfigElement} objects to and from an implementation-defined input. This in may be
  * the network, file IO, memory, a database, etc. Synchronicity is also implementation-specific:
  * {@link CompletableFuture} is used to provide a common interface between synchronous and non-synchronous usage.</p>
  *

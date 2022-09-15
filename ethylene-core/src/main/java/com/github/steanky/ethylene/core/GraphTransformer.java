@@ -122,41 +122,43 @@ public final class GraphTransformer {
             boolean finished = true;
             while (node.inputIterator.hasNext()) {
                 Entry<TKey, TIn> entry = node.inputIterator.next();
+                TKey entryKey = entry.getFirst();
+                TIn entryInput = entry.getSecond();
 
                 //if not a container, then we have a scalar
-                if (!containerPredicate.test(entry.getSecond())) {
+                if (!containerPredicate.test(entryInput)) {
                     //nodes that aren't containers have no children, so we can immediately add them to the accumulator
                     if (hasOutput) {
-                        TIn second = entry.getSecond();
                         TOut out;
                         boolean circular;
 
                         //keep track of scalar references in the same way as nodes, if enabled
                         if (circularRefSupport && trackScalarReference) {
-                            TVisit visit = visitKeyMapper.apply(second);
+                            TVisit visit = visitKeyMapper.apply(entryInput);
                             if (visited.containsKey(visit)) {
                                 out = visited.get(visit);
                                 circular = true;
                             }
                             else {
-                                out = scalarMapper.apply(second);
+                                out = scalarMapper.apply(entryInput);
                                 circular = false;
                             }
                         }
                         else {
-                            out = scalarMapper.apply(second);
+                            out = scalarMapper.apply(entryInput);
                             circular = false;
                         }
 
-                        node.output.accumulator.accept(entry.getFirst(), out, circular);
+                        node.output.accumulator.accept(entryKey, out, circular);
                     }
 
                     continue;
                 }
 
+                TVisit visit = null;
                 if (circularRefSupport) {
                     //handle already-visited non-scalar nodes, to allow proper handling of circular references
-                    TVisit visit = visitKeyMapper.apply(entry.getSecond());
+                    visit = visitKeyMapper.apply(entryInput);
 
                     //check containsKey, null values are allowed in the map
                     if (visited.containsKey(visit)) {
@@ -165,21 +167,22 @@ public final class GraphTransformer {
                         //it might not even be possible to ensure that it is constructed, in the case of circular references
                         //therefore, immediately add them to the accumulator, and let it know the reference is circular
                         if (hasOutput) {
-                            node.output.accumulator.accept(entry.getFirst(), visited.get(visit), true);
+                            node.output.accumulator.accept(entryKey, visited.get(visit), true);
                         }
+
                         continue;
                     }
                 }
 
-                Node<TIn, TOut, TKey> newNode = nodeFunction.apply(entry.getSecond());
+                Node<TIn, TOut, TKey> newNode = nodeFunction.apply(entryInput);
                 if (circularRefSupport) {
-                    visited.put(visitKeyMapper.apply(entry.getSecond()), newNode.output.data);
+                    visited.put(visit, newNode.output.data);
                 }
 
                 if (isEmpty(newNode)) {
                     if (hasOutput) {
                         //call the accumulator right away, empty nodes cannot have children
-                        node.output.accumulator.accept(entry.getFirst(), newNode.output.data, false);
+                        node.output.accumulator.accept(entryKey, newNode.output.data, false);
                     }
 
                     //don't bother pushing empty nodes to the stack, they cannot be explored
@@ -193,11 +196,11 @@ public final class GraphTransformer {
                 if (hasOutput) {
                     if (lazyAccumulation) {
                         //set the current node's result key and out fields
-                        node.result.key = entry.getFirst();
+                        node.result.key = entryKey;
                         node.result.out = newNode.output.data;
                     }
                     else {
-                        node.output.accumulator.accept(entry.getFirst(), newNode.output.data, false);
+                        node.output.accumulator.accept(entryKey, newNode.output.data, false);
                     }
                 }
 

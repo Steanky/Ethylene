@@ -8,8 +8,8 @@ import java.util.Collection;
 import java.util.RandomAccess;
 
 /**
- * An implementation of {@link ConfigList} based off of {@link ArrayList}, with similar performance and other
- * characteristics. Correspondingly, it implements {@link RandomAccess}.
+ * An implementation of {@link ConfigList} based off of an {@link ArrayList}, with similar performance and other
+ * characteristics. It implements {@link RandomAccess}.
  */
 public class ArrayConfigList extends AbstractConfigList implements RandomAccess {
     /**
