@@ -117,7 +117,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 return ConfigPrimitive.NULL;
             }
 
-            ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>();
+            ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>(IOException.class);
             ConfigElement element = GraphTransformer.process(rootPath, directoryEntry -> {
                 //gets all files that are directories, not the current path, or a file with an extension we can
                 //understand
@@ -177,7 +177,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 return null;
             }
 
-            ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>();
+            ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>(IOException.class);
             GraphTransformer.process(new OutputInfo(rootPath, element, true), containerEntry -> {
                 exceptionHolder.call(() -> Files.createDirectories(containerEntry.path));
                 Path normalizedPath = containerEntry.path.normalize();

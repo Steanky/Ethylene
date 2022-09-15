@@ -97,7 +97,9 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             }
                         }));
                     }, potentialContainer -> potentialContainer.element.isContainer(),
-                    scalar -> new MutableObject<>(scalar.element.asScalar()), entry -> entry.element).getValue();
+                    scalar -> new MutableObject<>(scalar.element.asScalar()), entry -> entry.element,
+                    GraphTransformer.Options.DEPTH_FIRST | GraphTransformer.Options.REFERENCE_TRACKING |
+                            GraphTransformer.Options.LAZY_ACCUMULATION).getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
@@ -154,7 +156,9 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                 //runtime type is passed to TypeHinter: this should be safe since it doesn't care about generics
                 return potentialContainer.object != null &&
                         typeHinter.getHint(potentialContainer.object.getClass()) != ElementType.SCALAR;
-            }, scalar -> new MutableObject<>(scalarSource.make(scalar.object)), entry -> entry.object).getValue();
+            }, scalar -> new MutableObject<>(scalarSource.make(scalar.object)), entry -> entry.object,
+                    GraphTransformer.Options.DEPTH_FIRST | GraphTransformer.Options.REFERENCE_TRACKING |
+                            GraphTransformer.Options.LAZY_ACCUMULATION).getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }

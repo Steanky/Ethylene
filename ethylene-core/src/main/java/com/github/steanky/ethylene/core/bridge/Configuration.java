@@ -145,8 +145,8 @@ public final class Configuration {
         return fromStreamsInternal(inputCallable, outputCallable, codec, executor);
     }
 
-    public static @NotNull ConfigSource asyncSourceFromStreams(@NotNull Callable<InputStream> inputCallable,
-            @NotNull Callable<OutputStream> outputCallable, @NotNull ConfigCodec codec) {
+    public static @NotNull ConfigSource asyncSourceFromStreams(@NotNull Callable<? extends InputStream> inputCallable,
+            @NotNull Callable<? extends OutputStream> outputCallable, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(inputCallable);
         Objects.requireNonNull(outputCallable);
         Objects.requireNonNull(codec);

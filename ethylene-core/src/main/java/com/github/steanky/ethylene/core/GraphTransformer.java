@@ -200,6 +200,7 @@ public final class GraphTransformer {
                         node.result.out = newNode.output.data;
                     }
                     else {
+                        //no lazy accumulation, immediately add this node
                         node.output.accumulator.accept(entryKey, newNode.output.data, false);
                     }
                 }
@@ -230,29 +231,21 @@ public final class GraphTransformer {
         return rootNode.output.data;
     }
 
+    public static <TIn, TOut, TKey, TVisit> TOut process(TIn input,
+            @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+            @NotNull Predicate<? super TIn> containerPredicate,
+            @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
+            @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper, int flags) {
+        return process(input, nodeFunction, containerPredicate, scalarMapper, visitKeyMapper, IdentityHashMap::new,
+                new ArrayDeque<>(), flags);
+    }
+
     private static boolean isEmpty(Node<?, ?, ?> node) {
         return node == EMPTY_NODE || !node.inputIterator.hasNext();
     }
 
     private static boolean hasOutput(Node<?, ?, ?> node) {
         return node.output != EMPTY_OUTPUT;
-    }
-
-    public static <TIn, TOut, TKey> TOut process(TIn input,
-            @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
-            @NotNull Predicate<? super TIn> containerPredicate,
-            @NotNull Function<? super TIn, ? extends TOut> scalarMapper) {
-        return process(input, nodeFunction, containerPredicate, scalarMapper, Function.identity(), IdentityHashMap::new,
-                new ArrayDeque<>(), Options.DEFAULT);
-    }
-
-    public static <TIn, TOut, TKey, TVisit> TOut process(TIn input,
-            @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
-            @NotNull Predicate<? super TIn> containerPredicate,
-            @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
-            @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper) {
-        return process(input, nodeFunction, containerPredicate, scalarMapper, visitKeyMapper, IdentityHashMap::new,
-                new ArrayDeque<>(), Options.DEFAULT);
     }
 
     @SuppressWarnings("unchecked")
