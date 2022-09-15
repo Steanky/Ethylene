@@ -107,6 +107,16 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Type @NotNull ... params) {
+        Objects.requireNonNull(raw);
+        Objects.requireNonNull(params);
+
+        int requiredLength = raw.getTypeParameters().length;
+        int actualLength = params.length;
+        if (requiredLength != actualLength) {
+            throw new IllegalArgumentException("Actual and required number of type parameters differ in length for '" +
+                    raw.getName() + "', was " + actualLength + ", needed " + requiredLength);
+        }
+
         return Token.of(GenericInfoRepository.retain(raw, new InternalParameterizedType(raw, null, params)));
     }
 
