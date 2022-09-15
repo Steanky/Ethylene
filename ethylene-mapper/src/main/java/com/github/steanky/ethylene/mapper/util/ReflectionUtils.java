@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.mapper.util;
 
 import com.github.steanky.ethylene.mapper.annotation.Name;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,5 +46,9 @@ public class ReflectionUtils {
         }
 
         return cls;
+    }
+
+    public static @NotNull Class<?> rawType(@NotNull Token<?> type) {
+        return rawType(type.get());
     }
 }

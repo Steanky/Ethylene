@@ -149,6 +149,6 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             }
         }
 
-        throw new MapperException("unable to find matching signature for element '" + providedElement + "'");
+        throw new MapperException("Unable to find matching signature for element '" + providedElement + "'");
     }
 }

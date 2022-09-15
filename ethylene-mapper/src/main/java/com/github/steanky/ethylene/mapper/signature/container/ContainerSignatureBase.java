@@ -5,21 +5,21 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.Iterator;
-import java.util.Objects;
 
 public abstract class ContainerSignatureBase implements Signature {
-    protected final Entry<String, Type> entry;
-    protected final Type containerType;
+    protected final Entry<String, Token<?>> entry;
+    protected final Token<?> containerType;
 
-    public ContainerSignatureBase(@NotNull Type componentType, @NotNull Type containerType) {
+    public ContainerSignatureBase(@NotNull Token<?> componentType, @NotNull Token<?> containerType) {
         this.entry = Entry.of(null, componentType);
-        this.containerType = Objects.requireNonNull(containerType);
+        this.containerType = containerType;
     }
 
     @Override
@@ -32,7 +32,7 @@ public abstract class ContainerSignatureBase implements Signature {
 
             @Override
             public Entry<String, Type> next() {
-                return entry;
+                return Entry.of(entry.getFirst(), entry.getSecond().get());
             }
         };
     }
@@ -73,6 +73,6 @@ public abstract class ContainerSignatureBase implements Signature {
 
     @Override
     public @NotNull Type returnType() {
-        return containerType;
+        return containerType.get();
     }
 }

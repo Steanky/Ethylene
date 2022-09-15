@@ -1,13 +1,15 @@
-package com.github.steanky.ethylene.mapper;
+package com.github.steanky.ethylene.mapper.type;
 
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -42,6 +44,8 @@ public abstract class Token<T> implements Supplier<Type> {
     public static final Token<Boolean> BOOLEAN = new Token<>(Boolean.class) {};
 
     private final Reference<Type> typeReference;
+
+    private static final Map<Class<?>, Type> referenceMap = Collections.synchronizedMap(new WeakHashMap<>());
 
     private Token(@NotNull Type type) {
         if (type instanceof TypeVariable<?> typeVariable) {
@@ -84,7 +88,17 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     public static @NotNull Token<?> of(@NotNull Type type) {
-        return new Token<>(type) {};
+        return new Token<>(Objects.requireNonNull(type)) {};
+    }
+
+    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Type @NotNull ... params) {
+        return Token.of(GenericInfoRepository.retain(raw, new InternalParameterizedType(raw, null, params)));
+    }
+
+    public final @NotNull Token<?> genericArrayType() {
+        Type type = get();
+        Class<?> raw = TypeUtils.getRawType(type, null);
+        return Token.of(GenericInfoRepository.retain(raw, new InternalGenericArrayType(type)));
     }
 
     public final @NotNull Type get() {

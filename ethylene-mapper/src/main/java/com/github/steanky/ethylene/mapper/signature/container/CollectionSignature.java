@@ -2,33 +2,45 @@ package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.MapperException;
-import com.github.steanky.ethylene.mapper.Token;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Type;
 import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
 public class CollectionSignature extends ContainerSignatureBase {
-    private final Constructor<?> constructor;
-    private final boolean parameterless;
+    private record ConstructorInfo(boolean parameterless, Constructor<?> constructor) {}
 
-    public CollectionSignature(@NotNull Type componentType, @NotNull Type collectionClass) {
+    private Reference<ConstructorInfo> constructorReference = new SoftReference<>(null);
+
+    public CollectionSignature(@NotNull Token<?> componentType, @NotNull Token<?> collectionClass) {
         super(componentType, collectionClass);
+    }
 
-        Class<?> rawClass = ReflectionUtils.rawType(collectionClass);
+    private ConstructorInfo resolveConstructor() {
+        ConstructorInfo cached = constructorReference.get();
+        if (cached != null) {
+            return cached;
+        }
+
+        Class<?> rawClass = ReflectionUtils.rawType(super.containerType.get());
         Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass, int.class);
+
+        boolean parameterless;
         if (constructor == null) {
             constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass);
+
             if (constructor == null) {
-                throw new MapperException("no suitable collection constructor found for '" + collectionClass + "'");
+                throw new MapperException("No suitable collection constructor found for '" + rawClass + "'");
             }
 
             parameterless = true;
@@ -36,7 +48,9 @@ public class CollectionSignature extends ContainerSignatureBase {
             parameterless = false;
         }
 
-        this.constructor = constructor;
+        ConstructorInfo constructorInfo = new ConstructorInfo(parameterless, constructor);
+        constructorReference = new SoftReference<>(constructorInfo);
+        return constructorInfo;
     }
 
     @SuppressWarnings("unchecked")
@@ -57,7 +71,7 @@ public class CollectionSignature extends ContainerSignatureBase {
 
                     @Override
                     public TypedObject next() {
-                        return new TypedObject(null, Token.of(CollectionSignature.this.entry.getSecond()),
+                        return new TypedObject(null, CollectionSignature.this.entry.getSecond(),
                                 collectionIterator.next());
                     }
                 };
@@ -96,11 +110,12 @@ public class CollectionSignature extends ContainerSignatureBase {
     @SuppressWarnings("unchecked")
     private Collection<Object> makeNewCollection(int size) {
         try {
-            if (parameterless) {
-                return (Collection<Object>) constructor.newInstance();
+            ConstructorInfo constructorInfo = resolveConstructor();
+            if (constructorInfo.parameterless) {
+                return (Collection<Object>) constructorInfo.constructor.newInstance();
             }
 
-            return (Collection<Object>) constructor.newInstance(size);
+            return (Collection<Object>) constructorInfo.constructor.newInstance(size);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new MapperException(e);
         }

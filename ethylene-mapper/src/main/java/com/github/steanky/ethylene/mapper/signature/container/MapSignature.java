@@ -2,10 +2,9 @@ package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.MapperException;
-import com.github.steanky.ethylene.mapper.Token;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,8 +20,8 @@ public class MapSignature extends ContainerSignatureBase {
     private final boolean parameterless;
     private final Constructor<?> constructor;
 
-    public MapSignature(@NotNull Type keyType, @NotNull Type valueType, @NotNull Type mapType) {
-        super(TypeUtils.parameterize(Map.Entry.class, keyType, valueType), mapType);
+    public MapSignature(@NotNull Token<?> keyType, @NotNull Token<?> valueType, @NotNull Token<?> mapType) {
+        super(Token.parameterize(Map.Entry.class, keyType.get(), valueType.get()), mapType);
         Class<?> mapClass = ReflectionUtils.rawType(mapType);
 
         Class<?> rawClass = ReflectionUtils.rawType(mapClass);
@@ -59,8 +58,7 @@ public class MapSignature extends ContainerSignatureBase {
 
                     @Override
                     public TypedObject next() {
-                        return new TypedObject(null, Token.of(MapSignature.this.entry.getSecond()), entryIterator
-                                .next());
+                        return new TypedObject(null, MapSignature.this.entry.getSecond(), entryIterator.next());
                     }
                 };
             }

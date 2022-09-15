@@ -7,6 +7,7 @@ import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;

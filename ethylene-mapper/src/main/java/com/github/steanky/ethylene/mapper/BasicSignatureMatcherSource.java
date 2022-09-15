@@ -8,6 +8,7 @@ import com.github.steanky.ethylene.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.mapper.signature.container.ArraySignature;
 import com.github.steanky.ethylene.mapper.signature.container.CollectionSignature;
 import com.github.steanky.ethylene.mapper.signature.container.MapSignature;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -59,17 +60,20 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
             return switch (typeHinter.getHint(type)) {
                 case LIST -> {
                     if (TypeUtils.isArrayType(type)) {
-                        Signature[] arraySignature = new Signature[] {
-                                new ArraySignature(TypeUtils.getArrayComponentType(type))};
+                        Signature[] arraySignature = new Signature[] {new ArraySignature(Token.of(TypeUtils
+                                .getArrayComponentType(type)))};
                         yield new BasicSignatureMatcher(arraySignature, typeHinter);
                     } else {
                         if (Collection.class.isAssignableFrom(raw)) {
                             Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Collection.class);
-                            Signature[] collectionSignature = new Signature[] {new CollectionSignature(types[0], type)};
+                            Signature[] collectionSignature = new Signature[] {new CollectionSignature(Token
+                                    .of(types[0]), Token.of(type))};
+
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
                         } else if (Map.class.isAssignableFrom(raw)) {
                             Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Map.class);
-                            Signature[] mapSignature = new Signature[] {new MapSignature(types[0], types[1], type)};
+                            Signature[] mapSignature = new Signature[] {new MapSignature(Token.of(types[0]), Token
+                                    .of(types[1]), Token.of(type))};
                             yield new BasicSignatureMatcher(mapSignature, typeHinter);
                         }
                     }

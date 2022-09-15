@@ -1,21 +1,19 @@
 package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.mapper.Token;
-import org.apache.commons.lang3.reflect.TypeUtils;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Type;
 import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class ArraySignature extends ContainerSignatureBase {
-    public ArraySignature(@NotNull Type componentType) {
-        super(componentType, TypeUtils.genericArrayType(componentType));
+    public ArraySignature(@NotNull Token<?> componentType) {
+        super(componentType, componentType.genericArrayType());
     }
 
     @Override
@@ -38,7 +36,7 @@ public class ArraySignature extends ContainerSignatureBase {
                             throw new NoSuchElementException();
                         }
 
-                        return new TypedObject(null, Token.of(ArraySignature.super.containerType), Array.get(object, i));
+                        return new TypedObject(null, ArraySignature.super.containerType, Array.get(object, i));
                     }
                 };
             }
