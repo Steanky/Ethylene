@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.Token;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
@@ -49,7 +50,7 @@ public class RecordSignature implements Signature {
         RecordComponent[] recordComponents = object.getClass().getRecordComponents();
         for (RecordComponent recordComponent : recordComponents) {
             try {
-                typedObjects.add(new TypedObject(recordComponent.getName(), recordComponent.getGenericType(),
+                typedObjects.add(new TypedObject(recordComponent.getName(), Token.of(recordComponent.getGenericType()),
                         recordComponent.getAccessor().invoke(object)));
             } catch (IllegalAccessException | InvocationTargetException ignored) {
             }

@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.Token;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +57,7 @@ public class CollectionSignature extends ContainerSignatureBase {
 
                     @Override
                     public TypedObject next() {
-                        return new TypedObject(null, CollectionSignature.this.entry.getSecond(),
+                        return new TypedObject(null, Token.of(CollectionSignature.this.entry.getSecond()),
                                 collectionIterator.next());
                     }
                 };

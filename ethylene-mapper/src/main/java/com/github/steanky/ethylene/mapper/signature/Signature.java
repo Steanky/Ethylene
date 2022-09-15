@@ -11,10 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -30,11 +27,11 @@ public interface Signature {
     }
 
     static @NotNull TypedObject type(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
-        return new TypedObject(name, type.get(), value);
+        return new TypedObject(name, type, value);
     }
 
     static @NotNull TypedObject type(@NotNull Token<?> type, @NotNull Object value) {
-        return new TypedObject(null, type.get(), value);
+        return new TypedObject(null, type, value);
     }
 
     @NotNull Iterable<Entry<String, Type>> argumentTypes();
@@ -67,13 +64,13 @@ public interface Signature {
         return 0;
     }
 
-    record TypedObject(@Nullable String name, @NotNull Type type, @NotNull Object value) {}
+    record TypedObject(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {}
 
     class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ?> constructor;
-        private final Type returnType;
+        private final Token<T> returnType;
         private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
-        private final Collection<Entry<String, Type>> argumentTypes;
+        private final Collection<Entry<String, Token<?>>> argumentTypes;
 
         private int priority;
         private boolean matchNames;
@@ -99,12 +96,12 @@ public interface Signature {
                 @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
                 @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
-            this.returnType = Objects.requireNonNull(returnType).get();
+            this.returnType = Objects.requireNonNull(returnType);
             this.objectSignatureExtractor = Objects.requireNonNull(objectSignatureExtractor);
 
             this.argumentTypes = new ArrayList<>(arguments.length);
             for (Entry<String, Token<?>> entry : arguments) {
-                argumentTypes.add(Entry.of(entry.getFirst(), entry.getSecond().get()));
+                argumentTypes.add(Entry.of(entry.getFirst(), entry.getSecond()));
             }
         }
 
@@ -146,7 +143,7 @@ public interface Signature {
         }
 
         public @NotNull Signature build() {
-            Collection<Entry<String, Type>> argumentTypes = Collections.unmodifiableCollection(this.argumentTypes);
+            Collection<Entry<String, Token<?>>> argumentTypes = Collections.unmodifiableCollection(this.argumentTypes);
             IntFunction<? extends ConfigContainer> containerFunction = this.containerFunction;
             ToIntFunction<? super ConfigElement> lengthFunction = this.lengthFunction;
             boolean matchNames = this.matchNames;
@@ -158,7 +155,21 @@ public interface Signature {
             return new Signature() {
                 @Override
                 public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
-                    return argumentTypes;
+
+                    return () -> new Iterator<>() {
+                        private final Iterator<Entry<String, Token<?>>> iterator = argumentTypes.iterator();
+
+                        @Override
+                        public boolean hasNext() {
+                            return iterator.hasNext();
+                        }
+
+                        @Override
+                        public Entry<String, Type> next() {
+                            Entry<String, Token<?>> entry = iterator.next();
+                            return Entry.of(entry.getFirst(), entry.getSecond().get());
+                        }
+                    };
                 }
 
                 @SuppressWarnings("unchecked")
@@ -214,7 +225,7 @@ public interface Signature {
 
                 @Override
                 public @NotNull Type returnType() {
-                    return returnType;
+                    return returnType.get();
                 }
 
                 @Override

@@ -78,7 +78,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                         Iterator<Entry<String, Type>> signatureIterator = signature.argumentTypes().iterator();
 
                         while (typeCollectionIterator.hasNext()) {
-                            if (typeHinter.getHint(typeCollectionIterator.next().type()) !=
+                            if (typeHinter.getHint(typeCollectionIterator.next().type().get()) !=
                                     typeHinter.getHint(signatureIterator.next().getSecond())) {
                                 break outer;
                             }

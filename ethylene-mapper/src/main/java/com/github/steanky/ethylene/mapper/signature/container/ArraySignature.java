@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.mapper.Token;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,7 +38,7 @@ public class ArraySignature extends ContainerSignatureBase {
                             throw new NoSuchElementException();
                         }
 
-                        return new TypedObject(null, ArraySignature.super.containerType, Array.get(object, i));
+                        return new TypedObject(null, Token.of(ArraySignature.super.containerType), Array.get(object, i));
                     }
                 };
             }

@@ -139,7 +139,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         }
 
                         Signature.TypedObject typedObject = typedObjectIterator.next();
-                        Type objectType = typeResolver.resolveType(typedObject.type(), null);
+                        Type objectType = typeResolver.resolveType(typedObject.type().get(), null);
                         SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType, null);
 
                         return Entry.of(typedObject.name(),

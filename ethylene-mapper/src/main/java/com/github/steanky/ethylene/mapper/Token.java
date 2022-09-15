@@ -82,6 +82,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
         this.typeReference = new WeakReference<>(target);
     }
+
     public static @NotNull Token<?> of(@NotNull Type type) {
         return new Token<>(type) {};
     }
