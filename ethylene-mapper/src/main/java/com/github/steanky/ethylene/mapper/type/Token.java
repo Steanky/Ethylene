@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.mapper.type;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -91,8 +92,30 @@ public abstract class Token<T> implements Supplier<Type> {
         return new Token<>(Objects.requireNonNull(type)) {};
     }
 
+    private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
+        Type[] result = new Type[variables.length];
+        int index = 0;
+        for (TypeVariable<?> var : variables) {
+            if (!mappings.containsKey(var)) {
+                throw new IllegalArgumentException("Missing type mapping for '" + var + "'");
+            }
+
+            result[index++] = mappings.get(var);
+        }
+
+        return result;
+    }
+
     public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Type @NotNull ... params) {
         return Token.of(GenericInfoRepository.retain(raw, new InternalParameterizedType(raw, null, params)));
+    }
+
+    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Map<TypeVariable<?>, Type> typeMap) {
+        Objects.requireNonNull(raw);
+        Objects.requireNonNull(typeMap);
+
+        Type[] types = extractTypeArgumentsFrom(typeMap, raw.getTypeParameters());
+        return Token.of(GenericInfoRepository.retain(raw, new InternalParameterizedType(raw, null, types)));
     }
 
     public final @NotNull Token<?> genericArrayType() {

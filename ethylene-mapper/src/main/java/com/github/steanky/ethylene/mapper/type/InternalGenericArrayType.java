@@ -30,7 +30,8 @@ class InternalGenericArrayType implements GenericArrayType {
 
     @Override
     public boolean equals(Object obj) {
-        return obj == this || obj instanceof GenericArrayType && TypeUtils.equals(this, (GenericArrayType) obj);
+        return obj == this || obj instanceof GenericArrayType other && getGenericComponentType().equals(other
+                .getGenericComponentType());
     }
 
     @Override

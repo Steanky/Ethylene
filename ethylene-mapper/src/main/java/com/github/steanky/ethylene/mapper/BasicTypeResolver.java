@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.mapper;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -19,6 +20,7 @@ import java.util.function.Supplier;
 
 public class BasicTypeResolver implements TypeResolver {
     private final TypeHinter typeHinter;
+
     private final Map<Class<?>, ClassEntry> types;
     private final Map<Class<?>, ClassEntry> cache;
 
@@ -71,7 +73,7 @@ public class BasicTypeResolver implements TypeResolver {
             Class<?> ref = cached.reference.get();
             if (ref != null) {
                 if (type instanceof ParameterizedType parameterizedType) {
-                    return TypeUtils.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType));
+                    return Token.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType)).get();
                 }
 
                 return ref;
@@ -91,7 +93,7 @@ public class BasicTypeResolver implements TypeResolver {
                 cache.put(raw, entry);
 
                 if (type instanceof ParameterizedType parameterizedType) {
-                    return TypeUtils.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType));
+                    return Token.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType)).get();
                 }
 
                 return ref;
@@ -108,7 +110,7 @@ public class BasicTypeResolver implements TypeResolver {
                 case NODE -> raw;
                 case LIST -> {
                     Type[] params = ReflectionUtils.extractGenericTypeParameters(type, raw);
-                    yield TypeUtils.parameterize(ArrayList.class, params.length == 0 ? Object.class : params[0]);
+                    yield Token.parameterize(ArrayList.class, params.length == 0 ? Object.class : params[0]).get();
                 }
                 case SCALAR -> {
                     Object scalar = element.asScalar();

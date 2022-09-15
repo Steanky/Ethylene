@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.function.Function;
 
 class GenericInfoRepository {
     private static final Map<Class<?>, GenericInfoRepository> store = new WeakHashMap<>();
@@ -16,7 +17,7 @@ class GenericInfoRepository {
     static @NotNull Type retain(@NotNull Class<?> owner, @NotNull Type type) {
         synchronized (sync) {
             return store.computeIfAbsent(owner, ignored -> new GenericInfoRepository()).canonicalTypes
-                    .computeIfAbsent(type, key -> key);
+                    .computeIfAbsent(type, Function.identity());
         }
     }
 }
