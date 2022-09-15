@@ -10,12 +10,7 @@ public class BasicPathNameInspector implements PathNameInspector {
 
     @Override
     public @NotNull String getExtension(@NotNull Path path) {
-        Path namePath = path.getFileName();
-        if (namePath == null) {
-            return EMPTY_STRING;
-        }
-
-        String namePathString = namePath.toString();
+        String namePathString = getFilenameString(path);
         int extensionIndex = namePathString.lastIndexOf(EXTENSION_SEPARATOR);
         if (extensionIndex == -1) {
             return EMPTY_STRING;
@@ -26,18 +21,22 @@ public class BasicPathNameInspector implements PathNameInspector {
 
     @Override
     public @NotNull String getName(@NotNull Path path) {
-        Path namePath = path.getFileName();
-        if (namePath == null) {
-            return EMPTY_STRING;
-        }
-
-        String namePathString = namePath.toString();
+        String namePathString = getFilenameString(path);
         int extensionIndex = namePathString.lastIndexOf(EXTENSION_SEPARATOR);
         if (extensionIndex == -1) {
             return namePathString;
         }
 
         return namePathString.substring(0, extensionIndex);
+    }
+
+    private static String getFilenameString(Path path) {
+        Path namePath = path.getFileName();
+        if (namePath == null) {
+            return EMPTY_STRING;
+        }
+
+        return namePath.toString();
     }
 
     @Override

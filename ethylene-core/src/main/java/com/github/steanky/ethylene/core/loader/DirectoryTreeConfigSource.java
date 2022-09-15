@@ -121,7 +121,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             ConfigElement element = GraphTransformer.process(rootPath, directoryEntry -> {
                 //gets all files that are directories, not the current path, or a file with an extension we can
                 //understand
-                List<Path> pathList = exceptionHolder.supply(() -> {
+                List<Path> pathList = exceptionHolder.get(() -> {
                     try (Stream<Path> paths = Files.walk(directoryEntry, 1, fileVisitOptions)) {
                         return paths.filter(path -> filterPath(directoryEntry, path)).toList();
                     }
@@ -147,7 +147,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             }, Files::isDirectory, entry -> {
                 String extension = pathNameInspector.getExtension(entry);
                 if (codecResolver.hasCodec(extension)) {
-                    return exceptionHolder.supply(() -> Configuration.read(entry, codecResolver.resolve(extension)),
+                    return exceptionHolder.get(() -> Configuration.read(entry, codecResolver.resolve(extension)),
                             () -> ConfigPrimitive.NULL);
                 }
 
@@ -179,12 +179,12 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
             ExceptionHolder<IOException> exceptionHolder = new ExceptionHolder<>(IOException.class);
             GraphTransformer.process(new OutputInfo(rootPath, element, true), containerEntry -> {
-                exceptionHolder.call(() -> Files.createDirectories(containerEntry.path));
+                exceptionHolder.run(() -> Files.createDirectories(containerEntry.path));
                 Path normalizedPath = containerEntry.path.normalize();
 
                 //get paths currently in the folder
                 //if there's an exception, existingPaths will be empty
-                Set<Path> existingPaths = exceptionHolder.supply(() -> {
+                Set<Path> existingPaths = exceptionHolder.get(() -> {
                     try (Stream<Path> paths = Files.walk(normalizedPath, 1, fileVisitOptions)) {
                         //like when reading, include all directories, and ignore files whose extensions we don't
                         //recognize
@@ -197,7 +197,6 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 //list of paths
                 //key (first in the entry) is always null because it's unused
                 List<Entry<Object, OutputInfo>> paths = new ArrayList<>(node.size());
-
                 for (ConfigEntry entry : node.entryCollection()) {
                     String elementName = entry.getFirst();
                     ConfigElement entryElement = entry.getSecond();
@@ -261,13 +260,13 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                                 Path link = outputInfo.isDirectory ? actualInfo.path.getParent()
                                         .resolve(pathNameInspector.getName(actualInfo.path)) : actualInfo.path;
 
-                                exceptionHolder.call(() -> Files.createSymbolicLink(link, outputInfo.path));
+                                exceptionHolder.run(() -> Files.createSymbolicLink(link, outputInfo.path));
                             } else if (!outputInfo.isDirectory) {
                                 //if outputInfo is a directory, no need to bother writing anything
                                 //(it will be created when its appropriate node is initialized)
                                 String extension = pathNameInspector.getExtension(actualInfo.path);
 
-                                exceptionHolder.call(() -> Configuration.write(actualInfo.path, actualInfo.element,
+                                exceptionHolder.run(() -> Configuration.write(actualInfo.path, actualInfo.element,
                                         codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) :
                                                 preferredCodec));
                             }
