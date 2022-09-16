@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.mapper.signature.constructor;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +32,7 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
                 }
             }
 
-            signatures[j++] = new ConstructorSignature(constructor, type);
+            signatures[j++] = new ConstructorSignature(constructor, Token.of(type));
         }
 
         if (j == 0) {

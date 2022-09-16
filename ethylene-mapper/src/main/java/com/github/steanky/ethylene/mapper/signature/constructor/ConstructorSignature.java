@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Order;
@@ -16,29 +17,96 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 
 public class ConstructorSignature implements Signature {
-    private final Constructor<?> constructor;
-    private final Type genericReturnType;
+    private final String declaringClassName;
+    private final Reference<Class<?>> declaringClassReference;
 
-    //fields are initialized lazily by initTypeCollection and initFields
+    private final String[] parameterTypeNames;
+    private final Reference<Class<?>>[] parameterTypes;
+
+    private final Token<?> genericReturnType;
+
+    //constructor objects are not retained by the classloader, so they might be garbage collected early
+    //use soft reference to reduce the frequency of this occurrence, and resolve the actual constructor at runtime when
+    //it is necessary to do so
+    private Reference<Constructor<?>> constructorReference;
+
     private boolean matchesNames;
     private Collection<Entry<String, Type>> types;
 
-    private Field[] fields;
-    private Map<String, Field> namedFields;
+    private Map<String, Reference<Field>> namedFields;
+    private Reference<Field[]> fieldReference = new SoftReference<>(null);
 
-    public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Type genericReturnType) {
-        this.constructor = Objects.requireNonNull(constructor);
+    @SuppressWarnings("unchecked")
+    public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Token<?> genericReturnType) {
+        this.constructorReference = new SoftReference<>(Objects.requireNonNull(constructor));
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
+
+        Class<?> declaringClass = constructor.getDeclaringClass();
+        Class<?>[] params = constructor.getParameterTypes();
+
+        this.declaringClassName = declaringClass.getName();
+        this.declaringClassReference = new WeakReference<>(declaringClass);
+
+        this.parameterTypes = new Reference[params.length];
+        this.parameterTypeNames = new String[params.length];
+        for (int i = 0; i < params.length; i++) {
+            Class<?> referent = params[i];
+            parameterTypes[i] = new WeakReference<>(referent);
+            parameterTypeNames[i] = referent.getName();
+        }
     }
 
-    private static Entry<String, Type> makeEntry(Parameter parameter, boolean parameterHasName) {
+    private Class<?>[] resolveParameterTypes() {
+        Class<?>[] parameterClasses = new Class[parameterTypes.length];
+        for (int i = 0; i < parameterClasses.length; i++) {
+            Class<?> referent = parameterTypes[i].get();
+            if (referent == null) {
+                throw new IllegalStateException("Class named '" + parameterTypeNames[i] + "' no longer exists");
+            }
+
+            parameterClasses[i] = referent;
+        }
+
+        return parameterClasses;
+    }
+
+    private Class<?> resolveDeclaringClass() {
+        Class<?> referent = declaringClassReference.get();
+        if (referent == null) {
+            throw new IllegalStateException("Class named '" + declaringClassName + "' no longer exists");
+        }
+
+        return referent;
+    }
+
+    private Constructor<?> resolveConstructor() {
+        Constructor<?> constructor = constructorReference.get();
+        if (constructor != null) {
+            return constructor;
+        }
+
+        Class<?> declaringClass = resolveDeclaringClass();
+        try {
+            constructor = declaringClass.getConstructor(resolveParameterTypes());
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("No valid constructor found for type '" + declaringClassName + "'", e);
+        }
+
+        constructorReference = new SoftReference<>(constructor);
+        return constructor;
+    }
+
+    private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
         Name parameterName = parameter.getAnnotation(Name.class);
         return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
-                parameter.getParameterizedType());
+                Token.of(parameter.getParameterizedType()));
     }
 
     @Override
@@ -51,17 +119,17 @@ public class ConstructorSignature implements Signature {
         initTypeCollection();
 
         Collection<TypedObject> typedObjects = new ArrayList<>(types.size());
-        Class<?> declaringClass = constructor.getDeclaringClass();
+        Class<?> declaringClass = resolveDeclaringClass();
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
 
-        initFields(declaringClass, widenAccess);
+        Field[] fields = initFields(declaringClass, widenAccess);
 
         int i = 0;
         for (Entry<String, Type> typeEntry : types) {
             Field field;
             String name;
             if (matchesNames) {
-                field = namedFields.get(name = typeEntry.getKey());
+                field = namedFields.get(name = typeEntry.getKey()).get();
                 if (field == null) {
                     break;
                 }
@@ -102,7 +170,7 @@ public class ConstructorSignature implements Signature {
 
         try {
             //it is the caller's responsibility to check argument length!
-            return constructor.newInstance(args);
+            return resolveConstructor().newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new MapperException(e);
         }
@@ -122,7 +190,7 @@ public class ConstructorSignature implements Signature {
 
     @Override
     public int length(@Nullable ConfigElement element) {
-        return constructor.getParameterCount();
+        return resolveConstructor().getParameterCount();
     }
 
     @Override
@@ -132,19 +200,21 @@ public class ConstructorSignature implements Signature {
 
     @Override
     public @NotNull Type returnType() {
-        return genericReturnType;
+        return genericReturnType.get();
     }
 
-    private void initFields(Class<?> declaringClass, boolean widenAccess) {
+    private Field[] initFields(Class<?> declaringClass, boolean widenAccess) {
+        Field[] fields = fieldReference.get();
         if (fields != null) {
-            return;
+            return fields;
         }
 
         fields = widenAccess ? declaringClass.getDeclaredFields() : declaringClass.getFields();
+
         if (matchesNames) {
             namedFields = new HashMap<>(fields.length);
             for (Field field : fields) {
-                namedFields.put(ReflectionUtils.getFieldName(field), field);
+                namedFields.put(ReflectionUtils.getFieldName(field), new SoftReference<>(field));
             }
         } else {
             Arrays.sort(fields, Comparator.comparing(field -> {
@@ -156,6 +226,9 @@ public class ConstructorSignature implements Signature {
                 return 0;
             }));
         }
+
+        fieldReference = new SoftReference<>(fields);
+        return fields;
     }
 
     private Collection<Entry<String, Type>> initTypeCollection() {
@@ -163,6 +236,7 @@ public class ConstructorSignature implements Signature {
             return types;
         }
 
+        Constructor<?> constructor = resolveConstructor();
         if (constructor.getParameterCount() == 0) {
             //use empty list if we can
             return types = List.of();
@@ -172,32 +246,32 @@ public class ConstructorSignature implements Signature {
         if (parameters.length == 1) {
             //alternatively use singleton list
             Parameter first = parameters[0];
-            Entry<String, Type> entry = makeEntry(first, first.isNamePresent());
+            Entry<String, Token<?>> entry = makeEntry(first, first.isNamePresent());
             matchesNames = entry.getFirst() != null;
-            return types = List.of(entry);
+            return types = new TypeMappingCollection(List.of(entry));
         }
 
         //use a backing ArrayList for n > 1 length
-        List<Entry<String, Type>> entryList = new ArrayList<>(parameters.length);
+        List<Entry<String, Token<?>>> entryList = new ArrayList<>(parameters.length);
 
         Parameter first = parameters[0];
 
         boolean parameterHasName = first.isNamePresent();
-        Entry<String, Type> firstEntry = makeEntry(first, parameterHasName);
+        Entry<String, Token<?>> firstEntry = makeEntry(first, parameterHasName);
         matchesNames = firstEntry.getFirst() != null;
 
         entryList.add(firstEntry);
 
         boolean firstNonNullName = firstEntry.getFirst() != null;
         for (int i = 1; i < parameters.length; i++) {
-            Entry<String, Type> entry = makeEntry(parameters[i], parameterHasName);
+            Entry<String, Token<?>> entry = makeEntry(parameters[i], parameterHasName);
             if (firstNonNullName == (entry.getFirst() == null)) {
-                throw new MapperException("inconsistent parameter naming");
+                throw new MapperException("Inconsistent parameter naming");
             }
 
             entryList.add(entry);
         }
 
-        return types = Collections.unmodifiableCollection(entryList);
+        return types = new TypeMappingCollection(entryList);
     }
 }

@@ -143,7 +143,7 @@ public interface Signature {
         }
 
         public @NotNull Signature build() {
-            Collection<Entry<String, Token<?>>> argumentTypes = Collections.unmodifiableCollection(this.argumentTypes);
+            Collection<Entry<String, Type>> argumentTypes = new TypeMappingCollection(this.argumentTypes);
             IntFunction<? extends ConfigContainer> containerFunction = this.containerFunction;
             ToIntFunction<? super ConfigElement> lengthFunction = this.lengthFunction;
             boolean matchNames = this.matchNames;
@@ -155,21 +155,7 @@ public interface Signature {
             return new Signature() {
                 @Override
                 public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
-
-                    return () -> new Iterator<>() {
-                        private final Iterator<Entry<String, Token<?>>> iterator = argumentTypes.iterator();
-
-                        @Override
-                        public boolean hasNext() {
-                            return iterator.hasNext();
-                        }
-
-                        @Override
-                        public Entry<String, Type> next() {
-                            Entry<String, Token<?>> entry = iterator.next();
-                            return Entry.of(entry.getFirst(), entry.getSecond().get());
-                        }
-                    };
+                    return argumentTypes;
                 }
 
                 @SuppressWarnings("unchecked")
