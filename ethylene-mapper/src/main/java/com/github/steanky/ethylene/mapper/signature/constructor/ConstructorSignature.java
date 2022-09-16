@@ -12,6 +12,7 @@ import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Order;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.type.Util;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
@@ -38,9 +39,11 @@ public class ConstructorSignature implements Signature {
     private Reference<Constructor<?>> constructorReference;
 
     private boolean matchesNames;
+
+    //types collection does not actually retain strong references to types, it is either empty or a TypeMappingCollection
     private Collection<Entry<String, Type>> types;
 
-    //similarly to Constructor, fields are not tied to the classloader, keep a soft reference and be prepared to
+    //similarly to constructors, fields are not tied to the classloader, keep a soft reference and be prepared to
     //re-create as necessary
     private Reference<Map<String, Field>> namedFieldsReference = new SoftReference<>(null);
     private Reference<Field[]> fieldsReference = new SoftReference<>(null);
@@ -79,22 +82,13 @@ public class ConstructorSignature implements Signature {
         return parameterClasses;
     }
 
-    private Class<?> resolveDeclaringClass() {
-        Class<?> referent = declaringClassReference.get();
-        if (referent == null) {
-            throw new IllegalStateException("Class named '" + declaringClassName + "' no longer exists");
-        }
-
-        return referent;
-    }
-
     private Constructor<?> resolveConstructor() {
         Constructor<?> constructor = constructorReference.get();
         if (constructor != null) {
             return constructor;
         }
 
-        Class<?> declaringClass = resolveDeclaringClass();
+        Class<?> declaringClass = Util.resolve(declaringClassReference, declaringClassName);
         try {
             constructor = declaringClass.getConstructor(resolveParameterTypes());
         } catch (NoSuchMethodException e) {
@@ -118,15 +112,15 @@ public class ConstructorSignature implements Signature {
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
-        initTypeCollection();
+        Collection<Entry<String, Type>> types = initTypeCollection();
 
-        Collection<TypedObject> typedObjects = new ArrayList<>(types.size());
-        Class<?> declaringClass = resolveDeclaringClass();
+        Class<?> declaringClass = Util.resolve(declaringClassReference, declaringClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
 
         Field[] fields = initFields(declaringClass, widenAccess);
 
         int i = 0;
+        Collection<TypedObject> typedObjects = new ArrayList<>(types.size());
         Map<String, Field> fieldMap = null;
         for (Entry<String, Type> typeEntry : types) {
             Field field;

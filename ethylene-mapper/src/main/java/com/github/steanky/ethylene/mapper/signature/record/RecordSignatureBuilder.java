@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper.signature.record;
 
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -13,6 +14,6 @@ public class RecordSignatureBuilder implements SignatureBuilder {
 
     @Override
     public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
-        return new Signature[] {new RecordSignature(type)};
+        return new Signature[] {new RecordSignature(Token.of(type))};
     }
 }

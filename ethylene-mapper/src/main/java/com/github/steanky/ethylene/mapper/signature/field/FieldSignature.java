@@ -6,45 +6,59 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.annotation.Exclude;
 import com.github.steanky.ethylene.mapper.annotation.Include;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.type.Util;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
 import java.util.*;
 
 public class FieldSignature implements Signature {
-    private final Type type;
-    private final Class<?> rawType;
+    private final Token<?> type;
+
+    private final Reference<Class<?>> rawType;
+    private final String rawTypeName;
 
     //fields are lazily initialized by initTypes
-    private Constructor<?> parameterlessConstructor;
-    private List<Field> participatingFields;
+    private Reference<SignatureData> signatureDataReference = new SoftReference<>(null);
+
+    //this is safe, does not actually retain strong refs to Type objects (see TypeMappingCollection)
     private Collection<Entry<String, Type>> types;
 
-    public FieldSignature(@NotNull Type type) {
+    private record SignatureData(Constructor<?> constructor, List<Field> fields) {}
+
+    public FieldSignature(@NotNull Token<?> type) {
         this.type = Objects.requireNonNull(type);
-        this.rawType = ReflectionUtils.rawType(type);
+
+        Class<?> rawType = ReflectionUtils.rawType(type);
+        this.rawType = new WeakReference<>(rawType);
+        this.rawTypeName = rawType.getName();
     }
 
-    private static Constructor<?> getConstructor(Class<?> cls, boolean widenAccess) {
+    private static Constructor<?> getConstructor(Class<?> rawClass, boolean widenAccess) {
         try {
             if (widenAccess) {
-                Constructor<?> constructor = cls.getDeclaredConstructor();
+                Constructor<?> constructor = rawClass.getDeclaredConstructor();
+
                 if (!constructor.trySetAccessible()) {
-                    throw new MapperException("failed to widen constructor access " + constructor);
+                    throw new MapperException("Failed to widen constructor access for '" + constructor + "'");
                 }
 
                 return constructor;
             }
 
-            return cls.getConstructor();
+            return rawClass.getConstructor();
         } catch (NoSuchMethodException e) {
             throw new MapperException(e);
         }
@@ -57,7 +71,7 @@ public class FieldSignature implements Signature {
         boolean defaultExclude = cls.isAnnotationPresent(Exclude.class);
         boolean defaultInclude = cls.isAnnotationPresent(Include.class);
         if (defaultExclude && defaultInclude) {
-            throw new MapperException("class '" + cls + "' annotated with both @Exclude and @Include");
+            throw new MapperException("Class '" + cls + "' is annotated with both @Exclude and @Include");
         }
 
         if (!defaultExclude && !defaultInclude) {
@@ -77,7 +91,7 @@ public class FieldSignature implements Signature {
             boolean includePresent = field.isAnnotationPresent(Include.class);
             boolean excludePresent = field.isAnnotationPresent(Exclude.class);
             if (includePresent && excludePresent) {
-                throw new MapperException("field '" + field + "' annotated with both @Exclude and @Include");
+                throw new MapperException("Field '" + field + "' annotated with both @Exclude and @Include");
             }
 
             if (defaultExclude) {
@@ -96,7 +110,7 @@ public class FieldSignature implements Signature {
             }
 
             if (widenAccess && !field.trySetAccessible()) {
-                throw new MapperException("failed to widen access for field " + field);
+                throw new MapperException("Failed to widen access for field '" + field + "'");
             }
 
             participatingFields.add(field);
@@ -106,44 +120,57 @@ public class FieldSignature implements Signature {
         return participatingFields;
     }
 
-    private Collection<Entry<String, Type>> initTypes() {
+    private SignatureData resolveData() {
+        SignatureData cached = signatureDataReference.get();
+        if (cached != null)  {
+            return cached;
+        }
+
+        Class<?> rawClass = Util.resolve(rawType, rawTypeName);
+        boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
+        Constructor<?> constructor = getConstructor(rawClass, widenAccess);
+        List<Field> participatingFields = getFields(rawClass, widenAccess);
+
+        cached = new SignatureData(constructor, participatingFields);
+        signatureDataReference = new SoftReference<>(cached);
+        return cached;
+    }
+
+    private Collection<Entry<String, Type>> resolveTypes() {
         if (types != null) {
             return types;
         }
 
-        boolean widenAccess = rawType.isAnnotationPresent(Widen.class);
-        this.parameterlessConstructor = getConstructor(rawType, widenAccess);
-        this.participatingFields = getFields(rawType, widenAccess);
-
-        if (this.participatingFields.isEmpty()) {
+        SignatureData data = resolveData();
+        if (data.fields.isEmpty()) {
             return types = List.of();
         }
 
-        Collection<Entry<String, Type>> typeCollection = new ArrayList<>(participatingFields.size());
-        for (Field field : participatingFields) {
-            typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), field.getGenericType()));
+        Collection<Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
+        for (Field field : data.fields) {
+            typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), Token.of(field.getGenericType())));
         }
 
-        return types = Collections.unmodifiableCollection(typeCollection);
+        return types = new TypeMappingCollection(typeCollection);
     }
 
     @Override
     public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
-        return initTypes();
+        return resolveTypes();
     }
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
-        initTypes();
-        Collection<TypedObject> typedObjects = new ArrayList<>(participatingFields.size());
-        for (Field field : participatingFields) {
+        SignatureData data = resolveData();
+
+        Collection<TypedObject> typedObjects = new ArrayList<>(data.fields.size());
+        for (Field field : data.fields) {
             String name = ReflectionUtils.getFieldName(field);
 
             try {
-                typedObjects.add(new TypedObject(name, Token.of(field.getGenericType()), FieldUtils
-                        .readField(field, object)));
-            } catch (IllegalAccessException ignored) {
-            }
+                typedObjects.add(new TypedObject(name, Token.of(field.getGenericType()), FieldUtils.readField(field,
+                        object)));
+            } catch (IllegalAccessException ignored) {}
         }
 
         return typedObjects;
@@ -167,7 +194,6 @@ public class FieldSignature implements Signature {
     @Override
     public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         try {
-            initTypes();
             if (buildingObject != null) {
                 finishObject(buildingObject, args);
                 return buildingObject;
@@ -193,7 +219,7 @@ public class FieldSignature implements Signature {
 
     @Override
     public int length(@Nullable ConfigElement element) {
-        return initTypes().size();
+        return resolveTypes().size();
     }
 
     @Override
@@ -203,18 +229,21 @@ public class FieldSignature implements Signature {
 
     @Override
     public @NotNull Type returnType() {
-        return type;
+        return type.get();
     }
 
     private void finishObject(Object buildingObject, Object[] args) throws IllegalAccessException {
+        SignatureData data = resolveData();
         for (int i = 0; i < args.length; i++) {
-            participatingFields.get(i).set(buildingObject, args[i]);
+            data.fields.get(i).set(buildingObject, args[i]);
         }
     }
 
     private Object getBuildingObject() {
+        SignatureData data = resolveData();
+
         try {
-            return parameterlessConstructor.newInstance();
+            return data.constructor.newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new MapperException(e);
         }
