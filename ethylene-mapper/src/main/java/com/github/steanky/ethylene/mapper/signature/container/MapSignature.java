@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
@@ -17,27 +18,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class MapSignature extends ContainerSignatureBase {
-    private final boolean parameterless;
-    private final Constructor<?> constructor;
-
     public MapSignature(@NotNull Token<?> keyType, @NotNull Token<?> valueType, @NotNull Token<?> mapType) {
         super(Token.parameterize(Map.Entry.class, keyType.get(), valueType.get()), mapType);
-        Class<?> mapClass = ReflectionUtils.rawType(mapType);
-
-        Class<?> rawClass = ReflectionUtils.rawType(mapClass);
-        Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass, int.class);
-        if (constructor == null) {
-            constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass);
-            if (constructor == null) {
-                throw new MapperException("no suitable collection constructor found for '" + mapClass + "'");
-            }
-
-            parameterless = true;
-        } else {
-            parameterless = false;
-        }
-
-        this.constructor = constructor;
     }
 
     @SuppressWarnings("unchecked")
@@ -71,12 +53,8 @@ public class MapSignature extends ContainerSignatureBase {
     }
 
     @Override
-    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-        if (!element.isContainer()) {
-            throw new MapperException("expected container");
-        }
-
-        return getMap(element.asContainer().entryCollection().size());
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return getMap(container.entryCollection().size());
     }
 
     @SuppressWarnings("unchecked")
@@ -104,8 +82,12 @@ public class MapSignature extends ContainerSignatureBase {
     @SuppressWarnings("unchecked")
     private Map<Object, Object> getMap(int size) {
         try {
-            return parameterless ? (Map<Object, Object>) constructor.newInstance() :
-                    (Map<Object, Object>) constructor.newInstance(size);
+            ConstructorInfo constructorInfo = super.resolveConstructor();
+            boolean parameterless = constructorInfo.parameterless();
+            Constructor<?> constructor = constructorInfo.constructor();
+
+            return parameterless ? (Map<Object, Object>) constructor.newInstance() : (Map<Object, Object>) constructor
+                    .newInstance(size);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new MapperException(e);
         }

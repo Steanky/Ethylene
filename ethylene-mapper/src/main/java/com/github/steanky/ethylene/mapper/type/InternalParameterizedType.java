@@ -41,8 +41,9 @@ class InternalParameterizedType implements ParameterizedType {
 
     @Override
     public boolean equals(final Object obj) {
-        return obj == this || obj instanceof ParameterizedType other && Arrays.equals(getActualTypeArguments(), other
-                .getActualTypeArguments());
+        return obj == this || obj instanceof ParameterizedType other && Objects.equals(getRawType(), other
+                .getRawType()) && Objects.equals(getOwnerType(), other.getOwnerType()) && Arrays
+                .equals(getActualTypeArguments(), other.getActualTypeArguments());
     }
 
     @Override

@@ -1,15 +1,12 @@
 package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
-import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.AbstractCollection;
@@ -18,39 +15,8 @@ import java.util.Collection;
 import java.util.Iterator;
 
 public class CollectionSignature extends ContainerSignatureBase {
-    private record ConstructorInfo(boolean parameterless, Constructor<?> constructor) {}
-
-    private Reference<ConstructorInfo> constructorReference = new SoftReference<>(null);
-
     public CollectionSignature(@NotNull Token<?> componentType, @NotNull Token<?> collectionClass) {
         super(componentType, collectionClass);
-    }
-
-    private ConstructorInfo resolveConstructor() {
-        ConstructorInfo cached = constructorReference.get();
-        if (cached != null) {
-            return cached;
-        }
-
-        Class<?> rawClass = ReflectionUtils.rawType(super.containerType.get());
-        Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass, int.class);
-
-        boolean parameterless;
-        if (constructor == null) {
-            constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass);
-
-            if (constructor == null) {
-                throw new MapperException("No suitable collection constructor found for '" + rawClass + "'");
-            }
-
-            parameterless = true;
-        } else {
-            parameterless = false;
-        }
-
-        ConstructorInfo constructorInfo = new ConstructorInfo(parameterless, constructor);
-        constructorReference = new SoftReference<>(constructorInfo);
-        return constructorInfo;
     }
 
     @SuppressWarnings("unchecked")
@@ -85,12 +51,8 @@ public class CollectionSignature extends ContainerSignatureBase {
     }
 
     @Override
-    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-        if (!element.isContainer()) {
-            throw new MapperException("expected container");
-        }
-
-        return makeNewCollection(element.asContainer().entryCollection().size());
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return makeNewCollection(container.entryCollection().size());
     }
 
     @SuppressWarnings("unchecked")
@@ -111,11 +73,14 @@ public class CollectionSignature extends ContainerSignatureBase {
     private Collection<Object> makeNewCollection(int size) {
         try {
             ConstructorInfo constructorInfo = resolveConstructor();
-            if (constructorInfo.parameterless) {
-                return (Collection<Object>) constructorInfo.constructor.newInstance();
+            boolean parameterless = constructorInfo.parameterless();
+            Constructor<?> constructor = constructorInfo.constructor();
+
+            if (parameterless) {
+                return (Collection<Object>) constructor.newInstance();
             }
 
-            return (Collection<Object>) constructorInfo.constructor.newInstance(size);
+            return (Collection<Object>) constructor.newInstance(size);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new MapperException(e);
         }

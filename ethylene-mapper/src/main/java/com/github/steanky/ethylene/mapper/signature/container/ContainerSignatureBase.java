@@ -5,21 +5,58 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
+import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.Iterator;
 
 public abstract class ContainerSignatureBase implements Signature {
+    protected record ConstructorInfo(boolean parameterless, Constructor<?> constructor) {}
+
     protected final Entry<String, Token<?>> entry;
     protected final Token<?> containerType;
+
+    protected Reference<ConstructorInfo> constructorInfoReference = new SoftReference<>(null);
 
     public ContainerSignatureBase(@NotNull Token<?> componentType, @NotNull Token<?> containerType) {
         this.entry = Entry.of(null, componentType);
         this.containerType = containerType;
+    }
+
+    protected @NotNull ConstructorInfo resolveConstructor() {
+        ConstructorInfo cached = constructorInfoReference.get();
+        if (cached != null) {
+            return cached;
+        }
+
+        Class<?> rawClass = ReflectionUtils.rawType(containerType.get());
+        Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass, int.class);
+
+        boolean parameterless;
+        if (constructor == null) {
+            constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass);
+
+            if (constructor == null) {
+                throw new MapperException("No suitable collection constructor found for '" + rawClass + "'");
+            }
+
+            parameterless = true;
+        } else {
+            parameterless = false;
+        }
+
+        ConstructorInfo constructorInfo = new ConstructorInfo(parameterless, constructor);
+        constructorInfoReference = new SoftReference<>(constructorInfo);
+        return constructorInfo;
     }
 
     @Override
@@ -40,6 +77,15 @@ public abstract class ContainerSignatureBase implements Signature {
     @Override
     public @NotNull ConfigContainer initContainer(int sizeHint) {
         return new ArrayConfigList(sizeHint);
+    }
+
+    @Override
+    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
+        if (!element.isContainer()) {
+            throw new MapperException("Expected container, got '" + element.type() + "'");
+        }
+
+        return makeBuildingObject(element.asContainer());
     }
 
     @Override
@@ -75,4 +121,6 @@ public abstract class ContainerSignatureBase implements Signature {
     public @NotNull Type returnType() {
         return containerType.get();
     }
+
+    protected abstract @NotNull Object makeBuildingObject(@NotNull ConfigContainer container);
 }

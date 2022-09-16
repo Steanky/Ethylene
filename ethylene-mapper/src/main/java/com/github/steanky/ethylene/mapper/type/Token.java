@@ -1,12 +1,12 @@
 package com.github.steanky.ethylene.mapper.type;
 
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.reflect.TypeUtils;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -45,8 +45,6 @@ public abstract class Token<T> implements Supplier<Type> {
     public static final Token<Boolean> BOOLEAN = new Token<>(Boolean.class) {};
 
     private final Reference<Type> typeReference;
-
-    private static final Map<Class<?>, Type> referenceMap = Collections.synchronizedMap(new WeakHashMap<>());
 
     private Token(@NotNull Type type) {
         if (type instanceof TypeVariable<?> typeVariable) {
@@ -88,35 +86,51 @@ public abstract class Token<T> implements Supplier<Type> {
         this.typeReference = new WeakReference<>(target);
     }
 
-    public static @NotNull Token<?> of(@NotNull Type type) {
-        return new Token<>(Objects.requireNonNull(type)) {};
-    }
-
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
         Type[] result = new Type[variables.length];
-        int index = 0;
+        int i = 0;
         for (TypeVariable<?> var : variables) {
             if (!mappings.containsKey(var)) {
                 throw new IllegalArgumentException("Missing type mapping for '" + var + "'");
             }
 
-            result[index++] = mappings.get(var);
+            result[i++] = mappings.get(var);
         }
 
         return result;
     }
 
-    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Type @NotNull ... params) {
-        Objects.requireNonNull(raw);
-        Objects.requireNonNull(params);
-
+    private static void checkTypes(Class<?> raw, Type ... params) {
         int requiredLength = raw.getTypeParameters().length;
         int actualLength = params.length;
         if (requiredLength != actualLength) {
             throw new IllegalArgumentException("Actual and required number of type parameters differ in length for '" +
                     raw.getName() + "', was " + actualLength + ", needed " + requiredLength);
         }
+    }
 
+    /**
+     * Creates a new Token containing the provided type. Only a weak reference to the type is retained. Since Java's
+     * own Type implementations have strong references elsewhere due to internal caching, the type will (assuming no
+     * other strong references exist) be garbage collected when the classloader it was created by is unloaded. However,
+     * custom subclasses of Type are not necessarily bound to the classloader. Unless additional precautions are taken,
+     * these objects are not safe for storage in Tokens because they will be garbage collected too soon.<p>
+     *
+     * This method is public to allow access across packages, but is not intended for general use. It is not part of the
+     * public API.
+     * @param type the type from which to create a token
+     * @return a new token containing the given type
+     */
+    @ApiStatus.Internal
+    public static @NotNull Token<?> of(@NotNull Type type) {
+        return new Token<>(Objects.requireNonNull(type)) {};
+    }
+
+    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Type @NotNull ... params) {
+        Objects.requireNonNull(raw);
+        Objects.requireNonNull(params);
+
+        checkTypes(raw, params);
         return Token.of(GenericInfoRepository.retain(raw, new InternalParameterizedType(raw, null, params)));
     }
 
@@ -125,6 +139,7 @@ public abstract class Token<T> implements Supplier<Type> {
         Objects.requireNonNull(typeMap);
 
         Type[] types = extractTypeArgumentsFrom(typeMap, raw.getTypeParameters());
+        checkTypes(raw, types);
         return Token.of(GenericInfoRepository.retain(raw, new InternalParameterizedType(raw, null, types)));
     }
 

@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,8 +50,8 @@ public class ArraySignature extends ContainerSignatureBase {
     }
 
     @Override
-    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-        return new Object[element.asContainer().elementCollection().size()];
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return new Object[container.elementCollection().size()];
     }
 
     @SuppressWarnings("SuspiciousSystemArraycopy")

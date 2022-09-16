@@ -78,7 +78,7 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
                         }
                     }
 
-                    throw new MapperException("unexpected container-like type '" + type.getTypeName() + "'");
+                    throw new MapperException("Unexpected container-like type '" + type.getTypeName() + "'");
                 }
                 case NODE ->
                         new BasicSignatureMatcher(signatureSelector.select(type).buildSignatures(type), typeHinter);
