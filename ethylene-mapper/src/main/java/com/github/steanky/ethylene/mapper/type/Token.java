@@ -1,6 +1,8 @@
 package com.github.steanky.ethylene.mapper.type;
 
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
+import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -105,6 +107,8 @@ public abstract class Token<T> implements Supplier<Type> {
     private static void checkTypes(Class<?> raw, Type... params) {
         int requiredLength = raw.getTypeParameters().length;
         int actualLength = params.length;
+
+        //validate parameter length
         if (requiredLength != actualLength) {
             throw new IllegalArgumentException(
                     "Actual and required number of type parameters differ in length for '" + raw.getName() + "', was " +
@@ -137,12 +141,40 @@ public abstract class Token<T> implements Supplier<Type> {
         return new Token<>(type) {};
     }
 
+    private static Token<?> parameterizeInternal(Class<?> raw, Class<?> owner, Type @NotNull ... params) {
+        checkTypes(raw, params);
+
+        Class<?> enclosing = raw.getEnclosingClass();
+        Type actualOwner;
+        if (enclosing == null) {
+            if (owner != null) {
+                throw new IllegalArgumentException("No owner allowed for '" + raw + "'");
+            }
+            actualOwner = null;
+        } else if (owner == null) {
+            actualOwner = raw.getEnclosingClass();
+        } else {
+            if (!TypeUtils.isAssignable(owner, enclosing)) {
+                throw new IllegalArgumentException("Invalid enclosing type for '" + raw + "'");
+            }
+            actualOwner = owner;
+        }
+
+        return Token.of(GenericInfoRepository.bind(raw, new InternalParameterizedType(raw, actualOwner, params)));
+    }
+
     public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Type @NotNull ... params) {
         Objects.requireNonNull(raw);
         Objects.requireNonNull(params);
 
-        checkTypes(raw, params);
-        return Token.of(GenericInfoRepository.bind(raw, new InternalParameterizedType(raw, null, params)));
+        return parameterizeInternal(raw, null, params);
+    }
+
+    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Class<?> owner, Type @NotNull ... params) {
+        Objects.requireNonNull(raw);
+        Objects.requireNonNull(params);
+
+        return parameterizeInternal(raw, owner, params);
     }
 
     public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Map<TypeVariable<?>, Type> typeMap) {
@@ -150,8 +182,16 @@ public abstract class Token<T> implements Supplier<Type> {
         Objects.requireNonNull(typeMap);
 
         Type[] types = extractTypeArgumentsFrom(typeMap, raw.getTypeParameters());
-        checkTypes(raw, types);
-        return Token.of(GenericInfoRepository.bind(raw, new InternalParameterizedType(raw, null, types)));
+        return parameterizeInternal(raw, null, types);
+    }
+
+    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Class<?> owner,
+            @NotNull Map<TypeVariable<?>, Type> typeMap) {
+        Objects.requireNonNull(raw);
+        Objects.requireNonNull(typeMap);
+
+        Type[] types = extractTypeArgumentsFrom(typeMap, raw.getTypeParameters());
+        return parameterizeInternal(raw, owner, types);
     }
 
     public final @NotNull Token<?> genericArrayType() {

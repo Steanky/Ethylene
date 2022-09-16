@@ -11,16 +11,16 @@ import java.util.Objects;
 
 class InternalGenericArrayType implements GenericArrayType, CustomType {
     private final Reference<Type> typeReference;
-    private final String name;
+    private final String typeName;
 
     InternalGenericArrayType(@NotNull Type componentType) {
         this.typeReference = new WeakReference<>(componentType);
-        this.name = componentType.getTypeName();
+        this.typeName = componentType.getTypeName();
     }
 
     @Override
     public Type getGenericComponentType() {
-        return Util.resolve(typeReference, name);
+        return Util.resolve(typeReference, typeName);
     }
 
     @Override
