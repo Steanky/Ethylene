@@ -33,15 +33,17 @@ public class ConstructorSignature implements Signature {
     private final Token<?> genericReturnType;
 
     //constructor objects are not retained by the classloader, so they might be garbage collected early
-    //use soft reference to reduce the frequency of this occurrence, and resolve the actual constructor at runtime when
-    //it is necessary to do so
+    //use soft reference to reduce the frequency of this occurrence, and resolve the actual constructor at runtime if it
+    //is necessary to do so
     private Reference<Constructor<?>> constructorReference;
 
     private boolean matchesNames;
     private Collection<Entry<String, Type>> types;
 
-    private Map<String, Reference<Field>> namedFields;
-    private Reference<Field[]> fieldReference = new SoftReference<>(null);
+    //similarly to Constructor, fields are not tied to the classloader, keep a soft reference and be prepared to
+    //re-create as necessary
+    private Reference<Map<String, Field>> namedFieldsReference = new SoftReference<>(null);
+    private Reference<Field[]> fieldsReference = new SoftReference<>(null);
 
     @SuppressWarnings("unchecked")
     public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Token<?> genericReturnType) {
@@ -125,11 +127,16 @@ public class ConstructorSignature implements Signature {
         Field[] fields = initFields(declaringClass, widenAccess);
 
         int i = 0;
+        Map<String, Field> fieldMap = null;
         for (Entry<String, Type> typeEntry : types) {
             Field field;
             String name;
             if (matchesNames) {
-                field = namedFields.get(name = typeEntry.getKey()).get();
+                if (fieldMap == null) {
+                    fieldMap = resolveNamedFields(fields);
+                }
+
+                field = fieldMap.get(name = typeEntry.getKey());
                 if (field == null) {
                     break;
                 }
@@ -204,7 +211,7 @@ public class ConstructorSignature implements Signature {
     }
 
     private Field[] initFields(Class<?> declaringClass, boolean widenAccess) {
-        Field[] fields = fieldReference.get();
+        Field[] fields = fieldsReference.get();
         if (fields != null) {
             return fields;
         }
@@ -212,10 +219,7 @@ public class ConstructorSignature implements Signature {
         fields = widenAccess ? declaringClass.getDeclaredFields() : declaringClass.getFields();
 
         if (matchesNames) {
-            namedFields = new HashMap<>(fields.length);
-            for (Field field : fields) {
-                namedFields.put(ReflectionUtils.getFieldName(field), new SoftReference<>(field));
-            }
+            resolveNamedFields(fields);
         } else {
             Arrays.sort(fields, Comparator.comparing(field -> {
                 Order order = field.getAnnotation(Order.class);
@@ -227,8 +231,23 @@ public class ConstructorSignature implements Signature {
             }));
         }
 
-        fieldReference = new SoftReference<>(fields);
+        fieldsReference = new SoftReference<>(fields);
         return fields;
+    }
+
+    private Map<String, Field> resolveNamedFields(Field[] fields) {
+        Map<String, Field> fieldMap = namedFieldsReference.get();
+        if (fieldMap != null) {
+            return fieldMap;
+        }
+
+        fieldMap = new HashMap<>(fields.length);
+        for (Field field : fields) {
+            fieldMap.put(ReflectionUtils.getFieldName(field), field);
+        }
+
+        namedFieldsReference = new SoftReference<>(fieldMap);
+        return fieldMap;
     }
 
     private Collection<Entry<String, Type>> initTypeCollection() {
