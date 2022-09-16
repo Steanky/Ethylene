@@ -22,12 +22,10 @@ public class HjsonCodec extends AbstractConfigCodec {
     private static final String NAME = "HJSON";
     private static final String PREFERRED_EXTENSION = "hjson";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
-
-    private final HjsonOptions readOptions;
-    private final HjsonOptions writeOptions;
-
     private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
     private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+    private final HjsonOptions readOptions;
+    private final HjsonOptions writeOptions;
 
     /**
      * Creates a new HjsonCodec instance using the given {@link HjsonOptions} for reading and writing.

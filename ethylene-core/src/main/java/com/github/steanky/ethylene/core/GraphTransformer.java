@@ -13,51 +13,6 @@ import java.util.function.Supplier;
  * transformations.
  */
 public final class GraphTransformer {
-    /**
-     * Bit flags for setting various options.
-     */
-    public static final class Options {
-        /**
-         * All options are disabled. This corresponds to a breadth-first graph transform with no reference tracking of
-         * any sort, and no lazy accumulation.
-         */
-        public static final int NONE = 0;
-
-        /**
-         * Enables support for reference tracking. If this is enabled, all node references will be tracked, whereas
-         * scalar references <i>can</i> be tracked only if their corresponding option flag is set. Warning: when this
-         * option is disabled, any circular references in the input data structure will cause an infinite loop and
-         * eventually an OOM.
-         */
-        public static final int REFERENCE_TRACKING = 1;
-
-        /**
-         * Enables support for tracking scalar references. This option will do nothing if the REFERENCE_TRACKING flag
-         * is not also set.
-         */
-        public static final int TRACK_SCALAR_REFERENCE = 2;
-
-        /**
-         * Equivalent to using both REFERENCE_TRACKING and TRACK_SCALAR_REFERENCE.
-         */
-        public static final int TRACK_ALL_REFERENCES = 3;
-
-        /**
-         * Causes graphs to be processed in a depth-first manner.
-         */
-        public static final int DEPTH_FIRST = 4;
-
-        /**
-         * Enables lazy accumulation of nodes. Child nodes will only be added to their parent accumulator when all the
-         * child's child nodes have been added.
-         */
-        public static final int LAZY_ACCUMULATION = 8;
-
-        private static boolean hasOption(int options, int option) {
-            return (options & option) != 0;
-        }
-    }
-
     private static final Accumulator<?, ?> EMPTY_ACCUMULATOR = (Accumulator<Object, Object>) (o, o2, circular) -> {};
     private static final Output<?, ?> EMPTY_OUTPUT = new Output<>(null, EMPTY_ACCUMULATOR);
     private static final Node<?, ?, ?> EMPTY_NODE = new Node<>(new Iterator<>() {
@@ -77,8 +32,8 @@ public final class GraphTransformer {
             @NotNull Predicate<? super TIn> containerPredicate,
             @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
             @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper,
-            @NotNull Supplier<? extends Map<TVisit, TOut>> visitedSupplier,
-            @NotNull Deque<Node<TIn, TOut, TKey>> stack, int flags) {
+            @NotNull Supplier<? extends Map<TVisit, TOut>> visitedSupplier, @NotNull Deque<Node<TIn, TOut, TKey>> stack,
+            int flags) {
         if (!containerPredicate.test(rootInput)) {
             //if rootInput is a scalar, just return whatever the scalar mapper produces
             //there's nothing more to do
@@ -132,13 +87,11 @@ public final class GraphTransformer {
                             if (visited.containsKey(visit)) {
                                 out = visited.get(visit);
                                 circular = true;
-                            }
-                            else {
+                            } else {
                                 out = scalarMapper.apply(entryInput);
                                 circular = false;
                             }
-                        }
-                        else {
+                        } else {
                             out = scalarMapper.apply(entryInput);
                             circular = false;
                         }
@@ -192,8 +145,7 @@ public final class GraphTransformer {
                         //set the current node's result key and out fields
                         node.result.key = entryKey;
                         node.result.out = newNode.output.data;
-                    }
-                    else {
+                    } else {
                         //no lazy accumulation, immediately add this node
                         node.output.accumulator.accept(entryKey, newNode.output.data, false);
                     }
@@ -255,6 +207,51 @@ public final class GraphTransformer {
     @FunctionalInterface
     public interface Accumulator<TKey, TOut> {
         void accept(TKey key, TOut out, boolean circular);
+    }
+
+    /**
+     * Bit flags for setting various options.
+     */
+    public static final class Options {
+        /**
+         * All options are disabled. This corresponds to a breadth-first graph transform with no reference tracking of
+         * any sort, and no lazy accumulation.
+         */
+        public static final int NONE = 0;
+
+        /**
+         * Enables support for reference tracking. If this is enabled, all node references will be tracked, whereas
+         * scalar references <i>can</i> be tracked only if their corresponding option flag is set. Warning: when this
+         * option is disabled, any circular references in the input data structure will cause an infinite loop and
+         * eventually an OOM.
+         */
+        public static final int REFERENCE_TRACKING = 1;
+
+        /**
+         * Enables support for tracking scalar references. This option will do nothing if the REFERENCE_TRACKING flag is
+         * not also set.
+         */
+        public static final int TRACK_SCALAR_REFERENCE = 2;
+
+        /**
+         * Equivalent to using both REFERENCE_TRACKING and TRACK_SCALAR_REFERENCE.
+         */
+        public static final int TRACK_ALL_REFERENCES = 3;
+
+        /**
+         * Causes graphs to be processed in a depth-first manner.
+         */
+        public static final int DEPTH_FIRST = 4;
+
+        /**
+         * Enables lazy accumulation of nodes. Child nodes will only be added to their parent accumulator when all the
+         * child's child nodes have been added.
+         */
+        public static final int LAZY_ACCUMULATION = 8;
+
+        private static boolean hasOption(int options, int option) {
+            return (options & option) != 0;
+        }
     }
 
     public static class NodeResult<TKey, TOut> {

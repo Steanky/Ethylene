@@ -40,8 +40,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
 
     private void registerCustomSignatures(Collection<Signature> signatures) {
         for (Signature signature : signatures) {
-            customSignatures.computeIfAbsent(ReflectionUtils.rawType(signature.returnType()), ignored ->
-                    new HashSet<>(2)).add(signature);
+            customSignatures.computeIfAbsent(ReflectionUtils.rawType(signature.returnType()),
+                    ignored -> new HashSet<>(2)).add(signature);
         }
     }
 
@@ -60,20 +60,20 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
             return switch (typeHinter.getHint(type)) {
                 case LIST -> {
                     if (TypeUtils.isArrayType(type)) {
-                        Signature[] arraySignature = new Signature[] {new ArraySignature(Token.of(TypeUtils
-                                .getArrayComponentType(type)))};
+                        Signature[] arraySignature = new Signature[] {
+                                new ArraySignature(Token.of(TypeUtils.getArrayComponentType(type)))};
                         yield new BasicSignatureMatcher(arraySignature, typeHinter);
                     } else {
                         if (Collection.class.isAssignableFrom(raw)) {
                             Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Collection.class);
-                            Signature[] collectionSignature = new Signature[] {new CollectionSignature(Token
-                                    .of(types[0]), Token.of(type))};
+                            Signature[] collectionSignature = new Signature[] {
+                                    new CollectionSignature(Token.of(types[0]), Token.of(type))};
 
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
                         } else if (Map.class.isAssignableFrom(raw)) {
                             Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Map.class);
-                            Signature[] mapSignature = new Signature[] {new MapSignature(Token.of(types[0]), Token
-                                    .of(types[1]), Token.of(type))};
+                            Signature[] mapSignature = new Signature[] {
+                                    new MapSignature(Token.of(types[0]), Token.of(types[1]), Token.of(type))};
                             yield new BasicSignatureMatcher(mapSignature, typeHinter);
                         }
                     }

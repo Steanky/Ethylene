@@ -114,50 +114,50 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             ElementEntry rootEntry = new ElementEntry(rootType, data, rootMatcher);
 
             return GraphTransformer.process(rootEntry, nodeEntry -> {
-                Object nodeObject = nodeEntry.object;
-                MatchingSignature typeSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type, null,
-                        nodeObject);
-                Signature signature = typeSignature.signature();
-                int size = typeSignature.size();
+                        Object nodeObject = nodeEntry.object;
+                        MatchingSignature typeSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type, null,
+                                nodeObject);
+                        Signature signature = typeSignature.signature();
+                        int size = typeSignature.size();
 
-                ConfigContainer target = signature.initContainer(size);
-                nodeEntry.element.setValue(target);
+                        ConfigContainer target = signature.initContainer(size);
+                        nodeEntry.element.setValue(target);
 
-                Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
+                        Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
 
-                return new GraphTransformer.Node<ElementEntry, Mutable<ConfigElement>, String>(new Iterator<>() {
-                    private int i = 0;
+                        return new GraphTransformer.Node<ElementEntry, Mutable<ConfigElement>, String>(new Iterator<>() {
+                            private int i = 0;
 
-                    @Override
-                    public boolean hasNext() {
-                        return i < size;
-                    }
+                            @Override
+                            public boolean hasNext() {
+                                return i < size;
+                            }
 
-                    @Override
-                    public Entry<String, ElementEntry> next() {
-                        if (i++ == size) {
-                            throw new NoSuchElementException();
-                        }
+                            @Override
+                            public Entry<String, ElementEntry> next() {
+                                if (i++ == size) {
+                                    throw new NoSuchElementException();
+                                }
 
-                        Signature.TypedObject typedObject = typedObjectIterator.next();
-                        Type objectType = typeResolver.resolveType(typedObject.type().get(), null);
-                        SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType, null);
+                                Signature.TypedObject typedObject = typedObjectIterator.next();
+                                Type objectType = typeResolver.resolveType(typedObject.type().get(), null);
+                                SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType, null);
 
-                        return Entry.of(typedObject.name(),
-                                new ElementEntry(objectType, typedObject.value(), thisMatcher));
-                    }
-                }, new GraphTransformer.Output<>(nodeEntry.element, (key, value, circular) -> {
-                    if (target.isList()) {
-                        target.asList().add(value.getValue());
-                    } else {
-                        target.asNode().put(key, value.getValue());
-                    }
-                }));
-            }, potentialContainer -> {
-                //runtime type is passed to TypeHinter: this should be safe since it doesn't care about generics
-                return potentialContainer.object != null &&
-                        typeHinter.getHint(potentialContainer.object.getClass()) != ElementType.SCALAR;
-            }, scalar -> new MutableObject<>(scalarSource.make(scalar.object)), entry -> entry.object,
+                                return Entry.of(typedObject.name(),
+                                        new ElementEntry(objectType, typedObject.value(), thisMatcher));
+                            }
+                        }, new GraphTransformer.Output<>(nodeEntry.element, (key, value, circular) -> {
+                            if (target.isList()) {
+                                target.asList().add(value.getValue());
+                            } else {
+                                target.asNode().put(key, value.getValue());
+                            }
+                        }));
+                    }, potentialContainer -> {
+                        //runtime type is passed to TypeHinter: this should be safe since it doesn't care about generics
+                        return potentialContainer.object != null &&
+                                typeHinter.getHint(potentialContainer.object.getClass()) != ElementType.SCALAR;
+                    }, scalar -> new MutableObject<>(scalarSource.make(scalar.object)), entry -> entry.object,
                     GraphTransformer.Options.DEPTH_FIRST | GraphTransformer.Options.REFERENCE_TRACKING |
                             GraphTransformer.Options.LAZY_ACCUMULATION).getValue();
         } catch (Exception e) {

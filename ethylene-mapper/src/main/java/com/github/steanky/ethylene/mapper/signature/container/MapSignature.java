@@ -1,17 +1,13 @@
 package com.github.steanky.ethylene.mapper.signature.container;
 
-import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
-import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Type;
 import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
@@ -52,11 +48,6 @@ public class MapSignature extends ContainerSignatureBase {
         };
     }
 
-    @Override
-    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
-        return getMap(container.entryCollection().size());
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
@@ -69,6 +60,11 @@ public class MapSignature extends ContainerSignatureBase {
         Map<Object, Object> map = getMap(args.length);
         finishMap(map, args);
         return map;
+    }
+
+    @Override
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return getMap(container.entryCollection().size());
     }
 
     @SuppressWarnings("unchecked")
@@ -86,8 +82,8 @@ public class MapSignature extends ContainerSignatureBase {
             boolean parameterless = constructorInfo.parameterless();
             Constructor<?> constructor = constructorInfo.constructor();
 
-            return parameterless ? (Map<Object, Object>) constructor.newInstance() : (Map<Object, Object>) constructor
-                    .newInstance(size);
+            return parameterless ? (Map<Object, Object>) constructor.newInstance() :
+                    (Map<Object, Object>) constructor.newInstance(size);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new MapperException(e);
         }

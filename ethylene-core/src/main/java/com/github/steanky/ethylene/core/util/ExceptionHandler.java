@@ -88,12 +88,11 @@ public class ExceptionHandler<TErr extends Exception> {
      * will be used to provide the return value of the function. If no exception is thrown, the return value of the
      * ThrowingSupplier is used.
      *
-     * @param supplier the supplier to call
+     * @param supplier        the supplier to call
      * @param defaultSupplier the supplier used to provide the default value; only called if an exception occurs
-     * @return the value returned by the default supplier if an exception occurred, otherwise the value returned by
-     * the ThrowingSupplier
-     *
-     * @param <TReturn> the return value type
+     * @param <TReturn>       the return value type
+     * @return the value returned by the default supplier if an exception occurred, otherwise the value returned by the
+     * ThrowingSupplier
      */
     public <TReturn> TReturn get(@NotNull ThrowingSupplier<? extends TReturn, ? extends TErr> supplier,
             @NotNull Supplier<? extends TReturn> defaultSupplier) {
@@ -115,24 +114,21 @@ public class ExceptionHandler<TErr extends Exception> {
      * {@link Supplier} will be used to provide the return value of the function. If no exception is thrown, the return
      * value of the ThrowingFunction is used.
      *
-     * @param function the function to call
+     * @param function        the function to call
      * @param defaultSupplier the supplier used to provide the default value; only called if an exception occurs
-     * @return the value returned by the default supplier if an exception occurred, otherwise the value returned by
-     * the ThrowingFunction
-     *
-     * @param <TReturn> the return value type
+     * @param <TReturn>       the return value type
+     * @return the value returned by the default supplier if an exception occurred, otherwise the value returned by the
+     * ThrowingFunction
      */
     public <TAccept, TReturn> TReturn apply(
-            @NotNull ThrowingFunction<? super TAccept, ? extends TReturn, ? extends TErr> function,
-            TAccept value,
+            @NotNull ThrowingFunction<? super TAccept, ? extends TReturn, ? extends TErr> function, TAccept value,
             @NotNull Supplier<? extends TReturn> defaultSupplier) {
         Objects.requireNonNull(function);
         Objects.requireNonNull(defaultSupplier);
 
         try {
             return function.apply(value);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             handleException(e);
         }
 
@@ -142,12 +138,10 @@ public class ExceptionHandler<TErr extends Exception> {
     private void handleException(Exception exception) {
         if (exceptionClass.isAssignableFrom(exception.getClass())) {
             setOrSuppress(exceptionClass.cast(exception));
-        }
-        else if (exception instanceof RuntimeException runtimeException) {
+        } else if (exception instanceof RuntimeException runtimeException) {
             //we don't handle runtime exceptions, but they can still occur
             throw runtimeException;
-        }
-        else {
+        } else {
             //should not happen under normal use
             throw new IllegalStateException("Unexpected exception type", exception);
         }

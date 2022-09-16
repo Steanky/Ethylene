@@ -37,17 +37,16 @@ class MappingConfigProcessorIntegrationTest {
     private final MappingConfigProcessor<Object> objectProcessor;
 
     public MappingConfigProcessorIntegrationTest() {
-        @SuppressWarnings("rawtypes")
-        Signature mapEntry = Signature.builder(new Token<Map.Entry>() {},
-                        (entry, objects) -> Map.entry(objects[0], objects[1]),
-                        (entry) -> List.of(Signature.type("key", new Token<>() {}, entry.getKey()),
-                                Signature.type("value", new Token<>() {}, entry.getValue())),
-                        Entry.of("key", new Token<>() {}), Entry.of("value", new Token<>() {})).matchingTypeHints()
-                .matchingNames().build();
+        @SuppressWarnings("rawtypes") Signature mapEntry = Signature.builder(new Token<Map.Entry>() {},
+                (entry, objects) -> Map.entry(objects[0], objects[1]),
+                (entry) -> List.of(Signature.type("key", new Token<>() {}, entry.getKey()),
+                        Signature.type("value", new Token<>() {}, entry.getValue())), Entry.of("key", new Token<>() {}),
+                Entry.of("value", new Token<>() {})).matchingTypeHints().matchingNames().build();
 
         typeHinter = new BasicTypeHinter();
-        typeResolver = new BasicTypeResolver(typeHinter, Set.of(Entry.of(ArrayList.class, Collection.class),
-                Entry.of(HashSet.class, Set.class), Entry.of(HashMap.class, Map.class)));
+        typeResolver = new BasicTypeResolver(typeHinter,
+                Set.of(Entry.of(ArrayList.class, Collection.class), Entry.of(HashSet.class, Set.class),
+                        Entry.of(HashMap.class, Map.class)));
         source = new BasicSignatureMatcherSource(typeHinter,
                 new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE, Set.of()), Set.of(mapEntry));
 
@@ -187,6 +186,7 @@ class MappingConfigProcessorIntegrationTest {
             assertEquals(List.of(1, 2, 3), integerList);
         }
 
+        @SuppressWarnings("CollectionAddedToSelf")
         @Test
         void selfReferentialList() throws ConfigProcessException {
             ConfigList list = ConfigList.of("a");
@@ -258,6 +258,7 @@ class MappingConfigProcessorIntegrationTest {
             assertEquals("value", obj.string);
         }
 
+        @SuppressWarnings("CollectionAddedToSelf")
         @Test
         void selfReferentialAccessWidenedFieldConstructor() throws ConfigProcessException {
             ConfigProcessor<AccessWidenedFieldClass> processor = new MappingConfigProcessor<>(new Token<>() {}, source,

@@ -8,6 +8,15 @@ public class BasicPathNameInspector implements PathNameInspector {
     private static final char EXTENSION_SEPARATOR = '.';
     private static final String EMPTY_STRING = "";
 
+    private static String getFilenameString(Path path) {
+        Path namePath = path.getFileName();
+        if (namePath == null) {
+            return EMPTY_STRING;
+        }
+
+        return namePath.toString();
+    }
+
     @Override
     public @NotNull String getExtension(@NotNull Path path) {
         String namePathString = getFilenameString(path);
@@ -28,15 +37,6 @@ public class BasicPathNameInspector implements PathNameInspector {
         }
 
         return namePathString.substring(0, extensionIndex);
-    }
-
-    private static String getFilenameString(Path path) {
-        Path namePath = path.getFileName();
-        if (namePath == null) {
-            return EMPTY_STRING;
-        }
-
-        return namePath.toString();
     }
 
     @Override

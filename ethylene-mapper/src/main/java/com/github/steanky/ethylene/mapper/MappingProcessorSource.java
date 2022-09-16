@@ -35,17 +35,12 @@ public interface MappingProcessorSource {
         private TypeHinter typeHinter = BasicTypeHinter.INSTANCE;
         private SignatureBuilder defaultBuilder = FieldSignatureBuilder.INSTANCE;
         private ScalarSource scalarSource = BasicScalarSource.INSTANCE;
-
-        private Function<? super Collection<Signature>, ? extends SignatureMatcher.Source>
-                signatureMatcherSourceFunction = customSignatures -> new BasicSignatureMatcherSource(typeHinter,
-                getSignatureBuilderSelector(), customSignatures);
-
-        private Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector>
-                signatureBuilderSelectorFunction = signaturePreferences ->
-                new BasicSignatureBuilderSelector(defaultBuilder, signaturePreferences);
-
-        private Function<? super Collection<Entry<Class<?>, Class<?>>>, ? extends TypeResolver> typeResolverFunction =
-                typeImplementations -> new BasicTypeResolver(typeHinter, typeImplementations);
+        private Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector> signatureBuilderSelectorFunction = signaturePreferences -> new BasicSignatureBuilderSelector(
+                defaultBuilder, signaturePreferences);
+        private Function<? super Collection<Signature>, ? extends SignatureMatcher.Source> signatureMatcherSourceFunction = customSignatures -> new BasicSignatureMatcherSource(
+                typeHinter, getSignatureBuilderSelector(), customSignatures);
+        private Function<? super Collection<Entry<Class<?>, Class<?>>>, ? extends TypeResolver> typeResolverFunction = typeImplementations -> new BasicTypeResolver(
+                typeHinter, typeImplementations);
 
         Builder() {}
 
@@ -87,8 +82,8 @@ public interface MappingProcessorSource {
             return this;
         }
 
-        public @NotNull Builder withSignatureMatcherSourceFunction(@NotNull Function<? super Collection<Signature>,
-                ? extends SignatureMatcher.Source> function) {
+        public @NotNull Builder withSignatureMatcherSourceFunction(
+                @NotNull Function<? super Collection<Signature>, ? extends SignatureMatcher.Source> function) {
             this.signatureMatcherSourceFunction = Objects.requireNonNull(function);
             return this;
         }
@@ -105,15 +100,15 @@ public interface MappingProcessorSource {
         }
 
         public @NotNull Builder withTypeImplementation(@NotNull Class<?> implementation, @NotNull Class<?> superclass) {
-            typeImplementations.add(Entry.of(Objects.requireNonNull(implementation), Objects
-                    .requireNonNull(superclass)));
+            typeImplementations.add(
+                    Entry.of(Objects.requireNonNull(implementation), Objects.requireNonNull(superclass)));
             return this;
         }
 
         public @NotNull Builder withSignatureBuilderPreference(@NotNull Class<?> type,
                 @NotNull SignatureBuilder signatureBuilder) {
-            signatureBuilderPreferences.add(Entry.of(Objects.requireNonNull(type), Objects
-                    .requireNonNull(signatureBuilder)));
+            signatureBuilderPreferences.add(
+                    Entry.of(Objects.requireNonNull(type), Objects.requireNonNull(signatureBuilder)));
             return this;
         }
 

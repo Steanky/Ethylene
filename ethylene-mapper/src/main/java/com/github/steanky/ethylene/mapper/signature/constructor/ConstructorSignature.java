@@ -6,12 +6,12 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
-import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
-import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Order;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.type.Util;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -25,19 +25,15 @@ import java.lang.reflect.*;
 import java.util.*;
 
 public class ConstructorSignature implements Signature {
-    private final String declaringClassName;
-    private final Reference<Class<?>> declaringClassReference;
-
-    private final String[] parameterTypeNames;
-    private final Reference<Class<?>>[] parameterTypes;
-
     private final Token<?> genericReturnType;
-
+    private final Reference<Class<?>> rawClassReference;
+    private final String rawClassName;
+    private final Reference<Class<?>>[] parameterTypes;
+    private final String[] parameterTypeNames;
     //constructor objects are not retained by the classloader, so they might be garbage collected early
     //use soft reference to reduce the frequency of this occurrence, and resolve the actual constructor at runtime if it
     //is necessary to do so
     private Reference<Constructor<?>> constructorReference;
-
     private boolean matchesNames;
 
     //types collection does not actually retain strong references to types, it is either empty or a TypeMappingCollection
@@ -50,15 +46,14 @@ public class ConstructorSignature implements Signature {
 
     @SuppressWarnings("unchecked")
     public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Token<?> genericReturnType) {
-        this.constructorReference = new SoftReference<>(Objects.requireNonNull(constructor));
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
+        this.constructorReference = new SoftReference<>(Objects.requireNonNull(constructor));
 
         Class<?> declaringClass = constructor.getDeclaringClass();
+        this.rawClassReference = new WeakReference<>(declaringClass);
+        this.rawClassName = declaringClass.getName();
+
         Class<?>[] params = constructor.getParameterTypes();
-
-        this.declaringClassName = declaringClass.getName();
-        this.declaringClassReference = new WeakReference<>(declaringClass);
-
         this.parameterTypes = new Reference[params.length];
         this.parameterTypeNames = new String[params.length];
         for (int i = 0; i < params.length; i++) {
@@ -66,6 +61,12 @@ public class ConstructorSignature implements Signature {
             parameterTypes[i] = new WeakReference<>(referent);
             parameterTypeNames[i] = referent.getName();
         }
+    }
+
+    private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
+        Name parameterName = parameter.getAnnotation(Name.class);
+        return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
+                Token.of(parameter.getParameterizedType()));
     }
 
     private Class<?>[] resolveParameterTypes() {
@@ -88,21 +89,15 @@ public class ConstructorSignature implements Signature {
             return constructor;
         }
 
-        Class<?> declaringClass = Util.resolve(declaringClassReference, declaringClassName);
+        Class<?> declaringClass = Util.resolve(rawClassReference, rawClassName);
         try {
             constructor = declaringClass.getConstructor(resolveParameterTypes());
         } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("No valid constructor found for type '" + declaringClassName + "'", e);
+            throw new IllegalStateException("No valid constructor found for type '" + rawClassName + "'", e);
         }
 
         constructorReference = new SoftReference<>(constructor);
         return constructor;
-    }
-
-    private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
-        Name parameterName = parameter.getAnnotation(Name.class);
-        return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
-                Token.of(parameter.getParameterizedType()));
     }
 
     @Override
@@ -114,7 +109,7 @@ public class ConstructorSignature implements Signature {
     public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
         Collection<Entry<String, Type>> types = initTypeCollection();
 
-        Class<?> declaringClass = Util.resolve(declaringClassReference, declaringClassName);
+        Class<?> declaringClass = Util.resolve(rawClassReference, rawClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
 
         Field[] fields = initFields(declaringClass, widenAccess);
@@ -148,8 +143,8 @@ public class ConstructorSignature implements Signature {
             }
 
             try {
-                typedObjects.add(new TypedObject(name, Token.of(field.getGenericType()), FieldUtils.readField(field,
-                        object)));
+                typedObjects.add(
+                        new TypedObject(name, Token.of(field.getGenericType()), FieldUtils.readField(field, object)));
             } catch (IllegalAccessException ignored) {
                 break;
             }

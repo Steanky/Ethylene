@@ -48,11 +48,6 @@ public class ArraySignature extends ContainerSignatureBase {
         };
     }
 
-    @Override
-    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
-        return new Object[container.elementCollection().size()];
-    }
-
     @SuppressWarnings("SuspiciousSystemArraycopy")
     @Override
     public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
@@ -62,5 +57,10 @@ public class ArraySignature extends ContainerSignatureBase {
 
         System.arraycopy(args, 0, buildingObject, 0, args.length);
         return buildingObject;
+    }
+
+    @Override
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return new Object[container.elementCollection().size()];
     }
 }

@@ -33,12 +33,10 @@ public class TomlCodec extends AbstractConfigCodec {
     private static final String NAME = "TOML";
     private static final String PREFERRED_EXTENSION = "toml";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
-
-    private final TomlParser parser;
-    private final TomlWriter writer;
-
     private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
     private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+    private final TomlParser parser;
+    private final TomlWriter writer;
 
     /**
      * Creates a new TomlCodec with default values.

@@ -1,16 +1,16 @@
 package com.github.steanky.ethylene.mapper.type;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
+import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -47,10 +47,12 @@ public abstract class Token<T> implements Supplier<Type> {
     private final Reference<Type> typeReference;
 
     private Token(@NotNull Type type) {
+        Objects.requireNonNull(type);
+
         if (type instanceof TypeVariable<?> typeVariable) {
             this.typeReference = new WeakReference<>(typeVariable.getBounds()[0]);
         } else {
-            this.typeReference = new WeakReference<>(Objects.requireNonNull(type));
+            this.typeReference = new WeakReference<>(type);
         }
     }
 
@@ -100,30 +102,39 @@ public abstract class Token<T> implements Supplier<Type> {
         return result;
     }
 
-    private static void checkTypes(Class<?> raw, Type ... params) {
+    private static void checkTypes(Class<?> raw, Type... params) {
         int requiredLength = raw.getTypeParameters().length;
         int actualLength = params.length;
         if (requiredLength != actualLength) {
-            throw new IllegalArgumentException("Actual and required number of type parameters differ in length for '" +
-                    raw.getName() + "', was " + actualLength + ", needed " + requiredLength);
+            throw new IllegalArgumentException(
+                    "Actual and required number of type parameters differ in length for '" + raw.getName() + "', was " +
+                            actualLength + ", needed " + requiredLength);
         }
     }
 
     /**
-     * Creates a new Token containing the provided type. Only a weak reference to the type is retained. Since Java's
-     * own Type implementations have strong references elsewhere due to internal caching, the type will (assuming no
-     * other strong references exist) be garbage collected when the classloader it was created by is unloaded. However,
-     * custom subclasses of Type are not necessarily bound to the classloader. Unless additional precautions are taken,
-     * these objects are not safe for storage in Tokens because they will be garbage collected too soon.<p>
-     *
+     * Creates a new Token containing the provided type. Only a weak reference to the type is retained. Since Java's own
+     * Type implementations have strong references elsewhere due to internal caching, the type will (assuming no other
+     * strong references exist) be garbage collected when the classloader it was created by is unloaded. However, custom
+     * subclasses of Type are not necessarily bound to the classloader. Unless additional precautions are taken, these
+     * objects are not safe for storage in Tokens because they will be garbage collected too soon.<p>
+     * <p>
      * This method is public to allow access across packages, but is not intended for general use. It is not part of the
      * public API.
+     *
      * @param type the type from which to create a token
      * @return a new token containing the given type
      */
+    @SuppressWarnings("IfStatementWithIdenticalBranches")
     @ApiStatus.Internal
     public static @NotNull Token<?> of(@NotNull Type type) {
-        return new Token<>(Objects.requireNonNull(type)) {};
+        Objects.requireNonNull(type);
+        if (type instanceof CustomType customType) {
+            //return the bound type if we can
+            return new Token<>(GenericInfoRepository.bind(ReflectionUtils.rawType(type), customType)) {};
+        }
+
+        return new Token<>(type) {};
     }
 
     public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Type @NotNull ... params) {
@@ -131,7 +142,7 @@ public abstract class Token<T> implements Supplier<Type> {
         Objects.requireNonNull(params);
 
         checkTypes(raw, params);
-        return Token.of(GenericInfoRepository.retain(raw, new InternalParameterizedType(raw, null, params)));
+        return Token.of(GenericInfoRepository.bind(raw, new InternalParameterizedType(raw, null, params)));
     }
 
     public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Map<TypeVariable<?>, Type> typeMap) {
@@ -140,13 +151,13 @@ public abstract class Token<T> implements Supplier<Type> {
 
         Type[] types = extractTypeArgumentsFrom(typeMap, raw.getTypeParameters());
         checkTypes(raw, types);
-        return Token.of(GenericInfoRepository.retain(raw, new InternalParameterizedType(raw, null, types)));
+        return Token.of(GenericInfoRepository.bind(raw, new InternalParameterizedType(raw, null, types)));
     }
 
     public final @NotNull Token<?> genericArrayType() {
         Type type = get();
-        Class<?> raw = TypeUtils.getRawType(type, null);
-        return Token.of(GenericInfoRepository.retain(raw, new InternalGenericArrayType(type)));
+        Class<?> raw = ReflectionUtils.rawType(type);
+        return Token.of(GenericInfoRepository.bind(raw, new InternalGenericArrayType(type)));
     }
 
     public final @NotNull Type get() {

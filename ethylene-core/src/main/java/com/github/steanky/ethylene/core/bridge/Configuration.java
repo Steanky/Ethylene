@@ -19,7 +19,7 @@ import java.util.concurrent.*;
  * of sources, either synchronously or asynchronously. Asynchronous methods generally support user-supplied
  * {@link Executor}s, but in the event one is not given, an overload exists which uses {@link ForkJoinPool#commonPool()}
  * as a default.<p>
- *
+ * <p>
  * All methods, unless otherwise noted, will throw a {@link NullPointerException} if any of their arguments are null.
  */
 public final class Configuration {
@@ -175,7 +175,8 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(executor);
 
-        return fromStreamsInternal(() -> Files.newInputStream(path), () -> Files.newOutputStream(path), codec, executor);
+        return fromStreamsInternal(() -> Files.newInputStream(path), () -> Files.newOutputStream(path), codec,
+                executor);
     }
 
     public static @NotNull ConfigSource asyncSourceFromPath(@NotNull Path path, @NotNull ConfigCodec codec) {
@@ -192,7 +193,7 @@ public final class Configuration {
      * @param inputStream the InputStream to read from
      * @param codec       the ConfigCodec which will be used to decode the input data
      * @return a {@link ConfigNode} object representing the decoded configuration data
-     * @throws IOException          if an IO error occurs or the InputStream does not contain valid data for the codec
+     * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
      */
     public static @NotNull ConfigElement read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec)
             throws IOException {
@@ -366,8 +367,8 @@ public final class Configuration {
         Objects.requireNonNull(input);
         Objects.requireNonNull(codec);
 
-        return readAsyncInternal(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), codec, ForkJoinPool
-                .commonPool());
+        return readAsyncInternal(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), codec,
+                ForkJoinPool.commonPool());
     }
 
     /**
@@ -449,8 +450,8 @@ public final class Configuration {
         Objects.requireNonNull(codec);
 
         OutputStream outputStream = new ByteArrayOutputStream();
-        return writeAsyncInternal(outputStream, element, codec, ForkJoinPool.commonPool()).thenApply(ignored ->
-                outputStream.toString());
+        return writeAsyncInternal(outputStream, element, codec, ForkJoinPool.commonPool()).thenApply(
+                ignored -> outputStream.toString());
     }
 
     /**
@@ -475,14 +476,14 @@ public final class Configuration {
     }
 
     public static <TData> @NotNull CompletableFuture<String> writeAsync(@NotNull ConfigCodec codec,
-        @NotNull ConfigProcessor<? super TData> processor, TData data, @NotNull Executor executor) {
+            @NotNull ConfigProcessor<? super TData> processor, TData data, @NotNull Executor executor) {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(processor);
         Objects.requireNonNull(executor);
 
         OutputStream outputStream = new ByteArrayOutputStream();
-        return writeAsyncInternal(outputStream, data, codec, processor, executor).thenApply(ignored -> outputStream
-                .toString());
+        return writeAsyncInternal(outputStream, data, codec, processor, executor).thenApply(
+                ignored -> outputStream.toString());
     }
 
     public static <TData> @NotNull CompletableFuture<String> writeAsync(@NotNull ConfigCodec codec,
@@ -491,8 +492,8 @@ public final class Configuration {
         Objects.requireNonNull(processor);
 
         OutputStream outputStream = new ByteArrayOutputStream();
-        return writeAsyncInternal(outputStream, data, codec, processor, ForkJoinPool.commonPool()).thenApply(ignored ->
-                outputStream.toString());
+        return writeAsyncInternal(outputStream, data, codec, processor, ForkJoinPool.commonPool()).thenApply(
+                ignored -> outputStream.toString());
     }
 
 
@@ -586,7 +587,7 @@ public final class Configuration {
     }
 
     public static @NotNull CompletableFuture<Void> writeAsync(@NotNull Path path, @NotNull ConfigElement element,
-        @NotNull ConfigCodec codec, @NotNull Executor executor) {
+            @NotNull ConfigCodec codec, @NotNull Executor executor) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(element);
         Objects.requireNonNull(codec);

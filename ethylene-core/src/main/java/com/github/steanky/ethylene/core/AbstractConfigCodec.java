@@ -41,9 +41,10 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                         "Top-level elements of type '" + type + "' not supported by '" + getName() + "' codec");
             }
 
-            writeObject(GraphTransformer.process(element, this::makeEncodeNode, this::isContainer,
-                    this::serializeElement, Function.identity(), IdentityHashMap::new, new ArrayDeque<>(),
-                    graphTransformerEncodeOptions), output);
+            writeObject(
+                    GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
+                            Function.identity(), IdentityHashMap::new, new ArrayDeque<>(),
+                            graphTransformerEncodeOptions), output);
         }
     }
 

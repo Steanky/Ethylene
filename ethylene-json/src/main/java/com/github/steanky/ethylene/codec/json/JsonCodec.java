@@ -28,11 +28,9 @@ public class JsonCodec extends AbstractConfigCodec {
     private static final String PREFERRED_EXTENSION = "json";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
-
-    private final Gson gson;
-
     private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
     private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+    private final Gson gson;
 
     /**
      * Creates a new JsonCodec using the provided {@link Gson} instance to read and write data.

@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.mapper.signature.container;
 
-import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.type.Token;
@@ -50,11 +49,6 @@ public class CollectionSignature extends ContainerSignatureBase {
         };
     }
 
-    @Override
-    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
-        return makeNewCollection(container.entryCollection().size());
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
@@ -67,6 +61,11 @@ public class CollectionSignature extends ContainerSignatureBase {
         Collection<Object> collection = makeNewCollection(args.length);
         collection.addAll(Arrays.asList(args));
         return collection;
+    }
+
+    @Override
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return makeNewCollection(container.entryCollection().size());
     }
 
     @SuppressWarnings("unchecked")

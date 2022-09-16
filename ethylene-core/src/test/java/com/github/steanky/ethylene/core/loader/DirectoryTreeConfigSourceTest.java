@@ -9,9 +9,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class DirectoryTreeConfigSourceTest {
+    @SuppressWarnings("CollectionAddedToSelf")
     @Test
     void readWriteEquivalent() throws IOException {
         ConfigNode testNode = ConfigNode.of("root",
@@ -24,9 +25,8 @@ class DirectoryTreeConfigSourceTest {
         codecResolver.registerCodec(jsonCodec);
 
         Path root = Files.createTempDirectory("DirectoryTreeConfigSourceTest_output");
-        DirectoryTreeConfigSource directoryTreeConfigSource = new DirectoryTreeConfigSource(
-                root, codecResolver, new BasicPathNameInspector(),
-                jsonCodec, null, true);
+        DirectoryTreeConfigSource directoryTreeConfigSource = new DirectoryTreeConfigSource(root, codecResolver,
+                new BasicPathNameInspector(), jsonCodec, null, true);
         directoryTreeConfigSource.write(testNode).join();
 
         ConfigElement element = directoryTreeConfigSource.read().join();

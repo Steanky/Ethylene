@@ -103,30 +103,32 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-        return Objects.requireNonNullElseGet(containerCollection, () -> containerCollection = new AbstractCollection<>() {
-            @Override
-            public Iterator<ConfigEntry> iterator() {
-                return new Iterator<>() {
-                    private final Iterator<Entry<String, ConfigElement>> entryIterator = mappings.entrySet().iterator();
-
+        return Objects.requireNonNullElseGet(containerCollection,
+                () -> containerCollection = new AbstractCollection<>() {
                     @Override
-                    public boolean hasNext() {
-                        return entryIterator.hasNext();
+                    public Iterator<ConfigEntry> iterator() {
+                        return new Iterator<>() {
+                            private final Iterator<Entry<String, ConfigElement>> entryIterator = mappings.entrySet()
+                                    .iterator();
+
+                            @Override
+                            public boolean hasNext() {
+                                return entryIterator.hasNext();
+                            }
+
+                            @Override
+                            public ConfigEntry next() {
+                                Entry<String, ConfigElement> next = entryIterator.next();
+                                return new ConfigEntry(next.getKey(), next.getValue());
+                            }
+                        };
                     }
 
                     @Override
-                    public ConfigEntry next() {
-                        Entry<String, ConfigElement> next = entryIterator.next();
-                        return new ConfigEntry(next.getKey(), next.getValue());
+                    public int size() {
+                        return mappings.size();
                     }
-                };
-            }
-
-            @Override
-            public int size() {
-                return mappings.size();
-            }
-        });
+                });
     }
 
     @Override

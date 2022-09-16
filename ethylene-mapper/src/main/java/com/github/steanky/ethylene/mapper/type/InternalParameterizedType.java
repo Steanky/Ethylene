@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Objects;
 
-class InternalParameterizedType implements ParameterizedType {
+class InternalParameterizedType implements ParameterizedType, CustomType {
     private final String rawName;
     private final String ownerName;
 
@@ -32,18 +32,11 @@ class InternalParameterizedType implements ParameterizedType {
         this.typeArguments = new Reference[typeArguments.length];
         this.typeArgumentNames = new String[typeArguments.length];
 
-        for(int i = 0; i < typeArguments.length; i++) {
+        for (int i = 0; i < typeArguments.length; i++) {
             Type type = typeArguments[i];
             this.typeArguments[i] = new WeakReference<>(type);
             this.typeArgumentNames[i] = type.getTypeName();
         }
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return obj == this || obj instanceof ParameterizedType other && Objects.equals(getRawType(), other
-                .getRawType()) && Objects.equals(getOwnerType(), other.getOwnerType()) && Arrays
-                .equals(getActualTypeArguments(), other.getActualTypeArguments());
     }
 
     @Override
@@ -57,18 +50,26 @@ class InternalParameterizedType implements ParameterizedType {
     }
 
     @Override
-    public Type getOwnerType() {
-        return owner == null ? null : Util.resolve(owner, ownerName);
-    }
-
-    @Override
     public Type getRawType() {
         return Util.resolve(raw, rawName);
     }
 
     @Override
+    public Type getOwnerType() {
+        return owner == null ? null : Util.resolve(owner, ownerName);
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(getRawType(), getOwnerType(), Arrays.hashCode(getActualTypeArguments()));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj == this ||
+                obj instanceof ParameterizedType other && Objects.equals(getRawType(), other.getRawType()) &&
+                        Objects.equals(getOwnerType(), other.getOwnerType()) &&
+                        Arrays.equals(getActualTypeArguments(), other.getActualTypeArguments());
     }
 
     @Override

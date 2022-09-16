@@ -6,12 +6,12 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
-import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
-import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.annotation.Exclude;
 import com.github.steanky.ethylene.mapper.annotation.Include;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.type.Util;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -22,12 +22,15 @@ import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 public class FieldSignature implements Signature {
-    private final Token<?> type;
+    private final Token<?> genericReturnType;
 
-    private final Reference<Class<?>> rawType;
+    private final Reference<Class<?>> rawTypeReference;
     private final String rawTypeName;
 
     //fields are lazily initialized by initTypes
@@ -36,13 +39,11 @@ public class FieldSignature implements Signature {
     //this is safe, does not actually retain strong refs to Type objects (see TypeMappingCollection)
     private Collection<Entry<String, Type>> types;
 
-    private record SignatureData(Constructor<?> constructor, List<Field> fields) {}
+    public FieldSignature(@NotNull Token<?> genericReturnType) {
+        this.genericReturnType = Objects.requireNonNull(genericReturnType);
 
-    public FieldSignature(@NotNull Token<?> type) {
-        this.type = Objects.requireNonNull(type);
-
-        Class<?> rawType = ReflectionUtils.rawType(type);
-        this.rawType = new WeakReference<>(rawType);
+        Class<?> rawType = ReflectionUtils.rawType(genericReturnType);
+        this.rawTypeReference = new WeakReference<>(rawType);
         this.rawTypeName = rawType.getName();
     }
 
@@ -122,11 +123,11 @@ public class FieldSignature implements Signature {
 
     private SignatureData resolveData() {
         SignatureData cached = signatureDataReference.get();
-        if (cached != null)  {
+        if (cached != null) {
             return cached;
         }
 
-        Class<?> rawClass = Util.resolve(rawType, rawTypeName);
+        Class<?> rawClass = Util.resolve(rawTypeReference, rawTypeName);
         boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
         Constructor<?> constructor = getConstructor(rawClass, widenAccess);
         List<Field> participatingFields = getFields(rawClass, widenAccess);
@@ -168,9 +169,10 @@ public class FieldSignature implements Signature {
             String name = ReflectionUtils.getFieldName(field);
 
             try {
-                typedObjects.add(new TypedObject(name, Token.of(field.getGenericType()), FieldUtils.readField(field,
-                        object)));
-            } catch (IllegalAccessException ignored) {}
+                typedObjects.add(
+                        new TypedObject(name, Token.of(field.getGenericType()), FieldUtils.readField(field, object)));
+            } catch (IllegalAccessException ignored) {
+            }
         }
 
         return typedObjects;
@@ -229,7 +231,7 @@ public class FieldSignature implements Signature {
 
     @Override
     public @NotNull Type returnType() {
-        return type.get();
+        return genericReturnType.get();
     }
 
     private void finishObject(Object buildingObject, Object[] args) throws IllegalAccessException {
@@ -248,4 +250,6 @@ public class FieldSignature implements Signature {
             throw new MapperException(e);
         }
     }
+
+    private record SignatureData(Constructor<?> constructor, List<Field> fields) {}
 }

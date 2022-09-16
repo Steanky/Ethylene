@@ -9,7 +9,7 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-class InternalGenericArrayType implements GenericArrayType {
+class InternalGenericArrayType implements GenericArrayType, CustomType {
     private final Reference<Type> typeReference;
     private final String name;
 
@@ -30,8 +30,8 @@ class InternalGenericArrayType implements GenericArrayType {
 
     @Override
     public boolean equals(Object obj) {
-        return obj == this || obj instanceof GenericArrayType other && getGenericComponentType().equals(other
-                .getGenericComponentType());
+        return obj == this || obj instanceof GenericArrayType other &&
+                getGenericComponentType().equals(other.getGenericComponentType());
     }
 
     @Override

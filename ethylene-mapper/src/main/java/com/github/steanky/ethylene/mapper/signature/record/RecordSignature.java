@@ -6,10 +6,10 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
-import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
-import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
+import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.type.Util;
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 public class RecordSignature implements Signature {
     private final Token<?> genericReturnType;
@@ -30,7 +33,7 @@ public class RecordSignature implements Signature {
     private final Reference<Class<?>> rawClassReference;
     private final String rawClassName;
 
-    //cache constructor and RecordComp array, be prepared to re-generate them if necessary since they can get
+    //cache constructor and RecordComponent array, be prepared to re-generate them if necessary since they can get
     //garbage-collected
     private Reference<Constructor<?>> constructorReference = new SoftReference<>(null);
     private Reference<RecordComponent[]> recordComponentsReference = new SoftReference<>(null);
