@@ -123,39 +123,34 @@ public class BasicTypeResolver implements TypeResolver {
         }
 
         //there was no defined "implementation" class, so try to intelligently guess one that will work with our element
-        if (!Modifier.isAbstract(raw.getModifiers())) {
-            if (element == null || hint.compatible(element)) {
-                //trivial case: null elements are compatible with everything, directly-compatible hints are also good
-                return type;
-            }
-
-            //check assignability
-            Type elementType = switch (element.type()) {
-                case NODE -> raw;
-                case LIST -> {
-                    Type[] params = ReflectionUtils.extractGenericTypeParameters(type, raw);
-                    yield Token.parameterize(ArrayList.class, params.length == 0 ? Object.class : params[0]).get();
-                }
-                case SCALAR -> {
-                    Object scalar = element.asScalar();
-                    if (scalar == null) {
-                        //null is assignable to anything
-                        yield type;
-                    }
-
-                    yield scalar.getClass();
-                }
-            };
-
-            if (!TypeUtils.isAssignable(elementType, type)) {
-                throw new MapperException("Element type '" + element.type() + "' not compatible with '" + type + "'");
-            }
-
-            //since elementType is dependent on the ConfigElement, we can't cache this result
-            return elementType;
+        if (element == null || hint.compatible(element)) {
+            //trivial case: null elements are compatible with everything, directly-compatible hints are also good
+            return type;
         }
 
-        //no type resolution found (but maybe we can still find a suitable signature later?)
-        return type;
+        //try to guess what type we need based on the element type and any generic information we have
+        Type elementType = switch (element.type()) {
+            case NODE -> raw;
+            case LIST -> {
+                Type[] params = ReflectionUtils.extractGenericTypeParameters(type, raw);
+                yield Token.parameterize(ArrayList.class, params.length == 0 ? Object.class : params[0]).get();
+            }
+            case SCALAR -> {
+                Object scalar = element.asScalar();
+                if (scalar == null) {
+                    //null is assignable to anything
+                    yield type;
+                }
+
+                yield scalar.getClass();
+            }
+        };
+
+        if (!TypeUtils.isAssignable(elementType, type)) {
+            throw new MapperException("Element type '" + elementType + "' not compatible with '" + type.getTypeName() +
+                    "'");
+        }
+
+        return elementType;
     }
 }
