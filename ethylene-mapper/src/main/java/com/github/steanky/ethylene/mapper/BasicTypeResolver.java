@@ -52,7 +52,7 @@ public class BasicTypeResolver implements TypeResolver {
             ClassEntry newEntry = new ClassEntry(ClassUtils.getName(implementation), implementation);
             if (typeCache.getIfPresent(superclass) != null) {
                 throw new MapperException("An implementation class is already registered to superclass '" + superclass
-                        .getTypeName() +"'");
+                        .getTypeName() + "'");
             }
 
             typeCache.put(superclass, newEntry);

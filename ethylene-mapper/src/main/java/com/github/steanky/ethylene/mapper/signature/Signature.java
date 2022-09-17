@@ -47,7 +47,7 @@ public interface Signature {
     }
 
     default @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-        throw new IllegalStateException("unsupported operation");
+        throw new IllegalStateException("Unsupported operation");
     }
 
     @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args);
