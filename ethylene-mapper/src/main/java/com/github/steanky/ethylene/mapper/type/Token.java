@@ -110,9 +110,8 @@ public abstract class Token<T> implements Supplier<Type> {
 
         //validate parameter length
         if (requiredLength != actualLength) {
-            throw new IllegalArgumentException(
-                    "Actual and required number of type parameters differ in length for '" + raw.getName() + "', was " +
-                            actualLength + ", needed " + requiredLength);
+            throw new IllegalArgumentException("Actual and required number of type parameters differ in length for '" +
+                    raw.getTypeName() + "', was " + actualLength + ", needed " + requiredLength);
         }
     }
 
@@ -141,7 +140,7 @@ public abstract class Token<T> implements Supplier<Type> {
         return new Token<>(type) {};
     }
 
-    private static Token<?> parameterizeInternal(Class<?> raw, Class<?> owner, Type @NotNull ... params) {
+    private static Token<?> parameterizeInternal(Class<?> raw, Class<?> owner, Type ... params) {
         checkTypes(raw, params);
 
         Class<?> enclosing = raw.getEnclosingClass();
@@ -152,7 +151,7 @@ public abstract class Token<T> implements Supplier<Type> {
             }
             actualOwner = null;
         } else if (owner == null) {
-            actualOwner = raw.getEnclosingClass();
+            actualOwner = enclosing;
         } else {
             if (!TypeUtils.isAssignable(owner, enclosing)) {
                 throw new IllegalArgumentException("Invalid enclosing type for '" + raw + "'");
@@ -170,8 +169,10 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(raw, null, params);
     }
 
-    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Class<?> owner, Type @NotNull ... params) {
+    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Class<?> owner,
+            Type @NotNull ... params) {
         Objects.requireNonNull(raw);
+        Objects.requireNonNull(owner);
         Objects.requireNonNull(params);
 
         return parameterizeInternal(raw, owner, params);
@@ -181,17 +182,16 @@ public abstract class Token<T> implements Supplier<Type> {
         Objects.requireNonNull(raw);
         Objects.requireNonNull(typeMap);
 
-        Type[] types = extractTypeArgumentsFrom(typeMap, raw.getTypeParameters());
-        return parameterizeInternal(raw, null, types);
+        return parameterizeInternal(raw, null, extractTypeArgumentsFrom(typeMap, raw.getTypeParameters()));
     }
 
-    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Class<?> owner,
+    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Class<?> owner,
             @NotNull Map<TypeVariable<?>, Type> typeMap) {
         Objects.requireNonNull(raw);
+        Objects.requireNonNull(owner);
         Objects.requireNonNull(typeMap);
 
-        Type[] types = extractTypeArgumentsFrom(typeMap, raw.getTypeParameters());
-        return parameterizeInternal(raw, owner, types);
+        return parameterizeInternal(raw, owner, extractTypeArgumentsFrom(typeMap, raw.getTypeParameters()));
     }
 
     public final @NotNull Token<?> genericArrayType() {

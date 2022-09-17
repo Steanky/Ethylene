@@ -13,7 +13,7 @@ import java.util.Objects;
 
 /**
  * Class used internally to more easily translate a {@link Collection} of entries of strings and tokens into a
- * collection of entries of strings and {@link Type} objects. No strong references to type objects are retained.<p>
+ * collection of entries of strings and {@link Type} objects. No strong references to type objects are retained.
  * <p>
  * This class is public to enable access across different packages, but is not considered part of the public API.
  */

@@ -1,5 +1,7 @@
 package com.github.steanky.ethylene.mapper.signature;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.annotation.Builder;
 import com.github.steanky.ethylene.mapper.signature.constructor.ConstructorSignatureBuilder;
@@ -10,18 +12,16 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
 
 public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector {
     private final SignatureBuilder defaultBuilder;
-    private final Map<Class<?>, SignatureBuilder> builderTypeMap;
+    private final Cache<Class<?>, SignatureBuilder> builderTypeCache;
 
     public BasicSignatureBuilderSelector(@NotNull SignatureBuilder defaultBuilder,
             @NotNull Collection<Entry<Class<?>, SignatureBuilder>> signaturePreferences) {
         this.defaultBuilder = Objects.requireNonNull(defaultBuilder);
-        this.builderTypeMap = new WeakHashMap<>(signaturePreferences.size());
+        this.builderTypeCache = Caffeine.newBuilder().weakKeys().build();
 
         registerSignaturePreferences(signaturePreferences);
     }
@@ -33,7 +33,7 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
 
             Objects.requireNonNull(type);
             Objects.requireNonNull(signatureBuilder);
-            builderTypeMap.put(type, signatureBuilder);
+            builderTypeCache.put(type, signatureBuilder);
         }
     }
 
@@ -42,7 +42,7 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
         Class<?> rawType = ReflectionUtils.rawType(type);
         Builder builderAnnotation = rawType.getAnnotation(Builder.class);
         if (builderAnnotation == null) {
-            SignatureBuilder signatureBuilder = builderTypeMap.get(rawType);
+            SignatureBuilder signatureBuilder = builderTypeCache.getIfPresent(rawType);
             if (signatureBuilder == null && rawType.isRecord()) {
                 return RecordSignatureBuilder.INSTANCE;
             }

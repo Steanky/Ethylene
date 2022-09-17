@@ -1,5 +1,7 @@
 package com.github.steanky.ethylene.mapper.type;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -47,7 +49,7 @@ import java.util.function.Function;
  */
 class GenericInfoRepository {
     //global mapping of class objects to generic info, may contain classes belonging to various classloaders
-    private static final Map<Class<?>, GenericInfoRepository> store = new WeakHashMap<>();
+    private static final Cache<Class<?>, GenericInfoRepository> store = Caffeine.newBuilder().weakKeys().build();
 
     private final Map<Type, Type> canonicalTypes = new ConcurrentHashMap<>(4);
 
@@ -64,12 +66,7 @@ class GenericInfoRepository {
      * @return the cached type if present, else {@code type}
      */
     static @NotNull Type bind(@NotNull Class<?> owner, @NotNull CustomType type) {
-        GenericInfoRepository repository;
-        synchronized (store) {
-            repository = store.computeIfAbsent(owner, ignored -> new GenericInfoRepository());
-        }
-
-        //we can give up the global lock on store once we retrieve the repository, canonicalTypes is a ConcurrentHashMap
-        return repository.canonicalTypes.computeIfAbsent(type, Function.identity());
+        return store.get(owner, ignored -> new GenericInfoRepository()).canonicalTypes.computeIfAbsent(type, Function
+                .identity());
     }
 }

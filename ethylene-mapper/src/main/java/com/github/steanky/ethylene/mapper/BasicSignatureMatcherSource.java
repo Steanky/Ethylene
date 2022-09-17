@@ -1,5 +1,7 @@
 package com.github.steanky.ethylene.mapper;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.signature.BasicSignatureMatcher;
 import com.github.steanky.ethylene.mapper.signature.Signature;
@@ -24,34 +26,34 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     private final TypeHinter typeHinter;
     private final SignatureBuilder.Selector signatureSelector;
 
-    private final Map<Type, SignatureMatcher> signatureCache;
-    private final Map<Class<?>, Set<Signature>> customSignatures;
+    private final Cache<Type, SignatureMatcher> signatureCache;
+    private final Cache<Class<?>, Set<Signature>> customSignatures;
 
     public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter,
             @NotNull SignatureBuilder.Selector signatureSelector, @NotNull Collection<Signature> customSignatures) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.signatureSelector = Objects.requireNonNull(signatureSelector);
 
-        this.signatureCache = new WeakHashMap<>();
-        this.customSignatures = new WeakHashMap<>(customSignatures.size());
+        this.signatureCache = Caffeine.newBuilder().weakKeys().build();
+        this.customSignatures = Caffeine.newBuilder().weakKeys().maximumSize(customSignatures.size()).build();
 
         registerCustomSignatures(customSignatures);
     }
 
     private void registerCustomSignatures(Collection<Signature> signatures) {
         for (Signature signature : signatures) {
-            customSignatures.computeIfAbsent(ReflectionUtils.rawType(signature.returnType()),
+            customSignatures.get(ReflectionUtils.rawType(signature.returnType()),
                     ignored -> new HashSet<>(2)).add(signature);
         }
     }
 
     @Override
     public SignatureMatcher matcherFor(@NotNull Type resolvedType, @Nullable ConfigElement element) {
-        return signatureCache.computeIfAbsent(resolvedType, type -> {
+        return signatureCache.get(resolvedType, type -> {
             Class<?> raw = ReflectionUtils.rawType(type);
 
             for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
-                Set<Signature> signatures = customSignatures.get(superclass);
+                Set<Signature> signatures = customSignatures.getIfPresent(superclass);
                 if (signatures != null) {
                     return new BasicSignatureMatcher(signatures.toArray(EMPTY_SIGNATURE_ARRAY), typeHinter);
                 }

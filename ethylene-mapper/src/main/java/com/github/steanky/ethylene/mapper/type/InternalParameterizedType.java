@@ -29,6 +29,7 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
 
         this.raw = new WeakReference<>(rawClass);
         this.owner = owner == null ? null : new WeakReference<>(owner);
+
         this.typeArguments = new Reference[typeArguments.length];
         this.typeArgumentNames = new String[typeArguments.length];
 

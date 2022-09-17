@@ -30,6 +30,7 @@ public class ConstructorSignature implements Signature {
     private final String rawClassName;
     private final Reference<Class<?>>[] parameterTypes;
     private final String[] parameterTypeNames;
+
     //constructor objects are not retained by the classloader, so they might be garbage collected early
     //use soft reference to reduce the frequency of this occurrence, and resolve the actual constructor at runtime if it
     //is necessary to do so
@@ -51,7 +52,7 @@ public class ConstructorSignature implements Signature {
 
         Class<?> declaringClass = constructor.getDeclaringClass();
         this.rawClassReference = new WeakReference<>(declaringClass);
-        this.rawClassName = declaringClass.getName();
+        this.rawClassName = declaringClass.getTypeName();
 
         Class<?>[] params = constructor.getParameterTypes();
         this.parameterTypes = new Reference[params.length];
@@ -59,7 +60,7 @@ public class ConstructorSignature implements Signature {
         for (int i = 0; i < params.length; i++) {
             Class<?> referent = params[i];
             parameterTypes[i] = new WeakReference<>(referent);
-            parameterTypeNames[i] = referent.getName();
+            parameterTypeNames[i] = referent.getTypeName();
         }
     }
 
