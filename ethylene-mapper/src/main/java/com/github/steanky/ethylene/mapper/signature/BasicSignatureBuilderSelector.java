@@ -21,7 +21,7 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
     public BasicSignatureBuilderSelector(@NotNull SignatureBuilder defaultBuilder,
             @NotNull Collection<Entry<Class<?>, SignatureBuilder>> signaturePreferences) {
         this.defaultBuilder = Objects.requireNonNull(defaultBuilder);
-        this.builderTypeCache = Caffeine.newBuilder().weakKeys().build();
+        this.builderTypeCache = Caffeine.newBuilder().initialCapacity(signaturePreferences.size()).weakKeys().build();
 
         registerSignaturePreferences(signaturePreferences);
     }

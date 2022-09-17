@@ -1,5 +1,7 @@
 package com.github.steanky.ethylene.mapper;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
@@ -20,14 +22,16 @@ import java.util.*;
 public class BasicTypeResolver implements TypeResolver {
     private final TypeHinter typeHinter;
 
-    private final Map<Class<?>, ClassEntry> types;
-    private final Map<Class<?>, ClassEntry> cache;
+    private final Cache<Class<?>, ClassEntry> typeCache;
+    private final Cache<Class<?>, ClassEntry> exactCache;
 
     public BasicTypeResolver(@NotNull TypeHinter typeHinter,
             @NotNull Collection<Entry<Class<?>, Class<?>>> typeImplementations) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
-        types = new WeakHashMap<>(typeImplementations.size());
-        cache = new WeakHashMap<>(typeImplementations.size());
+
+        int size = typeImplementations.size();
+        typeCache = Caffeine.newBuilder().initialCapacity(size).weakKeys().build();
+        exactCache = Caffeine.newBuilder().initialCapacity(size).weakKeys().build();
 
         registerTypeImplementations(typeImplementations);
     }
@@ -37,19 +41,22 @@ public class BasicTypeResolver implements TypeResolver {
             Class<?> implementation = entry.getFirst();
             Class<?> superclass = entry.getSecond();
 
+            Objects.requireNonNull(implementation);
+            Objects.requireNonNull(superclass);
             if (!TypeUtils.isAssignable(implementation, superclass)) {
                 throw new MapperException(
-                        "Implementation class '" + implementation.getName() + "' is not assignable to superclass '" +
-                                superclass.getName() + "'");
+                        "Implementation class '" + implementation.getTypeName() + "' is not assignable to superclass '" +
+                                superclass.getTypeName() + "'");
             }
 
             ClassEntry newEntry = new ClassEntry(ClassUtils.getName(implementation), implementation);
-            if (types.putIfAbsent(superclass, newEntry) != null) {
-                throw new MapperException(
-                        "There is already an implementation type registered for class '" + superclass.getName() + "'");
+            if (typeCache.getIfPresent(superclass) != null) {
+                throw new MapperException("An implementation class is already registered to superclass '" + superclass
+                        .getTypeName() +"'");
             }
 
-            cache.put(superclass, newEntry);
+            typeCache.put(superclass, newEntry);
+            exactCache.put(superclass, newEntry);
         }
     }
 
@@ -67,7 +74,7 @@ public class BasicTypeResolver implements TypeResolver {
             return type;
         }
 
-        ClassEntry cached = cache.get(raw);
+        ClassEntry cached = exactCache.getIfPresent(raw);
         if (cached != null) {
             Class<?> ref = cached.reference.get();
             if (ref != null) {
@@ -78,18 +85,18 @@ public class BasicTypeResolver implements TypeResolver {
                 return ref;
             }
 
-            cache.remove(raw);
+            exactCache.invalidate(raw);
         }
 
         for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
-            ClassEntry entry = types.get(superclass);
+            ClassEntry entry = typeCache.getIfPresent(superclass);
             if (entry != null) {
                 Class<?> ref = entry.reference.get();
                 if (ref == null) {
                     throw new MapperException("Class '" + entry.name + "' no longer exists");
                 }
 
-                cache.put(raw, entry);
+                exactCache.put(raw, entry);
 
                 if (type instanceof ParameterizedType parameterizedType) {
                     return Token.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType)).get();
@@ -99,7 +106,7 @@ public class BasicTypeResolver implements TypeResolver {
             }
         }
 
-        if (!Modifier.isAbstract(raw.getModifiers()) && !types.containsKey(raw)) {
+        if (!Modifier.isAbstract(raw.getModifiers()) && (typeCache.getIfPresent(raw) == null)) {
             if (element == null || hint.compatible(element)) {
                 return type;
             }

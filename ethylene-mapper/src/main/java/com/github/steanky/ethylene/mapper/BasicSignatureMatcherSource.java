@@ -27,7 +27,7 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     private final SignatureBuilder.Selector signatureSelector;
 
     private final Cache<Type, SignatureMatcher> signatureCache;
-    private final Cache<Class<?>, Set<Signature>> customSignatures;
+    private final Cache<Class<?>, Set<Signature>> customSignatureCache;
 
     public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter,
             @NotNull SignatureBuilder.Selector signatureSelector, @NotNull Collection<Signature> customSignatures) {
@@ -35,15 +35,15 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
         this.signatureSelector = Objects.requireNonNull(signatureSelector);
 
         this.signatureCache = Caffeine.newBuilder().weakKeys().build();
-        this.customSignatures = Caffeine.newBuilder().weakKeys().maximumSize(customSignatures.size()).build();
+        this.customSignatureCache = Caffeine.newBuilder().weakKeys().initialCapacity(customSignatures.size()).build();
 
         registerCustomSignatures(customSignatures);
     }
 
     private void registerCustomSignatures(Collection<Signature> signatures) {
         for (Signature signature : signatures) {
-            customSignatures.get(ReflectionUtils.rawType(signature.returnType()),
-                    ignored -> new HashSet<>(2)).add(signature);
+            customSignatureCache.get(ReflectionUtils.rawType(signature.returnType()), ignored ->
+                    new HashSet<>(1)).add(signature);
         }
     }
 
@@ -53,7 +53,7 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
             Class<?> raw = ReflectionUtils.rawType(type);
 
             for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
-                Set<Signature> signatures = customSignatures.getIfPresent(superclass);
+                Set<Signature> signatures = customSignatureCache.getIfPresent(superclass);
                 if (signatures != null) {
                     return new BasicSignatureMatcher(signatures.toArray(EMPTY_SIGNATURE_ARRAY), typeHinter);
                 }
