@@ -240,8 +240,8 @@ public abstract class Token<T> implements Supplier<Type> {
 
     /**
      * Creates a new token whose type is an array, whose component type is the current type of this token. If the type
-     * represented by this token is a raw class, the returned token will contain the result of calling {
-     * @link Class#arrayType()}. Otherwise, an appropriate implementation of {@link GenericArrayType} will be used
+     * represented by this token is a raw class, the returned token will contain the result of calling
+     * {@link Class#arrayType()}. Otherwise, an appropriate implementation of {@link GenericArrayType} will be used
      * instead.
      *
      * @return a new token representing an array type
