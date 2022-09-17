@@ -13,7 +13,7 @@ import java.util.NoSuchElementException;
 
 public class ArraySignature extends ContainerSignatureBase {
     public ArraySignature(@NotNull Token<?> componentType) {
-        super(componentType, componentType.genericArrayType());
+        super(componentType, componentType.arrayType());
     }
 
     @Override

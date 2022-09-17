@@ -21,6 +21,11 @@ import java.util.Objects;
 public class TypeMappingCollection extends AbstractCollection<Entry<String, Type>> {
     private final Collection<Entry<String, Token<?>>> tokenCollection;
 
+    /**
+     * Creates a new instance of this collection from the given collection of token entries. Changes to the underlying
+     * collection will be reflected in this instance.
+     * @param tokenCollection the underlying collection
+     */
     public TypeMappingCollection(@NotNull Collection<Entry<String, Token<?>>> tokenCollection) {
         this.tokenCollection = Objects.requireNonNull(tokenCollection);
     }

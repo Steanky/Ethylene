@@ -7,6 +7,13 @@ import org.jetbrains.annotations.NotNull;
 import java.time.temporal.Temporal;
 import java.util.Objects;
 
+import com.github.steanky.ethylene.core.ConfigPrimitive;
+
+/**
+ * Represents a TOML date. This is a scalar whose object type is {@link Temporal}.
+ * @see ConfigElement
+ * @see ConfigPrimitive
+ */
 @SuppressWarnings("ClassCanBeRecord")
 public class ConfigDate implements ConfigElement {
     private final Temporal temporal;

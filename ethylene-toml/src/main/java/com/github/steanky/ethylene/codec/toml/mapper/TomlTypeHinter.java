@@ -9,7 +9,14 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.time.temporal.Temporal;
 
+/**
+ * Special {@link TypeHinter} implementation which supports TOML date primitives. This is only meant to be used in
+ * conjunction with the {@code ethylene-mapper} module.
+ */
 public class TomlTypeHinter extends BasicTypeHinter {
+    /**
+     * The singleton instance of {@link TomlTypeHinter}.
+     */
     public static final TypeHinter INSTANCE = new TomlTypeHinter();
 
     private TomlTypeHinter() {}

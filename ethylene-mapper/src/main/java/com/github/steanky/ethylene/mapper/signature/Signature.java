@@ -29,10 +29,14 @@ public interface Signature {
     }
 
     static @NotNull TypedObject type(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
+        Objects.requireNonNull(type);
+        Objects.requireNonNull(value);
         return new TypedObject(name, type, value);
     }
 
     static @NotNull TypedObject type(@NotNull Token<?> type, @NotNull Object value) {
+        Objects.requireNonNull(type);
+        Objects.requireNonNull(value);
         return new TypedObject(null, type, value);
     }
 
@@ -94,7 +98,7 @@ public interface Signature {
         };
 
         @SafeVarargs
-        Builder(@NotNull Token<T> returnType, @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
+        private Builder(@NotNull Token<T> returnType, @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
                 @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
                 @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
@@ -103,7 +107,8 @@ public interface Signature {
 
             this.argumentTypes = new ArrayList<>(arguments.length);
             for (Entry<String, Token<?>> entry : arguments) {
-                argumentTypes.add(Entry.of(entry.getFirst(), entry.getSecond()));
+                argumentTypes.add(Entry.of(Objects.requireNonNull(entry.getFirst()), Objects.requireNonNull(entry
+                        .getSecond())));
             }
         }
 

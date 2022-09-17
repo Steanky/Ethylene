@@ -45,8 +45,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
             return (T) GraphTransformer.process(new ClassEntry(rootType, element, rootFactory), nodeEntry -> {
                         ConfigElement nodeElement = nodeEntry.element;
-                        MatchingSignature matchingSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type, nodeElement,
-                                null);
+                        MatchingSignature matchingSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type,
+                                nodeElement, null);
 
                         Signature signature = matchingSignature.signature();
                         int signatureSize = matchingSignature.size();

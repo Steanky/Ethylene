@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.mapper.type;
 
 import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +13,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+
+import java.lang.reflect.GenericArrayType;
 
 /**
  * Token may be used to retain complete, arbitrary type information at runtime. This includes generics, arrays, generic
@@ -123,7 +124,8 @@ public abstract class Token<T> implements Supplier<Type> {
      * objects are not safe for storage in Tokens because they will be garbage collected too soon.<p>
      * <p>
      * This method is public to allow access across packages, but is not intended for general use. It is not part of the
-     * public API.
+     * public API. Users should create tokens of specific types through subclassing,
+     * {@link Token#parameterize(Class, Type...)}, or a similar supported method.
      *
      * @param type the type from which to create a token
      * @return a new token containing the given type
@@ -140,7 +142,8 @@ public abstract class Token<T> implements Supplier<Type> {
         return new Token<>(type) {};
     }
 
-    private static Token<?> parameterizeInternal(Class<?> raw, Class<?> owner, Type ... params) {
+    private static Token<?> parameterizeInternal(Class<?> raw, Type owner, Type ... params) {
+        //currently, only checks the parameter array length against the number of variables, ignoring type bounds
         checkTypes(raw, params);
 
         Class<?> enclosing = raw.getEnclosingClass();
@@ -162,6 +165,15 @@ public abstract class Token<T> implements Supplier<Type> {
         return Token.of(GenericInfoRepository.bind(raw, new InternalParameterizedType(raw, actualOwner, params)));
     }
 
+    /**
+     * Creates a new Token containing a {@link Type} object representing a parameterized version of the provided class.
+     *
+     * @param raw the raw class to be parameterized
+     * @param params the type parameters to apply
+     * @return a new Token
+     * @throws IllegalArgumentException if the number of type parameters does not match the number of type variables
+     * declared by the class
+     */
     public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, Type @NotNull ... params) {
         Objects.requireNonNull(raw);
         Objects.requireNonNull(params);
@@ -169,7 +181,35 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(raw, null, params);
     }
 
-    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Class<?> owner,
+    /**
+     * Creates a new Token containing a {@link Type} object representing a parameterized version of the provided class.
+     *
+     * @param raw the raw class to be parameterized
+     * @param typeMap a map of {@link TypeVariable} to actual {@link Type}s
+     * @return a new Token
+     * @throws IllegalArgumentException if the number of type parameters does not match the number of type variables
+     * declared by the class, or there is a missing entry in the map
+     */
+    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Map<TypeVariable<?>, Type> typeMap) {
+        Objects.requireNonNull(raw);
+        Objects.requireNonNull(typeMap);
+
+        return parameterizeInternal(raw, null, extractTypeArgumentsFrom(typeMap, raw.getTypeParameters()));
+    }
+
+
+    /**
+     * Creates a new Token containing a {@link Type} object representing a parameterized version of the provided class,
+     * with a given owner type.
+     *
+     * @param raw the raw class to be parameterized
+     * @param owner the owner (enclosing) class
+     * @param params the type parameters to apply
+     * @return a new Token
+     * @throws IllegalArgumentException if the number of type parameters does not match the number of type variables
+     * declared by the class
+     */
+    public static @NotNull Token<?> parameterizeWithOwner(@NotNull Class<?> raw, @NotNull Type owner,
             Type @NotNull ... params) {
         Objects.requireNonNull(raw);
         Objects.requireNonNull(owner);
@@ -178,14 +218,18 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(raw, owner, params);
     }
 
-    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Map<TypeVariable<?>, Type> typeMap) {
-        Objects.requireNonNull(raw);
-        Objects.requireNonNull(typeMap);
-
-        return parameterizeInternal(raw, null, extractTypeArgumentsFrom(typeMap, raw.getTypeParameters()));
-    }
-
-    public static @NotNull Token<?> parameterize(@NotNull Class<?> raw, @NotNull Class<?> owner,
+    /**
+     * Creates a new Token containing a {@link Type} object representing a parameterized version of the provided class,
+     * with a given owner type.
+     *
+     * @param raw the raw class to be parameterized
+     * @param owner the owner (enclosing) class
+     * @param typeMap the map of TypeVariables to Type objects from which to construct a type array
+     * @return a new Token
+     * @throws IllegalArgumentException if the number of type parameters does not match the number of type variables
+     * declared by the class, or there is a missing entry in the map
+     */
+    public static @NotNull Token<?> parameterizeWithOwner(@NotNull Class<?> raw, @NotNull Type owner,
             @NotNull Map<TypeVariable<?>, Type> typeMap) {
         Objects.requireNonNull(raw);
         Objects.requireNonNull(owner);
@@ -194,10 +238,21 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(raw, owner, extractTypeArgumentsFrom(typeMap, raw.getTypeParameters()));
     }
 
-    public final @NotNull Token<?> genericArrayType() {
+    /**
+     * Creates a new token whose type is an array, whose component type is the current type of this token. If the type
+     * represented by this token is a raw class, the returned token will contain the result of calling {
+     * @link Class#arrayType()}. Otherwise, an appropriate implementation of {@link GenericArrayType} will be used
+     * instead.
+     *
+     * @return a new token representing an array type
+     */
+    public final @NotNull Token<?> arrayType() {
         Type type = get();
-        Class<?> raw = ReflectionUtils.rawType(type);
-        return Token.of(GenericInfoRepository.bind(raw, new InternalGenericArrayType(type)));
+        if (type instanceof Class<?> cls) {
+            return Token.of(cls.arrayType());
+        }
+
+        return Token.of(GenericInfoRepository.bind(ReflectionUtils.rawType(type), new InternalGenericArrayType(type)));
     }
 
     public final @NotNull Type get() {

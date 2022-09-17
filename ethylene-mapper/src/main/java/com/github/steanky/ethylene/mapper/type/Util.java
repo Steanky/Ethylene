@@ -13,6 +13,8 @@ import java.lang.reflect.Type;
 public class Util {
     /**
      * Resolves the given reference to a Type. If it is not present, throws a {@link TypeNotPresentException}.
+     * <p>
+     * This method is not part of the public API.
      *
      * @param typeReference the type reference
      * @param typeName      the type name

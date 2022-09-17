@@ -9,12 +9,20 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
+/**
+ * Implementation of {@link GenericArrayType} that retains no strong references to its underlying component {@link Type}
+ * object. Not part of the public API.
+ */
 class InternalGenericArrayType implements GenericArrayType, CustomType {
     private final Reference<Type> typeReference;
     private final String typeName;
 
+    /**
+     * Creates a new instance of this class from the given component type.
+     * @param componentType the component type
+     */
     InternalGenericArrayType(@NotNull Type componentType) {
-        this.typeReference = new WeakReference<>(componentType);
+        this.typeReference = new WeakReference<>(Objects.requireNonNull(componentType));
         this.typeName = componentType.getTypeName();
     }
 
@@ -25,7 +33,7 @@ class InternalGenericArrayType implements GenericArrayType, CustomType {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(typeReference.get());
+        return getGenericComponentType().hashCode();
     }
 
     @Override

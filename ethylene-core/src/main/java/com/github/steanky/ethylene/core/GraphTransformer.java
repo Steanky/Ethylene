@@ -109,10 +109,12 @@ public final class GraphTransformer {
 
                     //check containsKey, null values are allowed in the map
                     if (visited.containsKey(visit)) {
-                        //already-visited references are immediately added to the accumulator
-                        //if these references are nodes, their output might not have been fully constructed yet
-                        //it might not even be possible to ensure that it is constructed, in the case of circular references
-                        //therefore, immediately add them to the accumulator, and let it know the reference is circular
+                        /*
+                        already-visited references are immediately added to the accumulator. if these references are
+                        nodes, their output might not have been fully constructed yet. it might not even be possible to
+                        ensure that it is constructed, in the case of circular references. therefore, immediately add
+                        them to the accumulator, and let it know the reference is circular
+                         */
                         if (hasOutput) {
                             node.output.accumulator.accept(entryKey, visited.get(visit), true);
                         }
@@ -222,19 +224,21 @@ public final class GraphTransformer {
         /**
          * Enables support for reference tracking. If this is enabled, all node references will be tracked, whereas
          * scalar references <i>can</i> be tracked only if their corresponding option flag is set. Warning: when this
-         * option is disabled, any circular references in the input data structure will cause an infinite loop and
+         * option is not present, any circular references in the input data structure will cause an infinite loop and
          * eventually an OOM.
          */
         public static final int REFERENCE_TRACKING = 1;
 
         /**
          * Enables support for tracking scalar references. This option will do nothing if the REFERENCE_TRACKING flag is
-         * not also set.
+         * not also set. Since scalars cannot have children, not having this option will not cause a possibility of
+         * infinite loops. However, enabling it may be desirable in order to "de-duplicate" equivalent instances of
+         * scalars in the output data structure.
          */
         public static final int TRACK_SCALAR_REFERENCE = 2;
 
         /**
-         * Equivalent to using both REFERENCE_TRACKING and TRACK_SCALAR_REFERENCE.
+         * Equivalent to combining REFERENCE_TRACKING and TRACK_SCALAR_REFERENCE.
          */
         public static final int TRACK_ALL_REFERENCES = 3;
 

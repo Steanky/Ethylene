@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -38,11 +37,11 @@ import java.util.function.Function;
  * class.
  * <p>
  * Custom implementations of Type (see also: {@link InternalGenericArrayType}, {@link InternalParameterizedType})
- * present a special issue, however, because they are not cached internally by the JVM. Therefore, weak references to
+ * present a special issue, however, because they are not cached internally by the JDK. Therefore, weak references to
  * these types can be garbage collected <i>too soon</i>, before the classloader responsible for creating them is
  * destroyed.
  * <p>
- * This class is designed to contain the <i>only</i> strong references to such types in a {@link WeakHashMap}, keyed by
+ * This class is designed to contain the <i>only</i> strong references to such types in a weak-key cache, keyed by
  * the {@link Class} to which their lifetime should be scoped. It incidentally performs equality-based caching on said
  * custom instances (resulting in a form of object canonicalization, ensuring the returned objects are the same as the
  * ones actually held in the map).
@@ -51,7 +50,8 @@ class GenericInfoRepository {
     //global mapping of class objects to generic info, may contain classes belonging to various classloaders
     private static final Cache<Class<?>, GenericInfoRepository> store = Caffeine.newBuilder().weakKeys().build();
 
-    private final Map<Type, Type> canonicalTypes = new ConcurrentHashMap<>(4);
+    //initially has a tiny capacity since we don't expect that many bound types per registered class
+    private final Map<Type, Type> canonicalTypes = new ConcurrentHashMap<>(2);
 
     private GenericInfoRepository() {}
 

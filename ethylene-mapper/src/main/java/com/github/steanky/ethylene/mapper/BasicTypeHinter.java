@@ -44,14 +44,13 @@ public class BasicTypeHinter implements TypeHinter {
                 yield TypeUtils.isAssignable(Collection.class, toType);
             }
             case SCALAR -> {
-                Object scalar = element.asScalar();
-                if (scalar == null) {
+                if (element.isNull()) {
                     //null is assignable to all types, even non-scalars
                     yield true;
                 }
 
                 //simple assignability check
-                yield TypeUtils.isAssignable(scalar.getClass(), toType);
+                yield TypeUtils.isAssignable(element.asScalar().getClass(), toType);
             }
         };
     }

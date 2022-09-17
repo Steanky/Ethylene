@@ -12,6 +12,10 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * Implementation of {@link ParameterizedType} that retains no strong references to any {@link Type} or {@link Class}
+ * objects used in constructing it. Not part of the public API.
+ */
 class InternalParameterizedType implements ParameterizedType, CustomType {
     private final String rawName;
     private final String ownerName;
@@ -22,6 +26,14 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
     private final String[] typeArgumentNames;
     private final Reference<Type>[] typeArguments;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param rawClass the raw class of this generic type
+     * @param owner the owner, or enclosing, class
+     * @param typeArguments the type arguments, which are not checked for compatibility with the number or bounds of the
+     *                      raw class's type variables
+     */
     @SuppressWarnings("unchecked")
     InternalParameterizedType(@NotNull Class<?> rawClass, @Nullable Type owner, Type @NotNull [] typeArguments) {
         this.rawName = rawClass.getTypeName();
