@@ -2,7 +2,6 @@ package com.github.steanky.ethylene.mapper.internal;
 
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import org.apache.commons.lang3.reflect.TypeUtils;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
@@ -18,9 +17,8 @@ import java.lang.reflect.WildcardType;
  * Commons.
  * <p>
  * This class and all of its methods are public to enable cross-package access, but must not be considered part of the
- * public API. 
+ * public API.
  */
-@ApiStatus.Internal
 public class ReflectionUtils {
     private static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 

@@ -62,10 +62,10 @@ class GenericInfoRepository {
      * This method is thread-safe.
      *
      * @param owner the owner class
-     * @param type  the {@link CustomType} to cache
+     * @param type  the {@link WeakType} to cache
      * @return the cached type if present, else {@code type}
      */
-    static @NotNull Type bind(@NotNull Class<?> owner, @NotNull CustomType type) {
+    static @NotNull Type bind(@NotNull Class<?> owner, @NotNull WeakType type) {
         return store.get(owner, ignored -> new GenericInfoRepository()).canonicalTypes.computeIfAbsent(type, Function
                 .identity());
     }

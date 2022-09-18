@@ -14,7 +14,7 @@ import java.util.Objects;
  * Implementation of {@link GenericArrayType} that retains no strong references to its underlying component {@link Type}
  * object. Not part of the public API.
  */
-class InternalGenericArrayType implements GenericArrayType, CustomType {
+final class InternalGenericArrayType implements GenericArrayType, WeakType {
     private final Reference<Type> typeReference;
     private final String typeName;
 
@@ -34,11 +34,13 @@ class InternalGenericArrayType implements GenericArrayType, CustomType {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(typeReference.get());
+        return Objects.hashCode(getGenericComponentType());
     }
 
     @Override
     public boolean equals(Object obj) {
+        Type thisType = getGenericComponentType();
+
         if (obj == null) {
             return false;
         }
@@ -47,12 +49,8 @@ class InternalGenericArrayType implements GenericArrayType, CustomType {
             return true;
         }
 
-        if (obj instanceof InternalGenericArrayType other) {
-            return Objects.equals(typeReference.get(), other.typeReference.get());
-        }
-
         if (obj instanceof GenericArrayType other) {
-            return Objects.equals(typeReference.get(), other.getGenericComponentType());
+            return Objects.equals(thisType, other.getGenericComponentType());
         }
 
         return false;

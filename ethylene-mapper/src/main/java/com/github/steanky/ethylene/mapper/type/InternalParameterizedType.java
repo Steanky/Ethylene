@@ -17,12 +17,12 @@ import java.util.Objects;
  * Implementation of {@link ParameterizedType} that retains no strong references to any {@link Type} or {@link Class}
  * objects used in constructing it. Not part of the public API.
  */
-class InternalParameterizedType implements ParameterizedType, CustomType {
+final class InternalParameterizedType implements ParameterizedType, WeakType {
     private final String rawName;
     private final String ownerName;
 
-    private final Reference<Class<?>> raw;
-    private final Reference<Type> owner;
+    private final Reference<Class<?>> rawClassReference;
+    private final Reference<Type> ownerTypeReference;
 
     private final String[] typeArgumentNames;
     private final Reference<Type>[] typeArguments;
@@ -31,7 +31,7 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
      * Creates a new instance of this class.
      *
      * @param rawClass the raw class of this generic type
-     * @param owner the owner, or enclosing, class
+     * @param owner the owner, or enclosing, type
      * @param typeArguments the type arguments, which are not checked for compatibility with the number or bounds of the
      *                      raw class's type variables
      */
@@ -40,8 +40,8 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
         this.rawName = rawClass.getTypeName();
         this.ownerName = owner == null ? StringUtils.EMPTY : owner.getTypeName();
 
-        this.raw = new WeakReference<>(rawClass);
-        this.owner = owner == null ? null : new WeakReference<>(owner);
+        this.rawClassReference = new WeakReference<>(rawClass);
+        this.ownerTypeReference = owner == null ? null : new WeakReference<>(owner);
 
         this.typeArguments = new Reference[typeArguments.length];
         this.typeArgumentNames = new String[typeArguments.length];
@@ -53,15 +53,6 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
         }
     }
 
-    private Type[] getTypeArgumentArray() {
-        Type[] types = new Type[typeArguments.length];
-        for (int i = 0; i < typeArguments.length; i++) {
-            types[i] = typeArguments[i].get();
-        }
-
-        return types;
-    }
-
     @Override
     public Type[] getActualTypeArguments() {
         Type[] types = new Type[typeArguments.length];
@@ -69,26 +60,34 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
             types[i] = ReflectionUtils.resolve(typeArguments[i], typeArgumentNames[i]);
         }
 
+        //array may not contain null elements (resolve will throw exception if referent is null)
         return types;
     }
 
     @Override
     public Type getRawType() {
-        return ReflectionUtils.resolve(raw, rawName);
+        return ReflectionUtils.resolve(rawClassReference, rawName);
     }
 
     @Override
     public Type getOwnerType() {
-        return owner == null ? null : ReflectionUtils.resolve(owner, ownerName);
+        return ownerTypeReference == null ? null : ReflectionUtils.resolve(ownerTypeReference, ownerName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(raw.get(), owner.get(), Arrays.hashCode(getTypeArgumentArray()));
+        return Objects.hash(getRawType(), getOwnerType(), Arrays.hashCode(getActualTypeArguments()));
     }
 
     @Override
     public boolean equals(Object obj) {
+        //resolve the types first, in order to ensure consistent exception-throwing behavior
+        //if we didn't do this, equality checking against null or reference equal objects could not throw exceptions,
+        //even if the underlying type has been garbage collected
+        Type rawType = getRawType();
+        Type ownerType = getOwnerType();
+        Type[] typeArguments = getActualTypeArguments();
+
         if (obj == null) {
             return false;
         }
@@ -97,17 +96,10 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
             return true;
         }
 
-        if (obj instanceof InternalParameterizedType other) {
-            //directly compare referents to avoid throwing exceptions if the underlying types have been disposed of
-            //public methods will throw exceptions if this has occurred
-            return Objects.equals(raw.get(), other.raw.get()) && Objects.equals(owner.get(), other.owner.get()) &&
-                    Arrays.equals(getTypeArgumentArray(), other.getTypeArgumentArray());
-        }
-
         if (obj instanceof ParameterizedType other) {
-            //since we aren't comparing against another InternalParameterizedType, only use the interface methods
-            return Objects.equals(raw.get(), other.getRawType()) && Objects.equals(owner.get(), other.getOwnerType()) &&
-                    Arrays.equals(getTypeArgumentArray(), other.getActualTypeArguments());
+            return Objects.equals(rawType, other.getRawType()) &&
+                    Objects.equals(ownerType, other.getOwnerType()) &&
+                    Arrays.equals(typeArguments, other.getActualTypeArguments());
         }
 
         return false;

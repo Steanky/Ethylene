@@ -134,9 +134,9 @@ public abstract class Token<T> implements Supplier<Type> {
     @ApiStatus.Internal
     public static @NotNull Token<?> of(@NotNull Type type) {
         Objects.requireNonNull(type);
-        if (type instanceof CustomType customType) {
+        if (type instanceof WeakType weakType) {
             //return the bound type if we can
-            return new Token<>(GenericInfoRepository.bind(ReflectionUtils.rawType(type), customType)) {};
+            return new Token<>(GenericInfoRepository.bind(ReflectionUtils.rawType(type), weakType)) {};
         }
 
         return new Token<>(type) {};

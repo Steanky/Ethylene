@@ -1,8 +1,7 @@
-package com.github.steanky.ethylene.mapper.signature;
+package com.github.steanky.ethylene.mapper.internal;
 
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.type.Token;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -17,7 +16,6 @@ import java.util.Objects;
  * <p>
  * This class is public to enable access across different packages, but is not considered part of the public API.
  */
-@ApiStatus.Internal
 public class TypeMappingCollection extends AbstractCollection<Entry<String, Type>> {
     private final Collection<Entry<String, Token<?>>> tokenCollection;
 

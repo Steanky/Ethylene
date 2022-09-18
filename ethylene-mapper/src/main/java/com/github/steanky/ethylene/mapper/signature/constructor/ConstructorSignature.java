@@ -10,7 +10,7 @@ import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Order;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
-import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
+import com.github.steanky.ethylene.mapper.internal.TypeMappingCollection;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
