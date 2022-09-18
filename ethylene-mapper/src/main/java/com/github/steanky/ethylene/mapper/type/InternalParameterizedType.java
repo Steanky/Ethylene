@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.mapper.type;
 
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
@@ -52,11 +53,20 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
         }
     }
 
+    private Type[] getTypeArgumentArray() {
+        Type[] types = new Type[typeArguments.length];
+        for (int i = 0; i < typeArguments.length; i++) {
+            types[i] = typeArguments[i].get();
+        }
+
+        return types;
+    }
+
     @Override
     public Type[] getActualTypeArguments() {
         Type[] types = new Type[typeArguments.length];
         for (int i = 0; i < typeArguments.length; i++) {
-            types[i] = Util.resolve(typeArguments[i], typeArgumentNames[i]);
+            types[i] = ReflectionUtils.resolve(typeArguments[i], typeArgumentNames[i]);
         }
 
         return types;
@@ -64,25 +74,43 @@ class InternalParameterizedType implements ParameterizedType, CustomType {
 
     @Override
     public Type getRawType() {
-        return Util.resolve(raw, rawName);
+        return ReflectionUtils.resolve(raw, rawName);
     }
 
     @Override
     public Type getOwnerType() {
-        return owner == null ? null : Util.resolve(owner, ownerName);
+        return owner == null ? null : ReflectionUtils.resolve(owner, ownerName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getRawType(), getOwnerType(), Arrays.hashCode(getActualTypeArguments()));
+        return Objects.hash(raw.get(), owner.get(), Arrays.hashCode(getTypeArgumentArray()));
     }
 
     @Override
     public boolean equals(Object obj) {
-        return obj == this ||
-                obj instanceof ParameterizedType other && Objects.equals(getRawType(), other.getRawType()) &&
-                        Objects.equals(getOwnerType(), other.getOwnerType()) &&
-                        Arrays.equals(getActualTypeArguments(), other.getActualTypeArguments());
+        if (obj == null) {
+            return false;
+        }
+
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof InternalParameterizedType other) {
+            //directly compare referents to avoid throwing exceptions if the underlying types have been disposed of
+            //public methods will throw exceptions if this has occurred
+            return Objects.equals(raw.get(), other.raw.get()) && Objects.equals(owner.get(), other.owner.get()) &&
+                    Arrays.equals(getTypeArgumentArray(), other.getTypeArgumentArray());
+        }
+
+        if (obj instanceof ParameterizedType other) {
+            //since we aren't comparing against another InternalParameterizedType, only use the interface methods
+            return Objects.equals(raw.get(), other.getRawType()) && Objects.equals(owner.get(), other.getOwnerType()) &&
+                    Arrays.equals(getTypeArgumentArray(), other.getActualTypeArguments());
+        }
+
+        return false;
     }
 
     @Override

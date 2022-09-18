@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.mapper.type;
 
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,18 +29,33 @@ class InternalGenericArrayType implements GenericArrayType, CustomType {
 
     @Override
     public Type getGenericComponentType() {
-        return Util.resolve(typeReference, typeName);
+        return ReflectionUtils.resolve(typeReference, typeName);
     }
 
     @Override
     public int hashCode() {
-        return getGenericComponentType().hashCode();
+        return Objects.hashCode(typeReference.get());
     }
 
     @Override
     public boolean equals(Object obj) {
-        return obj == this || obj instanceof GenericArrayType other &&
-                getGenericComponentType().equals(other.getGenericComponentType());
+        if (obj == null) {
+            return false;
+        }
+
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof InternalGenericArrayType other) {
+            return Objects.equals(typeReference.get(), other.typeReference.get());
+        }
+
+        if (obj instanceof GenericArrayType other) {
+            return Objects.equals(typeReference.get(), other.getGenericComponentType());
+        }
+
+        return false;
     }
 
     @Override

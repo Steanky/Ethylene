@@ -10,8 +10,7 @@ import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.type.Util;
-import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,7 +43,7 @@ public class RecordSignature implements Signature {
     public RecordSignature(@NotNull Token<?> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
 
-        Class<?> rawClass = ReflectionUtils.rawType(genericReturnType);
+        Class<?> rawClass = genericReturnType.rawType();
         if (!rawClass.isRecord()) {
             throw new MapperException("'" + rawClass + "' is not a record");
         }
@@ -128,7 +127,7 @@ public class RecordSignature implements Signature {
             return cached;
         }
 
-        Class<?> objectClass = Util.resolve(rawClassReference, rawClassName);
+        Class<?> objectClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         RecordComponent[] recordComponents = objectClass.getRecordComponents();
         recordComponentsReference = new SoftReference<>(recordComponents);
         return recordComponents;
@@ -175,7 +174,7 @@ public class RecordSignature implements Signature {
             return cached;
         }
 
-        Class<?> rawClass = Util.resolve(rawClassReference, rawClassName);
+        Class<?> rawClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
         Class<?>[] types = resolveComponentTypes();
 

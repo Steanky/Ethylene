@@ -11,7 +11,7 @@ import com.github.steanky.ethylene.mapper.signature.container.ArraySignature;
 import com.github.steanky.ethylene.mapper.signature.container.CollectionSignature;
 import com.github.steanky.ethylene.mapper.signature.container.MapSignature;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;

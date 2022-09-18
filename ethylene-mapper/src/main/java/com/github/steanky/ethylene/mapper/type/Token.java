@@ -1,6 +1,6 @@
 package com.github.steanky.ethylene.mapper.type;
 
-import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -52,11 +52,11 @@ public abstract class Token<T> implements Supplier<Type> {
     private Token(@NotNull Type type) {
         Objects.requireNonNull(type);
 
-        if (type instanceof TypeVariable<?> typeVariable) {
-            this.typeReference = new WeakReference<>(typeVariable.getBounds()[0]);
-        } else {
-            this.typeReference = new WeakReference<>(type);
+        if (type instanceof TypeVariable<?>) {
+            throw new IllegalStateException("TypeVariable is not supported");
         }
+
+        this.typeReference = new WeakReference<>(type);
     }
 
     /**
@@ -84,8 +84,8 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("Expected non-null type parameter for '" + getClass().getTypeName() + "'");
         }
 
-        if (target instanceof TypeVariable<?> typeVariable) {
-            target = typeVariable.getBounds()[0];
+        if (target instanceof TypeVariable<?>) {
+            throw new IllegalStateException("TypeVariable is not supported");
         }
 
         this.typeReference = new WeakReference<>(target);
@@ -255,6 +255,23 @@ public abstract class Token<T> implements Supplier<Type> {
         return Token.of(GenericInfoRepository.bind(ReflectionUtils.rawType(type), new InternalGenericArrayType(type)));
     }
 
+    /**
+     * Computes the raw type of this token. For parameterized types, this is the type-erased class. For generic arrays,
+     * this is an array of the raw type of the component class.
+     *
+     * @return the raw type for this token
+     */
+    public final @NotNull Class<?> rawType() {
+        return ReflectionUtils.rawType(get());
+    }
+
+    /**
+     * Gets the underlying Type object. The returned value is a strong reference; care should be taken to avoid storing
+     * it statically unless additional precautions are taken.
+     *
+     * @return this token's type
+     * @throws IllegalStateException if the type once referred to by this token no longer exists
+     */
     public final @NotNull Type get() {
         Type type = typeReference.get();
         if (type == null) {

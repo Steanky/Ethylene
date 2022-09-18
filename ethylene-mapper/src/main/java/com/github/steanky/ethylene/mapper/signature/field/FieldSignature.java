@@ -12,8 +12,7 @@ import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.type.Util;
-import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +41,7 @@ public class FieldSignature implements Signature {
     public FieldSignature(@NotNull Token<?> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
 
-        Class<?> rawType = ReflectionUtils.rawType(genericReturnType);
+        Class<?> rawType = genericReturnType.rawType();
         this.rawTypeReference = new WeakReference<>(rawType);
         this.rawTypeName = rawType.getName();
     }
@@ -127,7 +126,7 @@ public class FieldSignature implements Signature {
             return cached;
         }
 
-        Class<?> rawClass = Util.resolve(rawTypeReference, rawTypeName);
+        Class<?> rawClass = ReflectionUtils.resolve(rawTypeReference, rawTypeName);
         boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
         Constructor<?> constructor = getConstructor(rawClass, widenAccess);
         List<Field> participatingFields = getFields(rawClass, widenAccess);

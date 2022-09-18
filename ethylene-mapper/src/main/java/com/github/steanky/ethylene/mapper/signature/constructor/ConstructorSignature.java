@@ -12,8 +12,7 @@ import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.TypeMappingCollection;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.type.Util;
-import com.github.steanky.ethylene.mapper.util.ReflectionUtils;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -90,7 +89,7 @@ public class ConstructorSignature implements Signature {
             return constructor;
         }
 
-        Class<?> declaringClass = Util.resolve(rawClassReference, rawClassName);
+        Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         try {
             constructor = declaringClass.getConstructor(resolveParameterTypes());
         } catch (NoSuchMethodException e) {
@@ -110,7 +109,7 @@ public class ConstructorSignature implements Signature {
     public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
         Collection<Entry<String, Type>> types = initTypeCollection();
 
-        Class<?> declaringClass = Util.resolve(rawClassReference, rawClassName);
+        Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
 
         Field[] fields = initFields(declaringClass, widenAccess);
