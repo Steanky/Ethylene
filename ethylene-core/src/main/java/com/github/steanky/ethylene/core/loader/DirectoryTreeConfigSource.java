@@ -152,7 +152,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         }
 
                         return ConfigPrimitive.NULL;
-                    }, entry -> getKey(entry, supportSymlinks), HashMap::new, new ArrayDeque<>(),
+                    }, entry -> getKey(entry, supportSymlinks), HashMap::new, ArrayDeque::new,
                     GraphTransformer.Options.TRACK_ALL_REFERENCES);
 
             exceptionHandler.throwIfPresent();
@@ -277,7 +277,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         }
 
                         return potentialContainer.isDirectory;
-                    }, Function.identity(), entry -> entry.element, IdentityHashMap::new, new ArrayDeque<>(),
+                    }, Function.identity(), entry -> entry.element, IdentityHashMap::new, ArrayDeque::new,
                     GraphTransformer.Options.TRACK_ALL_REFERENCES);
 
             exceptionHandler.throwIfPresent();

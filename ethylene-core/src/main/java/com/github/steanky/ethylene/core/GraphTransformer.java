@@ -13,8 +13,13 @@ import java.util.function.Supplier;
  * transformations.
  */
 public final class GraphTransformer {
+    //shared empty accumulator which is just a no-op
     private static final Accumulator<?, ?> EMPTY_ACCUMULATOR = (Accumulator<Object, Object>) (o, o2, circular) -> {};
+
+    //shared empty Output with null data and the empty accumulator
     private static final Output<?, ?> EMPTY_OUTPUT = new Output<>(null, EMPTY_ACCUMULATOR);
+
+    //shared empty Node with an empty iterator and the shared empty output
     private static final Node<?, ?, ?> EMPTY_NODE = new Node<>(new Iterator<>() {
         @Override
         public boolean hasNext() {
@@ -32,7 +37,8 @@ public final class GraphTransformer {
             @NotNull Predicate<? super TIn> containerPredicate,
             @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
             @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper,
-            @NotNull Supplier<? extends Map<TVisit, TOut>> visitedSupplier, @NotNull Deque<Node<TIn, TOut, TKey>> stack,
+            @NotNull Supplier<? extends Map<TVisit, TOut>> visitedSupplier,
+            @NotNull Supplier<? extends Deque<Node<TIn, TOut, TKey>>> stackSupplier,
             int flags) {
         if (!containerPredicate.test(rootInput)) {
             //if rootInput is a scalar, just return whatever the scalar mapper produces
@@ -50,7 +56,7 @@ public final class GraphTransformer {
         boolean circularRefSupport = Options.hasOption(flags, Options.REFERENCE_TRACKING);
         boolean trackScalarReference = Options.hasOption(flags, Options.TRACK_SCALAR_REFERENCE);
         boolean depthFirst = Options.hasOption(flags, Options.DEPTH_FIRST);
-        boolean lazyAccumulation = Options.hasOption(flags, Options.LAZY_ACCUMULATION);
+        boolean lazyAccumulation = Options.hasOption(flags, Options.LAZY_ACCUMULATION) && depthFirst;
 
         //don't initialize the visitation map if there is no support for circular references
         //make sure usages of this map check circularRefSupport to avoid NPE
@@ -60,12 +66,11 @@ public final class GraphTransformer {
             visited.put(visitKeyMapper.apply(rootInput), rootNode.output.data);
         }
 
+        Deque<Node<TIn, TOut, TKey>> stack = stackSupplier.get();
         stack.push(rootNode);
         while (!stack.isEmpty()) {
-            boolean peek = lazyAccumulation || depthFirst;
-
             //guaranteed to be non-empty (empty nodes are never added to the stack)
-            Node<TIn, TOut, TKey> node = peek ? stack.peek() : stack.pop();
+            Node<TIn, TOut, TKey> node = depthFirst ? stack.peek() : stack.pop();
 
             boolean hasOutput = hasOutput(node);
             boolean finished = true;
@@ -145,8 +150,7 @@ public final class GraphTransformer {
                 if (hasOutput) {
                     if (lazyAccumulation) {
                         //set the current node's result key and out fields
-                        node.result.key = entryKey;
-                        node.result.out = newNode.output.data;
+                        node.setResult(entryKey, newNode.output.data);
                     } else {
                         //no lazy accumulation, immediately add this node
                         node.output.accumulator.accept(entryKey, newNode.output.data, false);
@@ -162,14 +166,16 @@ public final class GraphTransformer {
                 }
             }
 
-            if (finished && peek) {
-                //remove the finished node
+            if (finished && depthFirst) {
+                //if depth-first, we only peeked the stack node
+                //if we're finished, we can pop this node
                 stack.pop();
 
                 if (lazyAccumulation) {
-                    //if lazy, it means we have to add a child node to "old", if it exists
+                    //when lazily accumulating depth-first, the parent node is at the top of the stack
+                    //we will never lazily accumulate when breadth-first
                     Node<TIn, TOut, TKey> old = stack.peek();
-                    if (old != null && hasOutput(old)) {
+                    if (old != null && hasOutput(old) && old.hasResult()) {
                         old.output.accumulator.accept(old.result.key, old.result.out, false);
                     }
                 }
@@ -185,7 +191,7 @@ public final class GraphTransformer {
             @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
             @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper, int flags) {
         return process(input, nodeFunction, containerPredicate, scalarMapper, visitKeyMapper, IdentityHashMap::new,
-                new ArrayDeque<>(), flags);
+                ArrayDeque::new, flags);
     }
 
     private static boolean isEmpty(Node<?, ?, ?> node) {
@@ -193,7 +199,7 @@ public final class GraphTransformer {
     }
 
     private static boolean hasOutput(Node<?, ?, ?> node) {
-        return node.output != EMPTY_OUTPUT;
+        return node.output != EMPTY_OUTPUT && node.output.accumulator != EMPTY_ACCUMULATOR;
     }
 
     @SuppressWarnings("unchecked")
@@ -249,7 +255,7 @@ public final class GraphTransformer {
 
         /**
          * Enables lazy accumulation of nodes. Child nodes will only be added to their parent accumulator when all the
-         * child's child nodes have been added.
+         * child's child nodes have been added. This option has no effect unless depth-first processing is enabled.
          */
         public static final int LAZY_ACCUMULATION = 8;
 
@@ -258,19 +264,44 @@ public final class GraphTransformer {
         }
     }
 
-    public static class NodeResult<TKey, TOut> {
+    //used internally for lazy accumulation of results
+    private static class NodeResult<TKey, TOut> {
         private TKey key;
         private TOut out;
     }
 
-    public record Node<TIn, TOut, TKey>(@NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator,
-            @NotNull Output<TOut, TKey> output, @NotNull NodeResult<TKey, TOut> result) {
-        public Node(@NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator, @NotNull Output<TOut, TKey> output) {
-            this(inputIterator, output, new NodeResult<>());
+    public static class Node<TIn, TOut, TKey> {
+        private final Iterator<? extends Entry<TKey, TIn>> inputIterator;
+        private final Output<TOut, TKey> output;
+        private NodeResult<TKey, TOut> result;
+
+        public Node(@NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator,
+                @NotNull Output<TOut, TKey> output) {
+            this.inputIterator = Objects.requireNonNull(inputIterator);
+            this.output = Objects.requireNonNull(output);
         }
 
         public Node(@NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator) {
-            this(inputIterator, emptyOutput(), new NodeResult<>());
+            this(inputIterator, emptyOutput());
+        }
+
+        private boolean hasResult() {
+            return result != null;
+        }
+
+        private void setResult(TKey key, TOut out) {
+            NodeResult<TKey, TOut> result = Objects.requireNonNullElseGet(this.result, () ->
+                    this.result = new NodeResult<>());
+            result.key = key;
+            result.out = out;
+        }
+
+        public @NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator() {
+            return inputIterator;
+        }
+
+        public @NotNull Output<TOut, TKey> output() {
+            return output;
         }
     }
 

@@ -36,15 +36,54 @@ import java.lang.reflect.GenericArrayType;
 //T is NOT unused, it is inspected reflectively on Token instantiation!
 @SuppressWarnings("unused")
 public abstract class Token<T> implements Supplier<Type> {
+    /**
+     * Common shared token whose underlying type is {@link Object}.
+     */
     public static final Token<Object> OBJECT = new Token<>(Object.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link String}.
+     */
     public static final Token<String> STRING = new Token<>(String.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link Long}.
+     */
     public static final Token<Long> LONG = new Token<>(Long.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link Double}.
+     */
     public static final Token<Double> DOUBLE = new Token<>(Double.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link Integer}.
+     */
     public static final Token<Integer> INTEGER = new Token<>(Integer.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link Float}.
+     */
     public static final Token<Float> FLOAT = new Token<>(Float.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link Short}.
+     */
     public static final Token<Short> SHORT = new Token<>(Short.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link Character}.
+     */
     public static final Token<Character> CHARACTER = new Token<>(Character.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link Byte}.
+     */
     public static final Token<Byte> BYTE = new Token<>(Byte.class) {};
+
+    /**
+     * Common shared token whose underlying type is {@link Boolean}.
+     */
     public static final Token<Boolean> BOOLEAN = new Token<>(Boolean.class) {};
 
     private final Reference<Type> typeReference;

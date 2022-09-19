@@ -43,7 +43,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
             writeObject(
                     GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
-                            Function.identity(), IdentityHashMap::new, new ArrayDeque<>(),
+                            Function.identity(), IdentityHashMap::new, ArrayDeque::new,
                             graphTransformerEncodeOptions), output);
         }
     }
@@ -54,7 +54,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
         try (input) {
             return GraphTransformer.process(readObject(input), this::makeDecodeNode, this::isContainer,
-                    this::deserializeObject, Function.identity(), IdentityHashMap::new, new ArrayDeque<>(),
+                    this::deserializeObject, Function.identity(), IdentityHashMap::new, ArrayDeque::new,
                     graphTransformerDecodeOptions);
         }
     }

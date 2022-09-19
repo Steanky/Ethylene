@@ -14,7 +14,7 @@ import java.lang.reflect.Type;
  * @implSpec In addition to complying with the specifications of Type, and any relevant sub-interfaces, implementations
  * must not retain any strong references to classloaders, whether directly or indirectly. As a side effect of this, it
  * is expected that certain methods that rely on reference objects will throw unchecked exceptions if they are accessed
- * after the referent(s) have been collected. Notably, this includes {@link Object#equals(Object)} and
+ * after the referent(s) have been garbage collected. Notably, this includes {@link Object#equals(Object)} and
  * {@link Object#hashCode()}.
  *
  * @see GenericInfoRepository
