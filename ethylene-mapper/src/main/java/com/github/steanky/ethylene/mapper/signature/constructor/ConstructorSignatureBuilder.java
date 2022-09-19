@@ -17,8 +17,8 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
     private ConstructorSignatureBuilder() {}
 
     @Override
-    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
-        Class<?> rawType = ReflectionUtils.rawType(type);
+    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Token<?> type) {
+        Class<?> rawType = type.rawType();
 
         boolean widenAccess = rawType.isAnnotationPresent(Widen.class);
         Constructor<?>[] candidateConstructors =
@@ -32,7 +32,7 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
                 }
             }
 
-            signatures[j++] = new ConstructorSignature(constructor, Token.ofType(type));
+            signatures[j++] = new ConstructorSignature(constructor, type);
         }
 
         if (j == 0) {

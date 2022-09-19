@@ -359,6 +359,22 @@ public abstract class Token<T> implements Supplier<Type> {
         return (Token<TReturn>)this;
     }
 
+    public final @NotNull Token<?>[] actualTypeParameters() {
+        Type type = get();
+
+        if (!isParameterized()) {
+            throw new IllegalStateException("Expected a parameterized type");
+        }
+
+        Type[] args = ((ParameterizedType) type).getActualTypeArguments();
+        Token<?>[] tokens = new Token[args.length];
+        for (int i = 0; i < tokens.length; i++) {
+            tokens[i] = Token.ofType(args[i]);
+        }
+
+        return tokens;
+    }
+
     public final @NotNull TypeVariableMap subtypeVariables(@NotNull Token<?> subtype) {
         Type type = get();
         if (!subtype.assignable(this)) {
@@ -369,7 +385,7 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("This token must be parameterized");
         }
 
-        return new TypeVariableMap(subtype.rawType(), (ParameterizedType) type);
+        return new TypeVariableMap(TypeUtils.determineTypeArguments(subtype.rawType(), (ParameterizedType) type));
     }
 
     public final @NotNull TypeVariableMap subtypeVariables(@NotNull Class<?> subtype) {
@@ -382,7 +398,25 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("This token must be parameterized");
         }
 
-        return new TypeVariableMap(subtype, (ParameterizedType) type);
+        return new TypeVariableMap(TypeUtils.determineTypeArguments(subtype, (ParameterizedType) type));
+    }
+
+    public final @NotNull TypeVariableMap supertypeVariables(@NotNull Token<?> supertype) {
+        Type type = get();
+        if (!assignable(supertype)) {
+            throw new IllegalArgumentException("Token type is not assignable to the supertype class");
+        }
+
+        return new TypeVariableMap(TypeUtils.getTypeArguments(type, supertype.rawType()));
+    }
+
+    public final @NotNull TypeVariableMap supertypeVariables(@NotNull Class<?> supertype) {
+        Type type = get();
+        if (!TypeUtils.isAssignable(type, supertype)) {
+            throw new IllegalArgumentException("Token type is not assignable to the supertype class");
+        }
+
+        return new TypeVariableMap(TypeUtils.getTypeArguments(type, supertype));
     }
 
     /**

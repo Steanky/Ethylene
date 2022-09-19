@@ -13,7 +13,7 @@ public class RecordSignatureBuilder implements SignatureBuilder {
     private RecordSignatureBuilder() {}
 
     @Override
-    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
-        return new Signature[] {new RecordSignature(Token.ofType(type))};
+    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Token<?> type) {
+        return new Signature[] {new RecordSignature(type)};
     }
 }

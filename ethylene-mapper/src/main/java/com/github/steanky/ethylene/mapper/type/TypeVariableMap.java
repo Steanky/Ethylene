@@ -13,24 +13,16 @@ public class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>> {
 
     private Set<Entry<TypeVariable<?>, Token<?>>> entrySet;
 
-    private TypeVariableMap(Map<TypeVariable<?>, Type> underlying) {
+    TypeVariableMap(Map<TypeVariable<?>, Type> underlying) {
         if (underlying.isEmpty()) {
             tokenMap = Map.of();
         }
         else {
-            tokenMap = new WeakHashMap<>(underlying.size());
+            tokenMap = new HashMap<>(underlying.size());
             for (Map.Entry<TypeVariable<?>, Type> entry : underlying.entrySet()) {
                 tokenMap.put(entry.getKey(), Token.ofType(entry.getValue()));
             }
         }
-    }
-
-    TypeVariableMap(@NotNull ParameterizedType parameterizedType) {
-        this(TypeUtils.getTypeArguments(parameterizedType));
-    }
-
-    TypeVariableMap(Class<?> rawSubtype, ParameterizedType supertype) {
-        this(TypeUtils.determineTypeArguments(rawSubtype, supertype));
     }
 
     @NotNull

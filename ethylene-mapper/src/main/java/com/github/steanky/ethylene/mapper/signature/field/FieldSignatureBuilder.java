@@ -13,7 +13,7 @@ public class FieldSignatureBuilder implements SignatureBuilder {
     private FieldSignatureBuilder() {}
 
     @Override
-    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
-        return new Signature[] {new FieldSignature(Token.ofType(type))};
+    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Token<?> type) {
+        return new Signature[] {new FieldSignature(type)};
     }
 }

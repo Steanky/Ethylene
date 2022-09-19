@@ -8,8 +8,6 @@ import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Map;
-import java.util.Objects;
 import java.lang.reflect.WildcardType;
 
 /**
@@ -21,49 +19,6 @@ import java.lang.reflect.WildcardType;
  */
 public class ReflectionUtils {
     public static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
-
-    /**
-     * Extracts the actual generic type parameters from the specified {@link Type}, given a superclass.
-     *
-     * @param type the type, which must be assignable to {@code genericSuperclass}
-     * @param genericSuperclass the superclass of {@code type}
-     * @return an array of type arguments corresponding to the types required by {@code genericSuperclass}
-     * @throws IllegalArgumentException if {@code type} is not assignable to {@code genericSuperclass} if a required
-     * type parameter cannot be found, or one of the type parameters is found to be a {@link TypeVariable}
-     */
-    public static @NotNull Type[] extractGenericTypeParameters(@NotNull Type type,
-            @NotNull Class<?> genericSuperclass) {
-        Objects.requireNonNull(type);
-        Objects.requireNonNull(genericSuperclass);
-
-        if (!TypeUtils.isAssignable(type, genericSuperclass)) {
-            throw new IllegalArgumentException("Type '" + type.getTypeName() + "' is not assignable to '" +
-                    genericSuperclass.getTypeName() + "'");
-        }
-
-        TypeVariable<?>[] typeVariables = genericSuperclass.getTypeParameters();
-        if (typeVariables.length == 0) {
-            return EMPTY_TYPE_ARRAY;
-        }
-
-        Type[] params = new Type[typeVariables.length];
-        Map<TypeVariable<?>, Type> typeMap = TypeUtils.getTypeArguments(type, genericSuperclass);
-        for (int i = 0; i < typeVariables.length; i++) {
-            TypeVariable<?> variable = typeVariables[i];
-            Type typeParameter = typeMap.get(typeVariables[i]);
-            if (typeParameter == null) {
-                throw new IllegalArgumentException("Missing type parameter '" + variable + "'");
-            }
-
-            if (typeParameter instanceof TypeVariable<?>) {
-                throw new IllegalArgumentException("TypeVariable is not supported");
-            }
-
-            params[i] = typeParameter;
-        }
-
-        return params;
-    }
 
     /**
      * Extracts the name of a field. This is either its name as defined in the source code, or the value of a present

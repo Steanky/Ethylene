@@ -47,9 +47,10 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
 
     @Override
     public SignatureMatcher matcherFor(@NotNull Token<?> token) {
+        //signatureCache is a weak cache, which means it uses identity comparisons
+        //this is fine for all subclasses of Type that can be returned by tokens, but not for tokens themselves as they
+        //are not expected to be cached in any way
         return signatureCache.get(token.get(), ignored -> {
-            Type type = token.get();
-
             for (Class<?> superclass : ClassUtils.hierarchy(token.rawType(), ClassUtils.Interfaces.INCLUDE)) {
                 Set<Signature> signatures = customSignatureCache.getIfPresent(superclass);
                 if (signatures != null) {
@@ -64,23 +65,24 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
                         yield new BasicSignatureMatcher(arraySignature, typeHinter);
                     } else {
                         if (token.assignable(Collection.class)) {
-                            Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Collection.class);
-                            Signature[] collectionSignature = new Signature[] {new CollectionSignature(Token
-                                    .ofType(types[0]), Token.ofType(type))};
+                            Token<?> parameterized = token.parameterize(token.supertypeVariables(Collection.class));
+                            Token<?>[] args = parameterized.actualTypeParameters();
+                            Signature[] collectionSignature = new Signature[] {new CollectionSignature(args[0], token)};
 
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
                         } else if (token.assignable(Map.class)) {
-                            Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Map.class);
-                            Signature[] mapSignature = new Signature[] {new MapSignature(Token.ofType(types[0]),
-                                    Token.ofType(types[1]), Token.ofType(type))};
+                            Token<?> parameterized = token.parameterize(token.supertypeVariables(Map.class));
+                            Token<?>[] args = parameterized.actualTypeParameters();
+
+                            Signature[] mapSignature = new Signature[] {new MapSignature(args[0], args[1], token)};
                             yield new BasicSignatureMatcher(mapSignature, typeHinter);
                         }
                     }
 
-                    throw new MapperException("Unexpected container-like type '" + type.getTypeName() + "'");
+                    throw new MapperException("Unexpected container-like type '" + token.getTypeName() + "'");
                 }
                 case NODE ->
-                        new BasicSignatureMatcher(signatureSelector.select(type).buildSignatures(type), typeHinter);
+                        new BasicSignatureMatcher(signatureSelector.select(token).buildSignatures(token), typeHinter);
                 case SCALAR -> null;
             };
         });
