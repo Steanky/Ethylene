@@ -2,7 +2,7 @@ package com.github.steanky.ethylene.codec.yaml;
 
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ElementType;
-import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.Graph;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.snakeyaml.engine.v2.api.*;
@@ -23,10 +23,10 @@ public class YamlCodec extends AbstractConfigCodec {
     private static final String PREFERRED_EXTENSION = "yml";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION, "yaml");
 
-    private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
+    private static final int ENCODE_OPTIONS = Graph.Options.TRACK_REFERENCES;
 
     //for YML, it's possible to construct circular references in config, so enable reference tracking
-    private static final int DECODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
+    private static final int DECODE_OPTIONS = Graph.Options.TRACK_REFERENCES;
 
     private final Supplier<Load> loadSupplier;
     private final Supplier<Dump> dumpSupplier;

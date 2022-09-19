@@ -2,7 +2,7 @@ package com.github.steanky.ethylene.core.codec;
 
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
@@ -52,8 +52,8 @@ class AbstractConfigCodecTest {
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> subRoot = new HashMap<>();
 
-        testCodec = new AbstractConfigCodec(GraphTransformer.Options.REFERENCE_TRACKING,
-                GraphTransformer.Options.REFERENCE_TRACKING) {
+        testCodec = new AbstractConfigCodec(Graph.Options.TRACK_REFERENCES,
+                Graph.Options.TRACK_REFERENCES) {
             @Override
             public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
                 return Set.of();

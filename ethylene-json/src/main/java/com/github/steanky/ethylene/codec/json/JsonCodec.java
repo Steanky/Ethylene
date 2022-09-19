@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.codec.json;
 
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
-import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.Graph;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -28,8 +28,8 @@ public class JsonCodec extends AbstractConfigCodec {
     private static final String PREFERRED_EXTENSION = "json";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
-    private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
-    private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+    private static final int ENCODE_OPTIONS = Graph.Options.TRACK_REFERENCES;
+    private static final int DECODE_OPTIONS = Graph.Options.NONE;
     private final Gson gson;
 
     /**

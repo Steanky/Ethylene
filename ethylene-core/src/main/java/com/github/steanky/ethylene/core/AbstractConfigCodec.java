@@ -41,10 +41,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                         "Top-level elements of type '" + type + "' not supported by '" + getName() + "' codec");
             }
 
-            writeObject(
-                    GraphTransformer.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
-                            Function.identity(), IdentityHashMap::new, ArrayDeque::new,
-                            graphTransformerEncodeOptions), output);
+            writeObject(Graph.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
+                    graphTransformerEncodeOptions), output);
         }
     }
 
@@ -53,30 +51,29 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(input);
 
         try (input) {
-            return GraphTransformer.process(readObject(input), this::makeDecodeNode, this::isContainer,
+            return Graph.process(readObject(input), this::makeDecodeNode, this::isContainer,
                     this::deserializeObject, Function.identity(), IdentityHashMap::new, ArrayDeque::new,
                     graphTransformerDecodeOptions);
         }
     }
 
-    protected @NotNull GraphTransformer.Node<ConfigElement, Object, String> makeEncodeNode(
+    protected @NotNull Graph.Node<ConfigElement, Object, String> makeEncodeNode(
             @NotNull ConfigElement target) {
         if (target.isNode()) {
             ConfigNode elementNode = target.asNode();
-            return new GraphTransformer.Node<>(elementNode.entryCollection().iterator(),
-                    makeEncodeMap(elementNode.size()));
+            return Graph.node(elementNode.entryCollection().iterator(), makeEncodeMap(elementNode.size()));
         } else if (target.isList()) {
             ConfigList elementList = target.asList();
-            return new GraphTransformer.Node<>(elementList.entryCollection().iterator(),
+            return Graph.node(elementList.entryCollection().iterator(),
                     makeEncodeCollection(elementList.size()));
         }
 
         throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
     }
 
-    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
+    protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof Map<?, ?> map) {
-            return new GraphTransformer.Node<>(new Iterator<>() {
+            return Graph.node(new Iterator<>() {
                 private final Iterator<? extends Map.Entry<?, ?>> iterator = map.entrySet().iterator();
 
                 @Override
@@ -91,7 +88,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
             }, makeDecodeMap(map.size()));
         } else if (target instanceof Collection<?> collection) {
-            return new GraphTransformer.Node<>(new Iterator<>() {
+            return Graph.node(new Iterator<>() {
                 private final Iterator<?> backing = collection.iterator();
 
                 @Override
@@ -107,7 +104,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         } else if (target.getClass().isArray()) {
             Object[] array = (Object[]) target;
 
-            return new GraphTransformer.Node<>(new Iterator<>() {
+            return Graph.node(new Iterator<>() {
                 private int i = 0;
 
                 @Override
@@ -125,24 +122,24 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
     }
 
-    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
+    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
         Map<String, Object> map = new LinkedHashMap<>(size);
-        return new GraphTransformer.Output<>(map, (k, v, b) -> map.put(k, v));
+        return Graph.output(map, (k, v, b) -> map.put(k, v));
     }
 
-    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeCollection(int size) {
+    protected @NotNull Graph.Output<Object, String> makeEncodeCollection(int size) {
         Collection<Object> collection = new ArrayList<>(size);
-        return new GraphTransformer.Output<>(collection, (k, v, b) -> collection.add(v));
+        return Graph.output(collection, (k, v, b) -> collection.add(v));
     }
 
-    protected @NotNull GraphTransformer.Output<ConfigElement, String> makeDecodeMap(int size) {
+    protected @NotNull Graph.Output<ConfigElement, String> makeDecodeMap(int size) {
         ConfigNode node = new LinkedConfigNode(size);
-        return new GraphTransformer.Output<>(node, (k, v, b) -> node.put(k, v));
+        return Graph.output(node, (k, v, b) -> node.put(k, v));
     }
 
-    protected @NotNull GraphTransformer.Output<ConfigElement, String> makeDecodeCollection(int size) {
+    protected @NotNull Graph.Output<ConfigElement, String> makeDecodeCollection(int size) {
         ConfigList list = new ArrayConfigList(size);
-        return new GraphTransformer.Output<>(list, (k, v, b) -> list.add(v));
+        return Graph.output(list, (k, v, b) -> list.add(v));
     }
 
     /**

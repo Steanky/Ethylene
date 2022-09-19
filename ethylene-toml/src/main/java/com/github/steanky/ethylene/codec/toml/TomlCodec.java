@@ -9,7 +9,7 @@ import com.electronwill.nightconfig.toml.TomlParser;
 import com.electronwill.nightconfig.toml.TomlWriter;
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.collection.Entry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,8 +33,8 @@ public class TomlCodec extends AbstractConfigCodec {
     private static final String NAME = "TOML";
     private static final String PREFERRED_EXTENSION = "toml";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
-    private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
-    private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+    private static final int ENCODE_OPTIONS = Graph.Options.TRACK_REFERENCES;
+    private static final int DECODE_OPTIONS = Graph.Options.NONE;
     private final TomlParser parser;
     private final TomlWriter writer;
 
@@ -60,9 +60,9 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
+    protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof UnmodifiableConfig config) {
-            return new GraphTransformer.Node<>(new Iterator<>() {
+            return Graph.node(new Iterator<>() {
                 private final Iterator<? extends UnmodifiableConfig.Entry> backing = config.entrySet().iterator();
 
                 @Override
@@ -82,9 +82,9 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
+    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
         Config config = TomlFormat.newConfig(() -> new LinkedHashMap<>(size));
-        return new GraphTransformer.Output<>(config, (k, v, b) -> config.add(k, v));
+        return Graph.output(config, (k, v, b) -> config.add(k, v));
     }
 
     @Override

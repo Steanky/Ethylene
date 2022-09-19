@@ -3,7 +3,7 @@ package com.github.steanky.ethylene.core.loader;
 import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
-import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.bridge.ConfigSource;
 import com.github.steanky.ethylene.core.bridge.Configuration;
 import com.github.steanky.ethylene.core.collection.ConfigEntry;
@@ -118,7 +118,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             }
 
             ExceptionHandler<IOException> exceptionHandler = new ExceptionHandler<>(IOException.class);
-            ConfigElement element = GraphTransformer.process(rootPath, directoryEntry -> {
+            ConfigElement element = Graph.process(rootPath, directoryEntry -> {
                         //gets all files that are directories, not the current path, or a file with an extension we can
                         //understand
                         List<Path> pathList = exceptionHandler.get(() -> {
@@ -128,7 +128,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         }, List::of);
 
                         ConfigNode node = new LinkedConfigNode(pathList.size());
-                        return new GraphTransformer.Node<>(new Iterator<>() {
+                        return Graph.node(new Iterator<>() {
                             private final Iterator<Path> pathIterator = pathList.listIterator();
 
                             @Override
@@ -141,8 +141,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                                 Path path = pathIterator.next();
                                 return Entry.of(pathNameInspector.getName(path), path);
                             }
-                        }, new GraphTransformer.Output<>(node,
-                                (GraphTransformer.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(
+                        }, Graph.output(node,
+                                (Graph.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(
                                         s, configElement)));
                     }, Files::isDirectory, entry -> {
                         String extension = pathNameInspector.getExtension(entry);
@@ -153,7 +153,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
                         return ConfigPrimitive.NULL;
                     }, entry -> getKey(entry, supportSymlinks), HashMap::new, ArrayDeque::new,
-                    GraphTransformer.Options.TRACK_ALL_REFERENCES);
+                    Graph.Options.TRACK_ALL_REFERENCES);
 
             exceptionHandler.throwIfPresent();
             return element;
@@ -178,7 +178,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             }
 
             ExceptionHandler<IOException> exceptionHandler = new ExceptionHandler<>(IOException.class);
-            GraphTransformer.process(new OutputInfo(rootPath, element, true), containerEntry -> {
+            Graph.process(new OutputInfo(rootPath, element, true), containerEntry -> {
                         exceptionHandler.run(() -> Files.createDirectories(containerEntry.path));
                         Path normalizedPath = containerEntry.path.normalize();
 
@@ -247,8 +247,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         //there is a circular reference (in which case the OutputInfo passed to the accumulator comes
                         //from some other node)
                         Iterator<Entry<Object, OutputInfo>> actualIterator = paths.iterator();
-                        return new GraphTransformer.Node<>(paths.iterator(),
-                                new GraphTransformer.Output<>(containerEntry, (o, outputInfo, circular) -> {
+                        return Graph.node(paths.iterator(),
+                                Graph.output(containerEntry, (o, outputInfo, circular) -> {
                                     //actually write the files
                                     //need to do this here, instead of in, say, the scalar mapper, so we can create
                                     //symlinks when indicated to do so by the circular flag
@@ -277,8 +277,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         }
 
                         return potentialContainer.isDirectory;
-                    }, Function.identity(), entry -> entry.element, IdentityHashMap::new, ArrayDeque::new,
-                    GraphTransformer.Options.TRACK_ALL_REFERENCES);
+                    }, Function.identity(), entry -> entry.element, Graph.Options.TRACK_ALL_REFERENCES);
 
             exceptionHandler.throwIfPresent();
             return null;

@@ -2,7 +2,7 @@ package com.github.steanky.ethylene.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
-import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
@@ -43,7 +43,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             Type rootType = typeResolver.resolveType(token.get(), element);
             SignatureMatcher rootFactory = signatureMatcherSource.matcherFor(rootType, element);
 
-            return (T) GraphTransformer.process(new ClassEntry(rootType, element, rootFactory), nodeEntry -> {
+            return (T) Graph.process(new ClassEntry(rootType, element, rootFactory), nodeEntry -> {
                         ConfigElement nodeElement = nodeEntry.element;
                         MatchingSignature matchingSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type,
                                 nodeElement, null);
@@ -60,7 +60,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                         Object[] args = new Object[signatureSize];
 
-                        return new GraphTransformer.Node<>(new Iterator<>() {
+                        return Graph.node(new Iterator<>() {
                             private int i = 0;
 
                             @Override
@@ -80,7 +80,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                                 return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
                             }
-                        }, new GraphTransformer.Output<>(nodeEntry.reference, new GraphTransformer.Accumulator<>() {
+                        }, Graph.output(nodeEntry.reference, new Graph.Accumulator<>() {
                             private int i = 0;
 
                             @Override
@@ -99,8 +99,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         }));
                     }, potentialContainer -> potentialContainer.element.isContainer(),
                     scalar -> new MutableObject<>(scalar.element.asScalar()), entry -> entry.element,
-                    GraphTransformer.Options.DEPTH_FIRST | GraphTransformer.Options.REFERENCE_TRACKING |
-                            GraphTransformer.Options.LAZY_ACCUMULATION).getValue();
+                    Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES |
+                            Graph.Options.LAZY_ACCUMULATION).getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
@@ -113,7 +113,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             SignatureMatcher rootMatcher = signatureMatcherSource.matcherFor(rootType, null);
             ElementEntry rootEntry = new ElementEntry(rootType, data, rootMatcher);
 
-            return GraphTransformer.process(rootEntry, nodeEntry -> {
+            return Graph.process(rootEntry, nodeEntry -> {
                         Object nodeObject = nodeEntry.object;
                         MatchingSignature typeSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type, null,
                                 nodeObject);
@@ -125,7 +125,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                         Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
 
-                        return new GraphTransformer.Node<ElementEntry, Mutable<ConfigElement>, String>(new Iterator<>() {
+                        return Graph.node(new Iterator<>() {
                             private int i = 0;
 
                             @Override
@@ -146,7 +146,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 return Entry.of(typedObject.name(),
                                         new ElementEntry(objectType, typedObject.value(), thisMatcher));
                             }
-                        }, new GraphTransformer.Output<>(nodeEntry.element, (key, value, circular) -> {
+                        }, Graph.output(nodeEntry.element,
+                                (Graph.Accumulator<String, Mutable<ConfigElement>>)(key, value, circular) -> {
                             if (target.isList()) {
                                 target.asList().add(value.getValue());
                             } else {
@@ -158,8 +159,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         return potentialContainer.object != null &&
                                 typeHinter.getHint(potentialContainer.object.getClass()) != ElementType.SCALAR;
                     }, scalar -> new MutableObject<>(scalarSource.make(scalar.object)), entry -> entry.object,
-                    GraphTransformer.Options.DEPTH_FIRST | GraphTransformer.Options.REFERENCE_TRACKING |
-                            GraphTransformer.Options.LAZY_ACCUMULATION).getValue();
+                    Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES |
+                            Graph.Options.LAZY_ACCUMULATION).getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }

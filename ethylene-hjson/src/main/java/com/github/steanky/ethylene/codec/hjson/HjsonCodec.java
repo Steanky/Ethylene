@@ -3,7 +3,7 @@ package com.github.steanky.ethylene.codec.hjson;
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
-import com.github.steanky.ethylene.core.GraphTransformer;
+import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.collection.Entry;
 import org.hjson.*;
 import org.jetbrains.annotations.NotNull;
@@ -22,8 +22,8 @@ public class HjsonCodec extends AbstractConfigCodec {
     private static final String NAME = "HJSON";
     private static final String PREFERRED_EXTENSION = "hjson";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
-    private static final int ENCODE_OPTIONS = GraphTransformer.Options.REFERENCE_TRACKING;
-    private static final int DECODE_OPTIONS = GraphTransformer.Options.NONE;
+    private static final int ENCODE_OPTIONS = Graph.Options.TRACK_REFERENCES;
+    private static final int DECODE_OPTIONS = Graph.Options.NONE;
     private final HjsonOptions readOptions;
     private final HjsonOptions writeOptions;
 
@@ -47,9 +47,9 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull GraphTransformer.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
+    protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof JsonObject object) {
-            return new GraphTransformer.Node<>(new Iterator<>() {
+            return Graph.node(new Iterator<>() {
                 private final Iterator<JsonObject.Member> iterator = object.iterator();
 
                 @Override
@@ -64,7 +64,7 @@ public class HjsonCodec extends AbstractConfigCodec {
                 }
             }, makeDecodeMap(object.size()));
         } else if (target instanceof JsonArray array) {
-            return new GraphTransformer.Node<>(new Iterator<>() {
+            return Graph.node(new Iterator<>() {
                 private final Iterator<JsonValue> backing = array.iterator();
 
                 @Override
@@ -83,15 +83,15 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeMap(int size) {
+    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
         JsonObject object = new JsonObject();
-        return new GraphTransformer.Output<>(object, (k, v, b) -> object.add(k, (JsonValue) v));
+        return Graph.output(object, (k, v, b) -> object.add(k, (JsonValue) v));
     }
 
     @Override
-    protected @NotNull GraphTransformer.Output<Object, String> makeEncodeCollection(int size) {
+    protected @NotNull Graph.Output<Object, String> makeEncodeCollection(int size) {
         JsonArray array = new JsonArray();
-        return new GraphTransformer.Output<>(array, (k, v, b) -> array.add((JsonValue) v));
+        return Graph.output(array, (k, v, b) -> array.add((JsonValue) v));
     }
 
     @Override

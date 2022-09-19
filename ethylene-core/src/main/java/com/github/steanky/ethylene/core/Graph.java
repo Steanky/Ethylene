@@ -12,14 +12,18 @@ import java.util.function.Supplier;
  * This utility class can be used to aid the process of designing generalized topology-preserving object graph
  * transformations.
  */
-public final class GraphTransformer {
+public final class Graph {
+    private Graph() {
+        throw new UnsupportedOperationException();
+    }
+
     //shared empty accumulator which is just a no-op
     private static final Accumulator<?, ?> EMPTY_ACCUMULATOR = (Accumulator<Object, Object>) (o, o2, circular) -> {};
 
     //shared empty Output with null data and the empty accumulator
     private static final Output<?, ?> EMPTY_OUTPUT = new Output<>(null, EMPTY_ACCUMULATOR);
 
-    //shared empty Node with an empty iterator and the shared empty output
+    //shared empty Node with an empty iterator and the empty output
     private static final Node<?, ?, ?> EMPTY_NODE = new Node<>(new Iterator<>() {
         @Override
         public boolean hasNext() {
@@ -37,7 +41,7 @@ public final class GraphTransformer {
             @NotNull Predicate<? super TIn> containerPredicate,
             @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
             @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper,
-            @NotNull Supplier<? extends Map<TVisit, TOut>> visitedSupplier,
+            @NotNull Supplier<? extends Map<? super TVisit, TOut>> visitedSupplier,
             @NotNull Supplier<? extends Deque<Node<TIn, TOut, TKey>>> stackSupplier,
             int flags) {
         if (!containerPredicate.test(rootInput)) {
@@ -53,14 +57,14 @@ public final class GraphTransformer {
             return rootNode.output.data;
         }
 
-        boolean circularRefSupport = Options.hasOption(flags, Options.REFERENCE_TRACKING);
-        boolean trackScalarReference = Options.hasOption(flags, Options.TRACK_SCALAR_REFERENCE);
+        boolean circularRefSupport = Options.hasOption(flags, Options.TRACK_REFERENCES);
+        boolean trackScalarReference = Options.hasOption(flags, Options.TRACK_SCALAR_REFERENCES);
         boolean depthFirst = Options.hasOption(flags, Options.DEPTH_FIRST);
         boolean lazyAccumulation = Options.hasOption(flags, Options.LAZY_ACCUMULATION) && depthFirst;
 
         //don't initialize the visitation map if there is no support for circular references
         //make sure usages of this map check circularRefSupport to avoid NPE
-        Map<TVisit, TOut> visited = null;
+        Map<? super TVisit, TOut> visited = null;
         if (circularRefSupport) {
             visited = visitedSupplier.get();
             visited.put(visitKeyMapper.apply(rootInput), rootNode.output.data);
@@ -75,7 +79,7 @@ public final class GraphTransformer {
             boolean hasOutput = hasOutput(node);
             boolean finished = true;
             while (node.inputIterator.hasNext()) {
-                Entry<TKey, TIn> entry = node.inputIterator.next();
+                Entry<? extends TKey, ? extends TIn> entry = node.inputIterator.next();
                 TKey entryKey = entry.getFirst();
                 TIn entryInput = entry.getSecond();
 
@@ -185,6 +189,14 @@ public final class GraphTransformer {
         return rootNode.output.data;
     }
 
+    public static <TIn, TOut, TKey> TOut process(TIn input,
+            @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+            @NotNull Predicate<? super TIn> containerPredicate,
+            @NotNull Function<? super TIn, ? extends TOut> scalarMapper, int flags) {
+        return process(input, nodeFunction, containerPredicate, scalarMapper, Function.identity(), IdentityHashMap::new,
+                ArrayDeque::new, flags);
+    }
+
     public static <TIn, TOut, TKey, TVisit> TOut process(TIn input,
             @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
             @NotNull Predicate<? super TIn> containerPredicate,
@@ -192,6 +204,22 @@ public final class GraphTransformer {
             @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper, int flags) {
         return process(input, nodeFunction, containerPredicate, scalarMapper, visitKeyMapper, IdentityHashMap::new,
                 ArrayDeque::new, flags);
+    }
+
+    public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
+            @NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator,
+            @NotNull Output<TOut, TKey> output) {
+        return new Node<>(inputIterator, output);
+    }
+
+    public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
+            @NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator) {
+        return new Node<>(inputIterator, emptyOutput());
+    }
+
+    public static <TOut, TKey> @NotNull Output<TOut, TKey> output(TOut data,
+            @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {
+        return new Output<>(data, accumulator);
     }
 
     private static boolean isEmpty(Node<?, ?, ?> node) {
@@ -233,15 +261,16 @@ public final class GraphTransformer {
          * option is not present, any circular references in the input data structure will cause an infinite loop and
          * eventually an OOM.
          */
-        public static final int REFERENCE_TRACKING = 1;
+        public static final int TRACK_REFERENCES = 1;
 
         /**
          * Enables support for tracking scalar references. This option will do nothing if the REFERENCE_TRACKING flag is
          * not also set. Since scalars cannot have children, not having this option will not cause a possibility of
          * infinite loops. However, enabling it may be desirable in order to "de-duplicate" equivalent instances of
-         * scalars in the output data structure.
+         * scalars in the output data structure, at the cost of additional memory being used to store the scalar objects
+         * during graph transformation.
          */
-        public static final int TRACK_SCALAR_REFERENCE = 2;
+        public static final int TRACK_SCALAR_REFERENCES = 2;
 
         /**
          * Equivalent to combining REFERENCE_TRACKING and TRACK_SCALAR_REFERENCE.
@@ -265,24 +294,21 @@ public final class GraphTransformer {
     }
 
     //used internally for lazy accumulation of results
-    private static class NodeResult<TKey, TOut> {
+    //only relevant when doing depth-first transforms
+    private static final class NodeResult<TKey, TOut> {
         private TKey key;
         private TOut out;
     }
 
-    public static class Node<TIn, TOut, TKey> {
-        private final Iterator<? extends Entry<TKey, TIn>> inputIterator;
-        private final Output<TOut, TKey> output;
+    public static final class Node<TIn, TOut, TKey> {
+        private final Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator;
+        private final Output<TOut, ? super TKey> output;
         private NodeResult<TKey, TOut> result;
 
-        public Node(@NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator,
-                @NotNull Output<TOut, TKey> output) {
-            this.inputIterator = Objects.requireNonNull(inputIterator);
-            this.output = Objects.requireNonNull(output);
-        }
-
-        public Node(@NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator) {
-            this(inputIterator, emptyOutput());
+        private Node(@NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator,
+                @NotNull Output<TOut, ? super TKey> output) {
+            this.inputIterator = inputIterator;
+            this.output = output;
         }
 
         private boolean hasResult() {
@@ -296,14 +322,22 @@ public final class GraphTransformer {
             result.out = out;
         }
 
-        public @NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator() {
+        public @NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator() {
             return inputIterator;
         }
 
-        public @NotNull Output<TOut, TKey> output() {
+        public @NotNull Output<TOut, ? super TKey> output() {
             return output;
         }
     }
 
-    public record Output<TOut, TKey>(TOut data, @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {}
+    public static final class Output<TOut, TKey> {
+        private final TOut data;
+        private final Accumulator<? super TKey, ? super TOut> accumulator;
+
+        private Output(TOut data, @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {
+            this.data = data;
+            this.accumulator = accumulator;
+        }
+    }
 }
