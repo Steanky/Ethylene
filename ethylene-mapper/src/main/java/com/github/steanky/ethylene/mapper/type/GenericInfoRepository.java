@@ -41,8 +41,8 @@ import java.util.function.Function;
  * these types can be garbage collected <i>too soon</i>, before the classloader responsible for creating them is
  * destroyed.
  * <p>
- * This class is designed to contain the <i>only</i> strong references to such types in a weak-key cache, keyed by
- * the {@link Class} to which their lifetime should be scoped. It incidentally performs equality-based caching on said
+ * This class is designed to contain the <i>only</i> strong references to such types in a weak-key cache, keyed by the
+ * {@link Class} to which their lifetime should be scoped. It incidentally performs equality-based caching on said
  * custom instances (resulting in a form of object canonicalization, ensuring the returned objects are the same as the
  * ones actually held in the map).
  */
@@ -66,7 +66,7 @@ class GenericInfoRepository {
      * @return the cached type if present, else {@code type}
      */
     static @NotNull Type bind(@NotNull Class<?> owner, @NotNull WeakType type) {
-        return store.get(owner, ignored -> new GenericInfoRepository()).canonicalTypes.computeIfAbsent(type, Function
-                .identity());
+        return store.get(owner, ignored -> new GenericInfoRepository()).canonicalTypes.computeIfAbsent(type,
+                Function.identity());
     }
 }

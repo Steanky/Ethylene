@@ -6,10 +6,8 @@ import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.TypeHinter;
 import com.github.steanky.ethylene.mapper.type.Token;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
 import java.util.*;
 
 public class BasicSignatureMatcher implements SignatureMatcher {
@@ -79,8 +77,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                         Iterator<Entry<String, Token<?>>> signatureIterator = signature.argumentTypes().iterator();
 
                         while (typeCollectionIterator.hasNext()) {
-                            if (typeHinter.getHint(typeCollectionIterator.next().type()) != typeHinter
-                                    .getHint(signatureIterator.next().getSecond())) {
+                            if (typeHinter.getHint(typeCollectionIterator.next().type()) !=
+                                    typeHinter.getHint(signatureIterator.next().getSecond())) {
                                 break outer;
                             }
                         }

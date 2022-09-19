@@ -142,8 +142,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                                 return Entry.of(pathNameInspector.getName(path), path);
                             }
                         }, Graph.output(node,
-                                (Graph.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(
-                                        s, configElement)));
+                                (Graph.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(s,
+                                        configElement)));
                     }, Files::isDirectory, entry -> {
                         String extension = pathNameInspector.getExtension(entry);
                         if (codecResolver.hasCodec(extension)) {
@@ -179,105 +179,104 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
             ExceptionHandler<IOException> exceptionHandler = new ExceptionHandler<>(IOException.class);
             Graph.process(new OutputInfo(rootPath, element, true), containerEntry -> {
-                        exceptionHandler.run(() -> Files.createDirectories(containerEntry.path));
-                        Path normalizedPath = containerEntry.path.normalize();
+                exceptionHandler.run(() -> Files.createDirectories(containerEntry.path));
+                Path normalizedPath = containerEntry.path.normalize();
 
-                        //get paths currently in the folder
-                        //if there's an exception, existingPaths will be empty
-                        Set<Path> existingPaths = exceptionHandler.get(() -> {
-                            try (Stream<Path> paths = Files.walk(normalizedPath, 1, fileVisitOptions)) {
-                                //like when reading, include all directories, and ignore files whose extensions we don't
-                                //recognize
-                                return paths.filter(path -> filterPath(normalizedPath, path)).collect(Collectors.toSet());
-                            }
-                        }, Set::of);
+                //get paths currently in the folder
+                //if there's an exception, existingPaths will be empty
+                Set<Path> existingPaths = exceptionHandler.get(() -> {
+                    try (Stream<Path> paths = Files.walk(normalizedPath, 1, fileVisitOptions)) {
+                        //like when reading, include all directories, and ignore files whose extensions we don't
+                        //recognize
+                        return paths.filter(path -> filterPath(normalizedPath, path)).collect(Collectors.toSet());
+                    }
+                }, Set::of);
 
-                        ConfigNode node = containerEntry.element.asNode();
+                ConfigNode node = containerEntry.element.asNode();
 
-                        //list of paths
-                        //key (first in the entry) is always null because it's unused
-                        List<Entry<Object, OutputInfo>> paths = new ArrayList<>(node.size());
-                        for (ConfigEntry entry : node.entryCollection()) {
-                            String elementName = entry.getFirst();
-                            ConfigElement entryElement = entry.getSecond();
-                            Path targetPath = normalizedPath.resolve(elementName);
+                //list of paths
+                //key (first in the entry) is always null because it's unused
+                List<Entry<Object, OutputInfo>> paths = new ArrayList<>(node.size());
+                for (ConfigEntry entry : node.entryCollection()) {
+                    String elementName = entry.getFirst();
+                    ConfigElement entryElement = entry.getSecond();
+                    Path targetPath = normalizedPath.resolve(elementName);
 
-                            boolean exists = existingPaths.contains(targetPath);
+                    boolean exists = existingPaths.contains(targetPath);
 
-                            if (exists) {
-                                //path already exists, is either an extensionless file or directory
-                                //if it's a directory, we'll iterate into it later
-                                //if it's a file, we'll write to it as a scalar
-                                paths.add(Entry.of(null,
-                                        new OutputInfo(targetPath, entryElement, Files.isDirectory(targetPath))));
-                            } else {
-                                //path doesn't exist, but that could be because of an extension
-                                //filter the existing paths to those whose name matches
-                                List<Path> targets = existingPaths.stream()
-                                        .filter(path -> pathNameInspector.getName(path).equals(elementName)).toList();
+                    if (exists) {
+                        //path already exists, is either an extensionless file or directory
+                        //if it's a directory, we'll iterate into it later
+                        //if it's a file, we'll write to it as a scalar
+                        paths.add(Entry.of(null,
+                                new OutputInfo(targetPath, entryElement, Files.isDirectory(targetPath))));
+                    } else {
+                        //path doesn't exist, but that could be because of an extension
+                        //filter the existing paths to those whose name matches
+                        List<Path> targets = existingPaths.stream()
+                                .filter(path -> pathNameInspector.getName(path).equals(elementName)).toList();
 
-                                if (targets.isEmpty()) {
-                                    //no file found at all - we'll write a new one using our preferred extension
-                                    Path filePath = normalizedPath.resolve(elementName + preferredExtension);
-                                    paths.add(Entry.of(null, new OutputInfo(filePath, entryElement, false)));
-                                } else {
-                                    //we have at least one matching (and existing) file
-                                    //if there are multiple files, they must differ only by extension
-                                    //if one of these extensions is the preferred extension, use that
-                                    Path preferred = null;
-                                    for (Path path : targets) {
-                                        String extension = pathNameInspector.getExtension(path);
-                                        if (preferredExtensionName.equals(extension)) {
-                                            preferred = path;
-                                            break;
-                                        }
-                                    }
-
-                                    if (preferred == null) {
-                                        //no preferred extension, just use the first file on the list
-                                        preferred = targets.get(0);
-                                    }
-
-                                    paths.add(Entry.of(null, new OutputInfo(preferred, entryElement, false)));
+                        if (targets.isEmpty()) {
+                            //no file found at all - we'll write a new one using our preferred extension
+                            Path filePath = normalizedPath.resolve(elementName + preferredExtension);
+                            paths.add(Entry.of(null, new OutputInfo(filePath, entryElement, false)));
+                        } else {
+                            //we have at least one matching (and existing) file
+                            //if there are multiple files, they must differ only by extension
+                            //if one of these extensions is the preferred extension, use that
+                            Path preferred = null;
+                            for (Path path : targets) {
+                                String extension = pathNameInspector.getExtension(path);
+                                if (preferredExtensionName.equals(extension)) {
+                                    preferred = path;
+                                    break;
                                 }
                             }
+
+                            if (preferred == null) {
+                                //no preferred extension, just use the first file on the list
+                                preferred = targets.get(0);
+                            }
+
+                            paths.add(Entry.of(null, new OutputInfo(preferred, entryElement, false)));
                         }
+                    }
+                }
 
-                        //use another iterator - this will differ from the results passed to the accumulator only when
-                        //there is a circular reference (in which case the OutputInfo passed to the accumulator comes
-                        //from some other node)
-                        Iterator<Entry<Object, OutputInfo>> actualIterator = paths.iterator();
-                        return Graph.node(paths.iterator(),
-                                Graph.output(containerEntry, (o, outputInfo, circular) -> {
-                                    //actually write the files
-                                    //need to do this here, instead of in, say, the scalar mapper, so we can create
-                                    //symlinks when indicated to do so by the circular flag
-                                    OutputInfo actualInfo = actualIterator.next().getSecond();
+                //use another iterator - this will differ from the results passed to the accumulator only when
+                //there is a circular reference (in which case the OutputInfo passed to the accumulator comes
+                //from some other node)
+                Iterator<Entry<Object, OutputInfo>> actualIterator = paths.iterator();
+                return Graph.node(paths.iterator(), Graph.output(containerEntry, (o, outputInfo, circular) -> {
+                    //actually write the files
+                    //need to do this here, instead of in, say, the scalar mapper, so we can create
+                    //symlinks when indicated to do so by the circular flag
+                    OutputInfo actualInfo = actualIterator.next().getSecond();
 
-                                    if (circular && supportSymlinks) {
-                                        //make a symlink to the target file/directory instead of making a copy
-                                        //strip the extension if the link target is a directory
-                                        Path link = outputInfo.isDirectory ? actualInfo.path.getParent()
-                                                .resolve(pathNameInspector.getName(actualInfo.path)) : actualInfo.path;
+                    if (circular && supportSymlinks) {
+                        //make a symlink to the target file/directory instead of making a copy
+                        //strip the extension if the link target is a directory
+                        Path link = outputInfo.isDirectory ?
+                                actualInfo.path.getParent().resolve(pathNameInspector.getName(actualInfo.path)) :
+                                actualInfo.path;
 
-                                        exceptionHandler.run(() -> Files.createSymbolicLink(link, outputInfo.path));
-                                    } else if (!outputInfo.isDirectory) {
-                                        //if outputInfo is a directory, no need to bother writing anything
-                                        //(it will be created when its appropriate node is initialized)
-                                        String extension = pathNameInspector.getExtension(actualInfo.path);
+                        exceptionHandler.run(() -> Files.createSymbolicLink(link, outputInfo.path));
+                    } else if (!outputInfo.isDirectory) {
+                        //if outputInfo is a directory, no need to bother writing anything
+                        //(it will be created when its appropriate node is initialized)
+                        String extension = pathNameInspector.getExtension(actualInfo.path);
 
-                                        exceptionHandler.run(() -> Configuration.write(actualInfo.path, actualInfo.element,
-                                                codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) :
-                                                        preferredCodec));
-                                    }
-                                }));
-                    }, potentialContainer -> {
-                        if (!potentialContainer.element.isNode()) {
-                            return false;
-                        }
+                        exceptionHandler.run(() -> Configuration.write(actualInfo.path, actualInfo.element,
+                                codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) : preferredCodec));
+                    }
+                }));
+            }, potentialContainer -> {
+                if (!potentialContainer.element.isNode()) {
+                    return false;
+                }
 
-                        return potentialContainer.isDirectory;
-                    }, Function.identity(), entry -> entry.element, Graph.Options.TRACK_ALL_REFERENCES);
+                return potentialContainer.isDirectory;
+            }, Function.identity(), entry -> entry.element, Graph.Options.TRACK_ALL_REFERENCES);
 
             exceptionHandler.throwIfPresent();
             return null;

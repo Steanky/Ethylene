@@ -4,11 +4,9 @@ import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Type;
 
 public class ConstructorSignatureBuilder implements SignatureBuilder {
     public static final ConstructorSignatureBuilder INSTANCE = new ConstructorSignatureBuilder();

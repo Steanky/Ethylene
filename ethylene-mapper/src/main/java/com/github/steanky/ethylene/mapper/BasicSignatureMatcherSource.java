@@ -10,7 +10,6 @@ import com.github.steanky.ethylene.mapper.signature.container.ArraySignature;
 import com.github.steanky.ethylene.mapper.signature.container.CollectionSignature;
 import com.github.steanky.ethylene.mapper.signature.container.MapSignature;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,8 +38,7 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
 
     private void registerCustomSignatures(Collection<Signature> signatures) {
         for (Signature signature : signatures) {
-            customSignatureCache.get(signature.returnType().rawType(), ignored -> new HashSet<>(1))
-                    .add(signature);
+            customSignatureCache.get(signature.returnType().rawType(), ignored -> new HashSet<>(1)).add(signature);
         }
     }
 

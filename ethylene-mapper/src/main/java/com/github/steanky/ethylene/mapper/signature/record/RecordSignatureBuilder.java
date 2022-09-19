@@ -5,8 +5,6 @@ import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
-
 public class RecordSignatureBuilder implements SignatureBuilder {
     public static final RecordSignatureBuilder INSTANCE = new RecordSignatureBuilder();
 

@@ -29,6 +29,7 @@ import java.util.function.Supplier;
  * <p>
  * All instance methods defined in this class, unless otherwise noted, will throw a {@link TypeNotPresentException} if
  * their underlying type object no longer exists.
+ *
  * @param <T> the type information to be held in this token
  */
 //T is NOT unused, it is inspected reflectively on Token instantiation!
@@ -95,18 +96,6 @@ public abstract class Token<T> implements Supplier<Type> {
         this.typeName = resolved.getTypeName();
     }
 
-    private static Type resolveType(Type input) {
-        if (input instanceof TypeVariable<?> variable) {
-            return variable.getBounds()[0];
-        }
-        else if (input instanceof WildcardType wildcardType) {
-            //interpret wildcards only by their upper bound
-            return wildcardType.getUpperBounds()[0];
-        }
-
-        return input;
-    }
-
     /**
      * Constructs a new Token representing a (often generic) type.
      *
@@ -137,6 +126,17 @@ public abstract class Token<T> implements Supplier<Type> {
         this.typeName = resolved.getTypeName();
     }
 
+    private static Type resolveType(Type input) {
+        if (input instanceof TypeVariable<?> variable) {
+            return variable.getBounds()[0];
+        } else if (input instanceof WildcardType wildcardType) {
+            //interpret wildcards only by their upper bound
+            return wildcardType.getUpperBounds()[0];
+        }
+
+        return input;
+    }
+
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
         Type[] result = new Type[variables.length];
         int i = 0;
@@ -157,8 +157,9 @@ public abstract class Token<T> implements Supplier<Type> {
 
         //validate parameter length
         if (requiredLength != actualLength) {
-            throw new IllegalArgumentException("Actual and required number of type parameters differ in length for '" +
-                    raw.getTypeName() + "', was " + actualLength + ", needed " + requiredLength);
+            throw new IllegalArgumentException(
+                    "Actual and required number of type parameters differ in length for '" + raw.getTypeName() +
+                            "', was " + actualLength + ", needed " + requiredLength);
         }
     }
 
@@ -193,7 +194,7 @@ public abstract class Token<T> implements Supplier<Type> {
         return new Token<>(type) {};
     }
 
-    private static Token<?> parameterizeInternal(Class<?> raw, Type owner, Type ... params) {
+    private static Token<?> parameterizeInternal(Class<?> raw, Type owner, Type... params) {
         //currently, only checks the parameter array length against the number of variables, ignoring type bounds
         checkTypes(raw, params);
 
@@ -302,7 +303,8 @@ public abstract class Token<T> implements Supplier<Type> {
             return Token.ofType(cls.arrayType());
         }
 
-        return Token.ofType(GenericInfoRepository.bind(ReflectionUtils.rawType(type), new InternalGenericArrayType(type)));
+        return Token.ofType(
+                GenericInfoRepository.bind(ReflectionUtils.rawType(type), new InternalGenericArrayType(type)));
     }
 
     /**
@@ -323,6 +325,7 @@ public abstract class Token<T> implements Supplier<Type> {
     /**
      * Returns true if this token represents an array type; false otherwise. An array type is either a ray array or a
      * {@link GenericArrayType}.
+     *
      * @return true if this token is an array type, false otherwise
      */
     public final boolean isArrayType() {
@@ -357,7 +360,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
     @SuppressWarnings("unchecked")
     public final <TReturn> @NotNull Token<TReturn> cast() {
-        return (Token<TReturn>)this;
+        return (Token<TReturn>) this;
     }
 
     public final @NotNull Token<?>[] actualTypeParameters() {

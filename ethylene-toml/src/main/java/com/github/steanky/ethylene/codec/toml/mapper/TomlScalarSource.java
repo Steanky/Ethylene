@@ -4,7 +4,6 @@ import com.github.steanky.ethylene.codec.toml.ConfigDate;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.BasicScalarSource;
 import com.github.steanky.ethylene.mapper.ScalarSource;
-import com.github.steanky.ethylene.mapper.TypeHinter;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.Temporal;

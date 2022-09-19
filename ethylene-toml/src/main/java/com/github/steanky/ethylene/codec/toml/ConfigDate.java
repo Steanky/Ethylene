@@ -1,16 +1,16 @@
 package com.github.steanky.ethylene.codec.toml;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.temporal.Temporal;
 import java.util.Objects;
 
-import com.github.steanky.ethylene.core.ConfigPrimitive;
-
 /**
  * Represents a TOML date. This is a scalar whose object type is {@link Temporal}.
+ *
  * @see ConfigElement
  * @see ConfigPrimitive
  */

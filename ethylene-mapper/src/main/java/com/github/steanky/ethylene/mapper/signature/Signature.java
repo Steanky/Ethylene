@@ -6,12 +6,10 @@ import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
-import com.github.steanky.ethylene.mapper.internal.TypeMappingCollection;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -109,8 +107,8 @@ public interface Signature {
 
             this.argumentTypes = new ArrayList<>(arguments.length);
             for (Entry<String, Token<?>> entry : arguments) {
-                argumentTypes.add(Entry.of(Objects.requireNonNull(entry.getFirst()), Objects.requireNonNull(entry
-                        .getSecond())));
+                argumentTypes.add(
+                        Entry.of(Objects.requireNonNull(entry.getFirst()), Objects.requireNonNull(entry.getSecond())));
             }
         }
 

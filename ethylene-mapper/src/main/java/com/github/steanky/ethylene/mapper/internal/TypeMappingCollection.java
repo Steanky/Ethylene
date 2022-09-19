@@ -22,6 +22,7 @@ public class TypeMappingCollection extends AbstractCollection<Entry<String, Type
     /**
      * Creates a new instance of this collection from the given collection of token entries. Changes to the underlying
      * collection will be reflected in this instance.
+     *
      * @param tokenCollection the underlying collection
      */
     public TypeMappingCollection(@NotNull Collection<Entry<String, Token<?>>> tokenCollection) {

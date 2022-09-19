@@ -52,8 +52,7 @@ class AbstractConfigCodecTest {
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> subRoot = new HashMap<>();
 
-        testCodec = new AbstractConfigCodec(Graph.Options.TRACK_REFERENCES,
-                Graph.Options.TRACK_REFERENCES) {
+        testCodec = new AbstractConfigCodec(Graph.Options.TRACK_REFERENCES, Graph.Options.TRACK_REFERENCES) {
             @Override
             public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
                 return Set.of();

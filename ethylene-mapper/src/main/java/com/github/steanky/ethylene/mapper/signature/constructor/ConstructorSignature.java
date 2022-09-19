@@ -9,10 +9,9 @@ import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Order;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
-import com.github.steanky.ethylene.mapper.signature.Signature;
-import com.github.steanky.ethylene.mapper.internal.TypeMappingCollection;
-import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
+import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +19,10 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Parameter;
 import java.util.*;
 
 /**
@@ -74,6 +76,12 @@ public class ConstructorSignature implements Signature {
         }
     }
 
+    private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
+        Name parameterName = parameter.getAnnotation(Name.class);
+        return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
+                Token.ofType(parameter.getParameterizedType()));
+    }
+
     @Override
     public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
         return resolveTypeCollection();
@@ -117,8 +125,8 @@ public class ConstructorSignature implements Signature {
             }
 
             try {
-                typedObjects.add(
-                        new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object)));
+                typedObjects.add(new TypedObject(name, Token.ofType(field.getGenericType()),
+                        FieldUtils.readField(field, object)));
             } catch (IllegalAccessException ignored) {
                 break;
             }
@@ -171,12 +179,6 @@ public class ConstructorSignature implements Signature {
     @Override
     public @NotNull Token<?> returnType() {
         return genericReturnType;
-    }
-
-    private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
-        Name parameterName = parameter.getAnnotation(Name.class);
-        return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
-                Token.ofType(parameter.getParameterizedType()));
     }
 
     private Class<?>[] resolveParameterTypes() {

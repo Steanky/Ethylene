@@ -13,16 +13,10 @@ import java.util.function.Supplier;
  * transformations.
  */
 public final class Graph {
-    private Graph() {
-        throw new UnsupportedOperationException();
-    }
-
     //shared empty accumulator which is just a no-op
     private static final Accumulator<?, ?> EMPTY_ACCUMULATOR = (Accumulator<Object, Object>) (o, o2, circular) -> {};
-
     //shared empty Output with null data and the empty accumulator
     private static final Output<?, ?> EMPTY_OUTPUT = new Output<>(null, EMPTY_ACCUMULATOR);
-
     //shared empty Node with an empty iterator and the empty output
     private static final Node<?, ?, ?> EMPTY_NODE = new Node<>(new Iterator<>() {
         @Override
@@ -36,14 +30,17 @@ public final class Graph {
         }
     }, emptyOutput());
 
+    private Graph() {
+        throw new UnsupportedOperationException();
+    }
+
     public static <TIn, TOut, TKey, TVisit> TOut process(TIn rootInput,
             @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
             @NotNull Predicate<? super TIn> containerPredicate,
             @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
             @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper,
             @NotNull Supplier<? extends Map<? super TVisit, TOut>> visitedSupplier,
-            @NotNull Supplier<? extends Deque<Node<TIn, TOut, TKey>>> stackSupplier,
-            int flags) {
+            @NotNull Supplier<? extends Deque<Node<TIn, TOut, TKey>>> stackSupplier, int flags) {
         if (!containerPredicate.test(rootInput)) {
             //if rootInput is a scalar, just return whatever the scalar mapper produces
             //there's nothing more to do
@@ -316,8 +313,8 @@ public final class Graph {
         }
 
         private void setResult(TKey key, TOut out) {
-            NodeResult<TKey, TOut> result = Objects.requireNonNullElseGet(this.result, () ->
-                    this.result = new NodeResult<>());
+            NodeResult<TKey, TOut> result = Objects.requireNonNullElseGet(this.result,
+                    () -> this.result = new NodeResult<>());
             result.key = key;
             result.out = out;
         }

@@ -14,24 +14,12 @@ public class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>> {
     TypeVariableMap(Map<TypeVariable<?>, Type> underlying) {
         if (underlying.isEmpty()) {
             tokenMap = Map.of();
-        }
-        else {
+        } else {
             tokenMap = new HashMap<>(underlying.size());
             for (Map.Entry<TypeVariable<?>, Type> entry : underlying.entrySet()) {
                 tokenMap.put(entry.getKey(), Token.ofType(entry.getValue()));
             }
         }
-    }
-
-    @NotNull
-    @Override
-    public Set<Entry<TypeVariable<?>, Token<?>>> entrySet() {
-        if (tokenMap.isEmpty()) {
-            return Set.of();
-        }
-
-        return Objects.requireNonNullElseGet(entrySet, () -> entrySet = Collections.unmodifiableSet(tokenMap
-                .entrySet()));
     }
 
     @Override
@@ -47,6 +35,17 @@ public class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>> {
     @Override
     public Token<?> get(Object key) {
         return tokenMap.get(key);
+    }
+
+    @NotNull
+    @Override
+    public Set<Entry<TypeVariable<?>, Token<?>>> entrySet() {
+        if (tokenMap.isEmpty()) {
+            return Set.of();
+        }
+
+        return Objects.requireNonNullElseGet(entrySet,
+                () -> entrySet = Collections.unmodifiableSet(tokenMap.entrySet()));
     }
 
     public @NotNull Map<TypeVariable<?>, Type> resolve() {

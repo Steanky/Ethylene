@@ -13,7 +13,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
 
 public class BasicTypeResolver implements TypeResolver {
     private static final Object PRESENT = new Object();
@@ -45,14 +47,14 @@ public class BasicTypeResolver implements TypeResolver {
             Objects.requireNonNull(implementation);
             Objects.requireNonNull(superclass);
             if (!TypeUtils.isAssignable(implementation, superclass)) {
-                throw new MapperException(
-                        "Implementation class '" + implementation.getTypeName() + "' is not assignable to superclass '" +
-                                superclass.getTypeName() + "'");
+                throw new MapperException("Implementation class '" + implementation.getTypeName() +
+                        "' is not assignable to superclass '" + superclass.getTypeName() + "'");
             }
 
             if (typeCache.getIfPresent(superclass) != null) {
-                throw new MapperException("An implementation class is already registered to superclass '" + superclass
-                        .getTypeName() + "'");
+                throw new MapperException(
+                        "An implementation class is already registered to superclass '" + superclass.getTypeName() +
+                                "'");
             }
 
             typeCache.put(superclass, new WeakReference<>(implementation));
@@ -142,8 +144,8 @@ public class BasicTypeResolver implements TypeResolver {
         };
 
         if (!elementType.isSubclassOf(type)) {
-            throw new MapperException("Element type '" + elementType + "' not compatible with '" + type.getTypeName() +
-                    "'");
+            throw new MapperException(
+                    "Element type '" + elementType + "' not compatible with '" + type.getTypeName() + "'");
         }
 
         return elementType;

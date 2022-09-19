@@ -7,11 +7,9 @@ import com.github.steanky.ethylene.mapper.annotation.Builder;
 import com.github.steanky.ethylene.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.signature.record.RecordSignatureBuilder;
-import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Objects;
 

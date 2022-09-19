@@ -20,6 +20,7 @@ final class InternalGenericArrayType implements GenericArrayType, WeakType {
 
     /**
      * Creates a new instance of this class from the given component type.
+     *
      * @param componentType the component type
      */
     InternalGenericArrayType(@NotNull Type componentType) {

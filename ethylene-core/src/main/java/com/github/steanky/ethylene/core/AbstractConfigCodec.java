@@ -51,21 +51,18 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         Objects.requireNonNull(input);
 
         try (input) {
-            return Graph.process(readObject(input), this::makeDecodeNode, this::isContainer,
-                    this::deserializeObject, Function.identity(), IdentityHashMap::new, ArrayDeque::new,
-                    graphTransformerDecodeOptions);
+            return Graph.process(readObject(input), this::makeDecodeNode, this::isContainer, this::deserializeObject,
+                    Function.identity(), IdentityHashMap::new, ArrayDeque::new, graphTransformerDecodeOptions);
         }
     }
 
-    protected @NotNull Graph.Node<ConfigElement, Object, String> makeEncodeNode(
-            @NotNull ConfigElement target) {
+    protected @NotNull Graph.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
         if (target.isNode()) {
             ConfigNode elementNode = target.asNode();
             return Graph.node(elementNode.entryCollection().iterator(), makeEncodeMap(elementNode.size()));
         } else if (target.isList()) {
             ConfigList elementList = target.asList();
-            return Graph.node(elementList.entryCollection().iterator(),
-                    makeEncodeCollection(elementList.size()));
+            return Graph.node(elementList.entryCollection().iterator(), makeEncodeCollection(elementList.size()));
         }
 
         throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());

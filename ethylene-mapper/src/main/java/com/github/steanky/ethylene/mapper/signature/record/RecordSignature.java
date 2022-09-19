@@ -7,10 +7,9 @@ import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
-import com.github.steanky.ethylene.mapper.signature.Signature;
-import com.github.steanky.ethylene.mapper.internal.TypeMappingCollection;
-import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
+import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +19,6 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -64,8 +62,9 @@ public class RecordSignature implements Signature {
 
         for (RecordComponent recordComponent : components) {
             try {
-                typedObjects.add(new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
-                        recordComponent.getAccessor().invoke(object)));
+                typedObjects.add(
+                        new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
+                                recordComponent.getAccessor().invoke(object)));
             } catch (IllegalAccessException | InvocationTargetException ignored) {
             }
         }

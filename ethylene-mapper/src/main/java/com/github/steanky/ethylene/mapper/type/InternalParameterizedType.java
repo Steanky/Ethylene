@@ -30,8 +30,8 @@ final class InternalParameterizedType implements ParameterizedType, WeakType {
     /**
      * Creates a new instance of this class.
      *
-     * @param rawClass the raw class of this generic type
-     * @param owner the owner, or enclosing, type
+     * @param rawClass      the raw class of this generic type
+     * @param owner         the owner, or enclosing, type
      * @param typeArguments the type arguments, which are not checked for compatibility with the number or bounds of the
      *                      raw class's type variables
      */
@@ -97,8 +97,7 @@ final class InternalParameterizedType implements ParameterizedType, WeakType {
         }
 
         if (obj instanceof ParameterizedType other) {
-            return Objects.equals(rawType, other.getRawType()) &&
-                    Objects.equals(ownerType, other.getOwnerType()) &&
+            return Objects.equals(rawType, other.getRawType()) && Objects.equals(ownerType, other.getOwnerType()) &&
                     Arrays.equals(typeArguments, other.getActualTypeArguments());
         }
 
