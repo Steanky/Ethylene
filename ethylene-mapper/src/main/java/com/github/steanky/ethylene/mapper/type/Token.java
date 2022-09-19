@@ -8,14 +8,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.*;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
-
-import java.lang.reflect.GenericArrayType;
 
 /**
  * Token may be used to retain complete, arbitrary type information at runtime. This includes generics, arrays, generic
@@ -94,12 +90,21 @@ public abstract class Token<T> implements Supplier<Type> {
     private Token(@NotNull Type type) {
         Objects.requireNonNull(type);
 
-        if (type instanceof TypeVariable<?>) {
-            throw new IllegalStateException("TypeVariable is not supported");
+        Type resolved = resolveType(type);
+        this.typeReference = new WeakReference<>(resolved);
+        this.typeName = resolved.getTypeName();
+    }
+
+    private static Type resolveType(Type input) {
+        if (input instanceof TypeVariable<?> variable) {
+            return variable.getBounds()[0];
+        }
+        else if (input instanceof WildcardType wildcardType) {
+            //interpret wildcards only by their upper bound
+            return wildcardType.getUpperBounds()[0];
         }
 
-        this.typeReference = new WeakReference<>(type);
-        this.typeName = type.getTypeName();
+        return input;
     }
 
     /**
@@ -127,12 +132,9 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("Expected non-null type parameter for '" + getClass().getTypeName() + "'");
         }
 
-        if (target instanceof TypeVariable<?>) {
-            throw new IllegalStateException("TypeVariable is not supported");
-        }
-
-        this.typeReference = new WeakReference<>(target);
-        this.typeName = target.getTypeName();
+        Type resolved = resolveType(target);
+        this.typeReference = new WeakReference<>(resolved);
+        this.typeName = resolved.getTypeName();
     }
 
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
@@ -327,27 +329,26 @@ public abstract class Token<T> implements Supplier<Type> {
         return TypeUtils.isArrayType(get());
     }
 
-    /**
-     * Determines if the type underlying this one is "raw" (a {@link Class}) rather than some other implementation of
-     * {@link Type}.
-     *
-     * @return true if this token represents a raw type, false otherwise
-     */
-    public final boolean isRaw() {
-        return get() instanceof Class<?>;
-    }
-
     public final boolean isParameterized() {
         return get() instanceof ParameterizedType;
     }
 
-    public final boolean assignable(@NotNull Token<?> toToken) {
+    public final boolean isSubclassOf(@NotNull Token<?> toToken) {
         return TypeUtils.isAssignable(get(), toToken.get());
     }
 
 
-    public final boolean assignable(@NotNull Class<?> toClass) {
+    public final boolean isSubclassOf(@NotNull Class<?> toClass) {
         return TypeUtils.isAssignable(get(), toClass);
+    }
+
+    public final boolean isSuperclassOf(@NotNull Token<?> toToken) {
+        return TypeUtils.isAssignable(toToken.get(), get());
+    }
+
+
+    public final boolean isSuperclassOf(@NotNull Class<?> toClass) {
+        return TypeUtils.isAssignable(toClass, get());
     }
 
     public final boolean isPrimitiveOrWrapper() {
@@ -377,7 +378,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
     public final @NotNull TypeVariableMap subtypeVariables(@NotNull Token<?> subtype) {
         Type type = get();
-        if (!subtype.assignable(this)) {
+        if (!subtype.isSubclassOf(this)) {
             throw new IllegalStateException("This token's type is not assignable to the given token's type");
         }
 
@@ -403,7 +404,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
     public final @NotNull TypeVariableMap supertypeVariables(@NotNull Token<?> supertype) {
         Type type = get();
-        if (!assignable(supertype)) {
+        if (!isSubclassOf(supertype)) {
             throw new IllegalArgumentException("Token type is not assignable to the supertype class");
         }
 

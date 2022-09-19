@@ -169,8 +169,8 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public @NotNull Type returnType() {
-        return genericReturnType.get();
+    public @NotNull Token<?> returnType() {
+        return genericReturnType;
     }
 
     private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {

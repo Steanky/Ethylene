@@ -35,7 +35,7 @@ public abstract class ContainerSignatureBase implements Signature {
             return cached;
         }
 
-        Class<?> rawClass = ReflectionUtils.rawType(containerType.get());
+        Class<?> rawClass = containerType.rawType();
         Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass, int.class);
 
         boolean parameterless;
@@ -115,8 +115,8 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
-    public @NotNull Type returnType() {
-        return containerType.get();
+    public @NotNull Token<?> returnType() {
+        return containerType;
     }
 
     protected abstract @NotNull Object makeBuildingObject(@NotNull ConfigContainer container);

@@ -117,8 +117,8 @@ public class RecordSignature implements Signature {
     }
 
     @Override
-    public @NotNull Type returnType() {
-        return genericReturnType.get();
+    public @NotNull Token<?> returnType() {
+        return genericReturnType;
     }
 
     private RecordComponent[] resolveComponents() {

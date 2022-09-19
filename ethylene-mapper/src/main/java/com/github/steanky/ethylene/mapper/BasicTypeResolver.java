@@ -141,7 +141,7 @@ public class BasicTypeResolver implements TypeResolver {
             }
         };
 
-        if (!elementType.assignable(type)) {
+        if (!elementType.isSubclassOf(type)) {
             throw new MapperException("Element type '" + elementType + "' not compatible with '" + type.getTypeName() +
                     "'");
         }

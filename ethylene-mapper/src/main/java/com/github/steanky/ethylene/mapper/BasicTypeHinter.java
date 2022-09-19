@@ -3,11 +3,8 @@ package com.github.steanky.ethylene.mapper;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.mapper.type.Token;
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
 
@@ -18,9 +15,9 @@ public class BasicTypeHinter implements TypeHinter {
 
     @Override
     public @NotNull ElementType getHint(@NotNull Token<?> type) {
-        if (type.assignable(Map.class) || type.assignable(Collection.class) || type.isArrayType()) {
+        if (type.isSubclassOf(Map.class) || type.isSubclassOf(Collection.class) || type.isArrayType()) {
             return ElementType.LIST;
-        } else if (type.isPrimitiveOrWrapper() || type.assignable(String.class)) {
+        } else if (type.isPrimitiveOrWrapper() || type.isSubclassOf(String.class)) {
             return ElementType.SCALAR;
         }
 
@@ -40,16 +37,17 @@ public class BasicTypeHinter implements TypeHinter {
                 }
 
                 //if toType is a superclass of Collection, returns true
-                yield TypeUtils.isAssignable(Collection.class, toType.get());
+                yield toType.isSuperclassOf(Collection.class);
             }
             case SCALAR -> {
-                if (element.isNull()) {
+                Object scalar = element.asScalar();
+                if (scalar == null) {
                     //null is assignable to all types, even non-scalars
                     yield true;
                 }
 
                 //simple assignability check
-                yield TypeUtils.isAssignable(element.asScalar().getClass(), toType.get());
+                yield toType.isSuperclassOf(scalar.getClass());
             }
         };
     }

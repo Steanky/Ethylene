@@ -4,10 +4,8 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.mapper.BasicTypeHinter;
 import com.github.steanky.ethylene.mapper.TypeHinter;
 import com.github.steanky.ethylene.mapper.type.Token;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
 import java.time.temporal.Temporal;
 
 /**
@@ -24,7 +22,7 @@ public class TomlTypeHinter extends BasicTypeHinter {
 
     @Override
     public @NotNull ElementType getHint(@NotNull Token<?> type) {
-        if (type.assignable(Temporal.class)) {
+        if (type.isSubclassOf(Temporal.class)) {
             return ElementType.SCALAR;
         }
 

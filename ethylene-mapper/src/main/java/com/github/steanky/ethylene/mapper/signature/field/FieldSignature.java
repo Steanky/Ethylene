@@ -230,8 +230,8 @@ public class FieldSignature implements Signature {
     }
 
     @Override
-    public @NotNull Type returnType() {
-        return genericReturnType.get();
+    public @NotNull Token<?> returnType() {
+        return genericReturnType;
     }
 
     private void finishObject(Object buildingObject, Object[] args) throws IllegalAccessException {

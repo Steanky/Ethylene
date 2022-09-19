@@ -27,10 +27,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     @Override
     public @NotNull MatchingSignature signature(@NotNull Token<?> typeToken, ConfigElement providedElement,
             Object providedObject) {
-        Type desiredType = typeToken.get();
-
         for (Signature signature : signatures) {
-            if (!TypeUtils.isAssignable(signature.returnType(), desiredType)) {
+            if (!signature.returnType().isSubclassOf(typeToken)) {
                 continue;
             }
 

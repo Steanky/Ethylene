@@ -12,7 +12,6 @@ import com.github.steanky.ethylene.mapper.signature.container.MapSignature;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -40,8 +39,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
 
     private void registerCustomSignatures(Collection<Signature> signatures) {
         for (Signature signature : signatures) {
-            customSignatureCache.get(ReflectionUtils.rawType(signature.returnType()), ignored ->
-                    new HashSet<>(1)).add(signature);
+            customSignatureCache.get(signature.returnType().rawType(), ignored -> new HashSet<>(1))
+                    .add(signature);
         }
     }
 
@@ -64,13 +63,13 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
                         Signature[] arraySignature = new Signature[] {new ArraySignature(token.componentType())};
                         yield new BasicSignatureMatcher(arraySignature, typeHinter);
                     } else {
-                        if (token.assignable(Collection.class)) {
+                        if (token.isSubclassOf(Collection.class)) {
                             Token<?> parameterized = token.parameterize(token.supertypeVariables(Collection.class));
                             Token<?>[] args = parameterized.actualTypeParameters();
                             Signature[] collectionSignature = new Signature[] {new CollectionSignature(args[0], token)};
 
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
-                        } else if (token.assignable(Map.class)) {
+                        } else if (token.isSubclassOf(Map.class)) {
                             Token<?> parameterized = token.parameterize(token.supertypeVariables(Map.class));
                             Token<?>[] args = parameterized.actualTypeParameters();
 

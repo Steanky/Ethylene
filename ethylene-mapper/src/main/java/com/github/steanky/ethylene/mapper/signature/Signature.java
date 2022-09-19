@@ -66,7 +66,7 @@ public interface Signature {
 
     @NotNull ElementType typeHint();
 
-    @NotNull Type returnType();
+    @NotNull Token<?> returnType();
 
     default int priority() {
         return 0;
@@ -219,8 +219,8 @@ public interface Signature {
                 }
 
                 @Override
-                public @NotNull Type returnType() {
-                    return returnType.get();
+                public @NotNull Token<?> returnType() {
+                    return returnType;
                 }
 
                 @Override
