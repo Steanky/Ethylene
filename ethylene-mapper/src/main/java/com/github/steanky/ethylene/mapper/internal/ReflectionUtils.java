@@ -20,7 +20,7 @@ import java.lang.reflect.WildcardType;
  * public API.
  */
 public class ReflectionUtils {
-    private static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
+    public static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
     /**
      * Extracts the actual generic type parameters from the specified {@link Type}, given a superclass.

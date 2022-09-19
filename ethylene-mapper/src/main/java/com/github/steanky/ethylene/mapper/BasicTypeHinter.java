@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
@@ -16,12 +17,10 @@ public class BasicTypeHinter implements TypeHinter {
     protected BasicTypeHinter() {}
 
     @Override
-    public @NotNull ElementType getHint(@NotNull Type type) {
-        if (TypeUtils.isAssignable(type, Map.class) || TypeUtils.isAssignable(type, Collection.class) ||
-                TypeUtils.isArrayType(type)) {
+    public @NotNull ElementType getHint(@NotNull Token<?> type) {
+        if (type.assignable(Map.class) || type.assignable(Collection.class) || type.isArrayType()) {
             return ElementType.LIST;
-        } else if (ClassUtils.isPrimitiveOrWrapper(TypeUtils.getRawType(type, null)) ||
-                TypeUtils.isAssignable(type, String.class)) {
+        } else if (type.isPrimitiveOrWrapper() || type.assignable(String.class)) {
             return ElementType.SCALAR;
         }
 
@@ -29,7 +28,7 @@ public class BasicTypeHinter implements TypeHinter {
     }
 
     @Override
-    public boolean assignable(@NotNull ConfigElement element, @NotNull Type toType) {
+    public boolean assignable(@NotNull ConfigElement element, @NotNull Token<?> toType) {
         return switch (element.type()) {
             //simplest case: if toType is a LIST or SCALAR and the element isn't, we are not assignable
             case NODE -> getHint(toType) == ElementType.NODE;
@@ -41,7 +40,7 @@ public class BasicTypeHinter implements TypeHinter {
                 }
 
                 //if toType is a superclass of Collection, returns true
-                yield TypeUtils.isAssignable(Collection.class, toType);
+                yield TypeUtils.isAssignable(Collection.class, toType.get());
             }
             case SCALAR -> {
                 if (element.isNull()) {
@@ -50,7 +49,7 @@ public class BasicTypeHinter implements TypeHinter {
                 }
 
                 //simple assignability check
-                yield TypeUtils.isAssignable(element.asScalar().getClass(), toType);
+                yield TypeUtils.isAssignable(element.asScalar().getClass(), toType.get());
             }
         };
     }

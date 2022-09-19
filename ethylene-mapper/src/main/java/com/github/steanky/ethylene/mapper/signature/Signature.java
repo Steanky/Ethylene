@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -41,7 +42,7 @@ public interface Signature {
         return new TypedObject(null, type, value);
     }
 
-    @NotNull Iterable<Entry<String, Type>> argumentTypes();
+    @NotNull Iterable<Entry<String, Token<?>>> argumentTypes();
 
     @NotNull Collection<TypedObject> objectData(@NotNull Object object);
 
@@ -151,7 +152,7 @@ public interface Signature {
         }
 
         public @NotNull Signature build() {
-            Collection<Entry<String, Type>> argumentTypes = new TypeMappingCollection(this.argumentTypes);
+            Collection<Entry<String, Token<?>>> argumentTypes = List.copyOf(this.argumentTypes);
             IntFunction<? extends ConfigContainer> containerFunction = this.containerFunction;
             ToIntFunction<? super ConfigElement> lengthFunction = this.lengthFunction;
             boolean matchNames = this.matchNames;
@@ -162,7 +163,7 @@ public interface Signature {
 
             return new Signature() {
                 @Override
-                public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
+                public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
                     return argumentTypes;
                 }
 

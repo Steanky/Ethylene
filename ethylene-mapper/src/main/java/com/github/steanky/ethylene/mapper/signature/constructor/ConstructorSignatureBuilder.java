@@ -32,7 +32,7 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
                 }
             }
 
-            signatures[j++] = new ConstructorSignature(constructor, Token.of(type));
+            signatures[j++] = new ConstructorSignature(constructor, Token.ofType(type));
         }
 
         if (j == 0) {

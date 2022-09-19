@@ -57,7 +57,7 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
+    public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
         return () -> new Iterator<>() {
             @Override
             public boolean hasNext() {
@@ -65,8 +65,8 @@ public abstract class ContainerSignatureBase implements Signature {
             }
 
             @Override
-            public Entry<String, Type> next() {
-                return Entry.of(entry.getFirst(), entry.getSecond().get());
+            public Entry<String, Token<?>> next() {
+                return Entry.of(entry.getFirst(), entry.getSecond());
             }
         };
     }

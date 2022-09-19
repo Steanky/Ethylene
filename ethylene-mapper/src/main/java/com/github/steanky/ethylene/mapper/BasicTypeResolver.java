@@ -6,7 +6,6 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
@@ -14,12 +13,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 
 public class BasicTypeResolver implements TypeResolver {
     private static final Object PRESENT = new Object();
+    private static final Token<?> ARRAY_LIST = Token.ofClass(ArrayList.class).parameterize(Object.class);
 
     private final TypeHinter typeHinter;
 
@@ -63,12 +61,11 @@ public class BasicTypeResolver implements TypeResolver {
     }
 
     @Override
-    public @NotNull Type resolveType(@NotNull Type type, @Nullable ConfigElement element) {
+    public @NotNull Token<?> resolveType(@NotNull Token<?> type, @Nullable ConfigElement element) {
         Objects.requireNonNull(type);
 
-        Class<?> raw = ReflectionUtils.rawType(type);
-        ElementType hint = typeHinter.getHint(raw);
-        if (raw.isArray() || raw.isPrimitive()) {
+        ElementType hint = typeHinter.getHint(type);
+        if (type.isArrayType() || type.isPrimitiveOrWrapper()) {
             if (element != null && !hint.compatible(element)) {
                 throw new MapperException("Incompatible type assignment '" + hint + "' to '" + type + "'");
             }
@@ -76,17 +73,17 @@ public class BasicTypeResolver implements TypeResolver {
             return type;
         }
 
+        Class<?> raw = type.rawType();
         Reference<Class<?>> classReference = exactCache.getIfPresent(raw);
         if (classReference != null) {
             Class<?> referent = classReference.get();
             if (referent != null) {
                 //exact cache had a hit, we can avoid walking the class hierarchy
-                if (type instanceof ParameterizedType parameterizedType) {
-                    return Token.parameterize(referent, TypeUtils.determineTypeArguments(referent, parameterizedType))
-                            .get();
+                if (type.isParameterized()) {
+                    return Token.ofClass(referent).parameterize(type.subtypeVariables(referent));
                 }
 
-                return referent;
+                return Token.ofClass(referent);
             }
 
             //this should not happen, if the entry has no reference to the class, the cache shouldn't either
@@ -98,8 +95,8 @@ public class BasicTypeResolver implements TypeResolver {
             for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
                 Reference<Class<?>> superclassReference = typeCache.getIfPresent(superclass);
                 if (superclassReference != null) {
-                    Class<?> ref = superclassReference.get();
-                    if (ref == null) {
+                    Class<?> referent = superclassReference.get();
+                    if (referent == null) {
                         //should not be possible
                         typeCache.invalidate(superclass);
                         continue;
@@ -109,11 +106,11 @@ public class BasicTypeResolver implements TypeResolver {
                     //generic parameters might be different next time, though, and we'll have to construct them
                     exactCache.put(raw, superclassReference);
 
-                    if (type instanceof ParameterizedType parameterizedType) {
-                        return Token.parameterize(ref, TypeUtils.determineTypeArguments(ref, parameterizedType)).get();
+                    if (type.isParameterized()) {
+                        return Token.ofClass(referent).parameterize(type.subtypeVariables(referent));
                     }
 
-                    return ref;
+                    return Token.ofClass(referent);
                 }
             }
 
@@ -130,12 +127,9 @@ public class BasicTypeResolver implements TypeResolver {
         //try to guess what type we need based on the element type and any generic information we have
         //this is a last-ditch effort to get a type that MIGHT be what we want, if this fails, throw an exception
         //failure occurs when the resulting type is not assignable to the desired type
-        Type elementType = switch (element.type()) {
-            case NODE -> raw;
-            case LIST -> {
-                Type[] params = ReflectionUtils.extractGenericTypeParameters(type, raw);
-                yield Token.parameterize(ArrayList.class, params.length == 0 ? Object.class : params[0]).get();
-            }
+        Token<?> elementType = switch (element.type()) {
+            case NODE -> Token.ofClass(raw);
+            case LIST -> ARRAY_LIST;
             case SCALAR -> {
                 Object scalar = element.asScalar();
                 if (scalar == null) {
@@ -143,11 +137,11 @@ public class BasicTypeResolver implements TypeResolver {
                     yield type;
                 }
 
-                yield scalar.getClass();
+                yield Token.ofClass(scalar.getClass());
             }
         };
 
-        if (!TypeUtils.isAssignable(elementType, type)) {
+        if (!elementType.assignable(type)) {
             throw new MapperException("Element type '" + elementType + "' not compatible with '" + type.getTypeName() +
                     "'");
         }

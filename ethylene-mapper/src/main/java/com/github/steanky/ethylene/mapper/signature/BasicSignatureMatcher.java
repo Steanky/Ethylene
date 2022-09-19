@@ -1,12 +1,11 @@
 package com.github.steanky.ethylene.mapper.signature;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.TypeHinter;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,8 +25,10 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     }
 
     @Override
-    public @NotNull MatchingSignature signature(@NotNull Type desiredType, ConfigElement providedElement,
+    public @NotNull MatchingSignature signature(@NotNull Token<?> typeToken, ConfigElement providedElement,
             Object providedObject) {
+        Type desiredType = typeToken.get();
+
         for (Signature signature : signatures) {
             if (!TypeUtils.isAssignable(signature.returnType(), desiredType)) {
                 continue;
@@ -62,8 +63,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                             objectDataMap.put(entry.name(), entry);
                         }
 
-                        Iterable<Entry<String, Type>> signatureTypes = signature.argumentTypes();
-                        for (Entry<String, Type> entry : signatureTypes) {
+                        Iterable<Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
+                        for (Entry<String, Token<?>> entry : signatureTypes) {
                             Signature.TypedObject typedObject = objectDataMap.get(entry.getFirst());
                             if (typedObject == null) {
                                 break outer;
@@ -77,11 +78,11 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                     if (matchTypeHints) {
                         Iterator<Signature.TypedObject> typeCollectionIterator = typeCollection.iterator();
-                        Iterator<Entry<String, Type>> signatureIterator = signature.argumentTypes().iterator();
+                        Iterator<Entry<String, Token<?>>> signatureIterator = signature.argumentTypes().iterator();
 
                         while (typeCollectionIterator.hasNext()) {
-                            if (typeHinter.getHint(typeCollectionIterator.next().type().get()) !=
-                                    typeHinter.getHint(signatureIterator.next().getSecond())) {
+                            if (typeHinter.getHint(typeCollectionIterator.next().type()) != typeHinter
+                                    .getHint(signatureIterator.next().getSecond())) {
                                 break outer;
                             }
                         }
@@ -114,7 +115,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
             outer:
             {
-                Iterable<Entry<String, Type>> signatureTypes;
+                Iterable<Entry<String, Token<?>>> signatureTypes;
                 Collection<ConfigElement> targetCollection;
                 if (matchNames) {
                     signatureTypes = signature.argumentTypes();
@@ -123,7 +124,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     targetCollection = new ArrayList<>(elementCollection.size());
 
                     //this ensures that the order is respected when matching names
-                    for (Entry<String, Type> entry : signatureTypes) {
+                    for (Entry<String, Token<?>> entry : signatureTypes) {
                         String name = entry.getFirst();
                         ConfigElement element = providedNode.get(name);
                         if (element == null) {
@@ -138,7 +139,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                 if (matchTypeHints) {
                     Iterator<ConfigElement> elementIterator = targetCollection.iterator();
-                    Iterator<Entry<String, Type>> signatureTypeIterator = signature.argumentTypes().iterator();
+                    Iterator<Entry<String, Token<?>>> signatureTypeIterator = signature.argumentTypes().iterator();
 
                     while (elementIterator.hasNext()) {
                         if (!typeHinter.assignable(elementIterator.next(), signatureTypeIterator.next().getSecond())) {

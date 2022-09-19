@@ -48,8 +48,7 @@ public class ConstructorSignature implements Signature {
     private Reference<Constructor<?>> constructorReference;
     private boolean matchesNames;
 
-    //types collection does not actually retain strong references to types, it is either empty or a TypeMappingCollection
-    private Collection<Entry<String, Type>> types;
+    private Collection<Entry<String, Token<?>>> types;
 
     //similarly to constructors, fields are not tied to the classloader, keep a soft reference and be prepared to
     //re-create as necessary
@@ -76,13 +75,13 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
+    public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
         return resolveTypeCollection();
     }
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
-        Collection<Entry<String, Type>> types = resolveTypeCollection();
+        Collection<Entry<String, Token<?>>> types = resolveTypeCollection();
 
         Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
@@ -92,7 +91,7 @@ public class ConstructorSignature implements Signature {
         int i = 0;
         Collection<TypedObject> typedObjects = new ArrayList<>(types.size());
         Map<String, Field> fieldMap = null;
-        for (Entry<String, Type> typeEntry : types) {
+        for (Entry<String, Token<?>> typeEntry : types) {
             Field field;
             String name;
             if (matchesNames) {
@@ -119,7 +118,7 @@ public class ConstructorSignature implements Signature {
 
             try {
                 typedObjects.add(
-                        new TypedObject(name, Token.of(field.getGenericType()), FieldUtils.readField(field, object)));
+                        new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object)));
             } catch (IllegalAccessException ignored) {
                 break;
             }
@@ -177,7 +176,7 @@ public class ConstructorSignature implements Signature {
     private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
         Name parameterName = parameter.getAnnotation(Name.class);
         return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
-                Token.of(parameter.getParameterizedType()));
+                Token.ofType(parameter.getParameterizedType()));
     }
 
     private Class<?>[] resolveParameterTypes() {
@@ -244,7 +243,7 @@ public class ConstructorSignature implements Signature {
         return fieldMap;
     }
 
-    private Collection<Entry<String, Type>> resolveTypeCollection() {
+    private Collection<Entry<String, Token<?>>> resolveTypeCollection() {
         if (types != null) {
             return types;
         }
@@ -261,7 +260,7 @@ public class ConstructorSignature implements Signature {
             Parameter first = parameters[0];
             Entry<String, Token<?>> entry = makeEntry(first, first.isNamePresent());
             matchesNames = entry.getFirst() != null;
-            return types = new TypeMappingCollection(List.of(entry));
+            return types = List.of(entry);
         }
 
         //use a backing ArrayList for n > 1 length
@@ -285,6 +284,6 @@ public class ConstructorSignature implements Signature {
             entryList.add(entry);
         }
 
-        return types = new TypeMappingCollection(entryList);
+        return types = List.copyOf(entryList);
     }
 }

@@ -14,6 +14,6 @@ public class FieldSignatureBuilder implements SignatureBuilder {
 
     @Override
     public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
-        return new Signature[] {new FieldSignature(Token.of(type))};
+        return new Signature[] {new FieldSignature(Token.ofType(type))};
     }
 }

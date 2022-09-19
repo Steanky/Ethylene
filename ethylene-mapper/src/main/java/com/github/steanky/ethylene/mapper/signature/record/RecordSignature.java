@@ -38,7 +38,7 @@ public class RecordSignature implements Signature {
     private Reference<RecordComponent[]> recordComponentsReference = new SoftReference<>(null);
 
     //safe, does not actually retain strong references to Type objects
-    private Collection<Entry<String, Type>> argumentTypes;
+    private Collection<Entry<String, Token<?>>> argumentTypes;
 
     public RecordSignature(@NotNull Token<?> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
@@ -53,7 +53,7 @@ public class RecordSignature implements Signature {
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
+    public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
         return resolveArgumentTypes();
     }
 
@@ -64,7 +64,7 @@ public class RecordSignature implements Signature {
 
         for (RecordComponent recordComponent : components) {
             try {
-                typedObjects.add(new TypedObject(recordComponent.getName(), Token.of(recordComponent.getGenericType()),
+                typedObjects.add(new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
                         recordComponent.getAccessor().invoke(object)));
             } catch (IllegalAccessException | InvocationTargetException ignored) {
             }
@@ -145,7 +145,7 @@ public class RecordSignature implements Signature {
         return types;
     }
 
-    private Collection<Entry<String, Type>> resolveArgumentTypes() {
+    private Collection<Entry<String, Token<?>>> resolveArgumentTypes() {
         if (argumentTypes != null) {
             return argumentTypes;
         }
@@ -157,15 +157,15 @@ public class RecordSignature implements Signature {
 
         if (recordComponents.length == 1) {
             RecordComponent component = recordComponents[0];
-            return argumentTypes = List.of(Entry.of(component.getName(), component.getGenericType()));
+            return argumentTypes = List.of(Entry.of(component.getName(), Token.ofType(component.getGenericType())));
         }
 
         List<Entry<String, Token<?>>> underlyingList = new ArrayList<>(recordComponents.length);
         for (RecordComponent component : recordComponents) {
-            underlyingList.add(Entry.of(component.getName(), Token.of(component.getGenericType())));
+            underlyingList.add(Entry.of(component.getName(), Token.ofType(component.getGenericType())));
         }
 
-        return argumentTypes = new TypeMappingCollection(underlyingList);
+        return argumentTypes = List.copyOf(underlyingList);
     }
 
     private Constructor<?> resolveConstructor() {

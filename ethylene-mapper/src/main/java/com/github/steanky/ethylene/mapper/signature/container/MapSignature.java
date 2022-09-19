@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class MapSignature extends ContainerSignatureBase {
     public MapSignature(@NotNull Token<?> keyType, @NotNull Token<?> valueType, @NotNull Token<?> mapType) {
-        super(Token.parameterize(Map.Entry.class, keyType.get(), valueType.get()), mapType);
+        super(Token.ofClass(Map.Entry.class).parameterize(keyType, valueType), mapType);
     }
 
     @SuppressWarnings("unchecked")

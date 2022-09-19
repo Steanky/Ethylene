@@ -15,7 +15,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -40,8 +39,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     @Override
     public T dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
         try {
-            Type rootType = typeResolver.resolveType(token.get(), element);
-            SignatureMatcher rootFactory = signatureMatcherSource.matcherFor(rootType, element);
+            Token<?> rootType = typeResolver.resolveType(token, element);
+            SignatureMatcher rootFactory = signatureMatcherSource.matcherFor(rootType);
 
             return (T) Graph.process(new ClassEntry(rootType, element, rootFactory), nodeEntry -> {
                         ConfigElement nodeElement = nodeEntry.element;
@@ -52,7 +51,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         int signatureSize = matchingSignature.size();
 
                         Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
-                        Iterator<Entry<String, Type>> typeEntryIterator = signature.argumentTypes().iterator();
+                        Iterator<Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
 
                         Object buildingObject =
                                 signature.hasBuildingObject() ? signature.initBuildingObject(nodeElement) : null;
@@ -75,8 +74,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 }
 
                                 ConfigElement nextElement = elementIterator.next();
-                                Type nextType = typeResolver.resolveType(typeEntryIterator.next().getSecond(), nextElement);
-                                SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType, nextElement);
+                                Token<?> nextType = typeResolver.resolveType(typeEntryIterator.next().getSecond(), nextElement);
+                                SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType);
 
                                 return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
                             }
@@ -109,14 +108,14 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     @Override
     public @NotNull ConfigElement elementFromData(T data) throws ConfigProcessException {
         try {
-            Type rootType = typeResolver.resolveType(token.get(), null);
-            SignatureMatcher rootMatcher = signatureMatcherSource.matcherFor(rootType, null);
+            Token<?> rootType = typeResolver.resolveType(token, null);
+            SignatureMatcher rootMatcher = signatureMatcherSource.matcherFor(rootType);
             ElementEntry rootEntry = new ElementEntry(rootType, data, rootMatcher);
 
             return Graph.process(rootEntry, nodeEntry -> {
                         Object nodeObject = nodeEntry.object;
-                        MatchingSignature typeSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type, null,
-                                nodeObject);
+                        MatchingSignature typeSignature = nodeEntry.signatureMatcher.signature(nodeEntry.type,
+                                null, nodeObject);
                         Signature signature = typeSignature.signature();
                         int size = typeSignature.size();
 
@@ -140,8 +139,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 }
 
                                 Signature.TypedObject typedObject = typedObjectIterator.next();
-                                Type objectType = typeResolver.resolveType(typedObject.type().get(), null);
-                                SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType, null);
+                                Token<?> objectType = typeResolver.resolveType(typedObject.type(), null);
+                                SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
 
                                 return Entry.of(typedObject.name(),
                                         new ElementEntry(objectType, typedObject.value(), thisMatcher));
@@ -156,8 +155,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         }));
                     }, potentialContainer -> {
                         //runtime type is passed to TypeHinter: this should be safe since it doesn't care about generics
-                        return potentialContainer.object != null &&
-                                typeHinter.getHint(potentialContainer.object.getClass()) != ElementType.SCALAR;
+                        return potentialContainer.object != null && typeHinter.getHint(Token.ofClass(potentialContainer
+                                .object.getClass())) != ElementType.SCALAR;
                     }, scalar -> new MutableObject<>(scalarSource.make(scalar.object)), entry -> entry.object,
                     Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES |
                             Graph.Options.LAZY_ACCUMULATION).getValue();
@@ -166,16 +165,16 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
         }
     }
 
-    private record ElementEntry(Type type, Object object, SignatureMatcher signatureMatcher,
+    private record ElementEntry(Token<?> type, Object object, SignatureMatcher signatureMatcher,
             Mutable<ConfigElement> element) {
-        private ElementEntry(Type type, Object object, SignatureMatcher signatureMatcher) {
+        private ElementEntry(Token<?> type, Object object, SignatureMatcher signatureMatcher) {
             this(type, object, signatureMatcher, new MutableObject<>(null));
         }
     }
 
-    private record ClassEntry(Type type, ConfigElement element, SignatureMatcher signatureMatcher,
+    private record ClassEntry(Token<?> type, ConfigElement element, SignatureMatcher signatureMatcher,
             Mutable<Object> reference) {
-        private ClassEntry(Type type, ConfigElement element, SignatureMatcher signatureMatcher) {
+        private ClassEntry(Token<?> type, ConfigElement element, SignatureMatcher signatureMatcher) {
             this(type, element, signatureMatcher, new MutableObject<>(null));
         }
     }

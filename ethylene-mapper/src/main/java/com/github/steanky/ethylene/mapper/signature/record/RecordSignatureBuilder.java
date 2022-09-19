@@ -14,6 +14,6 @@ public class RecordSignatureBuilder implements SignatureBuilder {
 
     @Override
     public @NotNull Signature @NotNull [] buildSignatures(@NotNull Type type) {
-        return new Signature[] {new RecordSignature(Token.of(type))};
+        return new Signature[] {new RecordSignature(Token.ofType(type))};
     }
 }

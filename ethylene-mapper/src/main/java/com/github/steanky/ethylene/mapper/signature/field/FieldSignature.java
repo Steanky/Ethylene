@@ -21,10 +21,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class FieldSignature implements Signature {
     private final Token<?> genericReturnType;
@@ -35,8 +32,7 @@ public class FieldSignature implements Signature {
     //fields are lazily initialized by initTypes
     private Reference<SignatureData> signatureDataReference = new SoftReference<>(null);
 
-    //this is safe, does not actually retain strong refs to Type objects (see TypeMappingCollection)
-    private Collection<Entry<String, Type>> types;
+    private Collection<Entry<String, Token<?>>> types;
 
     public FieldSignature(@NotNull Token<?> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
@@ -136,7 +132,7 @@ public class FieldSignature implements Signature {
         return cached;
     }
 
-    private Collection<Entry<String, Type>> resolveTypes() {
+    private Collection<Entry<String, Token<?>>> resolveTypes() {
         if (types != null) {
             return types;
         }
@@ -146,16 +142,21 @@ public class FieldSignature implements Signature {
             return types = List.of();
         }
 
-        Collection<Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
-        for (Field field : data.fields) {
-            typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), Token.of(field.getGenericType())));
+        if (data.fields.size() == 1) {
+            Field first = data.fields.get(0);
+            return types = List.of(Entry.of(ReflectionUtils.getFieldName(first), Token.ofType(first.getGenericType())));
         }
 
-        return types = new TypeMappingCollection(typeCollection);
+        Collection<Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
+        for (Field field : data.fields) {
+            typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), Token.ofType(field.getGenericType())));
+        }
+
+        return types = Collections.unmodifiableCollection(typeCollection);
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Type>> argumentTypes() {
+    public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
         return resolveTypes();
     }
 
@@ -169,7 +170,7 @@ public class FieldSignature implements Signature {
 
             try {
                 typedObjects.add(
-                        new TypedObject(name, Token.of(field.getGenericType()), FieldUtils.readField(field, object)));
+                        new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object)));
             } catch (IllegalAccessException ignored) {
             }
         }

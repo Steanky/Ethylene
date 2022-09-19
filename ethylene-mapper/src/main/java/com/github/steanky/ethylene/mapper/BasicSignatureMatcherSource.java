@@ -2,7 +2,6 @@ package com.github.steanky.ethylene.mapper;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.signature.BasicSignatureMatcher;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
@@ -15,7 +14,6 @@ import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -48,34 +46,33 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     }
 
     @Override
-    public SignatureMatcher matcherFor(@NotNull Type resolvedType, @Nullable ConfigElement element) {
-        return signatureCache.get(resolvedType, type -> {
-            Class<?> raw = ReflectionUtils.rawType(type);
+    public SignatureMatcher matcherFor(@NotNull Token<?> token) {
+        return signatureCache.get(token.get(), ignored -> {
+            Type type = token.get();
 
-            for (Class<?> superclass : ClassUtils.hierarchy(raw, ClassUtils.Interfaces.INCLUDE)) {
+            for (Class<?> superclass : ClassUtils.hierarchy(token.rawType(), ClassUtils.Interfaces.INCLUDE)) {
                 Set<Signature> signatures = customSignatureCache.getIfPresent(superclass);
                 if (signatures != null) {
                     return new BasicSignatureMatcher(signatures.toArray(EMPTY_SIGNATURE_ARRAY), typeHinter);
                 }
             }
 
-            return switch (typeHinter.getHint(type)) {
+            return switch (typeHinter.getHint(token)) {
                 case LIST -> {
-                    if (TypeUtils.isArrayType(type)) {
-                        Signature[] arraySignature = new Signature[] {
-                                new ArraySignature(Token.of(TypeUtils.getArrayComponentType(type)))};
+                    if (token.isArrayType()) {
+                        Signature[] arraySignature = new Signature[] {new ArraySignature(token.componentType())};
                         yield new BasicSignatureMatcher(arraySignature, typeHinter);
                     } else {
-                        if (Collection.class.isAssignableFrom(raw)) {
+                        if (token.assignable(Collection.class)) {
                             Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Collection.class);
-                            Signature[] collectionSignature = new Signature[] {
-                                    new CollectionSignature(Token.of(types[0]), Token.of(type))};
+                            Signature[] collectionSignature = new Signature[] {new CollectionSignature(Token
+                                    .ofType(types[0]), Token.ofType(type))};
 
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
-                        } else if (Map.class.isAssignableFrom(raw)) {
+                        } else if (token.assignable(Map.class)) {
                             Type[] types = ReflectionUtils.extractGenericTypeParameters(type, Map.class);
-                            Signature[] mapSignature = new Signature[] {
-                                    new MapSignature(Token.of(types[0]), Token.of(types[1]), Token.of(type))};
+                            Signature[] mapSignature = new Signature[] {new MapSignature(Token.ofType(types[0]),
+                                    Token.ofType(types[1]), Token.ofType(type))};
                             yield new BasicSignatureMatcher(mapSignature, typeHinter);
                         }
                     }
