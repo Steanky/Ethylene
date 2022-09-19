@@ -261,11 +261,17 @@ public abstract class Token<T> implements Supplier<Type> {
         return result;
     }
 
+    /**
+     * Creates a new token referencing the result of parameterizing this token's type with the provided parameters. If
+     * this token already represents a parameterized type, its raw class is used.
+     *
+     * @param params the parameters to use
+     * @return a new token containing the result of parameterizing this type
+     * @throws IllegalArgumentException if the given number of types differs from the amount required by this type
+     */
     public final @NotNull Token<?> parameterize(@NotNull Token<?> @NotNull ... params) {
         Objects.requireNonNull(params);
-
-        Class<?> raw = rawType();
-        return parameterizeInternal(raw, null, extractTypes(params));
+        return parameterizeInternal(rawType(), null, extractTypes(params));
     }
 
     /**
@@ -289,6 +295,13 @@ public abstract class Token<T> implements Supplier<Type> {
         return ReflectionUtils.resolve(typeReference, typeName);
     }
 
+    /**
+     * Convenience overload for {@link Token#parameterize(Token[])}. Uses {@link Class} objects directly instead of
+     * tokens.
+     *
+     * @param params the parameters to use
+     * @return a new token containing the result of parameterizing this type
+     */
     public final @NotNull Token<?> parameterize(@NotNull Class<?> @NotNull ... params) {
         Objects.requireNonNull(params);
 
@@ -296,6 +309,14 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(raw, null, params);
     }
 
+    /**
+     * Parameterizes this token by using types obtained from the given {@link TypeVariableMap}. If some necessary types
+     * cannot be found, an {@link IllegalArgumentException} will be thrown.
+     *
+     * @param typeVariables the map of type variables from which to extract type parameters
+     * @return a new token containing the result of parameterizing this type
+     * @throws IllegalArgumentException if some necessary types cannot be found
+     */
     public final @NotNull Token<?> parameterize(@NotNull TypeVariableMap typeVariables) {
         Objects.requireNonNull(typeVariables);
 
@@ -305,6 +326,17 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(raw, null, extractTypeArgumentsFrom(mappings, parameters));
     }
 
+    /**
+     * Creates a new token referencing the result of parameterizing this token's type with the provided parameters and
+     * owner. If this token already represents a parameterized type, its raw class is used. The owner type must be
+     * assignable to the raw type of the enclosing class.
+     *
+     * @param owner the owner class
+     * @param params the parameters to use
+     * @return a new token containing the result of parameterizing this type
+     * @throws IllegalArgumentException if the given number of types differs from the amount required by this type, or
+     * if the given owner type is not assignable to the raw type of the enclosing class
+     */
     public final @NotNull Token<?> parameterizeWithOwner(@NotNull Token<?> owner,
         @NotNull Token<?> @NotNull ... params) {
         Objects.requireNonNull(owner);
@@ -313,6 +345,12 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(rawType(), owner.get(), extractTypes(params));
     }
 
+    /**
+     * Convenience overload for {@link Token#parameterizeWithOwner(Token, Token[])}.
+     * @param owner the owner class
+     * @param params the parameters to use
+     * @return a new token containing the result of parameterizing this type
+     */
     public final @NotNull Token<?> parameterizeWithOwner(@NotNull Class<?> owner,
         @NotNull Class<?> @NotNull ... params) {
         Objects.requireNonNull(owner);
@@ -321,6 +359,15 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(rawType(), owner, params);
     }
 
+    /**
+     * Convenience overload for {@link Token#parameterizeWithOwner(Token, Token[])}. Extracts required type variables
+     * from the given {@link TypeVariableMap}.
+     *
+     * @param owner the owner class
+     * @param typeVariables the parameters to use
+     * @return a new token containing the result of parameterizing this type
+     * @throws IllegalArgumentException if the given TypeVariableMap does not contain some necessary types
+     */
     public final @NotNull Token<?> parameterizeWithOwner(@NotNull Token<?> owner,
         @NotNull TypeVariableMap typeVariables) {
         Objects.requireNonNull(owner);
@@ -331,6 +378,13 @@ public abstract class Token<T> implements Supplier<Type> {
         return parameterizeInternal(raw, owner.get(), extractTypeArgumentsFrom(typeVariables.resolve(), parameters));
     }
 
+    /**
+     * Convenience overload for {@link Token#parameterizeWithOwner(Token, TypeVariableMap)}.
+     * @param owner the owner class
+     * @param typeVariables the parameters to use
+     * @return a new token containing the result of parameterizing this type
+     * @throws IllegalArgumentException if the given TypeVariableMap does not contain some necessary types
+     */
     public final @NotNull Token<?> parameterizeWithOwner(@NotNull Class<?> owner,
         @NotNull TypeVariableMap typeVariables) {
         Objects.requireNonNull(owner);
@@ -383,29 +437,46 @@ public abstract class Token<T> implements Supplier<Type> {
         return TypeUtils.isArrayType(get());
     }
 
+    /**
+     * Checks if this type is a subclass of the given class.
+     *
+     * @param type the potential superclass
+     * @return true if this type subclasses (is assignable to) the given class, false otherwise
+     */
     public final boolean isSubclassOf(@NotNull Class<?> type) {
         Objects.requireNonNull(type);
         return TypeUtils.isAssignable(get(), type);
     }
 
+    /**
+     * Checks if this type is a superclass of the given type.
+     *
+     * @param type the potential subclass
+     * @return true if this type superclasses (is assignable from) the given type, false otherwise
+     */
     public final boolean isSuperclassOf(@NotNull Token<?> type) {
         Objects.requireNonNull(type);
         return TypeUtils.isAssignable(type.get(), get());
     }
 
 
+    /**
+     * Checks if this type is a superclass of the given class.
+     *
+     * @param type the potential subclass
+     * @return true if this type superclasses (is assignable from) the given class, false otherwise
+     */
     public final boolean isSuperclassOf(@NotNull Class<?> type) {
         Objects.requireNonNull(type);
         return TypeUtils.isAssignable(type, get());
     }
 
+    /**
+     * Determines if this token represents a primitive or wrapper type.
+     * @return true if this token represents a primitive or primitive wrapper type, false otherwise
+     */
     public final boolean isPrimitiveOrWrapper() {
         return ClassUtils.isPrimitiveOrWrapper(rawType());
-    }
-
-    @SuppressWarnings("unchecked")
-    public final <TReturn> @NotNull Token<TReturn> cast() {
-        return (Token<TReturn>) this;
     }
 
     public final @NotNull Token<?>[] actualTypeParameters() {
@@ -424,10 +495,21 @@ public abstract class Token<T> implements Supplier<Type> {
         return tokens;
     }
 
+    /**
+     * Determines if this token represents a parameterized type or not.
+     * @return true if the token's underlying type extends {@link ParameterizedType}, false otherwise
+     */
     public final boolean isParameterized() {
         return get() instanceof ParameterizedType;
     }
 
+    /**
+     * Extracts a map containing all of the {@link TypeVariable} instances between this (parameterized) token and the
+     * given subtype.
+     *
+     * @param subtype the subtype token, whose type must be assignable to this token's type
+     * @return a {@link TypeVariableMap} of {@link TypeVariable}s to {@link Type}s
+     */
     public final @NotNull TypeVariableMap subtypeVariables(@NotNull Token<?> subtype) {
         Objects.requireNonNull(subtype);
 
@@ -443,11 +525,23 @@ public abstract class Token<T> implements Supplier<Type> {
         return new TypeVariableMap(TypeUtils.determineTypeArguments(subtype.rawType(), (ParameterizedType) type));
     }
 
+    /**
+     * Checks if this type is a subclass of the given type..
+     *
+     * @param type the potential superclass
+     * @return true if this type subclasses (is assignable to) the given type, false otherwise
+     */
     public final boolean isSubclassOf(@NotNull Token<?> type) {
         Objects.requireNonNull(type);
         return TypeUtils.isAssignable(get(), type.get());
     }
 
+    /**
+     * Convenience overload for {@link Token#subtypeVariables(Token)}.
+     *
+     * @param subtype the subtype class, which must be assignable to this token's type
+     * @return a {@link TypeVariableMap} of {@link TypeVariable}s to {@link Type}s
+     */
     public final @NotNull TypeVariableMap subtypeVariables(@NotNull Class<?> subtype) {
         Objects.requireNonNull(subtype);
 
@@ -463,6 +557,13 @@ public abstract class Token<T> implements Supplier<Type> {
         return new TypeVariableMap(TypeUtils.determineTypeArguments(subtype, (ParameterizedType) type));
     }
 
+    /**
+     * Extracts a map containing all of the {@link TypeVariable} instances between this token and the given
+     * (parameterized) supertype.
+     *
+     * @param supertype the supertype token, to which this token's type must be assignable
+     * @return a {@link TypeVariableMap} of {@link TypeVariable}s to {@link Type}s
+     */
     public final @NotNull TypeVariableMap supertypeVariables(@NotNull Token<?> supertype) {
         Objects.requireNonNull(supertype);
 
@@ -474,6 +575,12 @@ public abstract class Token<T> implements Supplier<Type> {
         return new TypeVariableMap(TypeUtils.getTypeArguments(type, supertype.rawType()));
     }
 
+    /**
+     * Convenience overload for {@link Token#supertypeVariables(Token)}.
+     *
+     * @param supertype the supertype {@link Class}.
+     * @return a {@link TypeVariableMap} of {@link TypeVariable}s to {@link Type}s
+     */
     public final @NotNull TypeVariableMap supertypeVariables(@NotNull Class<?> supertype) {
         Objects.requireNonNull(supertype);
 
@@ -485,6 +592,12 @@ public abstract class Token<T> implements Supplier<Type> {
         return new TypeVariableMap(TypeUtils.getTypeArguments(type, supertype));
     }
 
+    /**
+     * Gets the name of the type underlying this token. This method will not throw a {@link TypeNotPresentException} if
+     * the underlying type has been garbage collected.
+     *
+     * @return the name of the underlying type
+     */
     public final @NotNull String getTypeName() {
         return typeName;
     }
