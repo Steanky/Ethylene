@@ -15,8 +15,8 @@ import java.util.Objects;
  * object. Not part of the public API.
  */
 final class InternalGenericArrayType implements GenericArrayType, WeakType {
-    private final Reference<Type> typeReference;
-    private final String typeName;
+    private final Reference<Type> componentTypeReference;
+    private final String componentTypeName;
 
     /**
      * Creates a new instance of this class from the given component type.
@@ -24,13 +24,13 @@ final class InternalGenericArrayType implements GenericArrayType, WeakType {
      * @param componentType the component type
      */
     InternalGenericArrayType(@NotNull Type componentType) {
-        this.typeReference = new WeakReference<>(Objects.requireNonNull(componentType));
-        this.typeName = componentType.getTypeName();
+        this.componentTypeReference = new WeakReference<>(Objects.requireNonNull(componentType));
+        this.componentTypeName = componentType.getTypeName();
     }
 
     @Override
     public Type getGenericComponentType() {
-        return ReflectionUtils.resolve(typeReference, typeName);
+        return ReflectionUtils.resolve(componentTypeReference, componentTypeName);
     }
 
     @Override

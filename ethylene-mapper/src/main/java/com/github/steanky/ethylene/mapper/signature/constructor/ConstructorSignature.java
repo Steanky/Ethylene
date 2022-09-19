@@ -286,6 +286,6 @@ public class ConstructorSignature implements Signature {
             entryList.add(entry);
         }
 
-        return types = List.copyOf(entryList);
+        return types = Collections.unmodifiableList(entryList);
     }
 }

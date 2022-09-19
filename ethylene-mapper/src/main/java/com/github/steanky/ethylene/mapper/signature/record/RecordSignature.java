@@ -19,10 +19,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class RecordSignature implements Signature {
     private final Token<?> genericReturnType;
@@ -164,7 +161,7 @@ public class RecordSignature implements Signature {
             underlyingList.add(Entry.of(component.getName(), Token.ofType(component.getGenericType())));
         }
 
-        return argumentTypes = List.copyOf(underlyingList);
+        return argumentTypes = Collections.unmodifiableCollection(underlyingList);
     }
 
     private Constructor<?> resolveConstructor() {
