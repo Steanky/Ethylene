@@ -29,7 +29,7 @@ public final class ConfigPrimitive implements ConfigElement {
 
     private static Object validateType(Object object) {
         if (!(object == null || object instanceof String || object instanceof Number || object instanceof Boolean ||
-                object instanceof Character)) {
+            object instanceof Character)) {
             throw new IllegalArgumentException("Object " + object + " not a valid type for ConfigPrimitive");
         }
 
@@ -42,6 +42,36 @@ public final class ConfigPrimitive implements ConfigElement {
         }
 
         throw new IllegalStateException("Element may not be converted to " + classType.getSimpleName());
+    }
+
+    @Override
+    public boolean isNull() {
+        return object == null;
+    }
+
+    @Override
+    public @NotNull ElementType type() {
+        return ElementType.SCALAR;
+    }
+
+    @Override
+    public boolean isBoolean() {
+        return object instanceof Boolean;
+    }
+
+    @Override
+    public boolean asBoolean() {
+        return convert(object, Boolean.class);
+    }
+
+    @Override
+    public boolean isNumber() {
+        return object instanceof Number;
+    }
+
+    @Override
+    public @NotNull Number asNumber() {
+        return convert(object, Number.class);
     }
 
     @Override
@@ -60,31 +90,6 @@ public final class ConfigPrimitive implements ConfigElement {
     }
 
     @Override
-    public boolean isNumber() {
-        return object instanceof Number;
-    }
-
-    @Override
-    public @NotNull Number asNumber() {
-        return convert(object, Number.class);
-    }
-
-    @Override
-    public boolean isBoolean() {
-        return object instanceof Boolean;
-    }
-
-    @Override
-    public boolean asBoolean() {
-        return convert(object, Boolean.class);
-    }
-
-    @Override
-    public boolean isNull() {
-        return object == null;
-    }
-
-    @Override
     public boolean isScalar() {
         return true;
     }
@@ -92,11 +97,6 @@ public final class ConfigPrimitive implements ConfigElement {
     @Override
     public Object asScalar() {
         return object;
-    }
-
-    @Override
-    public @NotNull ElementType type() {
-        return ElementType.SCALAR;
     }
 
     @Override

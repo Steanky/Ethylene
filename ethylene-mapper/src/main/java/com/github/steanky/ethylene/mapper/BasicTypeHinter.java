@@ -11,7 +11,8 @@ import java.util.Map;
 public class BasicTypeHinter implements TypeHinter {
     public static final TypeHinter INSTANCE = new BasicTypeHinter();
 
-    protected BasicTypeHinter() {}
+    protected BasicTypeHinter() {
+    }
 
     @Override
     public @NotNull ElementType getHint(@NotNull Token<?> type) {

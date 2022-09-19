@@ -118,45 +118,6 @@ public class FieldSignature implements Signature {
         return participatingFields;
     }
 
-    private SignatureData resolveData() {
-        SignatureData cached = signatureDataReference.get();
-        if (cached != null) {
-            return cached;
-        }
-
-        Class<?> rawClass = ReflectionUtils.resolve(rawTypeReference, rawTypeName);
-        boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
-        Constructor<?> constructor = getConstructor(rawClass, widenAccess);
-        List<Field> participatingFields = getFields(rawClass, widenAccess);
-
-        cached = new SignatureData(constructor, participatingFields);
-        signatureDataReference = new SoftReference<>(cached);
-        return cached;
-    }
-
-    private Collection<Entry<String, Token<?>>> resolveTypes() {
-        if (types != null) {
-            return types;
-        }
-
-        SignatureData data = resolveData();
-        if (data.fields.isEmpty()) {
-            return types = List.of();
-        }
-
-        if (data.fields.size() == 1) {
-            Field first = data.fields.get(0);
-            return types = List.of(Entry.of(ReflectionUtils.getFieldName(first), Token.ofType(first.getGenericType())));
-        }
-
-        Collection<Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
-        for (Field field : data.fields) {
-            typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), Token.ofType(field.getGenericType())));
-        }
-
-        return types = Collections.unmodifiableCollection(typeCollection);
-    }
-
     @Override
     public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
         return resolveTypes();
@@ -171,8 +132,8 @@ public class FieldSignature implements Signature {
             String name = ReflectionUtils.getFieldName(field);
 
             try {
-                typedObjects.add(new TypedObject(name, Token.ofType(field.getGenericType()),
-                        FieldUtils.readField(field, object)));
+                typedObjects.add(
+                    new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object)));
             } catch (IllegalAccessException ignored) {
             }
         }
@@ -236,11 +197,43 @@ public class FieldSignature implements Signature {
         return genericReturnType;
     }
 
-    private void finishObject(Object buildingObject, Object[] args) throws IllegalAccessException {
-        SignatureData data = resolveData();
-        for (int i = 0; i < args.length; i++) {
-            data.fields.get(i).set(buildingObject, args[i]);
+    private Collection<Entry<String, Token<?>>> resolveTypes() {
+        if (types != null) {
+            return types;
         }
+
+        SignatureData data = resolveData();
+        if (data.fields.isEmpty()) {
+            return types = List.of();
+        }
+
+        if (data.fields.size() == 1) {
+            Field first = data.fields.get(0);
+            return types = List.of(Entry.of(ReflectionUtils.getFieldName(first), Token.ofType(first.getGenericType())));
+        }
+
+        Collection<Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
+        for (Field field : data.fields) {
+            typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), Token.ofType(field.getGenericType())));
+        }
+
+        return types = Collections.unmodifiableCollection(typeCollection);
+    }
+
+    private SignatureData resolveData() {
+        SignatureData cached = signatureDataReference.get();
+        if (cached != null) {
+            return cached;
+        }
+
+        Class<?> rawClass = ReflectionUtils.resolve(rawTypeReference, rawTypeName);
+        boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
+        Constructor<?> constructor = getConstructor(rawClass, widenAccess);
+        List<Field> participatingFields = getFields(rawClass, widenAccess);
+
+        cached = new SignatureData(constructor, participatingFields);
+        signatureDataReference = new SoftReference<>(cached);
+        return cached;
     }
 
     private Object getBuildingObject() {
@@ -253,5 +246,13 @@ public class FieldSignature implements Signature {
         }
     }
 
-    private record SignatureData(Constructor<?> constructor, List<Field> fields) {}
+    private void finishObject(Object buildingObject, Object[] args) throws IllegalAccessException {
+        SignatureData data = resolveData();
+        for (int i = 0; i < args.length; i++) {
+            data.fields.get(i).set(buildingObject, args[i]);
+        }
+    }
+
+    private record SignatureData(Constructor<?> constructor, List<Field> fields) {
+    }
 }

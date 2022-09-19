@@ -21,6 +21,6 @@ class ConfigNodeTest {
 
     @Test
     void throwsWhenNonStringKey() {
-        assertThrows(IllegalArgumentException.class, () -> ConfigNode.of(new Object[] {1, "value"}));
+        assertThrows(IllegalArgumentException.class, () -> ConfigNode.of(new Object[]{1, "value"}));
     }
 }

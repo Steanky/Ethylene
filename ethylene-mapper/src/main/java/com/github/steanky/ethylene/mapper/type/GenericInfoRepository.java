@@ -53,7 +53,8 @@ class GenericInfoRepository {
     //initially has a tiny capacity since we don't expect that many bound types per registered class
     private final Map<Type, Type> canonicalTypes = new ConcurrentHashMap<>(2);
 
-    private GenericInfoRepository() {}
+    private GenericInfoRepository() {
+    }
 
     /**
      * Binds the given type to the owner type. If an equal type has previously been created, the old type is returned.
@@ -67,6 +68,6 @@ class GenericInfoRepository {
      */
     static @NotNull Type bind(@NotNull Class<?> owner, @NotNull WeakType type) {
         return store.get(owner, ignored -> new GenericInfoRepository()).canonicalTypes.computeIfAbsent(type,
-                Function.identity());
+            Function.identity());
     }
 }

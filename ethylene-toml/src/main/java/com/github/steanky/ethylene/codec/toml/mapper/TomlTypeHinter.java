@@ -18,7 +18,8 @@ public class TomlTypeHinter extends BasicTypeHinter {
      */
     public static final TypeHinter INSTANCE = new TomlTypeHinter();
 
-    private TomlTypeHinter() {}
+    private TomlTypeHinter() {
+    }
 
     @Override
     public @NotNull ElementType getHint(@NotNull Token<?> type) {

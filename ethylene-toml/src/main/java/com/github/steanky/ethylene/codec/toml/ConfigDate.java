@@ -29,6 +29,11 @@ public class ConfigDate implements ConfigElement {
     }
 
     @Override
+    public ElementType type() {
+        return ElementType.SCALAR;
+    }
+
+    @Override
     public boolean isString() {
         return true;
     }
@@ -47,11 +52,6 @@ public class ConfigDate implements ConfigElement {
     @Override
     public @NotNull Object asScalar() {
         return temporal;
-    }
-
-    @Override
-    public ElementType type() {
-        return ElementType.SCALAR;
     }
 
     /**

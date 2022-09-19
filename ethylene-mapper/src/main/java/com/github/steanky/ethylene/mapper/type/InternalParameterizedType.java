@@ -55,27 +55,6 @@ final class InternalParameterizedType implements ParameterizedType, WeakType {
     }
 
     @Override
-    public Type[] getActualTypeArguments() {
-        Type[] types = new Type[typeArgumentReferences.length];
-        for (int i = 0; i < typeArgumentReferences.length; i++) {
-            types[i] = ReflectionUtils.resolve(typeArgumentReferences[i], typeArgumentNames[i]);
-        }
-
-        //array may not contain null elements (resolve will throw exception if referent is null)
-        return types;
-    }
-
-    @Override
-    public Type getRawType() {
-        return ReflectionUtils.resolve(rawClassReference, rawClassName);
-    }
-
-    @Override
-    public Type getOwnerType() {
-        return ownerTypeReference == null ? null : ReflectionUtils.resolve(ownerTypeReference, ownerTypeName);
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(getRawType(), getOwnerType(), Arrays.hashCode(getActualTypeArguments()));
     }
@@ -99,7 +78,7 @@ final class InternalParameterizedType implements ParameterizedType, WeakType {
 
         if (obj instanceof ParameterizedType other) {
             return Objects.equals(rawType, other.getRawType()) && Objects.equals(ownerType, other.getOwnerType()) &&
-                    Arrays.equals(typeArguments, other.getActualTypeArguments());
+                Arrays.equals(typeArguments, other.getActualTypeArguments());
         }
 
         return false;
@@ -108,5 +87,26 @@ final class InternalParameterizedType implements ParameterizedType, WeakType {
     @Override
     public String toString() {
         return TypeUtils.toString(this);
+    }
+
+    @Override
+    public Type[] getActualTypeArguments() {
+        Type[] types = new Type[typeArgumentReferences.length];
+        for (int i = 0; i < typeArgumentReferences.length; i++) {
+            types[i] = ReflectionUtils.resolve(typeArgumentReferences[i], typeArgumentNames[i]);
+        }
+
+        //array may not contain null elements (resolve will throw exception if referent is null)
+        return types;
+    }
+
+    @Override
+    public Type getRawType() {
+        return ReflectionUtils.resolve(rawClassReference, rawClassName);
+    }
+
+    @Override
+    public Type getOwnerType() {
+        return ownerTypeReference == null ? null : ReflectionUtils.resolve(ownerTypeReference, ownerTypeName);
     }
 }

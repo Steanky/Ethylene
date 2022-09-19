@@ -43,8 +43,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     private final FileVisitOption[] fileVisitOptions;
 
     public DirectoryTreeConfigSource(@NotNull Path rootPath, @NotNull CodecResolver codecResolver,
-            @NotNull PathNameInspector pathNameInspector, @NotNull ConfigCodec preferredCodec,
-            @Nullable Executor executor, boolean supportSymlinks) {
+        @NotNull PathNameInspector pathNameInspector, @NotNull ConfigCodec preferredCodec, @Nullable Executor executor,
+        boolean supportSymlinks) {
         this.rootPath = Objects.requireNonNull(rootPath);
         this.codecResolver = Objects.requireNonNull(codecResolver);
         this.pathNameInspector = Objects.requireNonNull(pathNameInspector);
@@ -52,11 +52,11 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
         this.preferredExtensionName = preferredCodec.getPreferredExtension();
         this.preferredExtension =
-                preferredExtensionName.isEmpty() ? preferredExtensionName : "." + preferredExtensionName;
+            preferredExtensionName.isEmpty() ? preferredExtensionName : "." + preferredExtensionName;
         this.executor = executor;
         this.supportSymlinks = supportSymlinks;
         this.fileVisitOptions =
-                supportSymlinks ? new FileVisitOption[] {FileVisitOption.FOLLOW_LINKS} : EMPTY_FILE_VISIT_OPTION_ARRAY;
+            supportSymlinks ? new FileVisitOption[]{FileVisitOption.FOLLOW_LINKS} : EMPTY_FILE_VISIT_OPTION_ARRAY;
     }
 
     private static Object getKey(Path path, boolean followSymlinks) {
@@ -64,7 +64,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             //try to use file keys if possible (supported by the system & accessible by us)
             //readAttributes follows symlinks (so a symlink to a file and the file itself will have the same key)
             LinkOption[] options =
-                    followSymlinks ? EMPTY_LINK_OPTION_ARRAY : new LinkOption[] {LinkOption.NOFOLLOW_LINKS};
+                followSymlinks ? EMPTY_LINK_OPTION_ARRAY : new LinkOption[]{LinkOption.NOFOLLOW_LINKS};
             Object fileKey = Files.readAttributes(path, BasicFileAttributes.class, options).fileKey();
             if (fileKey != null) {
                 return fileKey;
@@ -105,11 +105,6 @@ public class DirectoryTreeConfigSource implements ConfigSource {
         return path.toString();
     }
 
-    private boolean filterPath(Path rootPath, Path childPath) {
-        return !childPath.equals(rootPath) &&
-                (Files.isDirectory(childPath) || codecResolver.hasCodec(pathNameInspector.getExtension(childPath)));
-    }
-
     @Override
     public @NotNull CompletableFuture<ConfigElement> read() {
         return FutureUtils.completeCallable(() -> {
@@ -119,41 +114,41 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
             ExceptionHandler<IOException> exceptionHandler = new ExceptionHandler<>(IOException.class);
             ConfigElement element = Graph.process(rootPath, directoryEntry -> {
-                        //gets all files that are directories, not the current path, or a file with an extension we can
-                        //understand
-                        List<Path> pathList = exceptionHandler.get(() -> {
-                            try (Stream<Path> paths = Files.walk(directoryEntry, 1, fileVisitOptions)) {
-                                return paths.filter(path -> filterPath(directoryEntry, path)).toList();
-                            }
-                        }, List::of);
+                    //gets all files that are directories, not the current path, or a file with an extension we can
+                    //understand
+                    List<Path> pathList = exceptionHandler.get(() -> {
+                        try (Stream<Path> paths = Files.walk(directoryEntry, 1, fileVisitOptions)) {
+                            return paths.filter(path -> filterPath(directoryEntry, path)).toList();
+                        }
+                    }, List::of);
 
-                        ConfigNode node = new LinkedConfigNode(pathList.size());
-                        return Graph.node(new Iterator<>() {
-                            private final Iterator<Path> pathIterator = pathList.listIterator();
+                    ConfigNode node = new LinkedConfigNode(pathList.size());
+                    return Graph.node(new Iterator<>() {
+                        private final Iterator<Path> pathIterator = pathList.listIterator();
 
-                            @Override
-                            public boolean hasNext() {
-                                return pathIterator.hasNext();
-                            }
-
-                            @Override
-                            public Entry<String, Path> next() {
-                                Path path = pathIterator.next();
-                                return Entry.of(pathNameInspector.getName(path), path);
-                            }
-                        }, Graph.output(node,
-                                (Graph.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(s,
-                                        configElement)));
-                    }, Files::isDirectory, entry -> {
-                        String extension = pathNameInspector.getExtension(entry);
-                        if (codecResolver.hasCodec(extension)) {
-                            return exceptionHandler.get(() -> Configuration.read(entry, codecResolver.resolve(extension)),
-                                    () -> ConfigPrimitive.NULL);
+                        @Override
+                        public boolean hasNext() {
+                            return pathIterator.hasNext();
                         }
 
-                        return ConfigPrimitive.NULL;
-                    }, entry -> getKey(entry, supportSymlinks), HashMap::new, ArrayDeque::new,
-                    Graph.Options.TRACK_ALL_REFERENCES);
+                        @Override
+                        public Entry<String, Path> next() {
+                            Path path = pathIterator.next();
+                            return Entry.of(pathNameInspector.getName(path), path);
+                        }
+                    }, Graph.output(node,
+                        (Graph.Accumulator<String, ConfigElement>) (s, configElement, circular) -> node.put(s,
+                            configElement)));
+                }, Files::isDirectory, entry -> {
+                    String extension = pathNameInspector.getExtension(entry);
+                    if (codecResolver.hasCodec(extension)) {
+                        return exceptionHandler.get(() -> Configuration.read(entry, codecResolver.resolve(extension)),
+                            () -> ConfigPrimitive.NULL);
+                    }
+
+                    return ConfigPrimitive.NULL;
+                }, entry -> getKey(entry, supportSymlinks), HashMap::new, ArrayDeque::new,
+                Graph.Options.TRACK_ALL_REFERENCES);
 
             exceptionHandler.throwIfPresent();
             return element;
@@ -173,7 +168,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 //if element is not a node, do the same
                 String extension = pathNameInspector.getExtension(rootPath);
                 Configuration.write(rootPath, element,
-                        codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) : preferredCodec);
+                    codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) : preferredCodec);
                 return null;
             }
 
@@ -208,13 +203,14 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         //path already exists, is either an extensionless file or directory
                         //if it's a directory, we'll iterate into it later
                         //if it's a file, we'll write to it as a scalar
-                        paths.add(Entry.of(null,
-                                new OutputInfo(targetPath, entryElement, Files.isDirectory(targetPath))));
+                        paths.add(
+                            Entry.of(null, new OutputInfo(targetPath, entryElement, Files.isDirectory(targetPath))));
                     } else {
                         //path doesn't exist, but that could be because of an extension
                         //filter the existing paths to those whose name matches
-                        List<Path> targets = existingPaths.stream()
-                                .filter(path -> pathNameInspector.getName(path).equals(elementName)).toList();
+                        List<Path> targets =
+                            existingPaths.stream().filter(path -> pathNameInspector.getName(path).equals(elementName))
+                                .toList();
 
                         if (targets.isEmpty()) {
                             //no file found at all - we'll write a new one using our preferred extension
@@ -257,8 +253,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         //make a symlink to the target file/directory instead of making a copy
                         //strip the extension if the link target is a directory
                         Path link = outputInfo.isDirectory ?
-                                actualInfo.path.getParent().resolve(pathNameInspector.getName(actualInfo.path)) :
-                                actualInfo.path;
+                            actualInfo.path.getParent().resolve(pathNameInspector.getName(actualInfo.path)) :
+                            actualInfo.path;
 
                         exceptionHandler.run(() -> Files.createSymbolicLink(link, outputInfo.path));
                     } else if (!outputInfo.isDirectory) {
@@ -267,7 +263,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         String extension = pathNameInspector.getExtension(actualInfo.path);
 
                         exceptionHandler.run(() -> Configuration.write(actualInfo.path, actualInfo.element,
-                                codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) : preferredCodec));
+                            codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) : preferredCodec));
                     }
                 }));
             }, potentialContainer -> {
@@ -283,5 +279,11 @@ public class DirectoryTreeConfigSource implements ConfigSource {
         }, executor);
     }
 
-    private record OutputInfo(Path path, ConfigElement element, boolean isDirectory) {}
+    private boolean filterPath(Path rootPath, Path childPath) {
+        return !childPath.equals(rootPath) &&
+            (Files.isDirectory(childPath) || codecResolver.hasCodec(pathNameInspector.getExtension(childPath)));
+    }
+
+    private record OutputInfo(Path path, ConfigElement element, boolean isDirectory) {
+    }
 }

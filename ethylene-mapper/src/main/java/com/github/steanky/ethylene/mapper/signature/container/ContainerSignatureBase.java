@@ -119,5 +119,6 @@ public abstract class ContainerSignatureBase implements Signature {
 
     protected abstract @NotNull Object makeBuildingObject(@NotNull ConfigContainer container);
 
-    protected record ConstructorInfo(boolean parameterless, Constructor<?> constructor) {}
+    protected record ConstructorInfo(boolean parameterless, Constructor<?> constructor) {
+    }
 }

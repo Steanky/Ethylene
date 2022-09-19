@@ -157,7 +157,7 @@ public interface ConfigProcessor<TData> {
      * @return a ConfigProcessor which can convert enum constants
      */
     static <TEnum extends Enum<?>> @NotNull ConfigProcessor<TEnum> enumProcessor(
-            @NotNull Class<? extends TEnum> enumClass) {
+        @NotNull Class<? extends TEnum> enumClass) {
         return new EnumConfigProcessor<>(enumClass);
     }
 
@@ -171,7 +171,7 @@ public interface ConfigProcessor<TData> {
      * @return a ConfigProcessor which can convert enum constants
      */
     static <TEnum extends Enum<?>> @NotNull ConfigProcessor<TEnum> enumProcessor(
-            @NotNull Class<? extends TEnum> enumClass, boolean caseSensitive) {
+        @NotNull Class<? extends TEnum> enumClass, boolean caseSensitive) {
         return new EnumConfigProcessor<>(enumClass, caseSensitive);
     }
 
@@ -185,7 +185,7 @@ public interface ConfigProcessor<TData> {
      * @return a minimal ConfigProcessor implementation
      */
     static <TReturn> @NotNull ConfigProcessor<TReturn> emptyProcessor(
-            @NotNull Supplier<? extends TReturn> returnSupplier) {
+        @NotNull Supplier<? extends TReturn> returnSupplier) {
         return new ConfigProcessor<>() {
             @Override
             public TReturn dataFromElement(@NotNull ConfigElement element) {
@@ -213,8 +213,8 @@ public interface ConfigProcessor<TData> {
      * @return a new ConfigProcessor which can serialize/deserialize the desired kind of map
      */
     static <TKey, TValue, TMap extends Map<TKey, TValue>> @NotNull ConfigProcessor<TMap> mapProcessor(
-            @NotNull ConfigProcessor<TKey> keyProcessor, @NotNull ConfigProcessor<TValue> valueProcessor,
-            @NotNull IntFunction<? extends TMap> mapFunction) {
+        @NotNull ConfigProcessor<TKey> keyProcessor, @NotNull ConfigProcessor<TValue> valueProcessor,
+        @NotNull IntFunction<? extends TMap> mapFunction) {
         Objects.requireNonNull(keyProcessor);
         Objects.requireNonNull(valueProcessor);
         Objects.requireNonNull(mapFunction);
@@ -231,7 +231,7 @@ public interface ConfigProcessor<TData> {
 
                     ConfigNode entryNode = entry.asNode();
                     map.put(keyProcessor.dataFromElement(entryNode.getElementOrThrow("key")),
-                            valueProcessor.dataFromElement(entryNode.getElementOrThrow("value")));
+                        valueProcessor.dataFromElement(entryNode.getElementOrThrow("value")));
                 }
 
                 return map;
@@ -271,6 +271,15 @@ public interface ConfigProcessor<TData> {
     @NotNull ConfigElement elementFromData(TData data) throws ConfigProcessException;
 
     /**
+     * Convenience method that calls {@link ConfigProcessor#mapProcessor(IntFunction)} with {@code HashMap::new}.
+     *
+     * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to a Map
+     */
+    default @NotNull ConfigProcessor<Map<String, TData>> mapProcessor() {
+        return mapProcessor(HashMap::new);
+    }
+
+    /**
      * Creates a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects,
      * and vice-versa.
      *
@@ -279,7 +288,7 @@ public interface ConfigProcessor<TData> {
      * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to String-keyed Map objects
      */
     default <M extends Map<String, TData>> @NotNull ConfigProcessor<M> mapProcessor(
-            @NotNull IntFunction<? extends M> mapFunction) {
+        @NotNull IntFunction<? extends M> mapFunction) {
         Objects.requireNonNull(mapFunction, "mapFunction");
 
         return new ConfigProcessor<>() {
@@ -307,12 +316,13 @@ public interface ConfigProcessor<TData> {
     }
 
     /**
-     * Convenience method that calls {@link ConfigProcessor#mapProcessor(IntFunction)} with {@code HashMap::new}.
+     * Convenience overload for {@link ConfigProcessor#collectionProcessor(IntFunction)} which uses
+     * {@code ArrayList::new} for its IntFunction.
      *
-     * @return a new ConfigProcessor capable of converting {@link ConfigElement} instances to a Map
+     * @return a list ConfigProcessor
      */
-    default @NotNull ConfigProcessor<Map<String, TData>> mapProcessor() {
-        return mapProcessor(HashMap::new);
+    default @NotNull ConfigProcessor<List<TData>> listProcessor() {
+        return collectionProcessor(ArrayList::new);
     }
 
     /**
@@ -324,7 +334,7 @@ public interface ConfigProcessor<TData> {
      * @return a new ConfigProcessor which can process collections of elements
      */
     default <TCollection extends Collection<TData>> @NotNull ConfigProcessor<TCollection> collectionProcessor(
-            @NotNull IntFunction<? extends TCollection> collectionSupplier) {
+        @NotNull IntFunction<? extends TCollection> collectionSupplier) {
         Objects.requireNonNull(collectionSupplier);
 
         return new ConfigProcessor<>() {
@@ -349,16 +359,6 @@ public interface ConfigProcessor<TData> {
                 return list;
             }
         };
-    }
-
-    /**
-     * Convenience overload for {@link ConfigProcessor#collectionProcessor(IntFunction)} which uses
-     * {@code ArrayList::new} for its IntFunction.
-     *
-     * @return a list ConfigProcessor
-     */
-    default @NotNull ConfigProcessor<List<TData>> listProcessor() {
-        return collectionProcessor(ArrayList::new);
     }
 
     /**

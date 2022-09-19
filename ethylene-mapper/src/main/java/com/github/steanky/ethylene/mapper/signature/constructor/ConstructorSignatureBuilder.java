@@ -12,7 +12,8 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
     public static final ConstructorSignatureBuilder INSTANCE = new ConstructorSignatureBuilder();
     private static final Signature[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
 
-    private ConstructorSignatureBuilder() {}
+    private ConstructorSignatureBuilder() {
+    }
 
     @Override
     public @NotNull Signature @NotNull [] buildSignatures(@NotNull Token<?> type) {
@@ -20,7 +21,7 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
 
         boolean widenAccess = rawType.isAnnotationPresent(Widen.class);
         Constructor<?>[] candidateConstructors =
-                widenAccess ? rawType.getDeclaredConstructors() : rawType.getConstructors();
+            widenAccess ? rawType.getDeclaredConstructors() : rawType.getConstructors();
         Signature[] signatures = new Signature[candidateConstructors.length];
         int j = 0;
         for (Constructor<?> constructor : candidateConstructors) {

@@ -16,8 +16,8 @@ class DirectoryTreeConfigSourceTest {
     @Test
     void readWriteEquivalent() throws IOException {
         ConfigNode testNode = ConfigNode.of("root",
-                ConfigNode.of("children", ConfigNode.of("children", ConfigNode.of("key", "value")), "children2",
-                        ConfigNode.of("key2", "value2")));
+            ConfigNode.of("children", ConfigNode.of("children", ConfigNode.of("key", "value")), "children2",
+                ConfigNode.of("key2", "value2")));
         testNode.put("reference", testNode);
 
         JsonCodec jsonCodec = new JsonCodec();
@@ -25,8 +25,8 @@ class DirectoryTreeConfigSourceTest {
         codecResolver.registerCodec(jsonCodec);
 
         Path root = Files.createTempDirectory("DirectoryTreeConfigSourceTest_output");
-        DirectoryTreeConfigSource directoryTreeConfigSource = new DirectoryTreeConfigSource(root, codecResolver,
-                new BasicPathNameInspector(), jsonCodec, null, true);
+        DirectoryTreeConfigSource directoryTreeConfigSource =
+            new DirectoryTreeConfigSource(root, codecResolver, new BasicPathNameInspector(), jsonCodec, null, true);
         directoryTreeConfigSource.write(testNode).join();
 
         ConfigElement element = directoryTreeConfigSource.read().join();

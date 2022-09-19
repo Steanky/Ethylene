@@ -33,7 +33,7 @@ public class FileConfigLoader<TData> extends ProcessingConfigLoader<TData> {
      * @throws IllegalArgumentException if path represents a directory
      */
     FileConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
-            @NotNull ConfigSource bridge, @NotNull Path path) {
+        @NotNull ConfigSource bridge, @NotNull Path path) {
         super(processor, defaultData, bridge);
         this.path = Objects.requireNonNull(path);
     }

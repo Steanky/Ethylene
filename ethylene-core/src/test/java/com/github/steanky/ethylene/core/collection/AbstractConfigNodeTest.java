@@ -16,7 +16,8 @@ class AbstractConfigNodeTest {
         innerList = new ArrayConfigList();
         ConfigNode innerNode = new LinkedConfigNode();
 
-        populatedNode = new AbstractConfigNode(new HashMap<>()) {};
+        populatedNode = new AbstractConfigNode(new HashMap<>()) {
+        };
         populatedNode.put("int", new ConfigPrimitive(10));
         populatedNode.put("string", new ConfigPrimitive("string"));
         populatedNode.put("list", innerList);
@@ -46,9 +47,11 @@ class AbstractConfigNodeTest {
     @SuppressWarnings("CollectionAddedToSelf")
     @Test
     void toStringTest() {
-        assertEquals("$0{}", new AbstractConfigNode(new HashMap<>()) {}.toString());
+        assertEquals("$0{}", new AbstractConfigNode(new HashMap<>()) {
+        }.toString());
 
-        AbstractConfigNode node = new AbstractConfigNode(new LinkedHashMap<>()) {};
+        AbstractConfigNode node = new AbstractConfigNode(new LinkedHashMap<>()) {
+        };
         node.put("self", node);
 
         assertEquals("$0{self=$0}", node.toString());

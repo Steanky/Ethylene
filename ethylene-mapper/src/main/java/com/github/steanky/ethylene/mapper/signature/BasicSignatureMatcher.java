@@ -24,7 +24,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
     @Override
     public @NotNull MatchingSignature signature(@NotNull Token<?> typeToken, ConfigElement providedElement,
-            Object providedObject) {
+        Object providedObject) {
         for (Signature signature : signatures) {
             if (!signature.returnType().isSubclassOf(typeToken)) {
                 continue;
@@ -78,7 +78,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                         while (typeCollectionIterator.hasNext()) {
                             if (typeHinter.getHint(typeCollectionIterator.next().type()) !=
-                                    typeHinter.getHint(signatureIterator.next().getSecond())) {
+                                typeHinter.getHint(signatureIterator.next().getSecond())) {
                                 break outer;
                             }
                         }

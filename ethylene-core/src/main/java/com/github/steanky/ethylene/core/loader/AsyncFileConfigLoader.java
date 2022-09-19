@@ -28,7 +28,7 @@ public class AsyncFileConfigLoader<TData> extends FileConfigLoader<TData> {
      * @param executor    the executor used to perform read and write operations asynchronously
      */
     public AsyncFileConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
-            @NotNull Path path, @NotNull ConfigCodec codec, @NotNull Executor executor) {
+        @NotNull Path path, @NotNull ConfigCodec codec, @NotNull Executor executor) {
         super(processor, defaultData, new FileCodecConfigSource(path, codec) {
             @Override
             protected @NotNull <TReturn> CompletableFuture<TReturn> makeFuture(@NotNull Callable<TReturn> callable) {

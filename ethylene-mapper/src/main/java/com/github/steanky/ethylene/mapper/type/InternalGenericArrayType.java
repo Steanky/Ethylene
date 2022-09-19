@@ -29,11 +29,6 @@ final class InternalGenericArrayType implements GenericArrayType, WeakType {
     }
 
     @Override
-    public Type getGenericComponentType() {
-        return ReflectionUtils.resolve(componentTypeReference, componentTypeName);
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hashCode(getGenericComponentType());
     }
@@ -60,5 +55,10 @@ final class InternalGenericArrayType implements GenericArrayType, WeakType {
     @Override
     public String toString() {
         return TypeUtils.toString(this);
+    }
+
+    @Override
+    public Type getGenericComponentType() {
+        return ReflectionUtils.resolve(componentTypeReference, componentTypeName);
     }
 }

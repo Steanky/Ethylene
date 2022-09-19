@@ -74,7 +74,8 @@ class AbstractConfigCodecTest {
             }
 
             @Override
-            protected void writeObject(@NotNull Object object, @NotNull OutputStream output) {}
+            protected void writeObject(@NotNull Object object, @NotNull OutputStream output) {
+            }
         };
 
         root.put(INTEGER_KEY, INTEGER_VALUE);
@@ -135,13 +136,13 @@ class AbstractConfigCodecTest {
     @Test
     void validNestedPrimitives() {
         assertEquals(SUB_STRING_VALUE,
-                resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY).asString());
+            resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY).asString());
     }
 
     @Test
     void validNestedArrayNodes() {
-        ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_NODES_KEY)
-                .asList();
+        ConfigList subNodes =
+            resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_NODES_KEY).asList();
 
         for (int i = 0; i < SUB_NODE_COUNT; i++) {
             ConfigNode element = subNodes.get(i).asNode();

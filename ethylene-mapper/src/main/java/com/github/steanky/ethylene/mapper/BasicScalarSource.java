@@ -7,7 +7,8 @@ import org.jetbrains.annotations.NotNull;
 public class BasicScalarSource implements ScalarSource {
     public static final ScalarSource INSTANCE = new BasicScalarSource();
 
-    protected BasicScalarSource() {}
+    protected BasicScalarSource() {
+    }
 
     @Override
     public @NotNull ConfigElement make(@NotNull Object data) {

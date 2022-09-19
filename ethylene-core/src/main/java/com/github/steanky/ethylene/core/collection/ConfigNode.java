@@ -43,8 +43,8 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
         for (int i = 0; i < objects.length; i += 2) {
             Object keyObject = objects[i];
             if (!(keyObject instanceof String keyString)) {
-                throw new IllegalArgumentException("Key object must be string, was " +
-                        (keyObject == null ? "null" : keyObject.getClass().getName()));
+                throw new IllegalArgumentException(
+                    "Key object must be string, was " + (keyObject == null ? "null" : keyObject.getClass().getName()));
             }
 
             Object valueObject = objects[i + 1];
@@ -62,6 +62,11 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     }
 
     @Override
+    default @NotNull ElementType type() {
+        return ElementType.NODE;
+    }
+
+    @Override
     default boolean isNode() {
         return true;
     }
@@ -69,11 +74,6 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     @Override
     default @NotNull ConfigNode asNode() {
         return this;
-    }
-
-    @Override
-    default @NotNull ElementType type() {
-        return ElementType.NODE;
     }
 
     /**

@@ -32,6 +32,13 @@ public class YamlCodec extends AbstractConfigCodec {
     private final Supplier<Dump> dumpSupplier;
 
     /**
+     * Creates a new YamlCodec using a default loadSupplier and dumpSupplier.
+     */
+    public YamlCodec() {
+        this(() -> new Load(LoadSettings.builder().build()), () -> new Dump(DumpSettings.builder().build()));
+    }
+
+    /**
      * <p>Creates a new YamlCodec that will use the given {@link Supplier} objects to produce {@link Load} and
      * {@link Dump} objects (used to read and write YAML, respectively).</p>
      *
@@ -45,13 +52,6 @@ public class YamlCodec extends AbstractConfigCodec {
         super(ENCODE_OPTIONS, DECODE_OPTIONS);
         this.loadSupplier = Objects.requireNonNull(loadSupplier);
         this.dumpSupplier = Objects.requireNonNull(dumpSupplier);
-    }
-
-    /**
-     * Creates a new YamlCodec using a default loadSupplier and dumpSupplier.
-     */
-    public YamlCodec() {
-        this(() -> new Load(LoadSettings.builder().build()), () -> new Dump(DumpSettings.builder().build()));
     }
 
     @Override
@@ -79,7 +79,8 @@ public class YamlCodec extends AbstractConfigCodec {
         try {
             StreamDataWriter writer = new YamlOutputStreamWriter(output, Charset.defaultCharset()) {
                 @Override
-                public void processIOException(IOException e) {}
+                public void processIOException(IOException e) {
+                }
             };
 
             dumpSupplier.get().dump(object, writer);

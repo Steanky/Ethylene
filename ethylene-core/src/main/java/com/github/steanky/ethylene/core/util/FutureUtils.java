@@ -11,35 +11,28 @@ import java.util.function.Function;
  * Contains utility methods for working with {@link CompletableFuture} objects.
  */
 public final class FutureUtils {
-    private FutureUtils() {throw new AssertionError("No.");}
+    private FutureUtils() {
+        throw new AssertionError("No.");
+    }
 
     /**
-     * Constructs a new {@link CompletableFuture} instance from the provided {@link Callable}. If the Callable throws an
-     * exception, the CompletableFuture will be completed <i>exceptionally</i> through its
-     * {@link CompletableFuture#completeExceptionally(Throwable)} method. Otherwise, it will complete normally with the
-     * result of invoking {@link Callable#call()} on the provided Callable. The Callable will be executed asynchronously
-     * using the provided {@link Executor}.
+     * Completes the given callable. Asynchronicity (or lack thereof) is determined by the provided Executor, which if
+     * non-null will be used to asynchronously execute the callable. This case is semantically identical to
+     * {@link FutureUtils#completeCallableAsync(Callable, Executor)}. Otherwise, if non-null, this method is equivalent
+     * to {@link FutureUtils#completeCallableSync(Callable)}.
      *
      * @param callable the callable to invoke
      * @param executor the executor used to run the callable asynchronously
-     * @param <TCall>  the object type returned by the callable
+     * @param <TCall>  the kind object returned by the callable
      * @return a {@link CompletableFuture} from the given Callable
      */
-    public static <TCall> CompletableFuture<TCall> completeCallableAsync(@NotNull Callable<? extends TCall> callable,
-            @NotNull Executor executor) {
-        Objects.requireNonNull(callable);
-        Objects.requireNonNull(executor);
+    public static <TCall> CompletableFuture<TCall> completeCallable(@NotNull Callable<? extends TCall> callable,
+        @Nullable Executor executor) {
+        if (executor == null) {
+            return completeCallableSync(callable);
+        }
 
-        CompletableFuture<TCall> future = new CompletableFuture<>();
-        executor.execute(() -> {
-            try {
-                future.complete(callable.call());
-            } catch (Exception exception) {
-                future.completeExceptionally(exception);
-            }
-        });
-
-        return future;
+        return completeCallableAsync(callable, executor);
     }
 
     /**
@@ -64,23 +57,32 @@ public final class FutureUtils {
     }
 
     /**
-     * Completes the given callable. Asynchronicity (or lack thereof) is determined by the provided Executor, which if
-     * non-null will be used to asynchronously execute the callable. This case is semantically identical to
-     * {@link FutureUtils#completeCallableAsync(Callable, Executor)}. Otherwise, if non-null, this method is equivalent
-     * to {@link FutureUtils#completeCallableSync(Callable)}.
+     * Constructs a new {@link CompletableFuture} instance from the provided {@link Callable}. If the Callable throws an
+     * exception, the CompletableFuture will be completed <i>exceptionally</i> through its
+     * {@link CompletableFuture#completeExceptionally(Throwable)} method. Otherwise, it will complete normally with the
+     * result of invoking {@link Callable#call()} on the provided Callable. The Callable will be executed asynchronously
+     * using the provided {@link Executor}.
      *
      * @param callable the callable to invoke
      * @param executor the executor used to run the callable asynchronously
-     * @param <TCall>  the kind object returned by the callable
+     * @param <TCall>  the object type returned by the callable
      * @return a {@link CompletableFuture} from the given Callable
      */
-    public static <TCall> CompletableFuture<TCall> completeCallable(@NotNull Callable<? extends TCall> callable,
-            @Nullable Executor executor) {
-        if (executor == null) {
-            return completeCallableSync(callable);
-        }
+    public static <TCall> CompletableFuture<TCall> completeCallableAsync(@NotNull Callable<? extends TCall> callable,
+        @NotNull Executor executor) {
+        Objects.requireNonNull(callable);
+        Objects.requireNonNull(executor);
 
-        return completeCallableAsync(callable, executor);
+        CompletableFuture<TCall> future = new CompletableFuture<>();
+        executor.execute(() -> {
+            try {
+                future.complete(callable.call());
+            } catch (Exception exception) {
+                future.completeExceptionally(exception);
+            }
+        });
+
+        return future;
     }
 
     /**
@@ -99,8 +101,8 @@ public final class FutureUtils {
      *              method
      */
     public static <TReturn, TErr extends Throwable> TReturn getAndWrapException(
-            @NotNull Future<? extends TReturn> future, @NotNull Function<Throwable, TErr> exceptionWrapper,
-            @NotNull Class<TErr> errorClass) throws TErr {
+        @NotNull Future<? extends TReturn> future, @NotNull Function<Throwable, TErr> exceptionWrapper,
+        @NotNull Class<TErr> errorClass) throws TErr {
         try {
             return future.get();
         } catch (ExecutionException e) {

@@ -31,7 +31,7 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
      * @param source      the {@link ConfigSource} used for reading/writing data
      */
     public ProcessingConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
-            @NotNull ConfigSource source) {
+        @NotNull ConfigSource source) {
         this.processor = Objects.requireNonNull(processor);
         this.defaultData = Objects.requireNonNull(defaultData);
         this.source = Objects.requireNonNull(source);
@@ -42,7 +42,7 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
         if (isAbsent()) {
             //elementFromData will run synchronously in all cases, bridge::write MAY run asynchronously
             return FutureUtils.completeCallableSync(() -> processor.elementFromData(defaultData))
-                    .thenCompose(source::write);
+                .thenCompose(source::write);
         }
 
         return CompletableFuture.completedFuture(null);
@@ -52,13 +52,13 @@ public abstract class ProcessingConfigLoader<TData> implements ConfigLoader<TDat
     public @NotNull CompletableFuture<TData> load() {
         //bridge.read() MAY run asynchronously, dataFromElement will always run synchronously
         return source.read()
-                .thenCompose(element -> FutureUtils.completeCallableSync(() -> processor.dataFromElement(element)));
+            .thenCompose(element -> FutureUtils.completeCallableSync(() -> processor.dataFromElement(element)));
     }
 
     @Override
     public @NotNull CompletableFuture<Void> write(@NotNull TData data) {
         return FutureUtils.completeCallableSync(() -> processor.elementFromData(defaultData))
-                .thenCompose(source::write);
+            .thenCompose(source::write);
     }
 
     /**

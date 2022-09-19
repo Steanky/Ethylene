@@ -8,10 +8,11 @@ import org.jetbrains.annotations.NotNull;
 public class FieldSignatureBuilder implements SignatureBuilder {
     public static final FieldSignatureBuilder INSTANCE = new FieldSignatureBuilder();
 
-    private FieldSignatureBuilder() {}
+    private FieldSignatureBuilder() {
+    }
 
     @Override
     public @NotNull Signature @NotNull [] buildSignatures(@NotNull Token<?> type) {
-        return new Signature[] {new FieldSignature(type)};
+        return new Signature[]{new FieldSignature(type)};
     }
 }

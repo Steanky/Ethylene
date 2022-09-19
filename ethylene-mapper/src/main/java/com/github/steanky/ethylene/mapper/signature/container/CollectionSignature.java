@@ -37,7 +37,7 @@ public class CollectionSignature extends ContainerSignatureBase {
                     @Override
                     public TypedObject next() {
                         return new TypedObject(null, CollectionSignature.this.entry.getSecond(),
-                                collectionIterator.next());
+                            collectionIterator.next());
                     }
                 };
             }
@@ -63,11 +63,6 @@ public class CollectionSignature extends ContainerSignatureBase {
         return collection;
     }
 
-    @Override
-    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
-        return makeNewCollection(container.entryCollection().size());
-    }
-
     @SuppressWarnings("unchecked")
     private Collection<Object> makeNewCollection(int size) {
         try {
@@ -83,5 +78,10 @@ public class CollectionSignature extends ContainerSignatureBase {
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new MapperException(e);
         }
+    }
+
+    @Override
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return makeNewCollection(container.entryCollection().size());
     }
 }

@@ -40,6 +40,11 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
     }
 
     @Override
+    default @NotNull ElementType type() {
+        return ElementType.LIST;
+    }
+
+    @Override
     default boolean isList() {
         return true;
     }
@@ -47,11 +52,6 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
     @Override
     default @NotNull ConfigList asList() {
         return this;
-    }
-
-    @Override
-    default @NotNull ElementType type() {
-        return ElementType.LIST;
     }
 
     /**

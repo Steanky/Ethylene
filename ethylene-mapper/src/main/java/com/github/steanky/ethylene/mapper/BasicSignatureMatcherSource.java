@@ -26,7 +26,7 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     private final Cache<Class<?>, Set<Signature>> customSignatureCache;
 
     public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter,
-            @NotNull SignatureBuilder.Selector signatureSelector, @NotNull Collection<Signature> customSignatures) {
+        @NotNull SignatureBuilder.Selector signatureSelector, @NotNull Collection<Signature> customSignatures) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.signatureSelector = Objects.requireNonNull(signatureSelector);
 
@@ -58,20 +58,20 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
             return switch (typeHinter.getHint(token)) {
                 case LIST -> {
                     if (token.isArrayType()) {
-                        Signature[] arraySignature = new Signature[] {new ArraySignature(token.componentType())};
+                        Signature[] arraySignature = new Signature[]{new ArraySignature(token.componentType())};
                         yield new BasicSignatureMatcher(arraySignature, typeHinter);
                     } else {
                         if (token.isSubclassOf(Collection.class)) {
                             Token<?> parameterized = token.parameterize(token.supertypeVariables(Collection.class));
                             Token<?>[] args = parameterized.actualTypeParameters();
-                            Signature[] collectionSignature = new Signature[] {new CollectionSignature(args[0], token)};
+                            Signature[] collectionSignature = new Signature[]{new CollectionSignature(args[0], token)};
 
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
                         } else if (token.isSubclassOf(Map.class)) {
                             Token<?> parameterized = token.parameterize(token.supertypeVariables(Map.class));
                             Token<?>[] args = parameterized.actualTypeParameters();
 
-                            Signature[] mapSignature = new Signature[] {new MapSignature(args[0], args[1], token)};
+                            Signature[] mapSignature = new Signature[]{new MapSignature(args[0], args[1], token)};
                             yield new BasicSignatureMatcher(mapSignature, typeHinter);
                         }
                     }
@@ -79,7 +79,7 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
                     throw new MapperException("Unexpected container-like type '" + token.getTypeName() + "'");
                 }
                 case NODE ->
-                        new BasicSignatureMatcher(signatureSelector.select(token).buildSignatures(token), typeHinter);
+                    new BasicSignatureMatcher(signatureSelector.select(token).buildSignatures(token), typeHinter);
                 case SCALAR -> null;
             };
         });

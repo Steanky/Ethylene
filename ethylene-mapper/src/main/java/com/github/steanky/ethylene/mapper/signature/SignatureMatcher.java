@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 @FunctionalInterface
 public interface SignatureMatcher {
     @NotNull MatchingSignature signature(@NotNull Token<?> desiredType, ConfigElement providedElement,
-            Object providedObject);
+        Object providedObject);
 
     @FunctionalInterface
     interface Source {

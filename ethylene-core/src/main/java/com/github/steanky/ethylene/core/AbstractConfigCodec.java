@@ -38,11 +38,11 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             ElementType type = element.type();
             if (!supportedTopLevelTypes().contains(type)) {
                 throw new IOException(
-                        "Top-level elements of type '" + type + "' not supported by '" + getName() + "' codec");
+                    "Top-level elements of type '" + type + "' not supported by '" + getName() + "' codec");
             }
 
             writeObject(Graph.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
-                    graphTransformerEncodeOptions), output);
+                graphTransformerEncodeOptions), output);
         }
     }
 
@@ -52,21 +52,19 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
         try (input) {
             return Graph.process(readObject(input), this::makeDecodeNode, this::isContainer, this::deserializeObject,
-                    Function.identity(), IdentityHashMap::new, ArrayDeque::new, graphTransformerDecodeOptions);
+                Function.identity(), IdentityHashMap::new, ArrayDeque::new, graphTransformerDecodeOptions);
         }
     }
 
-    protected @NotNull Graph.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
-        if (target.isNode()) {
-            ConfigNode elementNode = target.asNode();
-            return Graph.node(elementNode.entryCollection().iterator(), makeEncodeMap(elementNode.size()));
-        } else if (target.isList()) {
-            ConfigList elementList = target.asList();
-            return Graph.node(elementList.entryCollection().iterator(), makeEncodeCollection(elementList.size()));
-        }
-
-        throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
-    }
+    /**
+     * Reads an object from the given {@link InputStream}, which should contain configuration data in a particular
+     * format.
+     *
+     * @param input the InputStream to read from
+     * @return an object
+     * @throws IOException if an IO error occurs
+     */
+    protected abstract @NotNull Object readObject(@NotNull InputStream input) throws IOException;
 
     protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof Map<?, ?> map) {
@@ -119,14 +117,15 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
     }
 
-    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
-        Map<String, Object> map = new LinkedHashMap<>(size);
-        return Graph.output(map, (k, v, b) -> map.put(k, v));
-    }
-
-    protected @NotNull Graph.Output<Object, String> makeEncodeCollection(int size) {
-        Collection<Object> collection = new ArrayList<>(size);
-        return Graph.output(collection, (k, v, b) -> collection.add(v));
+    /**
+     * Deserializes a given object, as it is typically produced by a particular format deserializer.
+     *
+     * @param object the object to deserialize
+     * @return the resulting ConfigElement
+     * @throws IllegalArgumentException if object is not a valid type for {@link ConfigPrimitive}
+     */
+    protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
+        return new ConfigPrimitive(object);
     }
 
     protected @NotNull Graph.Output<ConfigElement, String> makeDecodeMap(int size) {
@@ -140,6 +139,28 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     /**
+     * Writes an object to the given {@link OutputStream}, which will then contain configuration data in some particular
+     * format.
+     *
+     * @param object the object to write
+     * @param output the OutputStream to write to
+     * @throws IOException if an IO error occurs
+     */
+    protected abstract void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException;
+
+    protected @NotNull Graph.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
+        if (target.isNode()) {
+            ConfigNode elementNode = target.asNode();
+            return Graph.node(elementNode.entryCollection().iterator(), makeEncodeMap(elementNode.size()));
+        } else if (target.isList()) {
+            ConfigList elementList = target.asList();
+            return Graph.node(elementList.entryCollection().iterator(), makeEncodeCollection(elementList.size()));
+        }
+
+        throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
+    }
+
+    /**
      * Returns true if this object is non-null and a container (subclass of {@link Collection}, {@link Map}, or an array
      * type).
      *
@@ -149,7 +170,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     @Contract("null -> false")
     protected boolean isContainer(@Nullable Object input) {
         return input != null &&
-                (input instanceof Collection<?> || input instanceof Map<?, ?> || input.getClass().isArray());
+            (input instanceof Collection<?> || input instanceof Map<?, ?> || input.getClass().isArray());
     }
 
     /**
@@ -165,34 +186,13 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         return element.asScalar();
     }
 
-    /**
-     * Deserializes a given object, as it is typically produced by a particular format deserializer.
-     *
-     * @param object the object to deserialize
-     * @return the resulting ConfigElement
-     * @throws IllegalArgumentException if object is not a valid type for {@link ConfigPrimitive}
-     */
-    protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
-        return new ConfigPrimitive(object);
+    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
+        Map<String, Object> map = new LinkedHashMap<>(size);
+        return Graph.output(map, (k, v, b) -> map.put(k, v));
     }
 
-    /**
-     * Reads an object from the given {@link InputStream}, which should contain configuration data in a particular
-     * format.
-     *
-     * @param input the InputStream to read from
-     * @return an object
-     * @throws IOException if an IO error occurs
-     */
-    protected abstract @NotNull Object readObject(@NotNull InputStream input) throws IOException;
-
-    /**
-     * Writes an object to the given {@link OutputStream}, which will then contain configuration data in some particular
-     * format.
-     *
-     * @param object the object to write
-     * @param output the OutputStream to write to
-     * @throws IOException if an IO error occurs
-     */
-    protected abstract void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException;
+    protected @NotNull Graph.Output<Object, String> makeEncodeCollection(int size) {
+        Collection<Object> collection = new ArrayList<>(size);
+        return Graph.output(collection, (k, v, b) -> collection.add(v));
+    }
 }

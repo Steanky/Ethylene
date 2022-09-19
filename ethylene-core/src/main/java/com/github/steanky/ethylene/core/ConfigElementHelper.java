@@ -10,19 +10,8 @@ import java.util.function.Supplier;
  * Internal utility class used by {@link ConfigElement}.
  */
 final class ConfigElementHelper {
-    private ConfigElementHelper() {throw new AssertionError("Don't do this.");}
-
-    private static String pathToString(@NotNull Object... pathString) {
-        StringBuilder builder = new StringBuilder("'");
-        for (int i = 0; i < pathString.length; i++) {
-            builder.append(pathString[i]);
-            if (i < pathString.length - 1) {
-                builder.append('/');
-            }
-        }
-        builder.append('\'');
-
-        return builder.toString();
+    private ConfigElementHelper() {
+        throw new AssertionError("Don't do this.");
     }
 
     /**
@@ -42,8 +31,8 @@ final class ConfigElementHelper {
      * @throws IllegalArgumentException if path contains invalid types (any besides Integer or String)
      */
     static <TReturn> @NotNull TReturn getOrDefault(@NotNull ConfigElement element,
-            @NotNull Supplier<TReturn> returnSupplier, @NotNull Function<ConfigElement, Boolean> typeValidator,
-            @NotNull Function<ConfigElement, TReturn> typeGetter, @NotNull Object... path) {
+        @NotNull Supplier<TReturn> returnSupplier, @NotNull Function<ConfigElement, Boolean> typeValidator,
+        @NotNull Function<ConfigElement, TReturn> typeGetter, @NotNull Object... path) {
         ConfigElement newElement = element.getElement(path);
 
         if (newElement != null && typeValidator.apply(newElement)) {
@@ -66,9 +55,8 @@ final class ConfigElementHelper {
      * @throws ConfigProcessException if the path is invalid, or the path is valid but the type is not
      */
     static <TReturn> @NotNull TReturn getOrThrow(@NotNull ConfigElement element,
-            @NotNull Function<ConfigElement, Boolean> typeValidator,
-            @NotNull Function<ConfigElement, TReturn> typeGetter, @NotNull Object... path)
-            throws ConfigProcessException {
+        @NotNull Function<ConfigElement, Boolean> typeValidator, @NotNull Function<ConfigElement, TReturn> typeGetter,
+        @NotNull Object... path) throws ConfigProcessException {
         ConfigElement newElement = element.getElement(path);
 
         if (newElement != null) {
@@ -80,5 +68,18 @@ final class ConfigElementHelper {
         }
 
         throw new ConfigProcessException("Path " + pathToString(path) + " is invalid for " + element);
+    }
+
+    private static String pathToString(@NotNull Object... pathString) {
+        StringBuilder builder = new StringBuilder("'");
+        for (int i = 0; i < pathString.length; i++) {
+            builder.append(pathString[i]);
+            if (i < pathString.length - 1) {
+                builder.append('/');
+            }
+        }
+        builder.append('\'');
+
+        return builder.toString();
     }
 }

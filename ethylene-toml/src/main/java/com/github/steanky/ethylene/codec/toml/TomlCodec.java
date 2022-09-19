@@ -60,6 +60,15 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
+    protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
+        try {
+            return parser.parse(input);
+        } catch (ParsingException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
     protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof UnmodifiableConfig config) {
             return Graph.node(new Iterator<>() {
@@ -82,9 +91,21 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
-        Config config = TomlFormat.newConfig(() -> new LinkedHashMap<>(size));
-        return Graph.output(config, (k, v, b) -> config.add(k, v));
+    protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
+        if (object instanceof Temporal date) {
+            return new ConfigDate(date);
+        }
+
+        return super.deserializeObject(object);
+    }
+
+    @Override
+    protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
+        try {
+            writer.write((UnmodifiableConfig) object, output);
+        } catch (WritingException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
@@ -102,30 +123,9 @@ public class TomlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
-        if (object instanceof Temporal date) {
-            return new ConfigDate(date);
-        }
-
-        return super.deserializeObject(object);
-    }
-
-    @Override
-    protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
-        try {
-            return parser.parse(input);
-        } catch (ParsingException e) {
-            throw new IOException(e);
-        }
-    }
-
-    @Override
-    protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
-        try {
-            writer.write((UnmodifiableConfig) object, output);
-        } catch (WritingException e) {
-            throw new IOException(e);
-        }
+    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
+        Config config = TomlFormat.newConfig(() -> new LinkedHashMap<>(size));
+        return Graph.output(config, (k, v, b) -> config.add(k, v));
     }
 
     @Override

@@ -1,14 +1,11 @@
 package com.github.steanky.ethylene.mapper.internal;
 
 import com.github.steanky.ethylene.mapper.annotation.Name;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 
 /**
  * Contains some reflection-related utilities. These generally serve to supplement those already found in Apache
@@ -33,23 +30,6 @@ public class ReflectionUtils {
         return nameAnnotation == null ? field.getName() : nameAnnotation.value();
     }
 
-    /**
-     * Determines the raw type of a given {@link Type} object, with similar semantics to
-     * {@link TypeUtils#getRawType(Type, Type)}, when the second parameter is passed a null value. However, in all
-     * instances where that method would return null, this method throws an {@link IllegalArgumentException} instead.
-     *
-     * @param type the type to convert to a raw class
-     * @return the raw type
-     * @throws IllegalArgumentException if Type is a {@link WildcardType} or {@link TypeVariable}
-     */
-    public static @NotNull Class<?> rawType(@NotNull Type type) {
-        Class<?> cls = TypeUtils.getRawType(type, null);
-        if (cls == null) {
-            throw new IllegalArgumentException("Invalid type '" + type.getTypeName() + "'");
-        }
-
-        return cls;
-    }
 
     /**
      * Resolves the given reference to a Type. If it is not present, throws a {@link TypeNotPresentException}.
@@ -60,7 +40,7 @@ public class ReflectionUtils {
      * @return the type itself
      */
     public static <TType extends Type> @NotNull TType resolve(@NotNull Reference<TType> typeReference,
-            @NotNull String typeName) {
+        @NotNull String typeName) {
         TType type = typeReference.get();
         if (type == null) {
             throw new TypeNotPresentException(typeName, null);

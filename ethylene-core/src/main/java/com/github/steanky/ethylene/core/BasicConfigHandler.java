@@ -19,7 +19,7 @@ public class BasicConfigHandler implements ConfigHandler {
     @Override
     public @NotNull CompletableFuture<Void> writeDefaults() {
         return CompletableFuture.allOf(
-                loaderMap.values().stream().map(ConfigLoader::writeDefaultIfAbsent).toArray(CompletableFuture[]::new));
+            loaderMap.values().stream().map(ConfigLoader::writeDefaultIfAbsent).toArray(CompletableFuture[]::new));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class BasicConfigHandler implements ConfigHandler {
     public <TData> @NotNull TData loadDataNow(@NotNull ConfigKey<TData> key) throws ConfigProcessException {
         validatePresentKey(key);
         return FutureUtils.getAndWrapException(((ConfigLoader<TData>) loaderMap.get(key)).load(),
-                ConfigProcessException::new, ConfigProcessException.class);
+            ConfigProcessException::new, ConfigProcessException.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -82,7 +82,7 @@ public class BasicConfigHandler implements ConfigHandler {
     public <TData> void writeDataNow(@NotNull ConfigKey<TData> key, @NotNull TData data) throws ConfigProcessException {
         validatePresentKey(key);
         FutureUtils.getAndWrapException(((ConfigLoader<TData>) loaderMap.get(key)).write(data),
-                ConfigProcessException::new, ConfigProcessException.class);
+            ConfigProcessException::new, ConfigProcessException.class);
     }
 
     private void validatePresentKey(ConfigKey<?> key) {

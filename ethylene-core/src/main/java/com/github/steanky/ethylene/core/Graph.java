@@ -14,7 +14,8 @@ import java.util.function.Supplier;
  */
 public final class Graph {
     //shared empty accumulator which is just a no-op
-    private static final Accumulator<?, ?> EMPTY_ACCUMULATOR = (Accumulator<Object, Object>) (o, o2, circular) -> {};
+    private static final Accumulator<?, ?> EMPTY_ACCUMULATOR = (Accumulator<Object, Object>) (o, o2, circular) -> {
+    };
     //shared empty Output with null data and the empty accumulator
     private static final Output<?, ?> EMPTY_OUTPUT = new Output<>(null, EMPTY_ACCUMULATOR);
     //shared empty Node with an empty iterator and the empty output
@@ -34,13 +35,20 @@ public final class Graph {
         throw new UnsupportedOperationException();
     }
 
+    public static <TIn, TOut, TKey> TOut process(TIn input,
+        @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+        @NotNull Predicate<? super TIn> containerPredicate, @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
+        int flags) {
+        return process(input, nodeFunction, containerPredicate, scalarMapper, Function.identity(), IdentityHashMap::new,
+            ArrayDeque::new, flags);
+    }
+
     public static <TIn, TOut, TKey, TVisit> TOut process(TIn rootInput,
-            @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
-            @NotNull Predicate<? super TIn> containerPredicate,
-            @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
-            @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper,
-            @NotNull Supplier<? extends Map<? super TVisit, TOut>> visitedSupplier,
-            @NotNull Supplier<? extends Deque<Node<TIn, TOut, TKey>>> stackSupplier, int flags) {
+        @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+        @NotNull Predicate<? super TIn> containerPredicate, @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
+        @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper,
+        @NotNull Supplier<? extends Map<? super TVisit, TOut>> visitedSupplier,
+        @NotNull Supplier<? extends Deque<Node<TIn, TOut, TKey>>> stackSupplier, int flags) {
         if (!containerPredicate.test(rootInput)) {
             //if rootInput is a scalar, just return whatever the scalar mapper produces
             //there's nothing more to do
@@ -186,39 +194,6 @@ public final class Graph {
         return rootNode.output.data;
     }
 
-    public static <TIn, TOut, TKey> TOut process(TIn input,
-            @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
-            @NotNull Predicate<? super TIn> containerPredicate,
-            @NotNull Function<? super TIn, ? extends TOut> scalarMapper, int flags) {
-        return process(input, nodeFunction, containerPredicate, scalarMapper, Function.identity(), IdentityHashMap::new,
-                ArrayDeque::new, flags);
-    }
-
-    public static <TIn, TOut, TKey, TVisit> TOut process(TIn input,
-            @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
-            @NotNull Predicate<? super TIn> containerPredicate,
-            @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
-            @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper, int flags) {
-        return process(input, nodeFunction, containerPredicate, scalarMapper, visitKeyMapper, IdentityHashMap::new,
-                ArrayDeque::new, flags);
-    }
-
-    public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
-            @NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator,
-            @NotNull Output<TOut, TKey> output) {
-        return new Node<>(inputIterator, output);
-    }
-
-    public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
-            @NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator) {
-        return new Node<>(inputIterator, emptyOutput());
-    }
-
-    public static <TOut, TKey> @NotNull Output<TOut, TKey> output(TOut data,
-            @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {
-        return new Output<>(data, accumulator);
-    }
-
     private static boolean isEmpty(Node<?, ?, ?> node) {
         return node == EMPTY_NODE || !node.inputIterator.hasNext();
     }
@@ -227,9 +202,33 @@ public final class Graph {
         return node.output != EMPTY_OUTPUT && node.output.accumulator != EMPTY_ACCUMULATOR;
     }
 
+    public static <TIn, TOut, TKey, TVisit> TOut process(TIn input,
+        @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
+        @NotNull Predicate<? super TIn> containerPredicate, @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
+        @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper, int flags) {
+        return process(input, nodeFunction, containerPredicate, scalarMapper, visitKeyMapper, IdentityHashMap::new,
+            ArrayDeque::new, flags);
+    }
+
+    public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
+        @NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator,
+        @NotNull Output<TOut, TKey> output) {
+        return new Node<>(inputIterator, output);
+    }
+
+    public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
+        @NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator) {
+        return new Node<>(inputIterator, emptyOutput());
+    }
+
     @SuppressWarnings("unchecked")
     public static <TKey, TOut> @NotNull Output<TKey, TOut> emptyOutput() {
         return (Output<TKey, TOut>) EMPTY_OUTPUT;
+    }
+
+    public static <TOut, TKey> @NotNull Output<TOut, TKey> output(TOut data,
+        @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {
+        return new Output<>(data, accumulator);
     }
 
     @SuppressWarnings("unchecked")
@@ -303,7 +302,7 @@ public final class Graph {
         private NodeResult<TKey, TOut> result;
 
         private Node(@NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator,
-                @NotNull Output<TOut, ? super TKey> output) {
+            @NotNull Output<TOut, ? super TKey> output) {
             this.inputIterator = inputIterator;
             this.output = output;
         }
@@ -313,8 +312,8 @@ public final class Graph {
         }
 
         private void setResult(TKey key, TOut out) {
-            NodeResult<TKey, TOut> result = Objects.requireNonNullElseGet(this.result,
-                    () -> this.result = new NodeResult<>());
+            NodeResult<TKey, TOut> result =
+                Objects.requireNonNullElseGet(this.result, () -> this.result = new NodeResult<>());
             result.key = key;
             result.out = out;
         }

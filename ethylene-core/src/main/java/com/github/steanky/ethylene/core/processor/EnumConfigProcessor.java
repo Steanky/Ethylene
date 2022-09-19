@@ -56,7 +56,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
         if (result == null) {
             Class<? extends TEnum> enumClass = getEnumClass();
             throw new ConfigProcessException(
-                    "No enum constant named '" + elementString + "' in " + enumClass.getTypeName());
+                "No enum constant named '" + elementString + "' in " + enumClass.getTypeName());
         }
 
         return result;
@@ -87,8 +87,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
                 lookupFunction = constantName -> {
                     for (TEnum constant : constants) {
                         if (caseSensitive ? constant.name().equals(constantName) :
-                                constant.name().toLowerCase(Locale.ROOT)
-                                        .equals(constantName.toLowerCase(Locale.ROOT))) {
+                            constant.name().toLowerCase(Locale.ROOT).equals(constantName.toLowerCase(Locale.ROOT))) {
                             return constant;
                         }
                     }

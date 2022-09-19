@@ -29,23 +29,6 @@ public class ExceptionHandler<TErr extends Exception> {
     }
 
     /**
-     * Sets or suppresses the given exception. If no prior exception has been set, the given exception becomes the new
-     * exception. If an exception was previously set, the new exception is suppressed by calling
-     * {@link Throwable#addSuppressed(Throwable)} on the first exception.
-     *
-     * @param exception the exception to set or suppress
-     */
-    public void setOrSuppress(@NotNull TErr exception) {
-        Objects.requireNonNull(exception);
-
-        if (this.exception == null) {
-            this.exception = exception;
-        } else {
-            this.exception.addSuppressed(exception);
-        }
-    }
-
-    /**
      * Optionally gets the set exception. The {@link Optional} will be empty if no exception occurred, otherwise, it
      * will contain the set exception.
      *
@@ -82,6 +65,35 @@ public class ExceptionHandler<TErr extends Exception> {
         }
     }
 
+    private void handleException(Exception exception) {
+        if (exceptionClass.isAssignableFrom(exception.getClass())) {
+            setOrSuppress(exceptionClass.cast(exception));
+        } else if (exception instanceof RuntimeException runtimeException) {
+            //we don't handle runtime exceptions, but they can still occur
+            throw runtimeException;
+        } else {
+            //should not happen under normal use
+            throw new IllegalStateException("Unexpected exception type", exception);
+        }
+    }
+
+    /**
+     * Sets or suppresses the given exception. If no prior exception has been set, the given exception becomes the new
+     * exception. If an exception was previously set, the new exception is suppressed by calling
+     * {@link Throwable#addSuppressed(Throwable)} on the first exception.
+     *
+     * @param exception the exception to set or suppress
+     */
+    public void setOrSuppress(@NotNull TErr exception) {
+        Objects.requireNonNull(exception);
+
+        if (this.exception == null) {
+            this.exception = exception;
+        } else {
+            this.exception.addSuppressed(exception);
+        }
+    }
+
     /**
      * Calls {@link ThrowingSupplier#get()} on the given function. If it throws an exception, it will be handled with
      * similar semantics to calling {@link ExceptionHandler#setOrSuppress(Exception)}, and the default {@link Supplier}
@@ -95,7 +107,7 @@ public class ExceptionHandler<TErr extends Exception> {
      * ThrowingSupplier
      */
     public <TReturn> TReturn get(@NotNull ThrowingSupplier<? extends TReturn, ? extends TErr> supplier,
-            @NotNull Supplier<? extends TReturn> defaultSupplier) {
+        @NotNull Supplier<? extends TReturn> defaultSupplier) {
         Objects.requireNonNull(supplier);
         Objects.requireNonNull(defaultSupplier);
 
@@ -121,8 +133,8 @@ public class ExceptionHandler<TErr extends Exception> {
      * ThrowingFunction
      */
     public <TAccept, TReturn> TReturn apply(
-            @NotNull ThrowingFunction<? super TAccept, ? extends TReturn, ? extends TErr> function, TAccept value,
-            @NotNull Supplier<? extends TReturn> defaultSupplier) {
+        @NotNull ThrowingFunction<? super TAccept, ? extends TReturn, ? extends TErr> function, TAccept value,
+        @NotNull Supplier<? extends TReturn> defaultSupplier) {
         Objects.requireNonNull(function);
         Objects.requireNonNull(defaultSupplier);
 
@@ -133,17 +145,5 @@ public class ExceptionHandler<TErr extends Exception> {
         }
 
         return defaultSupplier.get();
-    }
-
-    private void handleException(Exception exception) {
-        if (exceptionClass.isAssignableFrom(exception.getClass())) {
-            setOrSuppress(exceptionClass.cast(exception));
-        } else if (exception instanceof RuntimeException runtimeException) {
-            //we don't handle runtime exceptions, but they can still occur
-            throw runtimeException;
-        } else {
-            //should not happen under normal use
-            throw new IllegalStateException("Unexpected exception type", exception);
-        }
     }
 }

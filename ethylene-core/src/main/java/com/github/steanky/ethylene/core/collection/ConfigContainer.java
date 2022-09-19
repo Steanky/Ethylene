@@ -13,13 +13,13 @@ import java.util.Map;
  */
 public interface ConfigContainer extends ConfigElement {
     @Override
-    default boolean isContainer() {
-        return true;
+    default @NotNull ConfigContainer asContainer() {
+        return this;
     }
 
     @Override
-    default @NotNull ConfigContainer asContainer() {
-        return this;
+    default boolean isContainer() {
+        return true;
     }
 
     /**

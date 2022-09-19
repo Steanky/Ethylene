@@ -21,4 +21,5 @@ import java.lang.reflect.Type;
  * @see InternalGenericArrayType
  * @see InternalParameterizedType
  */
-sealed interface WeakType extends Type permits InternalGenericArrayType, InternalParameterizedType {}
+sealed interface WeakType extends Type permits InternalGenericArrayType, InternalParameterizedType {
+}

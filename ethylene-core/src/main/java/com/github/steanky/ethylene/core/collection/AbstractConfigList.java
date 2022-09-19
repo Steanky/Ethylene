@@ -49,7 +49,7 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      *                              listSupplier returns null
      */
     protected static @NotNull List<ConfigElement> constructList(@NotNull Collection<? extends ConfigElement> collection,
-            @NotNull IntFunction<? extends List<ConfigElement>> listSupplier) {
+        @NotNull IntFunction<? extends List<ConfigElement>> listSupplier) {
         Objects.requireNonNull(collection);
         Objects.requireNonNull(listSupplier);
 
@@ -99,29 +99,29 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
         return Objects.requireNonNullElseGet(containerCollection,
-                () -> containerCollection = new AbstractCollection<>() {
-                    @Override
-                    public Iterator<ConfigEntry> iterator() {
-                        return new Iterator<>() {
-                            private final Iterator<ConfigElement> elementIterator = list.iterator();
+            () -> containerCollection = new AbstractCollection<>() {
+                @Override
+                public Iterator<ConfigEntry> iterator() {
+                    return new Iterator<>() {
+                        private final Iterator<ConfigElement> elementIterator = list.iterator();
 
-                            @Override
-                            public boolean hasNext() {
-                                return elementIterator.hasNext();
-                            }
+                        @Override
+                        public boolean hasNext() {
+                            return elementIterator.hasNext();
+                        }
 
-                            @Override
-                            public ConfigEntry next() {
-                                return new ConfigEntry(null, elementIterator.next());
-                            }
-                        };
-                    }
+                        @Override
+                        public ConfigEntry next() {
+                            return new ConfigEntry(null, elementIterator.next());
+                        }
+                    };
+                }
 
-                    @Override
-                    public int size() {
-                        return list.size();
-                    }
-                });
+                @Override
+                public int size() {
+                    return list.size();
+                }
+            });
 
     }
 

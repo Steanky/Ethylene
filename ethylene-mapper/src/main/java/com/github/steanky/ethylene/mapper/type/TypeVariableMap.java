@@ -45,7 +45,7 @@ public class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>> {
         }
 
         return Objects.requireNonNullElseGet(entrySet,
-                () -> entrySet = Collections.unmodifiableSet(tokenMap.entrySet()));
+            () -> entrySet = Collections.unmodifiableSet(tokenMap.entrySet()));
     }
 
     public @NotNull Map<TypeVariable<?>, Type> resolve() {

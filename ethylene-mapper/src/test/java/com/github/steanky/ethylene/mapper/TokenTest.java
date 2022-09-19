@@ -19,18 +19,21 @@ class TokenTest {
 
     @Test
     void multiTypeParameterSubclassThrows() {
-        assertThrows(IllegalStateException.class, () -> new Token2<>() {});
+        assertThrows(IllegalStateException.class, () -> new Token2<>() {
+        });
     }
 
     @Test
     void classType() {
-        Token<String> string = new Token<>() {};
+        Token<String> string = new Token<>() {
+        };
         assertEquals(String.class, string.get());
     }
 
     @Test
     void arrayType() {
-        Token<String[]> stringArray = new Token<>() {};
+        Token<String[]> stringArray = new Token<>() {
+        };
         assertEquals(String[].class, stringArray.get());
     }
 
@@ -39,7 +42,8 @@ class TokenTest {
         Field field = TokenTest.class.getDeclaredField("generic");
         Type type = field.getGenericType();
 
-        Token<List<String>> stringList = new Token<>() {};
+        Token<List<String>> stringList = new Token<>() {
+        };
         assertEquals(type, stringList.get());
     }
 
@@ -48,7 +52,8 @@ class TokenTest {
         Field field = TokenTest.class.getDeclaredField("genericArray");
         Type type = field.getGenericType();
 
-        Token<List<String>[]> stringListArray = new Token<>() {};
+        Token<List<String>[]> stringListArray = new Token<>() {
+        };
         assertEquals(type, stringListArray.get());
     }
 
@@ -57,7 +62,8 @@ class TokenTest {
         Field field = TokenTest.class.getDeclaredField("upperBoundedGeneric");
         Type type = field.getGenericType();
 
-        Token<List<? extends String>> upperBoundedStringListArray = new Token<>() {};
+        Token<List<? extends String>> upperBoundedStringListArray = new Token<>() {
+        };
         assertEquals(type, upperBoundedStringListArray.get());
     }
 
@@ -66,14 +72,16 @@ class TokenTest {
         Field field = TokenTest.class.getDeclaredField("lowerBoundedGeneric");
         Type type = field.getGenericType();
 
-        Token<List<? super String>> lowerBoundedStringListArray = new Token<>() {};
+        Token<List<? super String>> lowerBoundedStringListArray = new Token<>() {
+        };
         assertEquals(type, lowerBoundedStringListArray.get());
     }
 
     @Test
     void parameterlessConstructionThrowsException() {
         //noinspection rawtypes
-        assertThrows(IllegalStateException.class, () -> new Token() {});
+        assertThrows(IllegalStateException.class, () -> new Token() {
+        });
     }
 
     static class Token2<T, Integer> extends Token<T> {

@@ -8,7 +8,8 @@ import org.mockito.Mockito;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigElementTest {
-    private final ConfigElement defaultElement = new ConfigElement() {};
+    private final ConfigElement defaultElement = new ConfigElement() {
+    };
 
     @Test
     void defaults() {

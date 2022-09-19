@@ -46,15 +46,15 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      * @throws NullPointerException if any of the arguments are null, or map contains any null keys or values
      */
     protected static @NotNull Map<String, ConfigElement> constructMap(
-            @NotNull Map<? extends String, ? extends ConfigElement> map,
-            @NotNull IntFunction<? extends Map<String, ConfigElement>> mapSupplier) {
+        @NotNull Map<? extends String, ? extends ConfigElement> map,
+        @NotNull IntFunction<? extends Map<String, ConfigElement>> mapSupplier) {
         Objects.requireNonNull(map);
         Objects.requireNonNull(mapSupplier);
 
         Map<String, ConfigElement> newMap = mapSupplier.apply(map.size());
         for (Map.Entry<? extends String, ? extends ConfigElement> entry : map.entrySet()) {
             newMap.put(Objects.requireNonNull(entry.getKey(), "map entry key"),
-                    Objects.requireNonNull(entry.getValue(), "map entry value"));
+                Objects.requireNonNull(entry.getValue(), "map entry value"));
         }
 
         return newMap;
@@ -104,31 +104,31 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
         return Objects.requireNonNullElseGet(containerCollection,
-                () -> containerCollection = new AbstractCollection<>() {
-                    @Override
-                    public Iterator<ConfigEntry> iterator() {
-                        return new Iterator<>() {
-                            private final Iterator<Entry<String, ConfigElement>> entryIterator = mappings.entrySet()
-                                    .iterator();
+            () -> containerCollection = new AbstractCollection<>() {
+                @Override
+                public Iterator<ConfigEntry> iterator() {
+                    return new Iterator<>() {
+                        private final Iterator<Entry<String, ConfigElement>> entryIterator =
+                            mappings.entrySet().iterator();
 
-                            @Override
-                            public boolean hasNext() {
-                                return entryIterator.hasNext();
-                            }
+                        @Override
+                        public boolean hasNext() {
+                            return entryIterator.hasNext();
+                        }
 
-                            @Override
-                            public ConfigEntry next() {
-                                Entry<String, ConfigElement> next = entryIterator.next();
-                                return new ConfigEntry(next.getKey(), next.getValue());
-                            }
-                        };
-                    }
+                        @Override
+                        public ConfigEntry next() {
+                            Entry<String, ConfigElement> next = entryIterator.next();
+                            return new ConfigEntry(next.getKey(), next.getValue());
+                        }
+                    };
+                }
 
-                    @Override
-                    public int size() {
-                        return mappings.size();
-                    }
-                });
+                @Override
+                public int size() {
+                    return mappings.size();
+                }
+            });
     }
 
     @Override

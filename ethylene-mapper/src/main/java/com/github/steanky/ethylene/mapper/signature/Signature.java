@@ -22,9 +22,9 @@ import java.util.function.ToIntFunction;
 public interface Signature {
     @SafeVarargs
     static <T> Builder<T> builder(@NotNull Token<T> type,
-            @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
-            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
-            @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
+        @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
+        @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+        @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
         return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
     }
 
@@ -70,7 +70,8 @@ public interface Signature {
         return 0;
     }
 
-    record TypedObject(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {}
+    record TypedObject(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
+    }
 
     class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ?> constructor;
@@ -99,8 +100,8 @@ public interface Signature {
 
         @SafeVarargs
         private Builder(@NotNull Token<T> returnType, @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
-                @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
-                @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
+            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+            @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
             this.returnType = Objects.requireNonNull(returnType);
             this.objectSignatureExtractor = Objects.requireNonNull(objectSignatureExtractor);
@@ -108,7 +109,7 @@ public interface Signature {
             this.argumentTypes = new ArrayList<>(arguments.length);
             for (Entry<String, Token<?>> entry : arguments) {
                 argumentTypes.add(
-                        Entry.of(Objects.requireNonNull(entry.getFirst()), Objects.requireNonNull(entry.getSecond())));
+                    Entry.of(Objects.requireNonNull(entry.getFirst()), Objects.requireNonNull(entry.getSecond())));
             }
         }
 
@@ -133,7 +134,7 @@ public interface Signature {
         }
 
         public @NotNull Builder<T> withBuildingObjectInitializer(
-                @NotNull Function<? super ConfigElement, ?> buildingObjectInitializer) {
+            @NotNull Function<? super ConfigElement, ?> buildingObjectInitializer) {
             this.buildingObjectInitializer = Objects.requireNonNull(buildingObjectInitializer);
             return this;
         }
@@ -144,7 +145,7 @@ public interface Signature {
         }
 
         public @NotNull Builder<T> withContainerFunction(
-                @NotNull IntFunction<? extends ConfigContainer> containerFunction) {
+            @NotNull IntFunction<? extends ConfigContainer> containerFunction) {
             this.containerFunction = Objects.requireNonNull(containerFunction);
             return this;
         }

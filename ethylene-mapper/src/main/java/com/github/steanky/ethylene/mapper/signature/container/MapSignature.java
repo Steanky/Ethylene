@@ -62,11 +62,6 @@ public class MapSignature extends ContainerSignatureBase {
         return map;
     }
 
-    @Override
-    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
-        return getMap(container.entryCollection().size());
-    }
-
     @SuppressWarnings("unchecked")
     private void finishMap(Map<Object, Object> map, Object[] args) {
         for (Object object : args) {
@@ -83,9 +78,14 @@ public class MapSignature extends ContainerSignatureBase {
             Constructor<?> constructor = constructorInfo.constructor();
 
             return parameterless ? (Map<Object, Object>) constructor.newInstance() :
-                    (Map<Object, Object>) constructor.newInstance(size);
+                (Map<Object, Object>) constructor.newInstance(size);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw new MapperException(e);
         }
+    }
+
+    @Override
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return getMap(container.entryCollection().size());
     }
 }

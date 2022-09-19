@@ -18,7 +18,8 @@ public class TomlScalarSource extends BasicScalarSource {
      */
     public static final ScalarSource INSTANCE = new TomlScalarSource();
 
-    private TomlScalarSource() {}
+    private TomlScalarSource() {
+    }
 
     @Override
     public @NotNull ConfigElement make(@NotNull Object data) {

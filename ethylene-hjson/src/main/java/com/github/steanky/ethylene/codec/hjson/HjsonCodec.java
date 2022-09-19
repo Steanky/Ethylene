@@ -28,6 +28,13 @@ public class HjsonCodec extends AbstractConfigCodec {
     private final HjsonOptions writeOptions;
 
     /**
+     * Creates a new HjsonCodec using default values.
+     */
+    public HjsonCodec() {
+        this(new HjsonOptions(), new HjsonOptions());
+    }
+
+    /**
      * Creates a new HjsonCodec instance using the given {@link HjsonOptions} for reading and writing.
      *
      * @param readOptions  the options used when reading
@@ -39,11 +46,13 @@ public class HjsonCodec extends AbstractConfigCodec {
         this.writeOptions = Objects.requireNonNull(writeOptions);
     }
 
-    /**
-     * Creates a new HjsonCodec using default values.
-     */
-    public HjsonCodec() {
-        this(new HjsonOptions(), new HjsonOptions());
+    @Override
+    protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
+        try {
+            return JsonValue.readHjson(new InputStreamReader(input), readOptions);
+        } catch (ParseException exception) {
+            throw new IOException(exception);
+        }
     }
 
     @Override
@@ -83,15 +92,31 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
-        JsonObject object = new JsonObject();
-        return Graph.output(object, (k, v, b) -> object.add(k, (JsonValue) v));
+    protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
+        if (object instanceof JsonValue value) {
+            if (value.isNull()) {
+                return new ConfigPrimitive(null);
+            } else if (value.isBoolean()) {
+                return new ConfigPrimitive(value.asBoolean());
+            } else if (value.isNumber()) {
+                return new ConfigPrimitive(value.asDouble());
+            } else if (value.isString()) {
+                return new ConfigPrimitive(value.asString());
+            }
+        }
+
+        return super.deserializeObject(object);
     }
 
     @Override
-    protected @NotNull Graph.Output<Object, String> makeEncodeCollection(int size) {
-        JsonArray array = new JsonArray();
-        return Graph.output(array, (k, v, b) -> array.add((JsonValue) v));
+    protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
+        Writer outputWriter = new OutputStreamWriter(output);
+        BufferedWriter bufferedWriter = new BufferedWriter(outputWriter);
+        ((JsonObject) object).writeTo(bufferedWriter, writeOptions);
+
+        //ensure everything gets written to the OutputStream before it is closed
+        bufferedWriter.flush();
+        outputWriter.flush();
     }
 
     @Override
@@ -117,40 +142,15 @@ public class HjsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
-        if (object instanceof JsonValue value) {
-            if (value.isNull()) {
-                return new ConfigPrimitive(null);
-            } else if (value.isBoolean()) {
-                return new ConfigPrimitive(value.asBoolean());
-            } else if (value.isNumber()) {
-                return new ConfigPrimitive(value.asDouble());
-            } else if (value.isString()) {
-                return new ConfigPrimitive(value.asString());
-            }
-        }
-
-        return super.deserializeObject(object);
+    protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
+        JsonObject object = new JsonObject();
+        return Graph.output(object, (k, v, b) -> object.add(k, (JsonValue) v));
     }
 
     @Override
-    protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
-        try {
-            return JsonValue.readHjson(new InputStreamReader(input), readOptions);
-        } catch (ParseException exception) {
-            throw new IOException(exception);
-        }
-    }
-
-    @Override
-    protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
-        Writer outputWriter = new OutputStreamWriter(output);
-        BufferedWriter bufferedWriter = new BufferedWriter(outputWriter);
-        ((JsonObject) object).writeTo(bufferedWriter, writeOptions);
-
-        //ensure everything gets written to the OutputStream before it is closed
-        bufferedWriter.flush();
-        outputWriter.flush();
+    protected @NotNull Graph.Output<Object, String> makeEncodeCollection(int size) {
+        JsonArray array = new JsonArray();
+        return Graph.output(array, (k, v, b) -> array.add((JsonValue) v));
     }
 
     @Override

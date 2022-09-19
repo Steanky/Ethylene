@@ -60,8 +60,8 @@ public class RecordSignature implements Signature {
         for (RecordComponent recordComponent : components) {
             try {
                 typedObjects.add(
-                        new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
-                                recordComponent.getAccessor().invoke(object)));
+                    new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
+                        recordComponent.getAccessor().invoke(object)));
             } catch (IllegalAccessException | InvocationTargetException ignored) {
             }
         }
@@ -117,16 +117,33 @@ public class RecordSignature implements Signature {
         return genericReturnType;
     }
 
-    private RecordComponent[] resolveComponents() {
-        RecordComponent[] cached = recordComponentsReference.get();
+    private Constructor<?> resolveConstructor() {
+        Constructor<?> cached = constructorReference.get();
         if (cached != null) {
             return cached;
         }
 
-        Class<?> objectClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
-        RecordComponent[] recordComponents = objectClass.getRecordComponents();
-        recordComponentsReference = new SoftReference<>(recordComponents);
-        return recordComponents;
+        Class<?> rawClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
+        boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
+        Class<?>[] types = resolveComponentTypes();
+
+        try {
+            if (widenAccess) {
+                Constructor<?> constructor = rawClass.getDeclaredConstructor(types);
+                if (!constructor.canAccess(null) && !constructor.trySetAccessible()) {
+                    throw new MapperException("Failed to widen access for record constructor '" + constructor + "'");
+                }
+
+                constructorReference = new SoftReference<>(constructor);
+                return constructor;
+            }
+
+            Constructor<?> constructor = rawClass.getConstructor(types);
+            constructorReference = new SoftReference<>(constructor);
+            return constructor;
+        } catch (NoSuchMethodException e) {
+            throw new MapperException(e);
+        }
     }
 
     private Class<?>[] resolveComponentTypes() {
@@ -164,32 +181,15 @@ public class RecordSignature implements Signature {
         return argumentTypes = Collections.unmodifiableCollection(underlyingList);
     }
 
-    private Constructor<?> resolveConstructor() {
-        Constructor<?> cached = constructorReference.get();
+    private RecordComponent[] resolveComponents() {
+        RecordComponent[] cached = recordComponentsReference.get();
         if (cached != null) {
             return cached;
         }
 
-        Class<?> rawClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
-        boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
-        Class<?>[] types = resolveComponentTypes();
-
-        try {
-            if (widenAccess) {
-                Constructor<?> constructor = rawClass.getDeclaredConstructor(types);
-                if (!constructor.canAccess(null) && !constructor.trySetAccessible()) {
-                    throw new MapperException("Failed to widen access for record constructor '" + constructor + "'");
-                }
-
-                constructorReference = new SoftReference<>(constructor);
-                return constructor;
-            }
-
-            Constructor<?> constructor = rawClass.getConstructor(types);
-            constructorReference = new SoftReference<>(constructor);
-            return constructor;
-        } catch (NoSuchMethodException e) {
-            throw new MapperException(e);
-        }
+        Class<?> objectClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
+        RecordComponent[] recordComponents = objectClass.getRecordComponents();
+        recordComponentsReference = new SoftReference<>(recordComponents);
+        return recordComponents;
     }
 }

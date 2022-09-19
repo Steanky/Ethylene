@@ -25,7 +25,7 @@ public class SyncFileConfigLoader<TData> extends FileConfigLoader<TData> {
      * @param codec       the {@link ConfigCodec} used to decode the file data
      */
     public SyncFileConfigLoader(@NotNull ConfigProcessor<TData> processor, @NotNull TData defaultData,
-            @NotNull Path path, @NotNull ConfigCodec codec) {
+        @NotNull Path path, @NotNull ConfigCodec codec) {
         super(processor, defaultData, new FileCodecConfigSource(path, codec) {
             @Override
             protected @NotNull <TReturn> CompletableFuture<TReturn> makeFuture(@NotNull Callable<TReturn> callable) {

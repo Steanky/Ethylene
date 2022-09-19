@@ -79,7 +79,7 @@ public class ConstructorSignature implements Signature {
     private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
         Name parameterName = parameter.getAnnotation(Name.class);
         return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
-                Token.ofType(parameter.getParameterizedType()));
+            Token.ofType(parameter.getParameterizedType()));
     }
 
     @Override
@@ -125,8 +125,8 @@ public class ConstructorSignature implements Signature {
             }
 
             try {
-                typedObjects.add(new TypedObject(name, Token.ofType(field.getGenericType()),
-                        FieldUtils.readField(field, object)));
+                typedObjects.add(
+                    new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object)));
             } catch (IllegalAccessException ignored) {
                 break;
             }
@@ -179,37 +179,6 @@ public class ConstructorSignature implements Signature {
     @Override
     public @NotNull Token<?> returnType() {
         return genericReturnType;
-    }
-
-    private Class<?>[] resolveParameterTypes() {
-        Class<?>[] parameterClasses = new Class[parameterTypes.length];
-        for (int i = 0; i < parameterClasses.length; i++) {
-            Class<?> referent = parameterTypes[i].get();
-            if (referent == null) {
-                throw new IllegalStateException("Class named '" + parameterTypeNames[i] + "' no longer exists");
-            }
-
-            parameterClasses[i] = referent;
-        }
-
-        return parameterClasses;
-    }
-
-    private Constructor<?> resolveConstructor() {
-        Constructor<?> constructor = constructorReference.get();
-        if (constructor != null) {
-            return constructor;
-        }
-
-        Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
-        try {
-            constructor = declaringClass.getConstructor(resolveParameterTypes());
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("No valid constructor found for type '" + rawClassName + "'", e);
-        }
-
-        constructorReference = new SoftReference<>(constructor);
-        return constructor;
     }
 
     private Field[] initFields(Class<?> declaringClass, boolean widenAccess) {
@@ -287,5 +256,36 @@ public class ConstructorSignature implements Signature {
         }
 
         return types = Collections.unmodifiableList(entryList);
+    }
+
+    private Constructor<?> resolveConstructor() {
+        Constructor<?> constructor = constructorReference.get();
+        if (constructor != null) {
+            return constructor;
+        }
+
+        Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
+        try {
+            constructor = declaringClass.getConstructor(resolveParameterTypes());
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("No valid constructor found for type '" + rawClassName + "'", e);
+        }
+
+        constructorReference = new SoftReference<>(constructor);
+        return constructor;
+    }
+
+    private Class<?>[] resolveParameterTypes() {
+        Class<?>[] parameterClasses = new Class[parameterTypes.length];
+        for (int i = 0; i < parameterClasses.length; i++) {
+            Class<?> referent = parameterTypes[i].get();
+            if (referent == null) {
+                throw new IllegalStateException("Class named '" + parameterTypeNames[i] + "' no longer exists");
+            }
+
+            parameterClasses[i] = referent;
+        }
+
+        return parameterClasses;
     }
 }
