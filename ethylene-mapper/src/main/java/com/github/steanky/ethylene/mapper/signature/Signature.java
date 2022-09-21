@@ -19,6 +19,10 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
+/**
+ * Represents something that may create a particular object from configuration data, and vice-versa. It also supplies
+ * information necessary to determine what types are required to construct objects.
+ */
 public interface Signature {
     @SafeVarargs
     static <T> Builder<T> builder(@NotNull Token<T> type,
@@ -28,7 +32,8 @@ public interface Signature {
         return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
     }
 
-    static @NotNull TypedObject type(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
+    static @NotNull TypedObject type(@NotNull String name, @NotNull Token<?> type, @NotNull Object value) {
+        Objects.requireNonNull(name);
         Objects.requireNonNull(type);
         Objects.requireNonNull(value);
         return new TypedObject(name, type, value);

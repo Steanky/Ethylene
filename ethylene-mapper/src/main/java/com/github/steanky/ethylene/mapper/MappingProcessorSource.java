@@ -2,14 +2,12 @@ package com.github.steanky.ethylene.mapper;
 
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
-import com.github.steanky.ethylene.mapper.signature.BasicSignatureBuilderSelector;
-import com.github.steanky.ethylene.mapper.signature.Signature;
-import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
-import com.github.steanky.ethylene.mapper.signature.SignatureMatcher;
+import com.github.steanky.ethylene.mapper.signature.*;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
 
@@ -31,25 +29,46 @@ public interface MappingProcessorSource {
         private final Collection<Signature> customSignatures = new HashSet<>();
         private final Collection<Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
         private final Collection<Entry<Class<?>, SignatureBuilder>> signatureBuilderPreferences = new HashSet<>();
+        private final Set<Token<?>> scalarTypes = new HashSet<>();
+        private final Set<ScalarSignature<?>> scalarSignatures = new HashSet<>();
 
-        private TypeHinter typeHinter = BasicTypeHinter.INSTANCE;
+        private ScalarSource scalarSource;
+        private TypeHinter typeHinter;
+        private Function<? super Set<Token<?>>, ? extends TypeHinter> typeHinterFunction = BasicTypeHinter::new;
+
         private SignatureBuilder defaultBuilder = FieldSignatureBuilder.INSTANCE;
-        private ScalarSource scalarSource = BasicScalarSource.INSTANCE;
+        private Function<? super Set<ScalarSignature<?>>, ? extends ScalarSource> scalarSourceFunction = signatures ->
+            new BasicScalarSource(buildTypeHinter(), signatures);
         private Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector>
             signatureBuilderSelectorFunction =
             signaturePreferences -> new BasicSignatureBuilderSelector(defaultBuilder, signaturePreferences);
         private Function<? super Collection<Signature>, ? extends SignatureMatcher.Source>
             signatureMatcherSourceFunction =
-            customSignatures -> new BasicSignatureMatcherSource(typeHinter, getSignatureBuilderSelector(),
+            customSignatures -> new BasicSignatureMatcherSource(buildTypeHinter(), getSignatureBuilderSelector(),
                 customSignatures);
         private Function<? super Collection<Entry<Class<?>, Class<?>>>, ? extends TypeResolver> typeResolverFunction =
-            typeImplementations -> new BasicTypeResolver(typeHinter, typeImplementations);
+            typeImplementations -> new BasicTypeResolver(buildTypeHinter(), typeImplementations);
 
         Builder() {
         }
 
+        private ScalarSource buildScalarSource() {
+            return Objects.requireNonNullElseGet(scalarSource, () -> scalarSource =
+                scalarSourceFunction.apply(scalarSignatures));
+        }
+
+        private TypeHinter buildTypeHinter() {
+            return Objects.requireNonNullElseGet(typeHinter, () -> typeHinter = typeHinterFunction.apply(scalarTypes));
+        }
+
         private SignatureBuilder.Selector getSignatureBuilderSelector() {
             return signatureBuilderSelectorFunction.apply(signatureBuilderPreferences);
+        }
+
+        public @NotNull Builder withTypeHinterFunction(
+            @NotNull Function<? super Set<Token<?>>, ? extends TypeHinter> typeHinterFunction) {
+            this.typeHinterFunction = Objects.requireNonNull(typeHinterFunction);
+            return this;
         }
 
         public @NotNull Builder withStandardSignatures() {
@@ -77,8 +96,9 @@ public interface MappingProcessorSource {
             return this;
         }
 
-        public @NotNull Builder withScalarSource(@NotNull ScalarSource scalarSource) {
-            this.scalarSource = Objects.requireNonNull(scalarSource);
+        public @NotNull Builder withScalarSourceFunction(
+            @NotNull Function<? super Set<ScalarSignature<?>>, ? extends ScalarSource> scalarSourceFunction) {
+            this.scalarSourceFunction = Objects.requireNonNull(scalarSourceFunction);
             return this;
         }
 
@@ -104,6 +124,11 @@ public interface MappingProcessorSource {
             return this;
         }
 
+        public @NotNull Builder withScalarSignature(@NotNull ScalarSignature<?> signature) {
+            scalarSignatures.add(signature);
+            return this;
+        }
+
         public @NotNull Builder withTypeImplementation(@NotNull Class<?> implementation, @NotNull Class<?> superclass) {
             typeImplementations.add(
                 Entry.of(Objects.requireNonNull(implementation), Objects.requireNonNull(superclass)));
@@ -119,9 +144,9 @@ public interface MappingProcessorSource {
 
         public @NotNull MappingProcessorSource build() {
             SignatureMatcher.Source source = signatureMatcherSourceFunction.apply(customSignatures);
-            TypeHinter hinter = this.typeHinter;
+            TypeHinter hinter = buildTypeHinter();
             TypeResolver resolver = typeResolverFunction.apply(typeImplementations);
-            ScalarSource scalarSource = this.scalarSource;
+            ScalarSource scalarSource = buildScalarSource();
 
             return new MappingProcessorSource() {
                 @Override

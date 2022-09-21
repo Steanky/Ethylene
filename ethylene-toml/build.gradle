@@ -7,6 +7,4 @@ group 'com.github.steanky'
 dependencies {
     api project(':ethylene-core')
     api 'com.electronwill.night-config:toml:3.6.5'
-
-    implementation project(':ethylene-mapper')
 }

@@ -99,9 +99,12 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 }
                             }
                         }));
-                    }, potentialContainer -> potentialContainer.element.isContainer(),
-                    scalar -> new MutableObject<>(scalar.element.asScalar()), entry -> entry.element,
-                    Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES | Graph.Options.LAZY_ACCUMULATION)
+                    },
+                    potentialContainer -> typeHinter.getHint(potentialContainer.type) != ElementType.SCALAR &&
+                        potentialContainer.element.isContainer(),
+                    scalar -> new MutableObject<>(scalarSource.makeObject(scalar.element, scalar.type)),
+                    entry -> entry.element, Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES |
+                        Graph.Options.LAZY_ACCUMULATION)
                 .getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
@@ -156,11 +159,15 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                     target.asNode().put(key, value.getValue());
                                 }
                             }));
-                    }, potentialContainer -> {
+                    },
+                    potentialContainer -> {
                         //runtime type is passed to TypeHinter: this should be safe since it doesn't care about generics
-                        return potentialContainer.object != null &&
-                            typeHinter.getHint(Token.ofClass(potentialContainer.object.getClass())) != ElementType.SCALAR;
-                    }, scalar -> new MutableObject<>(scalarSource.make(scalar.object)), entry -> entry.object,
+                        return typeHinter.getHint(potentialContainer.type) != ElementType.SCALAR &&
+                            (potentialContainer.object != null && typeHinter.getHint(Token.ofClass(potentialContainer
+                                .object.getClass())) != ElementType.SCALAR);
+                    },
+                    scalar -> new MutableObject<>(scalarSource.makeElement(scalar.object, scalar.type)),
+                    entry -> entry.object,
                     Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES | Graph.Options.LAZY_ACCUMULATION)
                 .getValue();
         } catch (Exception e) {

@@ -5,6 +5,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -438,12 +439,12 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     /**
-     * Checks if this type is a subclass of the given class.
+     * Checks if this type is a subclass of the given type.
      *
-     * @param type the potential superclass
+     * @param type the potential supertype
      * @return true if this type subclasses (is assignable to) the given class, false otherwise
      */
-    public final boolean isSubclassOf(@NotNull Class<?> type) {
+    public final boolean isSubclassOf(@NotNull Type type) {
         Objects.requireNonNull(type);
         return TypeUtils.isAssignable(get(), type);
     }
@@ -463,10 +464,10 @@ public abstract class Token<T> implements Supplier<Type> {
     /**
      * Checks if this type is a superclass of the given class.
      *
-     * @param type the potential subclass
+     * @param type the potential subtype
      * @return true if this type superclasses (is assignable from) the given class, false otherwise
      */
-    public final boolean isSuperclassOf(@NotNull Class<?> type) {
+    public final boolean isSuperclassOf(@NotNull Type type) {
         Objects.requireNonNull(type);
         return TypeUtils.isAssignable(type, get());
     }
@@ -479,6 +480,12 @@ public abstract class Token<T> implements Supplier<Type> {
         return ClassUtils.isPrimitiveOrWrapper(rawType());
     }
 
+    /**
+     * Gets the actual type parameters of this type.
+     *
+     * @return the actual type parameters of this type
+     * @throws IllegalStateException if this type is not a {@link ParameterizedType}
+     */
     public final @NotNull Token<?>[] actualTypeParameters() {
         Type type = get();
 
@@ -539,7 +546,7 @@ public abstract class Token<T> implements Supplier<Type> {
     /**
      * Convenience overload for {@link Token#subtypeVariables(Token)}.
      *
-     * @param subtype the subtype class, which must be assignable to this token's type
+     * @param subtype the subtype, which must be assignable to this token's type
      * @return a {@link TypeVariableMap} of {@link TypeVariable}s to {@link Type}s
      */
     public final @NotNull TypeVariableMap subtypeVariables(@NotNull Class<?> subtype) {
@@ -578,7 +585,7 @@ public abstract class Token<T> implements Supplier<Type> {
     /**
      * Convenience overload for {@link Token#supertypeVariables(Token)}.
      *
-     * @param supertype the supertype {@link Class}.
+     * @param supertype the supertype
      * @return a {@link TypeVariableMap} of {@link TypeVariable}s to {@link Type}s
      */
     public final @NotNull TypeVariableMap supertypeVariables(@NotNull Class<?> supertype) {
@@ -593,13 +600,39 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     /**
-     * Gets the name of the type underlying this token. This method will not throw a {@link TypeNotPresentException} if
-     * the underlying type has been garbage collected.
+     * Produces an Iterable that walks the class hierarchy, starting at this type's raw class, iterating each superclass
+     * (but not interface) until {@link Object}.
+     *
+     * @return an iterable which walks the class hierarchy
+     */
+    public final @NotNull Iterable<Class<?>> hierarchy() {
+        return ClassUtils.hierarchy(rawType());
+    }
+
+    /**
+     * Produces an Iterable that walks the class hierarchy, starting at this type's raw class, iterating each superclass
+     * (and potentially interface, if {@link ClassUtils.Interfaces#INCLUDE} is chosen) until {@link Object}.
+     *
+     * @param interfaces whether to include interfaces
+     * @return an iterable which walks the class hierarchy
+     */
+    public final @NotNull Iterable<Class<?>> hierarchy(@NotNull ClassUtils.Interfaces interfaces) {
+        return ClassUtils.hierarchy(rawType(), interfaces);
+    }
+
+    /**
+     * Gets the name of the type underlying this token. This method will <b>not</b> throw a
+     * {@link TypeNotPresentException} if the underlying type has been garbage collected.
      *
      * @return the name of the underlying type
      */
     public final @NotNull String getTypeName() {
         return typeName;
+    }
+
+    @SuppressWarnings("unchecked")
+    public final T cast(Object other) {
+        return (T) rawType().cast(other);
     }
 
     @Override

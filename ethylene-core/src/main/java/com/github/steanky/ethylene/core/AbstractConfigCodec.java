@@ -21,12 +21,12 @@ import java.util.function.Function;
  * natively supported by this class.</p>
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
-    private final int graphTransformerEncodeOptions;
-    private final int graphTransformerDecodeOptions;
+    private final int graphEncodeOptions;
+    private final int graphDecodeOptions;
 
-    protected AbstractConfigCodec(int graphTransformerEncodeOptions, int graphTransformerDecodeOptions) {
-        this.graphTransformerEncodeOptions = graphTransformerEncodeOptions;
-        this.graphTransformerDecodeOptions = graphTransformerDecodeOptions;
+    protected AbstractConfigCodec(int graphEncodeOptions, int graphDecodeOptions) {
+        this.graphEncodeOptions = graphEncodeOptions;
+        this.graphDecodeOptions = graphDecodeOptions;
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             }
 
             writeObject(Graph.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
-                graphTransformerEncodeOptions), output);
+                graphEncodeOptions), output);
         }
     }
 
@@ -52,7 +52,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
         try (input) {
             return Graph.process(readObject(input), this::makeDecodeNode, this::isContainer, this::deserializeObject,
-                Function.identity(), IdentityHashMap::new, ArrayDeque::new, graphTransformerDecodeOptions);
+                graphDecodeOptions);
         }
     }
 

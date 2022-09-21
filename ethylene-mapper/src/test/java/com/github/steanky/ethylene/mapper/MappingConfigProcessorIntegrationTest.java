@@ -26,7 +26,7 @@ class MappingConfigProcessorIntegrationTest {
     private final TypeHinter typeHinter;
     private final BasicTypeResolver typeResolver;
     private final BasicSignatureMatcherSource source;
-    private final ScalarSource scalarSource = BasicScalarSource.INSTANCE;
+    private final ScalarSource scalarSource;
 
     private final MappingConfigProcessor<List<String>> stringListProcessor;
     private final MappingConfigProcessor<List<Object>> objectListProcessor;
@@ -46,12 +46,13 @@ class MappingConfigProcessorIntegrationTest {
             }), Entry.of("value", new Token<>() {
             })).matchingTypeHints().matchingNames().build();
 
-        typeHinter = new BasicTypeHinter();
+        typeHinter = new BasicTypeHinter(Set.of());
         typeResolver = new BasicTypeResolver(typeHinter,
             Set.of(Entry.of(ArrayList.class, Collection.class), Entry.of(HashSet.class, Set.class),
                 Entry.of(HashMap.class, Map.class)));
         source = new BasicSignatureMatcherSource(typeHinter,
             new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE, Set.of()), Set.of(mapEntry));
+        scalarSource = new BasicScalarSource(typeHinter, Set.of());
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {
         }, source, typeHinter, typeResolver, scalarSource);

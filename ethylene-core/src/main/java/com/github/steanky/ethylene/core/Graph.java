@@ -255,7 +255,8 @@ public final class Graph {
          * Enables support for reference tracking. If this is enabled, all node references will be tracked, whereas
          * scalar references <i>can</i> be tracked only if their corresponding option flag is set. Warning: when this
          * option is not present, any circular references in the input data structure will cause an infinite loop and
-         * eventually an OOM.
+         * eventually an OOM. However, if there is some guarantee that such a condition is not possible, leaving this
+         * setting disabled can improve performance.
          */
         public static final int TRACK_REFERENCES = 1;
 

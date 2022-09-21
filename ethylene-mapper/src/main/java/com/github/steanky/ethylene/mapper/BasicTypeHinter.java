@@ -5,13 +5,26 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Map;
+import java.lang.reflect.Type;
+import java.util.*;
 
 public class BasicTypeHinter implements TypeHinter {
-    public static final TypeHinter INSTANCE = new BasicTypeHinter();
+    private final Set<Type> scalars;
+    private final Set<Type> nonScalars;
 
-    protected BasicTypeHinter() {
+    public BasicTypeHinter(@NotNull Set<Token<?>> scalarTypes) {
+        if (scalarTypes.isEmpty()) {
+            this.scalars = Set.of();
+            this.nonScalars = Set.of();
+        }
+        else {
+            this.scalars = Collections.newSetFromMap(new WeakHashMap<>(scalarTypes.size()));
+            for (Token<?> token : scalarTypes) {
+                this.scalars.add(token.get());
+            }
+
+            this.nonScalars = Collections.newSetFromMap(new WeakHashMap<>());
+        }
     }
 
     @Override
@@ -20,6 +33,25 @@ public class BasicTypeHinter implements TypeHinter {
             return ElementType.LIST;
         } else if (type.isPrimitiveOrWrapper() || type.isSubclassOf(String.class)) {
             return ElementType.SCALAR;
+        }
+
+        if (scalars.isEmpty()) {
+            return ElementType.NODE;
+        }
+
+        Type actual = type.get();
+        if (scalars.contains(actual)) {
+            return ElementType.SCALAR;
+        }
+
+        if (!nonScalars.contains(actual)) {
+            for (Type existing : scalars) {
+                if (type.isSubclassOf(existing)) {
+                    return ElementType.SCALAR;
+                }
+            }
+
+            nonScalars.add(actual);
         }
 
         return ElementType.NODE;

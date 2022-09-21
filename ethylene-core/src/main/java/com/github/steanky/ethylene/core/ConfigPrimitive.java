@@ -27,9 +27,19 @@ public final class ConfigPrimitive implements ConfigElement {
         this.object = validateType(object);
     }
 
+    /**
+     * Determines if the given object may be used to construct a {@link ConfigPrimitive}.
+     *
+     * @param object the object in question
+     * @return true if the object is a valid type for ConfigPrimitive; false otherwise
+     */
+    public static boolean isPrimitive(@Nullable Object object) {
+        return object == null || object instanceof String || object instanceof Number || object instanceof Boolean ||
+            object instanceof Character;
+    }
+
     private static Object validateType(Object object) {
-        if (!(object == null || object instanceof String || object instanceof Number || object instanceof Boolean ||
-            object instanceof Character)) {
+        if (!isPrimitive(object)) {
             throw new IllegalArgumentException("Object " + object + " not a valid type for ConfigPrimitive");
         }
 
