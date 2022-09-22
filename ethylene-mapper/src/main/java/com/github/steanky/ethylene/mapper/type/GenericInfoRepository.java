@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper.type;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -70,20 +71,23 @@ class GenericInfoRepository {
      * @param type  the {@link WeakType} to cache
      * @return the cached type if present, else {@code type}
      */
-    static @NotNull Type bind(@NotNull Class<?> owner, @NotNull WeakType type) {
+    private static @NotNull Type bind(@NotNull Class<?> owner, @NotNull WeakType type) {
         return store.get(owner, ignored -> new GenericInfoRepository()).canonicalTypes.computeIfAbsent(type,
             Function.identity());
     }
 
-    static @NotNull Type resolveType(@NotNull Type type) {
+    static @NotNull Type resolveType(@NotNull Class<?> owner, @NotNull Type type) {
         Objects.requireNonNull(type);
 
-        if (type instanceof Class<?> || type instanceof WeakType) {
+        if (type instanceof Class<?>) {
             return type;
         }
+        else if (type instanceof WeakType weakType) {
+            return bind(owner, weakType);
+        }
         else if (type instanceof ParameterizedType parameterizedType) {
-            return new WeakParameterizedType(TypeUtils.getRawType(parameterizedType.getRawType(), null),
-                parameterizedType.getOwnerType(), parameterizedType.getActualTypeArguments());
+            return bind(owner, new WeakParameterizedType((Class<?>) parameterizedType.getRawType(), parameterizedType
+                .getOwnerType(), parameterizedType.getActualTypeArguments()));
         }
         else if (type instanceof TypeVariable<?> typeVariable) {
             int i = 0;
@@ -95,13 +99,13 @@ class GenericInfoRepository {
                 i++;
             }
 
-            return new WeakTypeVariable<>(typeVariable, i);
+            return bind(owner, new WeakTypeVariable<>(typeVariable, i));
         }
         else if (type instanceof WildcardType wildcardType) {
-            return new WeakWildcardType(wildcardType);
+            return bind(owner, new WeakWildcardType(wildcardType));
         }
         else if(type instanceof GenericArrayType genericArrayType) {
-            return new WeakGenericArrayType(genericArrayType.getGenericComponentType());
+            return bind(owner, new WeakGenericArrayType(genericArrayType.getGenericComponentType()));
         }
 
         throw new IllegalArgumentException("Unexpected Type implementation '" + type.getClass().getName() + "'");
@@ -114,7 +118,8 @@ class GenericInfoRepository {
         }
 
         for (int i = 0; i < types.length; i++) {
-            Type type = resolveType(types[i]);
+            Type unbound = types[i];
+            Type type = resolveType(ReflectionUtils.rawType(unbound), unbound);
             names[i] = type.getTypeName();
             typeReferences[i] = new WeakReference<>(type);
         }

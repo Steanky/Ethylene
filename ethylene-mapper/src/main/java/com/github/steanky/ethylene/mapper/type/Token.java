@@ -101,7 +101,7 @@ public abstract class Token<T> implements Supplier<Type> {
     private Token(@NotNull Type type) {
         Objects.requireNonNull(type);
 
-        Type resolved = GenericInfoRepository.resolveType(type);
+        Type resolved = GenericInfoRepository.resolveType(ReflectionUtils.rawType(type), type);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
     }
@@ -131,7 +131,7 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("Expected non-null type parameter for '" + getClass().getTypeName() + "'");
         }
 
-        Type resolved = GenericInfoRepository.resolveType(target);
+        Type resolved = GenericInfoRepository.resolveType(ReflectionUtils.rawType(target), target);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
     }
@@ -170,7 +170,7 @@ public abstract class Token<T> implements Supplier<Type> {
             actualOwner = owner;
         }
 
-        return Token.ofType(GenericInfoRepository.bind(raw, new WeakParameterizedType(raw, actualOwner, params)));
+        return Token.ofType(GenericInfoRepository.resolveType(raw, new WeakParameterizedType(raw, actualOwner, params)));
     }
 
     private static Type[] extractTypes(Token<?>[] tokens) {
@@ -187,12 +187,7 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     private static @NotNull Class<?> rawType(Type type) {
-        Class<?> cls = TypeUtils.getRawType(type, null);
-        if (cls == null) {
-            throw new IllegalArgumentException("Invalid type '" + type.getTypeName() + "'");
-        }
-
-        return cls;
+        return ReflectionUtils.rawType(type);
     }
 
     private static void checkTypes(Class<?> raw, Type... params) {
@@ -228,7 +223,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
         if (type instanceof WeakType weakType) {
             //return the bound type if we can
-            return new Token<>(GenericInfoRepository.bind(rawType(type), weakType)) {
+            return new Token<>(weakType) {
             };
         }
 
@@ -402,7 +397,7 @@ public abstract class Token<T> implements Supplier<Type> {
             return Token.ofType(cls.arrayType());
         }
 
-        return Token.ofType(GenericInfoRepository.bind(rawType(type), new WeakGenericArrayType(type)));
+        return Token.ofType(new WeakGenericArrayType(type));
     }
 
     /**

@@ -26,8 +26,8 @@ final class WeakWildcardType implements WeakType, WildcardType {
         }
 
         Type[] upperBounds = wildcardType.getUpperBounds();
-        this.upperBoundNames = new String[upperBounds.length];
         this.upperBoundReferences = new Reference[upperBounds.length];
+        this.upperBoundNames = new String[upperBounds.length];
         GenericInfoRepository.populate(upperBounds, upperBoundReferences, upperBoundNames);
 
         Type[] lowerBounds = wildcardType.getLowerBounds();

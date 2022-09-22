@@ -25,7 +25,7 @@ final class WeakGenericArrayType implements GenericArrayType, WeakType {
      */
     WeakGenericArrayType(@NotNull Type componentType) {
         this.componentTypeReference = new WeakReference<>(componentType = GenericInfoRepository
-            .resolveType(componentType));
+            .resolveType(ReflectionUtils.rawType(componentType), componentType));
         this.componentTypeName = componentType.getTypeName();
     }
 
