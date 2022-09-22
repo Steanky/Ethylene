@@ -139,10 +139,11 @@ public abstract class Token<T> implements Supplier<Type> {
 
     private static Type resolveType(Type input) {
         if (input instanceof TypeVariable<?> variable) {
-            return variable.getBounds()[0];
+            //recursive resolve (upper bounds may be a TypeVariable itself)
+            return resolveType(variable.getBounds()[0]);
         } else if (input instanceof WildcardType wildcardType) {
             //interpret wildcards only by their upper bound
-            return wildcardType.getUpperBounds()[0];
+            return resolveType(wildcardType.getUpperBounds()[0]);
         }
 
         return input;

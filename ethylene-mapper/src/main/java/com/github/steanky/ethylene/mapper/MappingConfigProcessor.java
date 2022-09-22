@@ -20,6 +20,9 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
+    private static final int GRAPH_OPTIONS = Graph.Options.DEPTH_FIRST |
+        Graph.Options.TRACK_REFERENCES | Graph.Options.LAZY_ACCUMULATION;
+
     private final Token<T> token;
     private final SignatureMatcher.Source signatureMatcherSource;
     private final TypeHinter typeHinter;
@@ -100,11 +103,10 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             }
                         }));
                     },
-                    potentialContainer -> typeHinter.getHint(potentialContainer.type) != ElementType.SCALAR &&
-                        potentialContainer.element.isContainer(),
+                    this::elementToObjectContainerPredicate,
                     scalar -> new MutableObject<>(scalarSource.makeObject(scalar.element, scalar.type)),
-                    entry -> entry.element, Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES |
-                        Graph.Options.LAZY_ACCUMULATION)
+                    entry -> entry.element,
+                    GRAPH_OPTIONS)
                 .getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
@@ -126,7 +128,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         int size = typeSignature.size();
 
                         ConfigContainer target = signature.initContainer(size);
-                        nodeEntry.element.setValue(target);
+                        nodeEntry.element = target;
 
                         Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
 
@@ -148,37 +150,48 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 Token<?> objectType = typeResolver.resolveType(typedObject.type(), null);
                                 SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
 
-                                return Entry.of(typedObject.name(),
-                                    new ElementEntry(objectType, typedObject.value(), thisMatcher));
+                                return Entry.of(typedObject.name(), new ElementEntry(objectType, typedObject.value(),
+                                    thisMatcher));
                             }
-                        }, Graph.output(nodeEntry.element,
-                            (Graph.Accumulator<String, Mutable<ConfigElement>>) (key, value, circular) -> {
-                                if (target.isList()) {
-                                    target.asList().add(value.getValue());
-                                } else {
-                                    target.asNode().put(key, value.getValue());
-                                }
-                            }));
+                        }, Graph.output(nodeEntry.element, (String key, ConfigElement value, boolean circular) -> {
+                            if (target.isList()) {
+                                target.asList().add(value);
+                            } else {
+                                target.asNode().put(key, value);
+                            }
+                        }));
                     },
-                    potentialContainer -> {
-                        //runtime type is passed to TypeHinter: this should be safe since it doesn't care about generics
-                        return typeHinter.getHint(potentialContainer.type) != ElementType.SCALAR &&
-                            (potentialContainer.object != null && typeHinter.getHint(Token.ofClass(potentialContainer
-                                .object.getClass())) != ElementType.SCALAR);
-                    },
-                    scalar -> new MutableObject<>(scalarSource.makeElement(scalar.object, scalar.type)),
+                    this::objectToElementContainerPredicate,
+                    scalar -> scalarSource.makeElement(scalar.object, scalar.type),
                     entry -> entry.object,
-                    Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES | Graph.Options.LAZY_ACCUMULATION)
-                .getValue();
+                    GRAPH_OPTIONS);
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
     }
 
-    private record ElementEntry(Token<?> type, Object object, SignatureMatcher signatureMatcher,
-                                Mutable<ConfigElement> element) {
+    private boolean elementToObjectContainerPredicate(ClassEntry entry) {
+        return typeHinter.getHint(entry.type) != ElementType.SCALAR && entry.element.isContainer();
+    }
+
+    private boolean objectToElementContainerPredicate(ElementEntry entry) {
+        return typeHinter.getHint(entry.type) != ElementType.SCALAR &&
+            (entry.object != null && typeHinter.getHint(Token.ofClass(entry.object.getClass())) != ElementType.SCALAR);
+    }
+
+    private static class ElementEntry {
+        private final Token<?> type;
+        private final Object object;
+        private final SignatureMatcher signatureMatcher;
+
+        //ElementEntry isn't a record so we can set this field
+        private ConfigElement element;
+
         private ElementEntry(Token<?> type, Object object, SignatureMatcher signatureMatcher) {
-            this(type, object, signatureMatcher, new MutableObject<>(null));
+            this.type = type;
+            this.object = object;
+            this.signatureMatcher = signatureMatcher;
+            this.element = null;
         }
     }
 
