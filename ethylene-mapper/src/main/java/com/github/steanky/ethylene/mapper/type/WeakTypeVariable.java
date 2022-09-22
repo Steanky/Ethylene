@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  * This class violates the contract of {@link TypeVariable}, which specifies that its creation must not reify its
  * bounds. Said bounds are resolved in the constructor. We can't lazily evaluate the bounds without retaining a strong
  * reference to Type objects (violating the contract of {@link WeakType}) or risking early garbage collection (there is
- * no guarantee that a
+ * no guarantee that a TypeVariable is cached by the JVM).
  * @param <TDec> the type of generic declaration
  */
 final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakType, TypeVariable<TDec> {
@@ -166,10 +166,9 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakTyp
             return true;
         }
 
-        //instanceof on WeakTypeVariable instead of TypeVariable to copy TypeVariableImpl's behavior
-        if (obj instanceof WeakTypeVariable<?> other) {
-            return Objects.equals(genericDeclaration, other.genericDeclarationSupplier.get()) &&
-                Objects.equals(name, other.name);
+        if (obj instanceof TypeVariable<?> other) {
+            return Objects.equals(genericDeclaration, other.getGenericDeclaration()) &&
+                Objects.equals(name, other.getName());
         }
 
         return false;
@@ -178,5 +177,10 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakTyp
     @Override
     public String toString() {
         return TypeUtils.toString(this);
+    }
+
+    @Override
+    public @NotNull Class<?> getBoundClass() {
+        return ReflectionUtils.getDeclarationOwner(genericDeclarationSupplier.get());
     }
 }

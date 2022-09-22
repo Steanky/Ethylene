@@ -42,7 +42,7 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
         this.rawClassName = rawClass.getTypeName();
 
         this.ownerTypeReference = owner == null ? null : new WeakReference<>(owner = GenericInfoRepository
-            .resolveType(ReflectionUtils.rawType(owner), owner));
+            .resolveType(owner));
         this.ownerTypeName = owner == null ? StringUtils.EMPTY : owner.getTypeName();
 
         this.typeArgumentReferences = new Reference[typeArguments.length];
@@ -100,5 +100,10 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
     @Override
     public Type getOwnerType() {
         return ownerTypeReference == null ? null : ReflectionUtils.resolve(ownerTypeReference, ownerTypeName);
+    }
+
+    @Override
+    public @NotNull Class<?> getBoundClass() {
+        return ReflectionUtils.resolve(rawClassReference, rawClassName);
     }
 }

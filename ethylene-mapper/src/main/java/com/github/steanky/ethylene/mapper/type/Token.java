@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.mapper.type;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
@@ -15,7 +14,7 @@ import java.util.function.Supplier;
 
 /**
  * Token may be used to retain complete, arbitrary type information at runtime. This includes generics, arrays, generic
- * arrays, bounded or wildcard generics, and classes. This type may be accessed by using the {@code get} method.
+ * arrays, bounded or wildcard generics, classes, and type variables
  * <p>
  * This class is abstract to force implementing it wherever it is used, so that information may be extracted from the
  * superclass type parameter. A standard usage pattern for Token is shown below:
@@ -29,8 +28,11 @@ import java.util.function.Supplier;
  * <p>
  * All instance methods defined in this class, unless otherwise noted, will throw a {@link TypeNotPresentException} if
  * their underlying type object no longer exists.
- *
+ * <p>
+ * {@link Token#get()} may be used to retrieve the underlying type. This instance is guaranteed to be cached such that
+ * there is only one publicly-accessible instance available for each unique Type.
  * @param <T> the type information to be held in this token
+ * @see WeakType
  */
 //T is NOT unused, it is inspected reflectively on Token instantiation!
 @SuppressWarnings("unused")
@@ -101,7 +103,7 @@ public abstract class Token<T> implements Supplier<Type> {
     private Token(@NotNull Type type) {
         Objects.requireNonNull(type);
 
-        Type resolved = GenericInfoRepository.resolveType(ReflectionUtils.rawType(type), type);
+        Type resolved = GenericInfoRepository.resolveType(type);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
     }
@@ -131,7 +133,7 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("Expected non-null type parameter for '" + getClass().getTypeName() + "'");
         }
 
-        Type resolved = GenericInfoRepository.resolveType(ReflectionUtils.rawType(target), target);
+        Type resolved = GenericInfoRepository.resolveType(target);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
     }

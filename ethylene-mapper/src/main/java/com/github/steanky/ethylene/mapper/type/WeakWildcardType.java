@@ -76,4 +76,9 @@ final class WeakWildcardType implements WeakType, WildcardType {
     public String toString() {
         return TypeUtils.toString(this);
     }
+
+    @Override
+    public @NotNull Class<?> getBoundClass() {
+        return ReflectionUtils.rawType(this);
+    }
 }

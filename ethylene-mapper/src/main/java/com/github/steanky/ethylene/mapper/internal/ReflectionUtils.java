@@ -93,4 +93,17 @@ public class ReflectionUtils {
 
         throw new IllegalArgumentException("Unexpected subclass of Type '" + type.getClass().getName() + "'");
     }
+
+    public static @NotNull Class<?> getDeclarationOwner(@NotNull GenericDeclaration genericDeclaration) {
+        if (genericDeclaration instanceof Class<?> cls) {
+            return cls;
+        }
+        else if(genericDeclaration instanceof Executable executable) {
+            return executable.getDeclaringClass();
+        }
+        else {
+            throw new IllegalArgumentException("Unexpected subclass of GenericDeclaration '" + genericDeclaration
+                .getClass().getName() + "'");
+        }
+    }
 }
