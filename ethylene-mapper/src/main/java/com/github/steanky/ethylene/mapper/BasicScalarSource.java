@@ -98,7 +98,7 @@ public class BasicScalarSource implements ScalarSource {
             return ConfigPrimitive.of(data);
         }
 
-        return createElement(resolveSignature(Token.ofClass(dataClass), upperBounds), data);
+        return createElement(resolveSignature(Token.ofType(dataClass), upperBounds), data);
     }
 
     @Override

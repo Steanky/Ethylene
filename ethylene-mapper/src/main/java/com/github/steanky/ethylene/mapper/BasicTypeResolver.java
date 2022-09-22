@@ -13,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -81,10 +80,10 @@ public class BasicTypeResolver implements TypeResolver {
             if (referent != null) {
                 //exact cache had a hit, we can avoid walking the class hierarchy
                 if (type.isParameterized()) {
-                    return Token.ofClass(referent).parameterize(type.subtypeVariables(referent));
+                    return Token.ofType(referent).parameterize(type.subtypeVariables(referent));
                 }
 
-                return Token.ofClass(referent);
+                return Token.ofType(referent);
             }
 
             //this should not happen, if the entry has no reference to the class, the cache shouldn't either
@@ -108,10 +107,10 @@ public class BasicTypeResolver implements TypeResolver {
                     exactCache.put(raw, superclassReference);
 
                     if (type.isParameterized()) {
-                        return Token.ofClass(referent).parameterize(type.subtypeVariables(referent));
+                        return Token.ofType(referent).parameterize(type.subtypeVariables(referent));
                     }
 
-                    return Token.ofClass(referent);
+                    return Token.ofType(referent);
                 }
             }
 

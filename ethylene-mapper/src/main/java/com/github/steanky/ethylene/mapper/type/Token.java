@@ -136,20 +136,6 @@ public abstract class Token<T> implements Supplier<Type> {
         this.typeName = resolved.getTypeName();
     }
 
-    /**
-     * Creates a token from the given {@link Class}. Unlike {@link Token#ofType(Type)}, this method is safe for general
-     * use.
-     *
-     * @param type     the class from which to create a token
-     * @param <TClass> the object type defined by the class
-     * @return a new token containing the specified class
-     */
-    public static @NotNull <TClass> Token<TClass> ofClass(@NotNull Class<TClass> type) {
-        Objects.requireNonNull(type);
-        return new Token<>(type) {
-        };
-    }
-
     private static Token<?> parameterizeInternal(Class<?> raw, Type owner, Type... params) {
         //currently, only checks the parameter array length against the number of variables, ignoring type bounds
         checkTypes(raw, params);
@@ -170,7 +156,7 @@ public abstract class Token<T> implements Supplier<Type> {
             actualOwner = owner;
         }
 
-        return Token.ofType(GenericInfoRepository.resolveType(raw, new WeakParameterizedType(raw, actualOwner, params)));
+        return Token.ofType(new WeakParameterizedType(raw, actualOwner, params));
     }
 
     private static Type[] extractTypes(Token<?>[] tokens) {
@@ -202,33 +188,10 @@ public abstract class Token<T> implements Supplier<Type> {
         }
     }
 
-    /**
-     * Creates a new Token containing the provided type. Only a weak reference to the type is retained. Since Java's own
-     * Type implementations have strong references elsewhere due to internal caching, the type will (assuming no other
-     * strong references exist) be garbage collected when the classloader it was created by is unloaded. However, custom
-     * subclasses of Type are not necessarily bound to the classloader. Unless additional precautions are taken, these
-     * objects are not safe for storage in Tokens because they will be garbage collected too soon.<p>
-     * <p>
-     * This method is public to allow access across packages, but is not intended for general use. It is not part of the
-     * public API. Users should create tokens of specific types through subclassing,
-     * {@link Token#parameterize(Class[])}, {@link Token#ofClass(Class)}, or a similar supported method.
-     *
-     * @param type the type from which to create a token
-     * @return a new token containing the given type
-     */
-    @SuppressWarnings("IfStatementWithIdenticalBranches")
-    @ApiStatus.Internal
     public static @NotNull Token<?> ofType(@NotNull Type type) {
         Objects.requireNonNull(type);
 
-        if (type instanceof WeakType weakType) {
-            //return the bound type if we can
-            return new Token<>(weakType) {
-            };
-        }
-
-        return new Token<>(type) {
-        };
+        return new Token<>(type) {};
     }
 
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {

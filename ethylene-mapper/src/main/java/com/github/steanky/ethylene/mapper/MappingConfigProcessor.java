@@ -176,7 +176,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
     private boolean objectToElementContainerPredicate(ElementEntry entry) {
         return typeHinter.getHint(entry.type) != ElementType.SCALAR &&
-            (entry.object != null && typeHinter.getHint(Token.ofClass(entry.object.getClass())) != ElementType.SCALAR);
+            (entry.object != null && typeHinter.getHint(Token.ofType(entry.object.getClass())) != ElementType.SCALAR);
     }
 
     private static class ElementEntry {
