@@ -68,7 +68,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
             throw new ConfigProcessException("Cannot convert null enum constant to a ConfigElement");
         }
 
-        return new ConfigPrimitive(data.toString());
+        return ConfigPrimitive.of(data.toString());
     }
 
     private TEnum lookup(String name) {

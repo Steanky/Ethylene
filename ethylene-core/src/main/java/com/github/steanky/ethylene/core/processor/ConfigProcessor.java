@@ -89,7 +89,7 @@ public interface ConfigProcessor<TData> {
 
         @Override
         public @NotNull ConfigElement elementFromData(String s) {
-            return new ConfigPrimitive(s);
+            return ConfigPrimitive.of(s);
         }
     };
 
@@ -143,7 +143,7 @@ public interface ConfigProcessor<TData> {
 
         @Override
         public @NotNull ConfigElement elementFromData(Boolean b) {
-            return new ConfigPrimitive(b);
+            return ConfigPrimitive.of(b);
         }
     };
 

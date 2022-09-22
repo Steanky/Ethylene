@@ -152,7 +152,7 @@ int number=node.get("number").asNumber().intValue();
 
         //they're also mutable:
         list.remove(0); //removes "Ethylene"
-        developer.put("age",new ConfigPrimitive(69)); //adds an age field
+        developer.put("age", ConfigPrimitive.of(69)); //adds an age field
         developer.clear(); //clears all entries from developer
 ```
 

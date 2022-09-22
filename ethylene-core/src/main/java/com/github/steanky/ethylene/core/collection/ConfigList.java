@@ -32,7 +32,7 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
             if (object instanceof ConfigElement element) {
                 list.add(element);
             } else {
-                list.add(new ConfigPrimitive(object));
+                list.add(ConfigPrimitive.of(object));
             }
         }
 
@@ -61,7 +61,7 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
      * @param value the value to add to the node
      */
     default void addString(String value) {
-        add(new ConfigPrimitive(value));
+        add(ConfigPrimitive.of(value));
     }
 
     /**
@@ -71,7 +71,7 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
      * @param value the value to add to the node
      */
     default void addNumber(Number value) {
-        add(new ConfigPrimitive(value));
+        add(ConfigPrimitive.of(value));
     }
 
     /**
@@ -81,7 +81,7 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
      * @param value the value to add to the node
      */
     default void addCharacter(char value) {
-        add(new ConfigPrimitive(value));
+        add(ConfigPrimitive.of(value));
     }
 
     /**
@@ -91,6 +91,6 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
      * @param value the value to add to the node
      */
     default void addBoolean(boolean value) {
-        add(new ConfigPrimitive(value));
+        add(ConfigPrimitive.of(value));
     }
 }

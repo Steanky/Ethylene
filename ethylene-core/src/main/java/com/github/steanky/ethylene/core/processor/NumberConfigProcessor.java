@@ -36,6 +36,6 @@ class NumberConfigProcessor<TNumber extends Number> implements ConfigProcessor<T
 
     @Override
     public @NotNull ConfigElement elementFromData(TNumber number) {
-        return new ConfigPrimitive(number);
+        return ConfigPrimitive.of(number);
     }
 }

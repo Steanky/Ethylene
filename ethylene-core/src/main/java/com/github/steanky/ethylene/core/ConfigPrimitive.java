@@ -15,18 +15,18 @@ public final class ConfigPrimitive implements ConfigElement {
 
     private final Object object;
 
+    private ConfigPrimitive(@Nullable Object object) {
+        this.object = validateType(object);
+    }
+
     /**
-     * Creates a new ConfigPrimitive instance wrapping the provided {@link Object}. The object may only subclass one of
+     * Returns a new ConfigPrimitive instance wrapping the provided {@link Object}. The object may only subclass one of
      * a number of restricted types; otherwise, an {@link IllegalArgumentException} will be thrown.
      *
      * @param object the object to wrap
      * @throws IllegalArgumentException if the provided object is a type other than a String, Number, Boolean, or
      *                                  Character and is not null
      */
-    public ConfigPrimitive(@Nullable Object object) {
-        this.object = validateType(object);
-    }
-
     public static @NotNull ConfigPrimitive of(@Nullable Object object) {
         if (object == null) {
             return NULL;

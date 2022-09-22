@@ -197,7 +197,7 @@ class MappingConfigProcessorIntegrationTest {
             ConfigList list = ConfigList.of("a");
             list.add(list);
             list.add(list);
-            list.add(new ConfigPrimitive(1));
+            list.add(ConfigPrimitive.of(1));
 
             List<Object> objectList = objectListProcessor.dataFromElement(list);
             assertEquals("a", objectList.get(0));

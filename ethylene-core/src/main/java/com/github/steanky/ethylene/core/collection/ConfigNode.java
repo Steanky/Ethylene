@@ -52,7 +52,7 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
             if (valueObject instanceof ConfigElement valueElement) {
                 element = valueElement;
             } else {
-                element = new ConfigPrimitive(valueObject);
+                element = ConfigPrimitive.of(valueObject);
             }
 
             output.put(keyString, element);
@@ -84,7 +84,7 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      * @param value the value to add to the node
      */
     default void putString(@NotNull String key, String value) {
-        put(key, new ConfigPrimitive(value));
+        put(key, ConfigPrimitive.of(value));
     }
 
     /**
@@ -95,7 +95,7 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      * @param value the value to add to the node
      */
     default void putNumber(@NotNull String key, Number value) {
-        put(key, new ConfigPrimitive(value));
+        put(key, ConfigPrimitive.of(value));
     }
 
     /**
@@ -106,7 +106,7 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      * @param value the value to add to the node
      */
     default void putCharacter(@NotNull String key, char value) {
-        put(key, new ConfigPrimitive(value));
+        put(key, ConfigPrimitive.of(value));
     }
 
     /**
@@ -117,6 +117,6 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      * @param value the value to add to the node
      */
     default void putBoolean(@NotNull String key, boolean value) {
-        put(key, new ConfigPrimitive(value));
+        put(key, ConfigPrimitive.of(value));
     }
 }

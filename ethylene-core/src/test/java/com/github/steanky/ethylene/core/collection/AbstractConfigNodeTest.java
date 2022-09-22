@@ -18,15 +18,15 @@ class AbstractConfigNodeTest {
 
         populatedNode = new AbstractConfigNode(new HashMap<>()) {
         };
-        populatedNode.put("int", new ConfigPrimitive(10));
-        populatedNode.put("string", new ConfigPrimitive("string"));
+        populatedNode.put("int", ConfigPrimitive.of(10));
+        populatedNode.put("string", ConfigPrimitive.of("string"));
         populatedNode.put("list", innerList);
 
-        innerList.add(new ConfigPrimitive("list_string"));
+        innerList.add(ConfigPrimitive.of("list_string"));
         innerList.add(innerNode);
-        innerList.add(new ConfigPrimitive(10));
+        innerList.add(ConfigPrimitive.of(10));
 
-        innerNode.put("inner_string", new ConfigPrimitive("this is an inner string"));
+        innerNode.put("inner_string", ConfigPrimitive.of("this is an inner string"));
         innerNode.put("circular_reference", populatedNode);
     }
 
@@ -65,7 +65,7 @@ class AbstractConfigNodeTest {
         list.add(node);
         assertEquals("$0{self=$0, list=$1{$1, $0}}", node.toString());
 
-        list.add(new ConfigPrimitive(10));
+        list.add(ConfigPrimitive.of(10));
 
         assertEquals("$0{self=$0, list=$1{$1, $0, [10]}}", node.toString());
     }

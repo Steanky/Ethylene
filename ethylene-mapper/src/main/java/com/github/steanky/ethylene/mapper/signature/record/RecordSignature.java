@@ -59,11 +59,9 @@ public class RecordSignature implements Signature {
 
         for (RecordComponent recordComponent : components) {
             try {
-                typedObjects.add(
-                    new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
-                        recordComponent.getAccessor().invoke(object)));
-            } catch (IllegalAccessException | InvocationTargetException ignored) {
-            }
+                typedObjects.add(new TypedObject(recordComponent.getName(), Token.ofType(recordComponent
+                    .getGenericType()), recordComponent.getAccessor().invoke(object)));
+            } catch (IllegalAccessException | InvocationTargetException ignored) {}
         }
 
         return typedObjects;

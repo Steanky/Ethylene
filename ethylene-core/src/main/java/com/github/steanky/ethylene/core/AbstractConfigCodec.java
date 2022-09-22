@@ -125,7 +125,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @throws IllegalArgumentException if object is not a valid type for {@link ConfigPrimitive}
      */
     protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
-        return new ConfigPrimitive(object);
+        return ConfigPrimitive.of(object);
     }
 
     protected @NotNull Graph.Output<ConfigElement, String> makeDecodeMap(int size) {

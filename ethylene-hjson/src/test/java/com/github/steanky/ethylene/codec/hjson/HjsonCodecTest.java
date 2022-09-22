@@ -40,8 +40,8 @@ class HjsonCodecTest {
     @Test
     void writesHjson() throws IOException {
         ConfigNode node = new LinkedConfigNode();
-        node.put("test_string", new ConfigPrimitive("value"));
-        node.put("test_number", new ConfigPrimitive(1.0));
+        node.put("test_string", ConfigPrimitive.of("value"));
+        node.put("test_number", ConfigPrimitive.of(1.0));
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         codec.encode(node, stream);
