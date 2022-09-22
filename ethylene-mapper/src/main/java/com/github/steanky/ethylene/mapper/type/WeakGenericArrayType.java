@@ -14,7 +14,7 @@ import java.util.Objects;
  * Implementation of {@link GenericArrayType} that retains no strong references to its underlying component {@link Type}
  * object. Not part of the public API.
  */
-final class InternalGenericArrayType implements GenericArrayType, WeakType {
+final class WeakGenericArrayType implements GenericArrayType, WeakType {
     private final Reference<Type> componentTypeReference;
     private final String componentTypeName;
 
@@ -23,7 +23,7 @@ final class InternalGenericArrayType implements GenericArrayType, WeakType {
      *
      * @param componentType the component type
      */
-    InternalGenericArrayType(@NotNull Type componentType) {
+    WeakGenericArrayType(@NotNull Type componentType) {
         this.componentTypeReference = new WeakReference<>(Objects.requireNonNull(componentType));
         this.componentTypeName = componentType.getTypeName();
     }

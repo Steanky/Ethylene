@@ -64,9 +64,8 @@ public final class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>
         return tokenMap.get(key);
     }
 
-    @NotNull
     @Override
-    public Set<Entry<TypeVariable<?>, Token<?>>> entrySet() {
+    public @NotNull Set<Entry<TypeVariable<?>, Token<?>>> entrySet() {
         if (tokenMap.isEmpty()) {
             return Set.of();
         }

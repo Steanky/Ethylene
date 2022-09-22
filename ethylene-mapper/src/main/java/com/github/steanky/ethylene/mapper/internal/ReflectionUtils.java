@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.mapper.annotation.Name;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
@@ -47,5 +48,20 @@ public class ReflectionUtils {
         }
 
         return type;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <TType extends Type> @NotNull TType[] resolve(@NotNull Reference<TType>[] typeReferences,
+        @NotNull String[] names, @NotNull Class<?> type) {
+        if (typeReferences.length != names.length) {
+            throw new IllegalArgumentException("Reference array and name array must be the same length");
+        }
+
+        TType[] array = (TType[]) Array.newInstance(type, typeReferences.length);
+        for (int i = 0; i < typeReferences.length; i++) {
+            array[i] = resolve(typeReferences[i], names[i]);
+        }
+
+        return array;
     }
 }

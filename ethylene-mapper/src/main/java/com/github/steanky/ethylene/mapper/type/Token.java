@@ -5,7 +5,6 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -183,7 +182,7 @@ public abstract class Token<T> implements Supplier<Type> {
             actualOwner = owner;
         }
 
-        return Token.ofType(GenericInfoRepository.bind(raw, new InternalParameterizedType(raw, actualOwner, params)));
+        return Token.ofType(GenericInfoRepository.bind(raw, new WeakParameterizedType(raw, actualOwner, params)));
     }
 
     private static Type[] extractTypes(Token<?>[] tokens) {
@@ -415,7 +414,7 @@ public abstract class Token<T> implements Supplier<Type> {
             return Token.ofType(cls.arrayType());
         }
 
-        return Token.ofType(GenericInfoRepository.bind(rawType(type), new InternalGenericArrayType(type)));
+        return Token.ofType(GenericInfoRepository.bind(rawType(type), new WeakGenericArrayType(type)));
     }
 
     /**
@@ -664,6 +663,12 @@ public abstract class Token<T> implements Supplier<Type> {
         return false;
     }
 
+    /**
+     * Gets a string representation of this Token. Will not throw a {@link TypeNotPresentException} if the underlying
+     * type has been garbage collected.
+     *
+     * @return a string representation of this token
+     */
     @Override
     public final String toString() {
         return "Token{typeName=" + getTypeName() + "}";

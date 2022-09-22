@@ -36,7 +36,7 @@ import java.util.function.Function;
  * means that most reflection-related objects are unsafe also, because many of them (directly or indirectly) reference a
  * class.
  * <p>
- * Custom implementations of Type (see also: {@link InternalGenericArrayType}, {@link InternalParameterizedType})
+ * Custom implementations of Type (see also: {@link WeakGenericArrayType}, {@link WeakParameterizedType})
  * present a special issue, however, because they are not cached internally by the JDK. Therefore, weak references to
  * these types can be garbage collected <i>too soon</i>, before the classloader responsible for creating them is
  * destroyed.

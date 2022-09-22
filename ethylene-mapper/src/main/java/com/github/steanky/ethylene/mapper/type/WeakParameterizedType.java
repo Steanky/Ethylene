@@ -17,7 +17,7 @@ import java.util.Objects;
  * Implementation of {@link ParameterizedType} that retains no strong references to any {@link Type} or {@link Class}
  * objects used in constructing it. Not part of the public API.
  */
-final class InternalParameterizedType implements ParameterizedType, WeakType {
+final class WeakParameterizedType implements ParameterizedType, WeakType {
     private final Reference<Class<?>> rawClassReference;
     private final String rawClassName;
 
@@ -37,7 +37,7 @@ final class InternalParameterizedType implements ParameterizedType, WeakType {
      *                      raw class's type variables
      */
     @SuppressWarnings("unchecked")
-    InternalParameterizedType(@NotNull Class<?> rawClass, @Nullable Type owner, Type @NotNull [] typeArguments) {
+    WeakParameterizedType(@NotNull Class<?> rawClass, @Nullable Type owner, Type @NotNull [] typeArguments) {
         this.rawClassReference = new WeakReference<>(rawClass);
         this.rawClassName = rawClass.getTypeName();
 

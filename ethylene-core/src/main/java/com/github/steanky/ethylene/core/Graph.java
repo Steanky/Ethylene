@@ -65,7 +65,7 @@ public final class Graph {
         boolean circularRefSupport = Options.hasOption(flags, Options.TRACK_REFERENCES);
         boolean trackScalarReference = Options.hasOption(flags, Options.TRACK_SCALAR_REFERENCES);
         boolean depthFirst = Options.hasOption(flags, Options.DEPTH_FIRST);
-        boolean lazyAccumulation = Options.hasOption(flags, Options.LAZY_ACCUMULATION) && depthFirst;
+        boolean lazyAccumulation = depthFirst && Options.hasOption(flags, Options.LAZY_ACCUMULATION);
 
         //don't initialize the visitation map if there is no support for circular references
         //make sure usages of this map check circularRefSupport to avoid NPE

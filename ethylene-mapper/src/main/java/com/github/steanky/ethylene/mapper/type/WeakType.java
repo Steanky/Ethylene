@@ -18,8 +18,8 @@ import java.lang.reflect.Type;
  * after the referent(s) have been garbage collected. Notably, this includes {@link Object#equals(Object)} and
  * {@link Object#hashCode()}.
  * @see GenericInfoRepository
- * @see InternalGenericArrayType
- * @see InternalParameterizedType
+ * @see WeakGenericArrayType
+ * @see WeakParameterizedType
  */
-sealed interface WeakType extends Type permits InternalGenericArrayType, InternalParameterizedType {
+sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParameterizedType, WeakTypeVariable {
 }

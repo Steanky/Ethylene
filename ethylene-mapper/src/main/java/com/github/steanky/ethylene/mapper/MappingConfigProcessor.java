@@ -20,8 +20,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
-    private static final int GRAPH_OPTIONS = Graph.Options.DEPTH_FIRST |
-        Graph.Options.TRACK_REFERENCES | Graph.Options.LAZY_ACCUMULATION;
+    private static final int GRAPH_OPTIONS = Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES |
+        Graph.Options.LAZY_ACCUMULATION;
 
     private final Token<T> token;
     private final SignatureMatcher.Source signatureMatcherSource;
