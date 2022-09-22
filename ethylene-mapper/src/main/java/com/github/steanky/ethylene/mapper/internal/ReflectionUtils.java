@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.mapper.annotation.Name;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;

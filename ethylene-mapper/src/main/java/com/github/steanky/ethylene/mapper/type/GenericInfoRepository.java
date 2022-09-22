@@ -2,10 +2,14 @@ package com.github.steanky.ethylene.mapper.type;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.*;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -69,5 +73,50 @@ class GenericInfoRepository {
     static @NotNull Type bind(@NotNull Class<?> owner, @NotNull WeakType type) {
         return store.get(owner, ignored -> new GenericInfoRepository()).canonicalTypes.computeIfAbsent(type,
             Function.identity());
+    }
+
+    static @NotNull Type resolveType(@NotNull Type type) {
+        Objects.requireNonNull(type);
+
+        if (type instanceof Class<?> || type instanceof WeakType) {
+            return type;
+        }
+        else if (type instanceof ParameterizedType parameterizedType) {
+            return new WeakParameterizedType(TypeUtils.getRawType(parameterizedType.getRawType(), null),
+                parameterizedType.getOwnerType(), parameterizedType.getActualTypeArguments());
+        }
+        else if (type instanceof TypeVariable<?> typeVariable) {
+            int i = 0;
+            for (TypeVariable<?> sample : typeVariable.getGenericDeclaration().getTypeParameters()) {
+                if (sample == typeVariable) {
+                    break;
+                }
+
+                i++;
+            }
+
+            return new WeakTypeVariable<>(typeVariable, i);
+        }
+        else if (type instanceof WildcardType wildcardType) {
+            return new WeakWildcardType(wildcardType);
+        }
+        else if(type instanceof GenericArrayType genericArrayType) {
+            return new WeakGenericArrayType(genericArrayType.getGenericComponentType());
+        }
+
+        throw new IllegalArgumentException("Unexpected Type implementation '" + type.getClass().getName() + "'");
+    }
+
+    static void populate(@NotNull Type @NotNull [] types, @NotNull Reference<Type> @NotNull [] typeReferences,
+        @NotNull String @NotNull [] names) {
+        if (types.length != names.length) {
+            throw new IllegalArgumentException("Types and names array must be the same length");
+        }
+
+        for (int i = 0; i < types.length; i++) {
+            Type type = resolveType(types[i]);
+            names[i] = type.getTypeName();
+            typeReferences[i] = new WeakReference<>(type);
+        }
     }
 }

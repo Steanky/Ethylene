@@ -20,6 +20,9 @@ import java.lang.reflect.Type;
  * @see GenericInfoRepository
  * @see WeakGenericArrayType
  * @see WeakParameterizedType
+ * @see WeakTypeVariable
+ * @see WeakWildcardType
  */
-sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParameterizedType, WeakTypeVariable {
+sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParameterizedType, WeakTypeVariable,
+    WeakWildcardType {
 }

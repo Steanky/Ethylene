@@ -41,22 +41,20 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
         this.rawClassReference = new WeakReference<>(rawClass);
         this.rawClassName = rawClass.getTypeName();
 
-        this.ownerTypeReference = owner == null ? null : new WeakReference<>(owner);
+        this.ownerTypeReference = owner == null ? null : new WeakReference<>(owner = GenericInfoRepository
+            .resolveType(owner));
         this.ownerTypeName = owner == null ? StringUtils.EMPTY : owner.getTypeName();
 
         this.typeArgumentReferences = new Reference[typeArguments.length];
         this.typeArgumentNames = new String[typeArguments.length];
-
-        for (int i = 0; i < typeArguments.length; i++) {
-            Type typeArgument = typeArguments[i];
-            this.typeArgumentReferences[i] = new WeakReference<>(typeArgument);
-            this.typeArgumentNames[i] = typeArgument.getTypeName();
-        }
+        GenericInfoRepository.populate(typeArguments, typeArgumentReferences, typeArgumentNames);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getRawType(), getOwnerType(), Arrays.hashCode(getActualTypeArguments()));
+        return Arrays.hashCode(getActualTypeArguments()) ^
+            Objects.hashCode(getOwnerType()) ^
+            Objects.hashCode(getRawType());
     }
 
     @Override
@@ -91,13 +89,7 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
 
     @Override
     public Type[] getActualTypeArguments() {
-        Type[] types = new Type[typeArgumentReferences.length];
-        for (int i = 0; i < typeArgumentReferences.length; i++) {
-            types[i] = ReflectionUtils.resolve(typeArgumentReferences[i], typeArgumentNames[i]);
-        }
-
-        //array may not contain null elements (resolve will throw exception if referent is null)
-        return types;
+        return ReflectionUtils.resolve(typeArgumentReferences, typeArgumentNames, Type.class);
     }
 
     @Override

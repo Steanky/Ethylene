@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.mapper.type;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
@@ -22,7 +23,7 @@ import java.util.function.Supplier;
  * no guarantee that a
  * @param <TDec> the type of generic declaration
  */
-public final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakType, TypeVariable<TDec> {
+final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakType, TypeVariable<TDec> {
     private final int variableIndex;
     private final Reference<Type>[] boundReferences;
     private final String[] boundReferenceNames;
@@ -41,11 +42,7 @@ public final class WeakTypeVariable<TDec extends GenericDeclaration> implements 
         Type[] bounds = variable.getBounds();
         this.boundReferences = new Reference[bounds.length];
         this.boundReferenceNames = new String[bounds.length];
-        for (int i = 0; i < bounds.length; i++) {
-            Type type = bounds[i];
-            boundReferences[i] = new WeakReference<>(type);
-            boundReferenceNames[i] = type.getTypeName();
-        }
+        GenericInfoRepository.populate(bounds, boundReferences, boundReferenceNames);
 
         TDec genericDeclaration = variable.getGenericDeclaration();
         if (genericDeclaration instanceof Class<?> type) {
@@ -150,5 +147,36 @@ public final class WeakTypeVariable<TDec extends GenericDeclaration> implements 
     @Override
     public Annotation[] getDeclaredAnnotations() {
         return resolveVariable().getDeclaredAnnotations();
+    }
+
+    @Override
+    public int hashCode() {
+        return genericDeclarationSupplier.get().hashCode() ^ name.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        GenericDeclaration genericDeclaration = genericDeclarationSupplier.get();
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (obj == this) {
+            return true;
+        }
+
+        //instanceof on WeakTypeVariable instead of TypeVariable to copy TypeVariableImpl's behavior
+        if (obj instanceof WeakTypeVariable<?> other) {
+            return Objects.equals(genericDeclaration, other.genericDeclarationSupplier.get()) &&
+                Objects.equals(name, other.name);
+        }
+
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return TypeUtils.toString(this);
     }
 }

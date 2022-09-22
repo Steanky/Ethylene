@@ -101,7 +101,7 @@ public abstract class Token<T> implements Supplier<Type> {
     private Token(@NotNull Type type) {
         Objects.requireNonNull(type);
 
-        Type resolved = resolveType(type);
+        Type resolved = GenericInfoRepository.resolveType(type);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
     }
@@ -131,21 +131,9 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("Expected non-null type parameter for '" + getClass().getTypeName() + "'");
         }
 
-        Type resolved = resolveType(target);
+        Type resolved = GenericInfoRepository.resolveType(target);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
-    }
-
-    private static Type resolveType(Type input) {
-        if (input instanceof TypeVariable<?> variable) {
-            //recursive resolve (upper bounds may be a TypeVariable itself)
-            return resolveType(variable.getBounds()[0]);
-        } else if (input instanceof WildcardType wildcardType) {
-            //interpret wildcards only by their upper bound
-            return resolveType(wildcardType.getUpperBounds()[0]);
-        }
-
-        return input;
     }
 
     /**
