@@ -78,6 +78,7 @@ class GenericInfoRepository {
         Objects.requireNonNull(type);
 
         if (type instanceof Class<?>) {
+            //raw classes don't need to be bound as they should already be retained by their classloader
             return type;
         }
         else if (type instanceof WeakType weakType) {
@@ -99,19 +100,7 @@ class GenericInfoRepository {
                 i++;
             }
 
-            Class<?> owner;
-            if (genericDeclaration instanceof Class<?> cls) {
-                owner = cls;
-            }
-            else if (genericDeclaration instanceof Executable executable) {
-                owner = executable.getDeclaringClass();
-            }
-            else {
-                throw new IllegalArgumentException("Unexpected GenericDeclaration subclass '" + genericDeclaration
-                    .getClass().getName() + "'");
-            }
-
-            return bind(owner, new WeakTypeVariable<>(typeVariable, i));
+            return bind(ReflectionUtils.getOwner(genericDeclaration), new WeakTypeVariable<>(typeVariable, i));
         }
         else if (type instanceof WildcardType wildcardType) {
             return bind(ReflectionUtils.rawType(wildcardType), new WeakWildcardType(wildcardType));
@@ -131,8 +120,7 @@ class GenericInfoRepository {
         }
 
         for (int i = 0; i < types.length; i++) {
-            Type unbound = types[i];
-            Type type = resolveType(unbound);
+            Type type = resolveType(types[i]);
             names[i] = type.getTypeName();
             typeReferences[i] = new WeakReference<>(type);
         }

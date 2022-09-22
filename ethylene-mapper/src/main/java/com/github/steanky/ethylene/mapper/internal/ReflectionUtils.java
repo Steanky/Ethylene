@@ -1,14 +1,10 @@
 package com.github.steanky.ethylene.mapper.internal;
 
 import com.github.steanky.ethylene.mapper.annotation.Name;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Contains some reflection-related utilities. These generally serve to supplement those already found in Apache
@@ -68,8 +64,6 @@ public class ReflectionUtils {
     }
 
     public static @NotNull Class<?> rawType(@NotNull Type type) {
-        Objects.requireNonNull(type);
-
         if (type instanceof Class<?> cls) {
             return cls;
         }
@@ -83,8 +77,7 @@ public class ReflectionUtils {
         }
 
         if (type instanceof GenericArrayType genericArrayType) {
-            Class<?> rawComponentType = rawType(genericArrayType.getGenericComponentType());
-            return Array.newInstance(rawComponentType, 0).getClass();
+            return Array.newInstance(rawType(genericArrayType.getGenericComponentType()), 0).getClass();
         }
 
         if (type instanceof WildcardType wildcardType) {
@@ -94,7 +87,7 @@ public class ReflectionUtils {
         throw new IllegalArgumentException("Unexpected subclass of Type '" + type.getClass().getName() + "'");
     }
 
-    public static @NotNull Class<?> getDeclarationOwner(@NotNull GenericDeclaration genericDeclaration) {
+    public static @NotNull Class<?> getOwner(@NotNull GenericDeclaration genericDeclaration) {
         if (genericDeclaration instanceof Class<?> cls) {
             return cls;
         }

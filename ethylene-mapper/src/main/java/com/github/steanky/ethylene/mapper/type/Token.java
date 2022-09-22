@@ -174,10 +174,6 @@ public abstract class Token<T> implements Supplier<Type> {
         return types;
     }
 
-    private static @NotNull Class<?> rawType(Type type) {
-        return ReflectionUtils.rawType(type);
-    }
-
     private static void checkTypes(Class<?> raw, Type... params) {
         int requiredLength = raw.getTypeParameters().length;
         int actualLength = params.length;
@@ -229,12 +225,13 @@ public abstract class Token<T> implements Supplier<Type> {
 
     /**
      * Computes the raw type of this token. For parameterized types, this is the type-erased class. For generic arrays,
-     * this is an array of the raw type of the component class.
+     * this is an array of the raw type of the component class. For wildcard and type variables, this is the upper
+     * bound.
      *
      * @return the raw type for this token
      */
     public final @NotNull Class<?> rawType() {
-        return rawType(get());
+        return ReflectionUtils.rawType(get());
     }
 
     /**
