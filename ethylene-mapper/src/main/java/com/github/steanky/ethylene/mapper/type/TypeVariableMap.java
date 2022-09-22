@@ -8,8 +8,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.*;
 
 /**
- * An unmodifiable map of {@link TypeVariable} to {@link Token}, based on a {@link HashMap}. Instances can be obtained
- * through calling various methods on {@link Token}. They are primarily meant to be used with methods like
+ * An unmodifiable map of {@link TypeVariable} to {@link Token}. Instances can be obtained through calling various
+ * methods on {@link Token}. They are primarily meant to be used with methods like
  * {@link Token#parameterize(TypeVariableMap)}.
  * <p>
  * This class has a package-private constructor. This is because it would be possible to supply arbitrary instances of
@@ -36,10 +36,16 @@ public final class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>
         if (underlying.isEmpty()) {
             tokenMap = Map.of();
         } else {
-            tokenMap = new HashMap<>(underlying.size());
-            for (Map.Entry<TypeVariable<?>, Type> entry : underlying.entrySet()) {
-                tokenMap.put(entry.getKey(), Token.ofType(entry.getValue()));
+            @SuppressWarnings("unchecked")
+            Map.Entry<TypeVariable<?>, Token<?>>[] tokenArray = new Entry[underlying.size()];
+
+            Iterator<Map.Entry<TypeVariable<?>, Type>> entryIterator = underlying.entrySet().iterator();
+            for (int i = 0; i < tokenArray.length && entryIterator.hasNext(); i++) {
+                Map.Entry<TypeVariable<?>, Type> entry = entryIterator.next();
+                tokenArray[i] = Map.entry(entry.getKey(), Token.ofType(entry.getValue()));
             }
+
+            tokenMap = Map.ofEntries(tokenArray);
         }
     }
 

@@ -250,6 +250,10 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
+        if (variables.length == 0) {
+            return ReflectionUtils.EMPTY_TYPE_ARRAY;
+        }
+
         Type[] result = new Type[variables.length];
         int i = 0;
         for (TypeVariable<?> var : variables) {
@@ -662,6 +666,6 @@ public abstract class Token<T> implements Supplier<Type> {
 
     @Override
     public final String toString() {
-        return "Token{type=" + get() + "}";
+        return "Token{typeName=" + getTypeName() + "}";
     }
 }

@@ -27,6 +27,14 @@ public final class ConfigPrimitive implements ConfigElement {
         this.object = validateType(object);
     }
 
+    public static @NotNull ConfigPrimitive of(@Nullable Object object) {
+        if (object == null) {
+            return NULL;
+        }
+
+        return new ConfigPrimitive(object);
+    }
+
     /**
      * Determines if the given object may be used to construct a {@link ConfigPrimitive}.
      *

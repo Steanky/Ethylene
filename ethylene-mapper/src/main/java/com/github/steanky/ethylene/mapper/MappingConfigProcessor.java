@@ -184,7 +184,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
         private final Object object;
         private final SignatureMatcher signatureMatcher;
 
-        //ElementEntry isn't a record so we can set this field
+        //ElementEntry isn't a record, so we can set this field
         private ConfigElement element;
 
         private ElementEntry(Token<?> type, Object object, SignatureMatcher signatureMatcher) {

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface ScalarSource {
-    @NotNull ConfigElement makeElement(@Nullable Object data, @NotNull Token<?> type);
+    @NotNull ConfigElement makeElement(@Nullable Object data, @NotNull Token<?> upperBounds);
 
-    @Nullable Object makeObject(@NotNull ConfigElement element, @NotNull Token<?> type);
+    @Nullable Object makeObject(@NotNull ConfigElement element, @NotNull Token<?> upperBounds);
 }

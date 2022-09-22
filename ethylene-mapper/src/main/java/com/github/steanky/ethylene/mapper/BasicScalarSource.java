@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.type.Token;
+import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,12 +16,13 @@ public class BasicScalarSource implements ScalarSource {
     private static final int ELEMENT_TYPE_SIZE = ElementType.values().length;
 
     @SuppressWarnings("unchecked")
-    private static final Map.Entry<ElementType, ScalarSignature<?>>[] EMPTY_MAP_ENTRY_ARRAY = new Map.Entry[0];
+    private static final Map.Entry<ElementType, Set<ScalarSignature<?>>>[] EMPTY_MAP_ENTRY_ARRAY = new Map.Entry[0];
 
     private final TypeHinter typeHinter;
-    private final Map<Type, Map<ElementType, ScalarSignature<?>>> returnTypeMap;
+    private final Map<Class<?>, Map<ElementType, Set<ScalarSignature<?>>>> returnTypeMap;
 
 
+    @SuppressWarnings("unchecked")
     public BasicScalarSource(@NotNull TypeHinter typeHinter, @NotNull Set<ScalarSignature<?>> signatures) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
 
@@ -31,40 +33,28 @@ public class BasicScalarSource implements ScalarSource {
             //intermediateMap is only used to construct and validate the initial mappings
             //returnTypeMap is a precisely-sized WeakHashMap whose value maps are created using Map.ofEntries
             //(and therefore are more efficient than regular HashMaps)
-            Map<Type, Map<ElementType, ScalarSignature<?>>> intermediateMap = new HashMap<>(signatures.size());
+            Map<Class<?>, Map<ElementType, Set<ScalarSignature<?>>>> intermediateMap = new HashMap<>(signatures.size());
             for (ScalarSignature<?> signature : signatures) {
                 Token<?> objectType = signature.objectType();
                 ElementType elementType = signature.elementType();
 
-                if (intermediateMap.computeIfAbsent(signature.objectType().get(),
-                    type -> new HashMap<>(ELEMENT_TYPE_SIZE)).putIfAbsent(elementType, signature) != null) {
-                    throw new IllegalArgumentException("Tried to register more than one signature for object type '" +
-                        objectType.getTypeName() + "' and element type '" + elementType + "'");
-                }
+                intermediateMap.computeIfAbsent(objectType.rawType(), ignored -> new HashMap<>(ELEMENT_TYPE_SIZE))
+                    .computeIfAbsent(elementType, ignored -> new HashSet<>(2)).add(signature);
             }
 
             this.returnTypeMap = new WeakHashMap<>(intermediateMap.size());
-            for (Map.Entry<Type, Map<ElementType, ScalarSignature<?>>> entry : intermediateMap.entrySet()) {
-                this.returnTypeMap.put(entry.getKey(), Map.ofEntries(entry.getValue().entrySet()
-                    .toArray(EMPTY_MAP_ENTRY_ARRAY)));
+            for (Map.Entry<Class<?>, Map<ElementType, Set<ScalarSignature<?>>>> entry : intermediateMap.entrySet()) {
+                Map<ElementType, Set<ScalarSignature<?>>> subMap = entry.getValue();
+                Map.Entry<ElementType, Set<ScalarSignature<?>>>[] array = new Map.Entry[subMap.size()];
+
+                int i = 0;
+                for (Map.Entry<ElementType, Set<ScalarSignature<?>>> subEntry : subMap.entrySet()) {
+                    array[i++] = Map.entry(subEntry.getKey(), Set.copyOf(subEntry.getValue()));
+                }
+
+                returnTypeMap.put(entry.getKey(), Map.ofEntries(array));
             }
         }
-    }
-
-    private ScalarSignature<?> locateSignature(Token<?> token, ElementType desiredType) {
-        Type type = token.get();
-        Map<ElementType, ScalarSignature<?>> scalarSignature = returnTypeMap.get(type);
-
-        if (scalarSignature == null) {
-            throw new MapperException("No scalar signature found for data type '" + token.getTypeName() + "'");
-        }
-
-        ScalarSignature<?> desiredSignature = scalarSignature.get(desiredType);
-        if (desiredSignature == null) {
-            throw new MapperException("No scalar signature found for element type '" + desiredType + "'");
-        }
-
-        return desiredSignature;
     }
 
     //necessary to use this method to avoid raw types
@@ -73,28 +63,58 @@ public class BasicScalarSource implements ScalarSource {
     }
 
     @Override
-    public @NotNull ConfigElement makeElement(@Nullable Object data, @NotNull Token<?> type) {
-        ElementType dataType = data == null ? ElementType.SCALAR : typeHinter.getHint(Token.ofClass(data
-            .getClass()));
-        if (dataType == ElementType.SCALAR && ConfigPrimitive.isPrimitive(data)) {
-            //simple case: String, primitive type, or primitive type wrapper
-            return new ConfigPrimitive(data);
+    public @NotNull ConfigElement makeElement(@Nullable Object data, @NotNull Token<?> upperBounds) {
+        if (data == null) {
+            //null assignable to upper bounds in all cases
+            return ConfigPrimitive.NULL;
         }
 
-        return createElement(locateSignature(type, dataType), data);
-    }
+        Class<?> dataClass = data.getClass();
+        boolean assignable = upperBounds.isSuperclassOf(dataClass);
+        if (ConfigPrimitive.isPrimitive(data) && assignable) {
+            //simplest case, covers all standard primitives
+            return ConfigPrimitive.of(data);
+        }
 
-    @Override
-    public @Nullable Object makeObject(@NotNull ConfigElement element, @NotNull Token<?> type) {
-        if (element.isScalar()) {
-            Object object = element.asScalar();
+        //walk the hierarchy until we find a matching signature
+        Token<?> dataClassToken = Token.ofClass(dataClass);
+        ElementType elementType = typeHinter.getHint(dataClassToken);
+        for (Class<?> parent : dataClassToken.hierarchy(ClassUtils.Interfaces.INCLUDE)) {
+            Map<ElementType, Set<ScalarSignature<?>>> typeMappings = returnTypeMap.get(parent);
 
-            //handle the simple case: element is a scalar, and its underlying object is assignable to the type
-            if (object == null || type.isSuperclassOf(object.getClass())) {
-                return object;
+            //signature found for this data type
+            if (typeMappings != null) {
+                Set<ScalarSignature<?>> signatures = typeMappings.get(elementType);
+
+                //signature found for this element type
+                if (signatures != null) {
+                    for (ScalarSignature<?> signature : signatures) {
+                        if (upperBounds.isSuperclassOf(signature.objectType())) {
+                            return createElement(signature, data);
+                        }
+                    }
+                }
             }
         }
 
-        return locateSignature(type, element.type()).createScalar(element);
+        throw new IllegalArgumentException("Could not create scalar with upper bounds '" + upperBounds.getTypeName() +
+            "', no matching signature with ElementType '" + elementType + "'");
+    }
+
+    @Override
+    public @Nullable Object makeObject(@NotNull ConfigElement element, @NotNull Token<?> upperBounds) {
+        if (element.isNull()) {
+            return null;
+        }
+
+        ElementType elementType = element.type();
+        if (elementType.isScalar()) {
+            Object scalar = element.asScalar();
+            if (upperBounds.isSuperclassOf(scalar.getClass())) {
+                return scalar;
+            }
+        }
+
+        return null;
     }
 }
