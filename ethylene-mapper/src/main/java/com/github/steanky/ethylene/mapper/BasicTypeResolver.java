@@ -19,7 +19,6 @@ import java.util.Objects;
 
 public class BasicTypeResolver implements TypeResolver {
     private static final Object PRESENT = new Object();
-    private static final Token<?> ARRAY_LIST = Token.ofClass(ArrayList.class).parameterize(Object.class);
 
     private final TypeHinter typeHinter;
 
@@ -126,26 +125,13 @@ public class BasicTypeResolver implements TypeResolver {
             return type;
         }
 
-        //try to guess what type we need based on the element type and any generic information we have
-        //this is a last-ditch effort to get a type that MIGHT be what we want, if this fails, throw an exception
-        //failure occurs when the resulting type is not assignable to the desired type
-        Token<?> elementType = switch (element.type()) {
-            case NODE -> Token.ofClass(raw);
-            case LIST -> ARRAY_LIST;
-            case SCALAR -> {
-                Object scalar = element.asScalar();
-                if (scalar == null) {
-                    //null is assignable to anything
-                    yield type;
-                }
+        //use the element's preferred type as a last-ditch effort
+        Token<?> elementType = typeHinter.getPreferredType(element, type);
 
-                yield Token.ofClass(scalar.getClass());
-            }
-        };
-
+        //fail if the preferred type isn't assignable
         if (!elementType.isSubclassOf(type)) {
             throw new MapperException(
-                "Element type '" + elementType + "' not compatible with '" + type.getTypeName() + "'");
+                "Inferred element type '" + elementType + "' not compatible with '" + type.getTypeName() + "'");
         }
 
         return elementType;

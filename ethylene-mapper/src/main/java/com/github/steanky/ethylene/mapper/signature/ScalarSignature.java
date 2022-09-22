@@ -14,4 +14,6 @@ public interface ScalarSignature<TScalar> {
     @Nullable TScalar createScalar(@NotNull ConfigElement element);
 
     @NotNull ConfigElement createElement(@Nullable TScalar scalar);
+
+    int priority();
 }

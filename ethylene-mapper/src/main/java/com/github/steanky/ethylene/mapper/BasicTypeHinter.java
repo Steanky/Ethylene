@@ -9,6 +9,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 public class BasicTypeHinter implements TypeHinter {
+    private static final Token<?> ARRAY_LIST = Token.ofClass(ArrayList.class).parameterize(Object.class);
+
     private final Set<Type> scalars;
     private final Set<Type> nonScalars;
 
@@ -61,10 +63,10 @@ public class BasicTypeHinter implements TypeHinter {
     public boolean assignable(@NotNull ConfigElement element, @NotNull Token<?> toType) {
         return switch (element.type()) {
             //simplest case: if toType is a LIST or SCALAR and the element isn't, we are not assignable
-            case NODE -> getHint(toType) == ElementType.NODE;
+            case NODE -> getHint(toType).isNode();
             case LIST -> {
                 ElementType hint = getHint(toType);
-                if (hint == ElementType.LIST) {
+                if (hint.isList()) {
                     //we know we're a map, collection, or array, so we're compatible
                     yield true;
                 }
@@ -81,6 +83,23 @@ public class BasicTypeHinter implements TypeHinter {
 
                 //simple assignability check
                 yield toType.isSuperclassOf(scalar.getClass());
+            }
+        };
+    }
+
+    @Override
+    public @NotNull Token<?> getPreferredType(@NotNull ConfigElement element, @NotNull Token<?> upperBounds) {
+        return switch (element.type()) {
+            case NODE -> upperBounds; //can't guess type from a node, assume it's assignable
+            case LIST -> ARRAY_LIST; //arraylist is preferred, but don't check against the upper bounds (caller should)
+            case SCALAR -> {
+                Object scalar = element.asScalar();
+                if (scalar == null) {
+                    //null is assignable to anything
+                    yield upperBounds;
+                }
+
+                yield Token.ofClass(scalar.getClass());
             }
         };
     }
