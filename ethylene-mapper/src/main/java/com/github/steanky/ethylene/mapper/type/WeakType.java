@@ -29,7 +29,7 @@ import java.lang.reflect.Type;
  * @see WeakTypeVariable
  * @see WeakWildcardType
  */
-sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParameterizedType, WeakTypeBase, WeakTypeKey,
+sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParameterizedType, WeakTypeBase,
     WeakTypeVariable, WeakWildcardType {
     @Nullable ClassLoader getBoundClassloader();
 

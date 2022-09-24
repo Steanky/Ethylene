@@ -53,9 +53,24 @@ import java.util.function.Function;
  * ones actually held in the map).
  */
 class GenericInfo {
+    /**
+     * Byte indicating a parameterized {@link WeakType}.
+     */
     static final byte PARAMETERIZED = 0;
+
+    /**
+     * Byte indicating a generic array {@link WeakType}.
+     */
     static final byte GENERIC_ARRAY = 1;
+
+    /**
+     * Byte indicating a type variable {@link WeakType}.
+     */
     static final byte TYPE_VARIABLE = 2;
+
+    /**
+     * Byte indicating a wildcard {@link WeakType}.
+     */
     static final byte WILDCARD = 3;
 
     private static final byte[] NIL = new byte[] {0};
@@ -75,6 +90,7 @@ class GenericInfo {
         bootstrapTypes = new ConcurrentHashMap<>();
         queue = new ReferenceQueue<>();
         cleanupThread = new Thread(GenericInfo::cleanup, "Ethylene Reference Cleanup Thread");
+        cleanupThread.setDaemon(true);
         cleanupThread.start();
     }
 
@@ -82,11 +98,15 @@ class GenericInfo {
         //reference cleanup thread never ends
         while(true) {
             try {
+                //wait for a TypeReference to enter the queue
+                //this happens when its associated type is garbage-collected
+                //if there is a parent type, we need to remove it from the map
                 TypeReference reference = (TypeReference)queue.remove();
-                WeakType ownerType = reference.owner.get();
+                WeakType ownerType = reference.owner == null ? null : reference.owner.get();
 
                 //if ownerType is null, it's already been garbage collected - this is fine, we don't have to do anything
                 //(it can't possibly be in any maps)
+                //alternatively, this type has no owner, in which case we also don't have to remove anything
                 if (ownerType != null) {
                     //as soon as a type has a child type go out-of-scope, we must remove it
                     Reference<GenericInfo> repository = reference.repository;
@@ -101,7 +121,7 @@ class GenericInfo {
                         bootstrapTypes.remove(ownerType);
                     }
                 }
-            } catch (InterruptedException ignored) {
+            } catch (Throwable ignored) {
                 //ignored
             }
         }
@@ -111,7 +131,7 @@ class GenericInfo {
         private final Reference<WeakType> owner;
         private final Reference<GenericInfo> repository;
 
-        TypeReference(WeakType referent, WeakType owner, GenericInfo repository) {
+        private TypeReference(WeakType referent, WeakType owner, GenericInfo repository) {
             super(referent, queue);
             this.owner = owner == null ? null : new WeakReference<>(owner);
             this.repository = repository == null ? null : new WeakReference<>(repository);
