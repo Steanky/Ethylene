@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.mapper.type;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.Type;
@@ -60,8 +61,8 @@ final class WeakWildcardType extends WeakTypeBase implements WildcardType, WeakT
     }
 
     @Override
-    public @NotNull Class<?> getBoundClass() {
-        return ReflectionUtils.rawType(this);
+    public @Nullable ClassLoader getBoundClassloader() {
+        return ReflectionUtils.rawType(this).getClassLoader();
     }
 
     @Override

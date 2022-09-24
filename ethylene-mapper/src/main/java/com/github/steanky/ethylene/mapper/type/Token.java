@@ -103,9 +103,8 @@ public abstract class Token<T> implements Supplier<Type> {
     private Token(@NotNull Type type) {
         Objects.requireNonNull(type);
 
-        Type resolved = GenericInfo.resolveType(type);
-        this.typeReference = new WeakReference<>(resolved);
-        this.typeName = resolved.getTypeName();
+        this.typeReference = new WeakReference<>(type);
+        this.typeName = type.getTypeName();
     }
 
     /**
@@ -158,7 +157,7 @@ public abstract class Token<T> implements Supplier<Type> {
             actualOwner = owner;
         }
 
-        return Token.ofType(new WeakParameterizedType(raw, actualOwner, params));
+        return Token.ofType(GenericInfo.resolveType(new WeakParameterizedType(raw, actualOwner, params)));
     }
 
     private static Type[] extractTypes(Token<?>[] tokens) {
@@ -188,8 +187,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
     public static @NotNull Token<?> ofType(@NotNull Type type) {
         Objects.requireNonNull(type);
-
-        return new Token<>(type) {};
+        return new Token<>(GenericInfo.resolveType(type)) {};
     }
 
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
@@ -243,6 +241,14 @@ public abstract class Token<T> implements Supplier<Type> {
      */
     public final @NotNull Type get() {
         return ReflectionUtils.resolve(typeReference, typeName);
+    }
+
+    /**
+     * Determines if this Token contains a type reference.
+     * @return true if this token contains a type reference, false otherwise
+     */
+    public final boolean hasType() {
+        return typeReference.get() != null;
     }
 
     /**
@@ -359,7 +365,7 @@ public abstract class Token<T> implements Supplier<Type> {
             return Token.ofType(cls.arrayType());
         }
 
-        return Token.ofType(new WeakGenericArrayType(type));
+        return Token.ofType(GenericInfo.resolveType(new WeakGenericArrayType(type)));
     }
 
     /**
@@ -374,7 +380,7 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("This token does not represent an array type");
         }
 
-        return Token.ofType(TypeUtils.getArrayComponentType(type));
+        return Token.ofType(GenericInfo.resolveType(TypeUtils.getArrayComponentType(type)));
     }
 
     /**
@@ -445,7 +451,8 @@ public abstract class Token<T> implements Supplier<Type> {
         Type[] args = ((ParameterizedType) type).getActualTypeArguments();
         Token<?>[] tokens = new Token[args.length];
         for (int i = 0; i < tokens.length; i++) {
-            tokens[i] = Token.ofType(args[i]);
+            //don't need to re-resolve these types, if they exist, they have already been resolved
+            tokens[i] = new Token<>(args[i]) {};
         }
 
         return tokens;

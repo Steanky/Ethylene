@@ -1,18 +1,20 @@
 package com.github.steanky.ethylene.mapper.type;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class WeakTypeKey extends WeakTypeBase implements WeakType {
     private final byte[] identifier;
+    private final ClassLoader classLoader;
     
-    WeakTypeKey(byte @NotNull [] identifier) {
+    WeakTypeKey(byte @NotNull [] identifier, @Nullable ClassLoader classLoader) {
         this.identifier = identifier;
+        this.classLoader = classLoader;
     }
     
     @Override
-    public @NotNull Class<?> getBoundClass() {
-        //have to return something, this is unimportant
-        return Object.class;
+    public @Nullable ClassLoader getBoundClassloader() {
+        return classLoader;
     }
 
     @Override

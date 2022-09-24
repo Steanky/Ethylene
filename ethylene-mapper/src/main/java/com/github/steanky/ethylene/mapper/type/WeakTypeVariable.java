@@ -183,8 +183,8 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
     }
 
     @Override
-    public @NotNull Class<?> getBoundClass() {
-        return ReflectionUtils.getOwner(genericDeclarationSupplier.get());
+    public @NotNull ClassLoader getBoundClassloader() {
+        return ReflectionUtils.getOwner(genericDeclarationSupplier.get()).getClassLoader();
     }
 
     @Override

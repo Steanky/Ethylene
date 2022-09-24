@@ -117,8 +117,8 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
     }
 
     @Override
-    public @NotNull Class<?> getBoundClass() {
-        return ReflectionUtils.resolve(rawClassReference, rawClassName);
+    public @NotNull ClassLoader getBoundClassloader() {
+        return ReflectionUtils.resolve(rawClassReference, rawClassName).getClassLoader();
     }
 
     @Override

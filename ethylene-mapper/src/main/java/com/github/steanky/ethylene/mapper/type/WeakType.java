@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.mapper.type;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
 
@@ -31,7 +32,7 @@ import java.lang.reflect.Type;
  */
 sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParameterizedType, WeakTypeBase, WeakTypeKey,
     WeakTypeVariable, WeakWildcardType {
-    @NotNull Class<?> getBoundClass();
+    @Nullable ClassLoader getBoundClassloader();
 
     byte[] identifier();
 }

@@ -2,7 +2,6 @@ package com.github.steanky.ethylene.mapper.type;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -123,8 +122,7 @@ class GenericInfo {
     }
 
     private static @NotNull Type bind(@NotNull WeakType type) {
-        Class<?> owner = type.getBoundClass();
-        ClassLoader loader = owner.getClassLoader();
+        ClassLoader loader = type.getBoundClassloader();
         if (loader == null) {
             return bootstrapTypes.computeIfAbsent(type, Function.identity());
         }
@@ -189,7 +187,7 @@ class GenericInfo {
     static @NotNull Reference<Type> ref(@NotNull Type type, @Nullable WeakType owner) {
         Type resolvedType = resolveType(type);
         if (resolvedType instanceof WeakType weakType) {
-            ClassLoader loader = weakType.getBoundClass().getClassLoader();
+            ClassLoader loader = weakType.getBoundClassloader();
             if (loader == null) {
                 return new TypeReference(weakType, owner, null);
             }

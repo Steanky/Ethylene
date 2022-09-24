@@ -70,8 +70,8 @@ final class WeakGenericArrayType implements GenericArrayType, WeakType {
     }
 
     @Override
-    public @NotNull Class<?> getBoundClass() {
-        return ReflectionUtils.rawType(this);
+    public @NotNull ClassLoader getBoundClassloader() {
+        return ReflectionUtils.rawType(this).getClassLoader();
     }
 
     @Override
