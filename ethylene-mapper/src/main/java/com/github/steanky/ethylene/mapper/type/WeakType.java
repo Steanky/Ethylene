@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.mapper.type;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;

@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.mapper.type;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
@@ -175,11 +174,6 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
     @Override
     public Annotation[] getDeclaredAnnotations() {
         return resolveVariable().getDeclaredAnnotations();
-    }
-
-    @Override
-    public String toString() {
-        return TypeUtils.toString(this);
     }
 
     @Override

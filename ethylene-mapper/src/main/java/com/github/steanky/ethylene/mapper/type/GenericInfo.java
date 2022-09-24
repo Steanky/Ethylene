@@ -89,9 +89,12 @@ class GenericInfo {
                 //(it can't possibly be in any maps)
                 if (ownerType != null) {
                     //as soon as a type has a child type go out-of-scope, we must remove it
-                    GenericInfo repository = reference.repository;
+                    Reference<GenericInfo> repository = reference.repository;
                     if (repository != null) {
-                        repository.canonicalTypes.remove(ownerType);
+                        GenericInfo genericInfo = repository.get();
+                        if (genericInfo != null) {
+                            genericInfo.canonicalTypes.remove(ownerType);
+                        }
                     }
                     else {
                         //null repository means bootstrap owner type
@@ -106,12 +109,12 @@ class GenericInfo {
 
     private static class TypeReference extends WeakReference<Type> {
         private final Reference<WeakType> owner;
-        private final GenericInfo repository;
+        private final Reference<GenericInfo> repository;
 
         TypeReference(WeakType referent, WeakType owner, GenericInfo repository) {
             super(referent, queue);
             this.owner = owner == null ? null : new WeakReference<>(owner);
-            this.repository = repository;
+            this.repository = repository == null ? null : new WeakReference<>(repository);
         }
     }
 
