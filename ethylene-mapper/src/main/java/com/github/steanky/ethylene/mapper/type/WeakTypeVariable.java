@@ -23,26 +23,24 @@ import java.util.function.Supplier;
  * no guarantee that a TypeVariable is cached by the JVM).
  * @param <TDec> the type of generic declaration
  */
-final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakType, TypeVariable<TDec> {
+final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBase implements WeakType, TypeVariable<TDec> {
     private final int variableIndex;
     private final Reference<Type>[] boundReferences;
     private final String[] boundReferenceNames;
     private final Supplier<? extends TDec> genericDeclarationSupplier;
     private final String name;
 
+    private final byte[] identifier;
+
     @SuppressWarnings("unchecked")
     WeakTypeVariable(@NotNull TypeVariable<TDec> variable, int variableIndex) {
         Objects.requireNonNull(variable);
         this.variableIndex = variableIndex;
 
-        if (variable instanceof WeakTypeVariable<?>) {
-            throw new IllegalArgumentException("Creating WeakTypeVariable from WeakTypeVariable");
-        }
-
         Type[] bounds = variable.getBounds();
         this.boundReferences = new Reference[bounds.length];
         this.boundReferenceNames = new String[bounds.length];
-        GenericInfoRepository.populate(bounds, boundReferences, boundReferenceNames);
+        GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this);
 
         TDec genericDeclaration = variable.getGenericDeclaration();
         if (genericDeclaration instanceof Class<?> type) {
@@ -97,7 +95,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakTyp
                 //cast is safe
                 TDec newGenericDeclaration = (TDec) newExecutable;
 
-                //update the cached value
+                //re-set the cached value
                 executableReference.setValue(new SoftReference<>(newGenericDeclaration));
                 return newGenericDeclaration;
             };
@@ -107,7 +105,37 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakTyp
             throw new IllegalArgumentException("Unsupported generic declaration type '" + genericDeclaration + "'");
         }
 
+        this.identifier = generateIdentifier(variable, variableIndex);
         this.name = variable.getName();
+    }
+
+    static byte @NotNull [] generateIdentifier(@NotNull TypeVariable<?> variable, int variableIndex) {
+        Type[] bounds = variable.getBounds();
+        GenericDeclaration declaration = variable.getGenericDeclaration();
+        if (declaration instanceof Class<?> type) {
+            Type[] merged = new Type[bounds.length + 1];
+            merged[0] = type;
+            System.arraycopy(bounds, 0, merged, 1, bounds.length);
+            return GenericInfo.identifier(GenericInfo.TYPE_VARIABLE, Integer.toString(variableIndex), merged);
+        }
+        else if (declaration instanceof Executable executable) {
+            Class<?>[] parameters = executable.getParameterTypes();
+
+            Type[] merged = new Type[bounds.length + parameters.length + 5];
+            merged[0] = executable.getDeclaringClass();
+            merged[1] = null;
+            System.arraycopy(bounds, 0, merged, 2, bounds.length);
+            merged[bounds.length] = null;
+            System.arraycopy(parameters, 0, merged, 3 + bounds.length, parameters.length);
+            merged[parameters.length + bounds.length + 3] = null;
+            merged[parameters.length + bounds.length + 4] = executable.getDeclaringClass();
+            return GenericInfo.identifier(GenericInfo.TYPE_VARIABLE, (executable instanceof Method ? "M" : "C")
+                + executable.getName() + variableIndex, merged);
+        }
+        else {
+            throw new IllegalArgumentException("Unexpected subclass of GenericDeclaration '" + declaration
+                .getClass() + "'");
+        }
     }
 
     private TypeVariable<?> resolveVariable() {
@@ -150,31 +178,6 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakTyp
     }
 
     @Override
-    public int hashCode() {
-        return genericDeclarationSupplier.get().hashCode() ^ name.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        GenericDeclaration genericDeclaration = genericDeclarationSupplier.get();
-
-        if (obj == null) {
-            return false;
-        }
-
-        if (obj == this) {
-            return true;
-        }
-
-        if (obj instanceof TypeVariable<?> other) {
-            return Objects.equals(genericDeclaration, other.getGenericDeclaration()) &&
-                Objects.equals(name, other.getName());
-        }
-
-        return false;
-    }
-
-    @Override
     public String toString() {
         return TypeUtils.toString(this);
     }
@@ -182,5 +185,10 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> implements WeakTyp
     @Override
     public @NotNull Class<?> getBoundClass() {
         return ReflectionUtils.getOwner(genericDeclarationSupplier.get());
+    }
+
+    @Override
+    public byte[] identifier() {
+        return identifier;
     }
 }

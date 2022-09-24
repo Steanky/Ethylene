@@ -27,6 +27,8 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
     private final Reference<Type>[] typeArgumentReferences;
     private final String[] typeArgumentNames;
 
+    private final byte[] identifier;
+
 
     /**
      * Creates a new instance of this class.
@@ -41,13 +43,25 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
         this.rawClassReference = new WeakReference<>(rawClass);
         this.rawClassName = rawClass.getTypeName();
 
-        this.ownerTypeReference = owner == null ? null : new WeakReference<>(owner = GenericInfoRepository
-            .resolveType(owner));
+        this.ownerTypeReference = owner == null ? null : GenericInfo.ref(owner, this);
         this.ownerTypeName = owner == null ? StringUtils.EMPTY : owner.getTypeName();
 
         this.typeArgumentReferences = new Reference[typeArguments.length];
         this.typeArgumentNames = new String[typeArguments.length];
-        GenericInfoRepository.populate(typeArguments, typeArgumentReferences, typeArgumentNames);
+        GenericInfo.populate(typeArguments, typeArgumentReferences, typeArgumentNames, this);
+
+        this.identifier = generateIdentifier(rawClass, owner, typeArguments);
+    }
+
+    static byte @NotNull [] generateIdentifier(@NotNull Class<?> rawClass, @Nullable Type owner,
+        Type @NotNull [] typeArguments) {
+        Type[] mergedArray = new Type[3 + typeArguments.length];
+        mergedArray[0] = owner;
+        mergedArray[1] = rawClass;
+        mergedArray[2] = null;
+        System.arraycopy(typeArguments, 0, mergedArray, 3, typeArguments.length);
+
+        return GenericInfo.identifier(GenericInfo.PARAMETERIZED, mergedArray);
     }
 
     @Override
@@ -105,5 +119,10 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
     @Override
     public @NotNull Class<?> getBoundClass() {
         return ReflectionUtils.resolve(rawClassReference, rawClassName);
+    }
+
+    @Override
+    public byte[] identifier() {
+        return identifier;
     }
 }

@@ -103,7 +103,7 @@ public abstract class Token<T> implements Supplier<Type> {
     private Token(@NotNull Type type) {
         Objects.requireNonNull(type);
 
-        Type resolved = GenericInfoRepository.resolveType(type);
+        Type resolved = GenericInfo.resolveType(type);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
     }
@@ -133,7 +133,7 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("Expected non-null type parameter for '" + getClass().getTypeName() + "'");
         }
 
-        Type resolved = GenericInfoRepository.resolveType(target);
+        Type resolved = GenericInfo.resolveType(target);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
     }

@@ -5,7 +5,6 @@ import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.util.Objects;
@@ -18,15 +17,22 @@ final class WeakGenericArrayType implements GenericArrayType, WeakType {
     private final Reference<Type> componentTypeReference;
     private final String componentTypeName;
 
+    private final byte[] identifier;
+
     /**
      * Creates a new instance of this class from the given component type.
      *
      * @param componentType the component type
      */
     WeakGenericArrayType(@NotNull Type componentType) {
-        this.componentTypeReference = new WeakReference<>(componentType = GenericInfoRepository
-            .resolveType(componentType));
+        this.componentTypeReference = GenericInfo.ref(componentType, this);
         this.componentTypeName = componentType.getTypeName();
+
+        this.identifier = generateIdentifier(componentType);
+    }
+
+    static byte @NotNull [] generateIdentifier(@NotNull Type componentType) {
+        return GenericInfo.identifier(GenericInfo.GENERIC_ARRAY, componentType);
     }
 
     @Override
@@ -66,5 +72,10 @@ final class WeakGenericArrayType implements GenericArrayType, WeakType {
     @Override
     public @NotNull Class<?> getBoundClass() {
         return ReflectionUtils.rawType(this);
+    }
+
+    @Override
+    public byte[] identifier() {
+        return identifier;
     }
 }

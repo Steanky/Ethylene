@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.*;
+import java.util.List;
 
 /**
  * Contains some reflection-related utilities. These generally serve to supplement those already found in Apache
