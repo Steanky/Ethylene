@@ -17,7 +17,7 @@ import java.util.Objects;
  * Implementation of {@link ParameterizedType} that retains no strong references to any {@link Type} or {@link Class}
  * objects used in constructing it. Not part of the public API.
  */
-final class WeakParameterizedType implements ParameterizedType, WeakType {
+final class WeakParameterizedType extends WeakTypeBase implements ParameterizedType, WeakType {
     private final Reference<Class<?>> rawClassReference;
     private final String rawClassName;
 
@@ -43,12 +43,13 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
         this.rawClassReference = new WeakReference<>(rawClass);
         this.rawClassName = rawClass.getTypeName();
 
-        this.ownerTypeReference = owner == null ? null : GenericInfo.ref(owner, this);
+        ClassLoader classLoader = rawClass.getClassLoader();
+        this.ownerTypeReference = owner == null ? null : GenericInfo.ref(owner, this, classLoader);
         this.ownerTypeName = owner == null ? StringUtils.EMPTY : owner.getTypeName();
 
         this.typeArgumentReferences = new Reference[typeArguments.length];
         this.typeArgumentNames = new String[typeArguments.length];
-        GenericInfo.populate(typeArguments, typeArgumentReferences, typeArgumentNames, this);
+        GenericInfo.populate(typeArguments, typeArgumentReferences, typeArgumentNames, this, classLoader);
 
         this.identifier = generateIdentifier(rawClass, owner, typeArguments);
     }
@@ -62,43 +63,6 @@ final class WeakParameterizedType implements ParameterizedType, WeakType {
         System.arraycopy(typeArguments, 0, mergedArray, 3, typeArguments.length);
 
         return GenericInfo.identifier(GenericInfo.PARAMETERIZED, mergedArray);
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(getActualTypeArguments()) ^
-            Objects.hashCode(getOwnerType()) ^
-            Objects.hashCode(getRawType());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        //resolve the types first, in order to ensure consistent exception-throwing behavior
-        //if we didn't do this, equality checking against null or reference equal objects could not throw exceptions,
-        //even if the underlying type has been garbage collected
-        Type rawType = getRawType();
-        Type ownerType = getOwnerType();
-        Type[] typeArguments = getActualTypeArguments();
-
-        if (obj == null) {
-            return false;
-        }
-
-        if (obj == this) {
-            return true;
-        }
-
-        if (obj instanceof ParameterizedType other) {
-            return Objects.equals(rawType, other.getRawType()) && Objects.equals(ownerType, other.getOwnerType()) &&
-                Arrays.equals(typeArguments, other.getActualTypeArguments());
-        }
-
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return TypeUtils.toString(this);
     }
 
     @Override

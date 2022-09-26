@@ -2,10 +2,12 @@ package com.github.steanky.ethylene.mapper.internal;
 
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.*;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Contains some reflection-related utilities. These generally serve to supplement those already found in Apache
@@ -62,6 +64,25 @@ public class ReflectionUtils {
         }
 
         return array;
+    }
+
+    public static @Nullable ClassLoader getClassLoader(@NotNull Type type) {
+        Objects.requireNonNull(type);
+
+        if (type instanceof Class<?> cls) {
+            return cls.getClassLoader();
+        }
+        else if (type instanceof ParameterizedType parameterizedType) {
+            return ((Class<?>)parameterizedType.getRawType()).getClassLoader();
+        }
+        else if (type instanceof TypeVariable<?> typeVariable) {
+            return getOwner(typeVariable.getGenericDeclaration()).getClassLoader();
+        }
+        else if (type instanceof GenericArrayType || type instanceof WildcardType) {
+            return null;
+        }
+
+        throw new IllegalArgumentException("Unexpected subclass of Type '" + type.getClass().getName() + "'");
     }
 
     public static @NotNull Class<?> rawType(@NotNull Type type) {

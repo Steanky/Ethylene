@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper.type;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,6 +10,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +53,10 @@ import java.util.function.Function;
  * {@link Class} to which their lifetime should be scoped. It incidentally performs equality-based caching on said
  * custom instances (resulting in a form of object canonicalization, ensuring the returned objects are the same as the
  * ones actually held in the map).
+ * <p>
+ * Types which are referenced by other types, such as the parameter of a {@link WeakParameterizedType}, are held in
+ * special references that remove their parent from its cache when garbage collected. This is accomplished through the
+ * use of a {@link ReferenceQueue} and a cleanup daemon.
  */
 class GenericInfo {
     /**
@@ -81,6 +87,7 @@ class GenericInfo {
     //we can't access the bootstrap classloader, so we can't keep this in the canonicalTypes map
     //bootstrap types won't be unloaded
     private static final Map<Type, Type> bootstrapTypes;
+    private static final Cache<Class<?>, TypeReference> bootstrapClassReferences;
 
     private static final ReferenceQueue<Type> queue;
     private static final Thread cleanupThread;
@@ -88,6 +95,7 @@ class GenericInfo {
     static {
         store = Caffeine.newBuilder().weakKeys().build();
         bootstrapTypes = new ConcurrentHashMap<>();
+        bootstrapClassReferences = Caffeine.newBuilder().weakKeys().build();
         queue = new ReferenceQueue<>();
         cleanupThread = new Thread(GenericInfo::cleanup, "Ethylene Reference Cleanup Thread");
         cleanupThread.setDaemon(true);
@@ -109,9 +117,9 @@ class GenericInfo {
                 //alternatively, this type has no owner, in which case we also don't have to remove anything
                 if (ownerType != null) {
                     //as soon as a type has a child type go out-of-scope, we must remove it
-                    Reference<GenericInfo> repository = reference.repository;
-                    if (repository != null) {
-                        GenericInfo genericInfo = repository.get();
+                    Reference<GenericInfo> ownerRepository = reference.repository;
+                    if (ownerRepository != null) {
+                        GenericInfo genericInfo = ownerRepository.get();
                         if (genericInfo != null) {
                             genericInfo.canonicalTypes.remove(ownerType);
                         }
@@ -131,10 +139,26 @@ class GenericInfo {
         private final Reference<WeakType> owner;
         private final Reference<GenericInfo> repository;
 
-        private TypeReference(WeakType referent, WeakType owner, GenericInfo repository) {
+        private TypeReference(Type referent, WeakType owner, ClassLoader ownerClassLoader) {
             super(referent, queue);
-            this.owner = owner == null ? null : new WeakReference<>(owner);
-            this.repository = repository == null ? null : new WeakReference<>(repository);
+
+            if (owner != null) {
+                this.owner = new WeakReference<>(owner);
+
+                GenericInfo info = ownerClassLoader == null ? null : store.getIfPresent(ownerClassLoader);
+                if (info != null) {
+                    //if there is a repository, retain only a weak reference to it
+                    this.repository = new WeakReference<>(info);
+                }
+                else {
+                    //no repository means bootstrap or unknown classloader
+                    this.repository = null;
+                }
+            }
+            else {
+                this.owner = null;
+                this.repository = null;
+            }
         }
     }
 
@@ -144,8 +168,7 @@ class GenericInfo {
     private GenericInfo() {
     }
 
-    private static @NotNull Type bind(@NotNull WeakType type) {
-        ClassLoader loader = type.getBoundClassloader();
+    private static @NotNull Type bind(@NotNull WeakType type, @Nullable ClassLoader loader) {
         if (loader == null) {
             return bootstrapTypes.computeIfAbsent(type, Function.identity());
         }
@@ -154,21 +177,20 @@ class GenericInfo {
             .identity());
     }
 
-    static @NotNull Type resolveType(@NotNull Type type) {
+    static @NotNull Type resolveType(@NotNull Type type, @Nullable ClassLoader classLoader) {
         Objects.requireNonNull(type);
 
         if (type instanceof Class<?>) {
-            //raw classes don't need to be bound as they should already be retained by their classloader
             return type;
         }
         else if (type instanceof WeakType weakType) {
             //get the canonical instance of this weak type
-            return bind(weakType);
+            return bind(weakType, classLoader);
         }
         else if (type instanceof ParameterizedType parameterizedType) {
             Class<?> rawType = (Class<?>) parameterizedType.getRawType();
             return bind(new WeakParameterizedType(rawType, parameterizedType.getOwnerType(), parameterizedType
-                .getActualTypeArguments()));
+                .getActualTypeArguments()), classLoader);
         }
         else if (type instanceof TypeVariable<?> typeVariable) {
             GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
@@ -181,45 +203,34 @@ class GenericInfo {
                 i++;
             }
 
-            return bind(new WeakTypeVariable<>(typeVariable, i));
+            return bind(new WeakTypeVariable<>(typeVariable, i), classLoader);
         }
         else if (type instanceof WildcardType wildcardType) {
-            return bind(new WeakWildcardType(wildcardType));
+            return bind(new WeakWildcardType(wildcardType), classLoader);
         }
         else if(type instanceof GenericArrayType genericArrayType) {
-            return bind(new WeakGenericArrayType(genericArrayType
-                .getGenericComponentType()));
+            return bind(new WeakGenericArrayType(genericArrayType.getGenericComponentType()), classLoader);
         }
 
         throw new IllegalArgumentException("Unexpected Type implementation '" + type.getClass().getName() + "'");
     }
 
     static void populate(@NotNull Type @NotNull [] types, @NotNull Reference<Type> @NotNull [] typeReferences,
-        @NotNull String @NotNull [] names, @Nullable WeakType owner) {
+        @NotNull String @NotNull [] names, @Nullable WeakType owner, @Nullable ClassLoader ownerClassLoader) {
         if (types.length != names.length) {
             throw new IllegalArgumentException("Types and names array must be the same length");
         }
 
         for (int i = 0; i < types.length; i++) {
-            Type type = resolveType(types[i]);
+            Type type = resolveType(types[i], ownerClassLoader);
             names[i] = type.getTypeName();
-            typeReferences[i] = ref(type, owner);
+            typeReferences[i] = ref(type, owner, ownerClassLoader);
         }
     }
 
-    static @NotNull Reference<Type> ref(@NotNull Type type, @Nullable WeakType owner) {
-        Type resolvedType = resolveType(type);
-        if (resolvedType instanceof WeakType weakType) {
-            ClassLoader loader = weakType.getBoundClassloader();
-            if (loader == null) {
-                return new TypeReference(weakType, owner, null);
-            }
-
-            GenericInfo repository = store.get(loader, ignored -> new GenericInfo());
-            return new TypeReference(weakType, owner, repository);
-        }
-
-        return new WeakReference<>(resolvedType);
+    static @NotNull Reference<Type> ref(@NotNull Type type, @Nullable WeakType owner,
+        @Nullable ClassLoader ownerClassLoader) {
+        return new TypeReference(resolveType(type, ownerClassLoader), owner, ownerClassLoader);
     }
 
     static byte @NotNull [] identifier(byte typeIdentifier, @Nullable String metadata, @Nullable Type ... components) {
@@ -227,6 +238,7 @@ class GenericInfo {
 
         int i = 0;
         int totalComponentLength = 0;
+        Charset charset = StandardCharsets.US_ASCII;
         for (Type type : components) {
             byte[] newArray;
             if (type == null) {
@@ -240,18 +252,18 @@ class GenericInfo {
             }
             else if (type instanceof Class<?> cls) {
                 //if class, use its name
-                newArray = StandardCharsets.US_ASCII.encode(cls.getName()).array();
+                newArray = charset.encode(cls.getName()).array();
             }
             else {
                 //if any other type, use its type name
-                newArray = StandardCharsets.US_ASCII.encode(type.getTypeName()).array();
+                newArray = charset.encode(type.getTypeName()).array();
             }
 
             componentByteArrays[i++] = newArray;
             totalComponentLength += newArray.length;
         }
 
-        byte[] encodedMetadata = metadata == null ? NIL : StandardCharsets.US_ASCII.encode(metadata).array();
+        byte[] encodedMetadata = metadata == null ? NIL : charset.encode(metadata).array();
         //save first byte for type indicator, nameChars.length for length, rest for components
         byte[] composite = new byte[2 + totalComponentLength + encodedMetadata.length + (Math.max(0, components.length
             - 1))];

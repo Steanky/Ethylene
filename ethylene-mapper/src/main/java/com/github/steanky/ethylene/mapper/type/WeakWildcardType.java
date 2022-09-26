@@ -25,12 +25,12 @@ final class WeakWildcardType extends WeakTypeBase implements WildcardType, WeakT
         Type[] upperBounds = wildcardType.getUpperBounds();
         this.upperBoundReferences = new Reference[upperBounds.length];
         this.upperBoundNames = new String[upperBounds.length];
-        GenericInfo.populate(upperBounds, upperBoundReferences, upperBoundNames, this);
+        GenericInfo.populate(upperBounds, upperBoundReferences, upperBoundNames, this, null);
 
         Type[] lowerBounds = wildcardType.getLowerBounds();
         this.lowerBoundReferences = new Reference[lowerBounds.length];
         this.lowerBoundNames = new String[lowerBounds.length];
-        GenericInfo.populate(lowerBounds, lowerBoundReferences, lowerBoundNames, this);
+        GenericInfo.populate(lowerBounds, lowerBoundReferences, lowerBoundNames, this, null);
 
         this.identifier = generateIdentifier(upperBounds, lowerBounds);
     }

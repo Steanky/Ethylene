@@ -39,13 +39,13 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
         Type[] bounds = variable.getBounds();
         this.boundReferences = new Reference[bounds.length];
         this.boundReferenceNames = new String[bounds.length];
-        GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this);
 
         TDec genericDeclaration = variable.getGenericDeclaration();
         if (genericDeclaration instanceof Class<?> type) {
             //simple case: generic decl is class
             Reference<Class<?>> genericDeclarationReference = new WeakReference<>(type);
             String className = type.getTypeName();
+            GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this, type.getClassLoader());
             this.genericDeclarationSupplier = () -> (TDec)ReflectionUtils.resolve(genericDeclarationReference, className);
         }
         else if(genericDeclaration instanceof Method || genericDeclaration instanceof Constructor<?>) {
@@ -70,6 +70,8 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
 
             Mutable<Reference<TDec>> executableReference = new MutableObject<>(new SoftReference<>(genericDeclaration));
             boolean isMethod = genericDeclaration instanceof Method;
+            GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this, declaringClass
+                .getClassLoader());
             this.genericDeclarationSupplier = (Supplier<TDec>) () -> {
                 TDec cachedDeclaration = executableReference.getValue().get();
                 if (cachedDeclaration != null) {
