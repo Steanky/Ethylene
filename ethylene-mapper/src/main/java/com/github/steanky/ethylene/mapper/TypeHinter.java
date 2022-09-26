@@ -7,6 +7,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 
+/**
+ * Provides basic inspections on {@link Token}s and {@link ConfigElement}s.
+ */
 public interface TypeHinter {
     @NotNull ElementType getHint(@NotNull Token<?> type);
 

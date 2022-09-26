@@ -28,6 +28,13 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
     private final Supplier<? extends TDec> genericDeclarationSupplier;
     private final String name;
 
+    /**
+     * Creates a new {@link WeakTypeVariable} from the given {@link TypeVariable} and generic declaration variable
+     * index. This is the index of the given TypeVariable within the {@link GenericDeclaration} it is a part of.
+     *
+     * @param variable the TypeVariable from which to create this instance
+     * @param variableIndex the index of {@code variable} within its GenericDeclaration
+     */
     @SuppressWarnings("unchecked")
     WeakTypeVariable(@NotNull TypeVariable<TDec> variable, int variableIndex) {
         super(generateIdentifier(variable, variableIndex));
@@ -106,7 +113,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
         this.name = variable.getName();
     }
 
-    static byte @NotNull [] generateIdentifier(@NotNull TypeVariable<?> variable, int variableIndex) {
+    private static byte @NotNull [] generateIdentifier(@NotNull TypeVariable<?> variable, int variableIndex) {
         Type[] bounds = variable.getBounds();
         GenericDeclaration declaration = variable.getGenericDeclaration();
         if (declaration instanceof Class<?> type) {

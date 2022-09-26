@@ -27,7 +27,7 @@ final class WeakGenericArrayType extends WeakTypeBase implements GenericArrayTyp
         this.componentTypeName = componentType.getTypeName();
     }
 
-    static byte @NotNull [] generateIdentifier(@NotNull Type componentType) {
+    private static byte @NotNull [] generateIdentifier(@NotNull Type componentType) {
         return GenericInfo.identifier(GenericInfo.GENERIC_ARRAY, componentType);
     }
 

@@ -1,6 +1,6 @@
 package com.github.steanky.ethylene.mapper.type;
 
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
 
@@ -31,5 +31,13 @@ import java.lang.reflect.Type;
  */
 sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParameterizedType, WeakTypeBase,
     WeakTypeVariable, WeakWildcardType {
-    byte[] identifier();
+    /**
+     * The identifier bytes, used to compare instances for equality. The format this uses is specified by
+     * {@link GenericInfo#identifier(byte, String, Type...)}.
+     * <p>
+     * To improve performance, implementations are not required to create defensive copies of their unique identifier
+     * array. Unless otherwise specified, callers should assume this array is not safe to modify.
+     * @return the unique identifier array, which must not be modified
+     */
+    byte @NotNull [] identifier();
 }

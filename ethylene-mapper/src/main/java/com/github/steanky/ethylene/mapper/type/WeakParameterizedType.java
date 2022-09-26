@@ -51,7 +51,7 @@ final class WeakParameterizedType extends WeakTypeBase implements ParameterizedT
         GenericInfo.populate(typeArguments, typeArgumentReferences, typeArgumentNames, this, classLoader);
     }
 
-    static byte @NotNull [] generateIdentifier(@NotNull Class<?> rawClass, @Nullable Type owner,
+    private static byte @NotNull [] generateIdentifier(@NotNull Class<?> rawClass, @Nullable Type owner,
         Type @NotNull [] typeArguments) {
         Type[] mergedArray = new Type[3 + typeArguments.length];
         mergedArray[0] = owner;

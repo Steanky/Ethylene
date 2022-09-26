@@ -5,12 +5,21 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
+/**
+ * Base abstract class for {@link WeakType}. Includes implementations of {@link Object#equals(Object)},
+ * {@link Object#hashCode()}, and {@link Object#toString()} suitable for any WeakType. Also contains the identifier byte
+ * array.
+ */
 abstract non-sealed class WeakTypeBase implements WeakType {
     private final byte[] identifier;
 
     private boolean hashed;
     private int hash;
 
+    /**
+     * Creates a new instance of this class from the provided identifier array.
+     * @param identifier the identifier array
+     */
     WeakTypeBase(byte @NotNull [] identifier) {
         this.identifier = identifier;
     }
@@ -49,7 +58,7 @@ abstract non-sealed class WeakTypeBase implements WeakType {
     }
 
     @Override
-    public final byte[] identifier() {
+    public final byte @NotNull [] identifier() {
         return identifier;
     }
 }

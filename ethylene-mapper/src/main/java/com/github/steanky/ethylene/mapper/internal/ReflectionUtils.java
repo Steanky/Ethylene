@@ -6,7 +6,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.*;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -66,6 +65,15 @@ public class ReflectionUtils {
         return array;
     }
 
+    /**
+     * Returns the {@link ClassLoader} responsible for the given type. For class objects, this is the value returned by
+     * {@link Class#getClassLoader()}. For {@link ParameterizedType}, this is the class loader of its raw type. For
+     * {@link TypeVariable}, this is the classloader of the declaring class of the {@link GenericDeclaration} the
+     * variable is part of. For {@link GenericArrayType} and {@link WildcardType}, this method returns {@code null}.
+     *
+     * @param type the type to retrieve a classloader from
+     * @return the classloader of the type
+     */
     public static @Nullable ClassLoader getClassLoader(@NotNull Type type) {
         Objects.requireNonNull(type);
 

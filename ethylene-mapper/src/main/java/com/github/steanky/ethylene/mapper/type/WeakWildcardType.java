@@ -7,6 +7,10 @@ import java.lang.ref.Reference;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 
+/**
+ * Weak version of {@link WildcardType} which does not retain any strong references to its bounds. Not part of the
+ * public API.
+ */
 final class WeakWildcardType extends WeakTypeBase implements WildcardType, WeakType {
     private final Reference<Type>[] upperBoundReferences;
     private final String[] upperBoundNames;
@@ -14,6 +18,12 @@ final class WeakWildcardType extends WeakTypeBase implements WildcardType, WeakT
     private final Reference<Type>[] lowerBoundReferences;
     private final String[] lowerBoundNames;
 
+    /**
+     * Creates a new instance of this class from the given {@link WildcardType}. The new instance will have the same
+     * bounds as the provided type.
+     *
+     * @param wildcardType the wildcard type from which to create this instance
+     */
     @SuppressWarnings("unchecked")
     WeakWildcardType(@NotNull WildcardType wildcardType) {
         super(generateIdentifier(wildcardType.getUpperBounds(), wildcardType.getLowerBounds()));
@@ -29,7 +39,7 @@ final class WeakWildcardType extends WeakTypeBase implements WildcardType, WeakT
         GenericInfo.populate(lowerBounds, lowerBoundReferences, lowerBoundNames, this, null);
     }
 
-    static byte[] generateIdentifier(Type[] upperBounds, Type[] lowerBounds) {
+    private static byte[] generateIdentifier(Type[] upperBounds, Type[] lowerBounds) {
         Type[] identifierTypes = new Type[upperBounds.length + lowerBounds.length + 1];
         System.arraycopy(upperBounds, 0, identifierTypes, 0, upperBounds.length);
         //add null type as separator to indicate boundary between upper and lower bounds

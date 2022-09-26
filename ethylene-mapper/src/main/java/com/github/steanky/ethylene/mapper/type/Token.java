@@ -132,7 +132,7 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("Expected non-null type parameter for '" + getClass().getTypeName() + "'");
         }
 
-        Type resolved = GenericInfo.resolveType(target, ReflectionUtils.getClassLoader(target));
+        Type resolved = GenericInfo.resolveType(target);
         this.typeReference = new WeakReference<>(resolved);
         this.typeName = resolved.getTypeName();
     }
@@ -157,8 +157,7 @@ public abstract class Token<T> implements Supplier<Type> {
             actualOwner = owner;
         }
 
-        return Token.ofType(GenericInfo.resolveType(new WeakParameterizedType(raw, actualOwner, params), raw
-            .getClassLoader()));
+        return Token.ofType(GenericInfo.resolveType(new WeakParameterizedType(raw, actualOwner, params)));
     }
 
     private static Type[] extractTypes(Token<?>[] tokens) {
@@ -188,7 +187,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
     public static @NotNull Token<?> ofType(@NotNull Type type) {
         Objects.requireNonNull(type);
-        return new Token<>(GenericInfo.resolveType(type, ReflectionUtils.getClassLoader(type))) {};
+        return new Token<>(GenericInfo.resolveType(type)) {};
     }
 
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
@@ -366,7 +365,7 @@ public abstract class Token<T> implements Supplier<Type> {
             return Token.ofType(cls.arrayType());
         }
 
-        return Token.ofType(GenericInfo.resolveType(new WeakGenericArrayType(type), null));
+        return Token.ofType(GenericInfo.resolveType(new WeakGenericArrayType(type)));
     }
 
     /**
@@ -383,7 +382,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
         Type component = TypeUtils.getArrayComponentType(type);
         ClassLoader loader = ReflectionUtils.getClassLoader(component);
-        return Token.ofType(GenericInfo.resolveType(component, loader));
+        return Token.ofType(GenericInfo.resolveType(component));
     }
 
     /**
