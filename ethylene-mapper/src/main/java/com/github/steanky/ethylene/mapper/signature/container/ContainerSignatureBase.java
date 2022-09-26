@@ -64,7 +64,7 @@ public abstract class ContainerSignatureBase implements Signature {
 
             @Override
             public Entry<String, Token<?>> next() {
-                return Entry.of(entry.getFirst(), entry.getSecond());
+                return entry;
             }
         };
     }

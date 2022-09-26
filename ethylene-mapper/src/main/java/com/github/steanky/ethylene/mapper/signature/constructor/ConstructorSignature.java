@@ -230,7 +230,7 @@ public class ConstructorSignature implements Signature {
             //alternatively use singleton list
             Parameter first = parameters[0];
             Entry<String, Token<?>> entry = makeEntry(first, first.isNamePresent());
-            matchesNames = entry.getFirst() != null;
+            matchesNames = entry.getKey() != null;
             return types = List.of(entry);
         }
 
@@ -241,14 +241,14 @@ public class ConstructorSignature implements Signature {
 
         boolean parameterHasName = first.isNamePresent();
         Entry<String, Token<?>> firstEntry = makeEntry(first, parameterHasName);
-        matchesNames = firstEntry.getFirst() != null;
+        matchesNames = firstEntry.getKey() != null;
 
         entryList.add(firstEntry);
 
-        boolean firstNonNullName = firstEntry.getFirst() != null;
+        boolean firstNonNullName = firstEntry.getKey() != null;
         for (int i = 1; i < parameters.length; i++) {
             Entry<String, Token<?>> entry = makeEntry(parameters[i], parameterHasName);
-            if (firstNonNullName == (entry.getFirst() == null)) {
+            if (firstNonNullName == (entry.getKey() == null)) {
                 throw new MapperException("Inconsistent parameter naming");
             }
 

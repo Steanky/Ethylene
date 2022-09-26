@@ -61,7 +61,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                         Iterable<Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
                         for (Entry<String, Token<?>> entry : signatureTypes) {
-                            Signature.TypedObject typedObject = objectDataMap.get(entry.getFirst());
+                            Signature.TypedObject typedObject = objectDataMap.get(entry.getKey());
                             if (typedObject == null) {
                                 break outer;
                             }
@@ -78,7 +78,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                         while (typeCollectionIterator.hasNext()) {
                             if (typeHinter.getHint(typeCollectionIterator.next().type()) !=
-                                typeHinter.getHint(signatureIterator.next().getSecond())) {
+                                typeHinter.getHint(signatureIterator.next().getValue())) {
                                 break outer;
                             }
                         }
@@ -121,7 +121,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                     //this ensures that the order is respected when matching names
                     for (Entry<String, Token<?>> entry : signatureTypes) {
-                        String name = entry.getFirst();
+                        String name = entry.getKey();
                         ConfigElement element = providedNode.get(name);
                         if (element == null) {
                             break outer;
@@ -138,7 +138,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     Iterator<Entry<String, Token<?>>> signatureTypeIterator = signature.argumentTypes().iterator();
 
                     while (elementIterator.hasNext()) {
-                        if (!typeHinter.assignable(elementIterator.next(), signatureTypeIterator.next().getSecond())) {
+                        if (!typeHinter.assignable(elementIterator.next(), signatureTypeIterator.next().getValue())) {
                             break outer;
                         }
                     }

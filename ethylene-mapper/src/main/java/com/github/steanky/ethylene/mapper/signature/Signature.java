@@ -114,7 +114,7 @@ public interface Signature {
             this.argumentTypes = new ArrayList<>(arguments.length);
             for (Entry<String, Token<?>> entry : arguments) {
                 argumentTypes.add(
-                    Entry.of(Objects.requireNonNull(entry.getFirst()), Objects.requireNonNull(entry.getSecond())));
+                    Entry.of(Objects.requireNonNull(entry.getKey()), Objects.requireNonNull(entry.getValue())));
             }
         }
 

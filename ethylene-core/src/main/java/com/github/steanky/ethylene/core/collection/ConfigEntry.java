@@ -4,13 +4,14 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
  * <p>Represents a particular key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is like a
  * list, the key will be null.</p>
  */
-public final class ConfigEntry implements Entry<String, ConfigElement> {
+public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
     private final String key;
     private final ConfigElement element;
 
@@ -26,18 +27,23 @@ public final class ConfigEntry implements Entry<String, ConfigElement> {
     }
 
     @Override
-    public String getFirst() {
+    public int hashCode() {
+        return Objects.hash(key, element);
+    }
+
+    @Override
+    public String getKey() {
         return key;
     }
 
     @Override
-    public @NotNull ConfigElement getSecond() {
+    public ConfigElement getValue() {
         return element;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(key, element);
+    public ConfigElement setValue(ConfigElement value) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -50,8 +56,8 @@ public final class ConfigEntry implements Entry<String, ConfigElement> {
             return true;
         }
 
-        if (obj instanceof Entry<?, ?> entry) {
-            return Objects.equals(key, entry.getFirst()) && Objects.equals(element, entry.getSecond());
+        if (obj instanceof Map.Entry<?, ?> entry) {
+            return Objects.equals(key, entry.getKey()) && Objects.equals(element, entry.getValue());
         }
 
         return false;

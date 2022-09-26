@@ -39,8 +39,8 @@ public class BasicTypeResolver implements TypeResolver {
 
     private void registerTypeImplementations(Collection<Entry<Class<?>, Class<?>>> typeImplementations) {
         for (Entry<Class<?>, Class<?>> entry : typeImplementations) {
-            Class<?> implementation = entry.getFirst();
-            Class<?> superclass = entry.getSecond();
+            Class<?> implementation = entry.getKey();
+            Class<?> superclass = entry.getValue();
 
             Objects.requireNonNull(implementation);
             Objects.requireNonNull(superclass);

@@ -79,7 +79,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                                 }
 
                                 ConfigElement nextElement = elementIterator.next();
-                                Token<?> nextType = typeResolver.resolveType(typeEntryIterator.next().getSecond(),
+                                Token<?> nextType = typeResolver.resolveType(typeEntryIterator.next().getValue(),
                                     nextElement);
                                 SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType);
 

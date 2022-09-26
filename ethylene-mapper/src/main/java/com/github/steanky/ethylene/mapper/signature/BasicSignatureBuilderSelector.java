@@ -27,8 +27,8 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
 
     private void registerSignaturePreferences(Collection<Entry<Class<?>, SignatureBuilder>> signaturePreferences) {
         for (Entry<Class<?>, SignatureBuilder> preference : signaturePreferences) {
-            Class<?> type = preference.getFirst();
-            SignatureBuilder signatureBuilder = preference.getSecond();
+            Class<?> type = preference.getKey();
+            SignatureBuilder signatureBuilder = preference.getValue();
 
             Objects.requireNonNull(type);
             Objects.requireNonNull(signatureBuilder);

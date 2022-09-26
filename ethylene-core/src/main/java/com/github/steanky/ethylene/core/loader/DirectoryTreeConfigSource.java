@@ -193,8 +193,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 //key (first in the entry) is always null because it's unused
                 List<Entry<Object, OutputInfo>> paths = new ArrayList<>(node.size());
                 for (ConfigEntry entry : node.entryCollection()) {
-                    String elementName = entry.getFirst();
-                    ConfigElement entryElement = entry.getSecond();
+                    String elementName = entry.getKey();
+                    ConfigElement entryElement = entry.getValue();
                     Path targetPath = normalizedPath.resolve(elementName);
 
                     boolean exists = existingPaths.contains(targetPath);
@@ -247,7 +247,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                     //actually write the files
                     //need to do this here, instead of in, say, the scalar mapper, so we can create
                     //symlinks when indicated to do so by the circular flag
-                    OutputInfo actualInfo = actualIterator.next().getSecond();
+                    OutputInfo actualInfo = actualIterator.next().getValue();
 
                     if (circular && supportSymlinks) {
                         //make a symlink to the target file/directory instead of making a copy

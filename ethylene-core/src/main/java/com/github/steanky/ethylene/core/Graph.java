@@ -84,9 +84,9 @@ public final class Graph {
             boolean hasOutput = hasOutput(node);
             boolean finished = true;
             while (node.inputIterator.hasNext()) {
-                Entry<? extends TKey, ? extends TIn> entry = node.inputIterator.next();
-                TKey entryKey = entry.getFirst();
-                TIn entryInput = entry.getSecond();
+                Map.Entry<? extends TKey, ? extends TIn> entry = node.inputIterator.next();
+                TKey entryKey = entry.getKey();
+                TIn entryInput = entry.getValue();
 
                 //if not a container, then we have a scalar
                 if (!containerPredicate.test(entryInput)) {
@@ -211,13 +211,13 @@ public final class Graph {
     }
 
     public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
-        @NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator,
+        @NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator,
         @NotNull Output<TOut, TKey> output) {
         return new Node<>(inputIterator, output);
     }
 
     public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
-        @NotNull Iterator<? extends Entry<TKey, TIn>> inputIterator) {
+        @NotNull Iterator<? extends Map.Entry<TKey, TIn>> inputIterator) {
         return new Node<>(inputIterator, emptyOutput());
     }
 
@@ -298,11 +298,11 @@ public final class Graph {
     }
 
     public static final class Node<TIn, TOut, TKey> {
-        private final Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator;
+        private final Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator;
         private final Output<TOut, ? super TKey> output;
         private NodeResult<TKey, TOut> result;
 
-        private Node(@NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator,
+        private Node(@NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator,
             @NotNull Output<TOut, ? super TKey> output) {
             this.inputIterator = inputIterator;
             this.output = output;
@@ -319,7 +319,7 @@ public final class Graph {
             result.out = out;
         }
 
-        public @NotNull Iterator<? extends Entry<? extends TKey, ? extends TIn>> inputIterator() {
+        public @NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator() {
             return inputIterator;
         }
 
