@@ -26,6 +26,15 @@ public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
         this.element = Objects.requireNonNull(element);
     }
 
+    /**
+     * Creates a new ConfigEntry instance with a null key.
+     *
+     * @param element the value element
+     */
+    public ConfigEntry(@NotNull ConfigElement element) {
+        this(null, element);
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(key, element);

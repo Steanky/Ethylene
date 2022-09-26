@@ -19,7 +19,8 @@ import java.util.function.Function;
 class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnum> {
     private final String className;
     private final boolean caseSensitive;
-    private Reference<Class<? extends TEnum>> enumClassReference;
+    private final Reference<Class<? extends TEnum>> enumClassReference;
+
     private Function<String, TEnum> lookupFunction;
 
     /**
@@ -100,16 +101,10 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
         return lookupFunction.apply(name);
     }
 
-    @SuppressWarnings("unchecked")
     private Class<? extends TEnum> getEnumClass() {
         Class<? extends TEnum> cls = enumClassReference.get();
         if (cls == null) {
-            try {
-                cls = (Class<? extends TEnum>) Class.forName(className);
-                enumClassReference = new WeakReference<>(cls);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+            throw new TypeNotPresentException(className, null);
         }
 
         return cls;

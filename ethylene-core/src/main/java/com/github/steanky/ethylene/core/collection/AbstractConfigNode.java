@@ -25,6 +25,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     protected final Map<String, ConfigElement> mappings;
 
     private Collection<ConfigEntry> containerCollection;
+    private Collection<ConfigElement> elementCollection;
 
     /**
      * Construct a new AbstractConfigNode using the provided mappings.
@@ -133,6 +134,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        return Collections.unmodifiableCollection(mappings.values());
+        return Objects.requireNonNullElseGet(elementCollection, () -> elementCollection = Collections
+            .unmodifiableCollection(mappings.values()));
     }
 }

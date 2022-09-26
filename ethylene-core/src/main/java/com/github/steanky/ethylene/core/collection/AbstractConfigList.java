@@ -112,7 +112,7 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
 
                         @Override
                         public ConfigEntry next() {
-                            return new ConfigEntry(null, elementIterator.next());
+                            return new ConfigEntry(elementIterator.next());
                         }
                     };
                 }

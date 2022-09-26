@@ -5,8 +5,17 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 
 public class BasicPathNameInspector implements PathNameInspector {
+    /**
+     * The singleton instance. This class is immutable.
+     */
+    public static final PathNameInspector INSTANCE = new BasicPathNameInspector();
+
     private static final char EXTENSION_SEPARATOR = '.';
     private static final String EMPTY_STRING = "";
+
+    private BasicPathNameInspector() {
+
+    }
 
     private static String getFilenameString(Path path) {
         Path namePath = path.getFileName();
@@ -37,10 +46,5 @@ public class BasicPathNameInspector implements PathNameInspector {
         }
 
         return namePathString.substring(0, extensionIndex);
-    }
-
-    @Override
-    public boolean hasExtension(@NotNull Path path) {
-        return !getExtension(path).isEmpty();
     }
 }

@@ -158,6 +158,7 @@ public interface ConfigProcessor<TData> {
      */
     static <TEnum extends Enum<?>> @NotNull ConfigProcessor<TEnum> enumProcessor(
         @NotNull Class<? extends TEnum> enumClass) {
+        Objects.requireNonNull(enumClass);
         return new EnumConfigProcessor<>(enumClass);
     }
 
@@ -172,6 +173,7 @@ public interface ConfigProcessor<TData> {
      */
     static <TEnum extends Enum<?>> @NotNull ConfigProcessor<TEnum> enumProcessor(
         @NotNull Class<? extends TEnum> enumClass, boolean caseSensitive) {
+        Objects.requireNonNull(enumClass);
         return new EnumConfigProcessor<>(enumClass, caseSensitive);
     }
 
@@ -186,6 +188,7 @@ public interface ConfigProcessor<TData> {
      */
     static <TReturn> @NotNull ConfigProcessor<TReturn> emptyProcessor(
         @NotNull Supplier<? extends TReturn> returnSupplier) {
+        Objects.requireNonNull(returnSupplier);
         return new ConfigProcessor<>() {
             @Override
             public TReturn dataFromElement(@NotNull ConfigElement element) {

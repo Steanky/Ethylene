@@ -26,7 +26,8 @@ class DirectoryTreeConfigSourceTest {
 
         Path root = Files.createTempDirectory("DirectoryTreeConfigSourceTest_output");
         DirectoryTreeConfigSource directoryTreeConfigSource =
-            new DirectoryTreeConfigSource(root, codecResolver, new BasicPathNameInspector(), jsonCodec, null, true);
+            new DirectoryTreeConfigSource(root, codecResolver, BasicPathNameInspector.INSTANCE, jsonCodec,
+                null, true);
         directoryTreeConfigSource.write(testNode).join();
 
         ConfigElement element = directoryTreeConfigSource.read().join();
