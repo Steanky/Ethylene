@@ -50,6 +50,16 @@ public class ReflectionUtils {
         return type;
     }
 
+    /**
+     * Resolves a number of type references to concrete types. If any type is null (missing), throw a
+     * {@link TypeNotPresentException}.
+     *
+     * @param typeReferences the references from which to extract types
+     * @param names the corresponding names of each type
+     * @param type the class of type, used to create the type array; must be assignable to {@code TType}
+     * @return a resolved type array
+     * @param <TType> the subclass of {@link Type}
+     */
     @SuppressWarnings("unchecked")
     public static <TType extends Type> @NotNull TType[] resolve(@NotNull Reference<TType>[] typeReferences,
         @NotNull String[] names, @NotNull Class<?> type) {
@@ -93,6 +103,20 @@ public class ReflectionUtils {
         throw new IllegalArgumentException("Unexpected subclass of Type '" + type.getClass().getName() + "'");
     }
 
+    /**
+     * Resolves the underlying raw type of the given {@link Type} object. Supports implementations of
+     * {@link ParameterizedType}. {@link TypeVariable}, {@link GenericArrayType}, {@link WildcardType}, and
+     * {@link Class}. Any other subclasses of {@link Type} are not supported and will cause this method to throw an
+     * exception.
+     * <p>
+     * Class objects are returned as-is. {@link ParameterizedType#getRawType()} is cast to Class and returned. The first
+     * upper bound of a {@link TypeVariable} is recursively resolved and the result returned. A regular array type is
+     * recursively resolved and returned for {@link GenericArrayType}. The first upper bound of a {@link WildcardType}
+     * is recursively resolved and returned.
+     *
+     * @param type the type to extract a raw class from
+     * @return the raw class
+     */
     public static @NotNull Class<?> rawType(@NotNull Type type) {
         if (type instanceof Class<?> cls) {
             return cls;
@@ -117,6 +141,16 @@ public class ReflectionUtils {
         throw new IllegalArgumentException("Unexpected subclass of Type '" + type.getClass().getName() + "'");
     }
 
+    /**
+     * Gets the owner class of the given {@link GenericDeclaration}.
+     * <p>
+     * If the generic declaration is itself a class, it is returned. Otherwise, if the declaration is an
+     * {@link Executable}, its declaring class is returned. If the {@link GenericDeclaration} is not a class object, or
+     * subclass of Executable, an {@link IllegalArgumentException} is thrown.
+     *
+     * @param genericDeclaration the declaration from which to extract an owner
+     * @return the owner class
+     */
     public static @NotNull Class<?> getOwner(@NotNull GenericDeclaration genericDeclaration) {
         if (genericDeclaration instanceof Class<?> cls) {
             return cls;
@@ -124,9 +158,8 @@ public class ReflectionUtils {
         else if(genericDeclaration instanceof Executable executable) {
             return executable.getDeclaringClass();
         }
-        else {
-            throw new IllegalArgumentException("Unexpected subclass of GenericDeclaration '" + genericDeclaration
-                .getClass().getName() + "'");
-        }
+
+        throw new IllegalArgumentException("Unexpected subclass of GenericDeclaration '" + genericDeclaration.getClass()
+            .getName() + "'");
     }
 }

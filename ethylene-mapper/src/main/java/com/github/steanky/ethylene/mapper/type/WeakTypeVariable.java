@@ -33,7 +33,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
      * index. This is the index of the given TypeVariable within the {@link GenericDeclaration} it is a part of.
      *
      * @param variable the TypeVariable from which to create this instance
-     * @param variableIndex the index of {@code variable} within its GenericDeclaration
+     * @param variableIndex the index of {@code variable} within its
      */
     @SuppressWarnings("unchecked")
     WeakTypeVariable(@NotNull TypeVariable<TDec> variable, int variableIndex) {

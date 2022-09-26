@@ -79,6 +79,11 @@ class GenericInfo {
      */
     static final byte WILDCARD = 3;
 
+    /**
+     * Standard charset used by {@link GenericInfo#identifier(byte, String, Type...)}.
+     */
+    static final Charset CHARSET = StandardCharsets.UTF_8;
+
     //used by GenericInfo#identifier
     private static final byte[] NIL = new byte[] {0};
 
@@ -312,7 +317,6 @@ class GenericInfo {
 
         int i = 0;
         int totalComponentLength = 0;
-        Charset charset = StandardCharsets.UTF_8;
         for (Type type : components) {
             byte[] newArray;
             if (type == null) {
@@ -326,18 +330,18 @@ class GenericInfo {
             }
             else if (type instanceof Class<?> cls) {
                 //if class, use its name (this has a nice, compact encoding)
-                newArray = charset.encode(cls.getName()).array();
+                newArray = CHARSET.encode(cls.getName()).array();
             }
             else {
                 //if any other type, use its type name
-                newArray = charset.encode(type.getTypeName()).array();
+                newArray = CHARSET.encode(type.getTypeName()).array();
             }
 
             componentByteArrays[i++] = newArray;
             totalComponentLength += newArray.length;
         }
 
-        byte[] encodedMetadata = metadata == null ? NIL : charset.encode(metadata).array();
+        byte[] encodedMetadata = metadata == null ? NIL : CHARSET.encode(metadata).array();
         //save first byte for type indicator, nameChars.length for length, rest for components
         byte[] composite = new byte[2 + totalComponentLength + encodedMetadata.length + (Math.max(0, components.length
             - 1))];

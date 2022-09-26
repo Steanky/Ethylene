@@ -588,6 +588,12 @@ public abstract class Token<T> implements Supplier<Type> {
         return typeName;
     }
 
+    /**
+     * Casts the given object to this token's type.
+     *
+     * @param other the object to cast
+     * @return the object, after casting
+     */
     @SuppressWarnings("unchecked")
     public final T cast(Object other) {
         return (T) rawType().cast(other);
