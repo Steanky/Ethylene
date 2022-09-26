@@ -27,9 +27,6 @@ final class WeakParameterizedType extends WeakTypeBase implements ParameterizedT
     private final Reference<Type>[] typeArgumentReferences;
     private final String[] typeArgumentNames;
 
-    private final byte[] identifier;
-
-
     /**
      * Creates a new instance of this class.
      *
@@ -40,6 +37,8 @@ final class WeakParameterizedType extends WeakTypeBase implements ParameterizedT
      */
     @SuppressWarnings("unchecked")
     WeakParameterizedType(@NotNull Class<?> rawClass, @Nullable Type owner, Type @NotNull [] typeArguments) {
+        super(generateIdentifier(rawClass, owner, typeArguments));
+
         this.rawClassReference = new WeakReference<>(rawClass);
         this.rawClassName = rawClass.getTypeName();
 
@@ -50,8 +49,6 @@ final class WeakParameterizedType extends WeakTypeBase implements ParameterizedT
         this.typeArgumentReferences = new Reference[typeArguments.length];
         this.typeArgumentNames = new String[typeArguments.length];
         GenericInfo.populate(typeArguments, typeArgumentReferences, typeArgumentNames, this, classLoader);
-
-        this.identifier = generateIdentifier(rawClass, owner, typeArguments);
     }
 
     static byte @NotNull [] generateIdentifier(@NotNull Class<?> rawClass, @Nullable Type owner,
@@ -78,15 +75,5 @@ final class WeakParameterizedType extends WeakTypeBase implements ParameterizedT
     @Override
     public Type getOwnerType() {
         return ownerTypeReference == null ? null : ReflectionUtils.resolve(ownerTypeReference, ownerTypeName);
-    }
-
-    @Override
-    public @NotNull ClassLoader getBoundClassloader() {
-        return ReflectionUtils.resolve(rawClassReference, rawClassName).getClassLoader();
-    }
-
-    @Override
-    public byte[] identifier() {
-        return identifier;
     }
 }

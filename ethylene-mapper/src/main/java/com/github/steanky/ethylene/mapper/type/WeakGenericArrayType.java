@@ -15,19 +15,16 @@ final class WeakGenericArrayType extends WeakTypeBase implements GenericArrayTyp
     private final Reference<Type> componentTypeReference;
     private final String componentTypeName;
 
-    private final byte[] identifier;
-
     /**
      * Creates a new instance of this class from the given component type.
      *
      * @param componentType the component type
      */
     WeakGenericArrayType(@NotNull Type componentType) {
+        super(generateIdentifier(componentType));
         //array types belong to the bootstrap classloader
         this.componentTypeReference = GenericInfo.ref(componentType, this, null);
         this.componentTypeName = componentType.getTypeName();
-
-        this.identifier = generateIdentifier(componentType);
     }
 
     static byte @NotNull [] generateIdentifier(@NotNull Type componentType) {
@@ -37,15 +34,5 @@ final class WeakGenericArrayType extends WeakTypeBase implements GenericArrayTyp
     @Override
     public Type getGenericComponentType() {
         return ReflectionUtils.resolve(componentTypeReference, componentTypeName);
-    }
-
-    @Override
-    public @NotNull ClassLoader getBoundClassloader() {
-        return ReflectionUtils.rawType(this).getClassLoader();
-    }
-
-    @Override
-    public byte[] identifier() {
-        return identifier;
     }
 }

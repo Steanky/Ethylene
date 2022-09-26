@@ -10,7 +10,6 @@ import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.*;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -29,11 +28,9 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
     private final Supplier<? extends TDec> genericDeclarationSupplier;
     private final String name;
 
-    private final byte[] identifier;
-
     @SuppressWarnings("unchecked")
     WeakTypeVariable(@NotNull TypeVariable<TDec> variable, int variableIndex) {
-        Objects.requireNonNull(variable);
+        super(generateIdentifier(variable, variableIndex));
         this.variableIndex = variableIndex;
 
         Type[] bounds = variable.getBounds();
@@ -106,7 +103,6 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
             throw new IllegalArgumentException("Unsupported generic declaration type '" + genericDeclaration + "'");
         }
 
-        this.identifier = generateIdentifier(variable, variableIndex);
         this.name = variable.getName();
     }
 
@@ -139,7 +135,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
         }
     }
 
-    private TypeVariable<?> resolveVariable() {
+    private TypeVariable<?> resolveTypeVariable() {
         return genericDeclarationSupplier.get().getTypeParameters()[variableIndex];
     }
 
@@ -160,31 +156,21 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
 
     @Override
     public AnnotatedType[] getAnnotatedBounds() {
-        return resolveVariable().getAnnotatedBounds();
+        return resolveTypeVariable().getAnnotatedBounds();
     }
 
     @Override
     public <TAnno extends Annotation> TAnno getAnnotation(@NotNull Class<TAnno> annotationClass) {
-        return resolveVariable().getAnnotation(annotationClass);
+        return resolveTypeVariable().getAnnotation(annotationClass);
     }
 
     @Override
     public Annotation[] getAnnotations() {
-        return resolveVariable().getAnnotations();
+        return resolveTypeVariable().getAnnotations();
     }
 
     @Override
     public Annotation[] getDeclaredAnnotations() {
-        return resolveVariable().getDeclaredAnnotations();
-    }
-
-    @Override
-    public @NotNull ClassLoader getBoundClassloader() {
-        return ReflectionUtils.getOwner(genericDeclarationSupplier.get()).getClassLoader();
-    }
-
-    @Override
-    public byte[] identifier() {
-        return identifier;
+        return resolveTypeVariable().getDeclaredAnnotations();
     }
 }

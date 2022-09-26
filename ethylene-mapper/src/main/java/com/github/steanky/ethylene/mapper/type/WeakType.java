@@ -31,7 +31,5 @@ import java.lang.reflect.Type;
  */
 sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParameterizedType, WeakTypeBase,
     WeakTypeVariable, WeakWildcardType {
-    @Nullable ClassLoader getBoundClassloader();
-
     byte[] identifier();
 }
