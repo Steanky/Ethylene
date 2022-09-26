@@ -309,7 +309,7 @@ class GenericInfo {
      * @see GenericInfo#PARAMETERIZED
      * @see GenericInfo#GENERIC_ARRAY
      * @see GenericInfo#TYPE_VARIABLE
-     * @see GenericInfo#TYPE_VARIABLE
+     * @see GenericInfo#WILDCARD
      * @return the identifier byte array for the given arguments
      */
     static byte @NotNull [] identifier(byte typeIdentifier, @Nullable String metadata, @Nullable Type ... components) {
