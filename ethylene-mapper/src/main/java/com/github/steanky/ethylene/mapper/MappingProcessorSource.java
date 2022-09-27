@@ -19,26 +19,28 @@ public interface MappingProcessorSource {
     <TData> @NotNull ConfigProcessor<TData> processorFor(@NotNull Token<TData> token);
 
     class Builder {
-        @SuppressWarnings("rawtypes") private static final Signature MAP_ENTRY_SIGNATURE =
-            Signature.builder(new Token<Map.Entry>() {
-                              }, (entry, objects) -> Map.entry(objects[0], objects[1]),
-                (entry) -> List.of(Signature.type("key", Token.OBJECT, entry.getKey()),
-                    Signature.type("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
+        private static final Signature MAP_ENTRY_SIGNATURE =
+            Signature.builder(Token.ofClass(Map.Entry.class),
+                (entry, objects) -> Map.entry(objects[0], objects[1]),
+                (entry) -> List.of(
+                    Signature.type("key", Token.OBJECT, entry.getKey()),
+                    Signature.type("value", Token.OBJECT, entry.getValue())),
+                Entry.of("key", Token.OBJECT),
                 Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
 
         private final Collection<Signature> customSignatures = new HashSet<>();
         private final Collection<Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
         private final Collection<Entry<Class<?>, SignatureBuilder>> signatureBuilderPreferences = new HashSet<>();
-        private final Set<Token<?>> scalarTypes = new HashSet<>();
-        private final Set<ScalarSignature<?>> scalarSignatures = new HashSet<>();
+        private final Collection<Token<?>> scalarTypes = new HashSet<>();
+        private final Collection<ScalarSignature<?>> scalarSignatures = new HashSet<>();
 
         private ScalarSource scalarSource;
         private TypeHinter typeHinter;
-        private Function<? super Set<Token<?>>, ? extends TypeHinter> typeHinterFunction = BasicTypeHinter::new;
+        private Function<? super Collection<Token<?>>, ? extends TypeHinter> typeHinterFunction = BasicTypeHinter::new;
 
         private SignatureBuilder defaultBuilder = FieldSignatureBuilder.INSTANCE;
-        private Function<? super Set<ScalarSignature<?>>, ? extends ScalarSource> scalarSourceFunction = signatures ->
-            new BasicScalarSource(buildTypeHinter(), signatures);
+        private Function<? super Collection<ScalarSignature<?>>, ? extends ScalarSource> scalarSourceFunction =
+            signatures -> new BasicScalarSource(buildTypeHinter(), signatures);
         private Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector>
             signatureBuilderSelectorFunction =
             signaturePreferences -> new BasicSignatureBuilderSelector(defaultBuilder, signaturePreferences);
@@ -66,7 +68,7 @@ public interface MappingProcessorSource {
         }
 
         public @NotNull Builder withTypeHinterFunction(
-            @NotNull Function<? super Set<Token<?>>, ? extends TypeHinter> typeHinterFunction) {
+            @NotNull Function<? super Collection<Token<?>>, ? extends TypeHinter> typeHinterFunction) {
             this.typeHinterFunction = Objects.requireNonNull(typeHinterFunction);
             return this;
         }
@@ -97,7 +99,7 @@ public interface MappingProcessorSource {
         }
 
         public @NotNull Builder withScalarSourceFunction(
-            @NotNull Function<? super Set<ScalarSignature<?>>, ? extends ScalarSource> scalarSourceFunction) {
+            @NotNull Function<? super Collection<ScalarSignature<?>>, ? extends ScalarSource> scalarSourceFunction) {
             this.scalarSourceFunction = Objects.requireNonNull(scalarSourceFunction);
             return this;
         }

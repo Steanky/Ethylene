@@ -78,12 +78,14 @@ public class BasicTypeResolver implements TypeResolver {
         if (classReference != null) {
             Class<?> referent = classReference.get();
             if (referent != null) {
+                Token<?> referentType = Token.ofType(referent);
+
                 //exact cache had a hit, we can avoid walking the class hierarchy
                 if (type.isParameterized()) {
-                    return Token.ofType(referent).parameterize(type.subtypeVariables(referent));
+                    return referentType.parameterize(type.subtypeVariables(referent));
                 }
 
-                return Token.ofType(referent);
+                return referentType;
             }
 
             //this should not happen, if the entry has no reference to the class, the cache shouldn't either
@@ -106,11 +108,12 @@ public class BasicTypeResolver implements TypeResolver {
                     //generic parameters might be different next time, though, and we'll have to construct them
                     exactCache.put(raw, superclassReference);
 
+                    Token<?> referentToken = Token.ofType(referent);
                     if (type.isParameterized()) {
-                        return Token.ofType(referent).parameterize(type.subtypeVariables(referent));
+                        return referentToken.parameterize(type.subtypeVariables(referent));
                     }
 
-                    return Token.ofType(referent);
+                    return referentToken;
                 }
             }
 

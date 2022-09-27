@@ -50,7 +50,7 @@ public class ConstructorSignature implements Signature {
     private Reference<Constructor<?>> constructorReference;
     private boolean matchesNames;
 
-    private Collection<Entry<String, Token<?>>> types;
+    private Collection<Map.Entry<String, Token<?>>> types;
 
     //similarly to constructors, fields are not tied to the classloader, keep a soft reference and be prepared to
     //re-create as necessary
@@ -83,13 +83,13 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
+    public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
         return resolveTypeCollection();
     }
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
-        Collection<Entry<String, Token<?>>> types = resolveTypeCollection();
+        Collection<Map.Entry<String, Token<?>>> types = resolveTypeCollection();
 
         Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
@@ -99,7 +99,7 @@ public class ConstructorSignature implements Signature {
         int i = 0;
         Collection<TypedObject> typedObjects = new ArrayList<>(types.size());
         Map<String, Field> fieldMap = null;
-        for (Entry<String, Token<?>> typeEntry : types) {
+        for (Map.Entry<String, Token<?>> typeEntry : types) {
             Field field;
             String name;
             if (matchesNames) {
@@ -214,7 +214,7 @@ public class ConstructorSignature implements Signature {
         return fieldMap;
     }
 
-    private Collection<Entry<String, Token<?>>> resolveTypeCollection() {
+    private Collection<Map.Entry<String, Token<?>>> resolveTypeCollection() {
         if (types != null) {
             return types;
         }

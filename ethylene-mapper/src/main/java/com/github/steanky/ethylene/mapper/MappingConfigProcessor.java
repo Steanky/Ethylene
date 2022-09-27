@@ -16,6 +16,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -54,7 +55,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         int signatureSize = matchingSignature.size();
 
                         Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
-                        Iterator<Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
+                        Iterator<Map.Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
 
                         //if this signature supports circular refs, buildingObject should be non-null
                         Object buildingObject =

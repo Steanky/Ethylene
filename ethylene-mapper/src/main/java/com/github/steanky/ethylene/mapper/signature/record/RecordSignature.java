@@ -33,7 +33,7 @@ public class RecordSignature implements Signature {
     private Reference<RecordComponent[]> recordComponentsReference = new SoftReference<>(null);
 
     //safe, does not actually retain strong references to Type objects
-    private Collection<Entry<String, Token<?>>> argumentTypes;
+    private Collection<Map.Entry<String, Token<?>>> argumentTypes;
 
     public RecordSignature(@NotNull Token<?> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
@@ -48,7 +48,7 @@ public class RecordSignature implements Signature {
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
+    public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
         return resolveArgumentTypes();
     }
 
@@ -156,7 +156,7 @@ public class RecordSignature implements Signature {
         return types;
     }
 
-    private Collection<Entry<String, Token<?>>> resolveArgumentTypes() {
+    private Collection<Map.Entry<String, Token<?>>> resolveArgumentTypes() {
         if (argumentTypes != null) {
             return argumentTypes;
         }

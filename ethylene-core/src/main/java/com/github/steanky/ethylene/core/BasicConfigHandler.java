@@ -24,7 +24,11 @@ public class BasicConfigHandler implements ConfigHandler {
 
     @Override
     public void writeDefaultsAndGet() throws ConfigProcessException {
-        FutureUtils.getAndWrapException(writeDefaults(), ConfigProcessException::new, ConfigProcessException.class);
+        try {
+            FutureUtils.getAndWrapException(writeDefaults(), ConfigProcessException::new, ConfigProcessException.class);
+        } catch (InterruptedException e) {
+            throw new ConfigProcessException("Interrupted during write", e);
+        }
     }
 
     @Override
@@ -66,8 +70,12 @@ public class BasicConfigHandler implements ConfigHandler {
     @Override
     public <TData> @NotNull TData loadDataNow(@NotNull ConfigKey<TData> key) throws ConfigProcessException {
         validatePresentKey(key);
-        return FutureUtils.getAndWrapException(((ConfigLoader<TData>) loaderMap.get(key)).load(),
-            ConfigProcessException::new, ConfigProcessException.class);
+        try {
+            return FutureUtils.getAndWrapException(((ConfigLoader<TData>) loaderMap.get(key)).load(),
+                ConfigProcessException::new, ConfigProcessException.class);
+        } catch (InterruptedException e) {
+            throw new ConfigProcessException("Interrupted during load", e);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -81,8 +89,12 @@ public class BasicConfigHandler implements ConfigHandler {
     @Override
     public <TData> void writeDataNow(@NotNull ConfigKey<TData> key, @NotNull TData data) throws ConfigProcessException {
         validatePresentKey(key);
-        FutureUtils.getAndWrapException(((ConfigLoader<TData>) loaderMap.get(key)).write(data),
-            ConfigProcessException::new, ConfigProcessException.class);
+        try {
+            FutureUtils.getAndWrapException(((ConfigLoader<TData>) loaderMap.get(key)).write(data),
+                ConfigProcessException::new, ConfigProcessException.class);
+        } catch (InterruptedException e) {
+            throw new ConfigProcessException("Interrupted during write", e);
+        }
     }
 
     private void validatePresentKey(ConfigKey<?> key) {

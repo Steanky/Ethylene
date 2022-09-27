@@ -49,8 +49,8 @@ public final class FutureUtils {
         CompletableFuture<TCall> future = new CompletableFuture<>();
         try {
             future.complete(callable.call());
-        } catch (Exception exception) {
-            future.completeExceptionally(exception);
+        } catch (Throwable throwable) {
+            future.completeExceptionally(throwable);
         }
 
         return future;
@@ -77,8 +77,8 @@ public final class FutureUtils {
         executor.execute(() -> {
             try {
                 future.complete(callable.call());
-            } catch (Exception exception) {
-                future.completeExceptionally(exception);
+            } catch (Throwable throwable) {
+                future.completeExceptionally(throwable);
             }
         });
 
@@ -102,7 +102,7 @@ public final class FutureUtils {
      */
     public static <TReturn, TErr extends Throwable> TReturn getAndWrapException(
         @NotNull Future<? extends TReturn> future, @NotNull Function<Throwable, TErr> exceptionWrapper,
-        @NotNull Class<TErr> errorClass) throws TErr {
+        @NotNull Class<TErr> errorClass) throws TErr, InterruptedException {
         try {
             return future.get();
         } catch (ExecutionException e) {
@@ -112,8 +112,6 @@ public final class FutureUtils {
             } else {
                 throw exceptionWrapper.apply(cause);
             }
-        } catch (InterruptedException e) {
-            throw exceptionWrapper.apply(e);
         }
     }
 }

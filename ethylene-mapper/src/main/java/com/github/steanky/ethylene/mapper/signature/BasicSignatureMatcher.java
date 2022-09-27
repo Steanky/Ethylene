@@ -59,8 +59,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                             objectDataMap.put(entry.name(), entry);
                         }
 
-                        Iterable<Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
-                        for (Entry<String, Token<?>> entry : signatureTypes) {
+                        Iterable<Map.Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
+                        for (Map.Entry<String, Token<?>> entry : signatureTypes) {
                             Signature.TypedObject typedObject = objectDataMap.get(entry.getKey());
                             if (typedObject == null) {
                                 break outer;
@@ -74,7 +74,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                     if (matchTypeHints) {
                         Iterator<Signature.TypedObject> typeCollectionIterator = typeCollection.iterator();
-                        Iterator<Entry<String, Token<?>>> signatureIterator = signature.argumentTypes().iterator();
+                        Iterator<Map.Entry<String, Token<?>>> signatureIterator = signature.argumentTypes().iterator();
 
                         while (typeCollectionIterator.hasNext()) {
                             if (typeHinter.getHint(typeCollectionIterator.next().type()) !=
@@ -111,7 +111,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
             outer:
             {
-                Iterable<Entry<String, Token<?>>> signatureTypes;
+                Iterable<Map.Entry<String, Token<?>>> signatureTypes;
                 Collection<ConfigElement> targetCollection;
                 if (matchNames) {
                     signatureTypes = signature.argumentTypes();
@@ -120,7 +120,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     targetCollection = new ArrayList<>(elementCollection.size());
 
                     //this ensures that the order is respected when matching names
-                    for (Entry<String, Token<?>> entry : signatureTypes) {
+                    for (Map.Entry<String, Token<?>> entry : signatureTypes) {
                         String name = entry.getKey();
                         ConfigElement element = providedNode.get(name);
                         if (element == null) {
@@ -135,7 +135,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
                 if (matchTypeHints) {
                     Iterator<ConfigElement> elementIterator = targetCollection.iterator();
-                    Iterator<Entry<String, Token<?>>> signatureTypeIterator = signature.argumentTypes().iterator();
+                    Iterator<Map.Entry<String, Token<?>>> signatureTypeIterator = signature.argumentTypes().iterator();
 
                     while (elementIterator.hasNext()) {
                         if (!typeHinter.assignable(elementIterator.next(), signatureTypeIterator.next().getValue())) {

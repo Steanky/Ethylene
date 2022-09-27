@@ -190,6 +190,11 @@ public abstract class Token<T> implements Supplier<Type> {
         return new Token<>(GenericInfo.resolveType(type)) {};
     }
 
+    public static <T> @NotNull Token<T> ofClass(@NotNull Class<T> type){
+        Objects.requireNonNull(type);
+        return new Token<>(type) {};
+    }
+
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
         if (variables.length == 0) {
             return ReflectionUtils.EMPTY_TYPE_ARRAY;

@@ -10,10 +10,7 @@ import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -28,7 +25,7 @@ public interface Signature {
     static <T> Builder<T> builder(@NotNull Token<T> type,
         @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
         @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
-        @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
+        @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
         return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
     }
 
@@ -45,7 +42,7 @@ public interface Signature {
         return new TypedObject(null, type, value);
     }
 
-    @NotNull Iterable<Entry<String, Token<?>>> argumentTypes();
+    @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes();
 
     @NotNull Collection<TypedObject> objectData(@NotNull Object object);
 
@@ -82,7 +79,7 @@ public interface Signature {
         private final BiFunction<? super T, ? super Object[], ?> constructor;
         private final Token<T> returnType;
         private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
-        private final Collection<Entry<String, Token<?>>> argumentTypes;
+        private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
 
         private int priority;
         private boolean matchNames;
@@ -106,13 +103,13 @@ public interface Signature {
         @SafeVarargs
         private Builder(@NotNull Token<T> returnType, @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
             @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
-            @NotNull Entry<String, Token<?>> @NotNull ... arguments) {
+            @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
             this.returnType = Objects.requireNonNull(returnType);
             this.objectSignatureExtractor = Objects.requireNonNull(objectSignatureExtractor);
 
             this.argumentTypes = new ArrayList<>(arguments.length);
-            for (Entry<String, Token<?>> entry : arguments) {
+            for (Map.Entry<String, Token<?>> entry : arguments) {
                 argumentTypes.add(
                     Entry.of(Objects.requireNonNull(entry.getKey()), Objects.requireNonNull(entry.getValue())));
             }
@@ -156,7 +153,7 @@ public interface Signature {
         }
 
         public @NotNull Signature build() {
-            Collection<Entry<String, Token<?>>> argumentTypes = List.copyOf(this.argumentTypes);
+            Collection<Map.Entry<String, Token<?>>> argumentTypes = List.copyOf(this.argumentTypes);
             IntFunction<? extends ConfigContainer> containerFunction = this.containerFunction;
             ToIntFunction<? super ConfigElement> lengthFunction = this.lengthFunction;
             boolean matchNames = this.matchNames;
@@ -167,7 +164,7 @@ public interface Signature {
 
             return new Signature() {
                 @Override
-                public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
+                public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
                     return argumentTypes;
                 }
 

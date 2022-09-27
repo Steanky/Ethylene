@@ -14,7 +14,7 @@ public class BasicTypeHinter implements TypeHinter {
     private final Set<Type> scalars;
     private final Set<Type> nonScalars;
 
-    public BasicTypeHinter(@NotNull Set<Token<?>> scalarTypes) {
+    public BasicTypeHinter(@NotNull Collection<Token<?>> scalarTypes) {
         if (scalarTypes.isEmpty()) {
             this.scalars = Set.of();
             this.nonScalars = Set.of();

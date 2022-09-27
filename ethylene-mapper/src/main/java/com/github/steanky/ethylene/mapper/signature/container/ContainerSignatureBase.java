@@ -16,9 +16,10 @@ import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.util.Iterator;
+import java.util.Map;
 
 public abstract class ContainerSignatureBase implements Signature {
-    protected final Entry<String, Token<?>> entry;
+    protected final Map.Entry<String, Token<?>> entry;
     protected final Token<?> containerType;
     protected Reference<ConstructorInfo> constructorInfoReference = new SoftReference<>(null);
 
@@ -55,7 +56,7 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
+    public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
         return () -> new Iterator<>() {
             @Override
             public boolean hasNext() {
@@ -63,7 +64,7 @@ public abstract class ContainerSignatureBase implements Signature {
             }
 
             @Override
-            public Entry<String, Token<?>> next() {
+            public Map.Entry<String, Token<?>> next() {
                 return entry;
             }
         };

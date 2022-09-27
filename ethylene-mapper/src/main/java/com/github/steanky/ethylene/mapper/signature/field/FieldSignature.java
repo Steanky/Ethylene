@@ -34,7 +34,7 @@ public class FieldSignature implements Signature {
     //fields are lazily initialized by initTypes
     private Reference<SignatureData> signatureDataReference = new SoftReference<>(null);
 
-    private Collection<Entry<String, Token<?>>> types;
+    private Collection<Map.Entry<String, Token<?>>> types;
 
     public FieldSignature(@NotNull Token<?> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
@@ -119,7 +119,7 @@ public class FieldSignature implements Signature {
     }
 
     @Override
-    public @NotNull Iterable<Entry<String, Token<?>>> argumentTypes() {
+    public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
         return resolveTypes();
     }
 
@@ -197,7 +197,7 @@ public class FieldSignature implements Signature {
         return genericReturnType;
     }
 
-    private Collection<Entry<String, Token<?>>> resolveTypes() {
+    private Collection<Map.Entry<String, Token<?>>> resolveTypes() {
         if (types != null) {
             return types;
         }
