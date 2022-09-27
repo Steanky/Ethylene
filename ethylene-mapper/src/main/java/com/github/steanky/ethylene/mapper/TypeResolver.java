@@ -14,9 +14,10 @@ public interface TypeResolver {
     /**
      * Resolves the given type. If an implementation is available, and it is compatible with the given
      * {@link ConfigElement}, it is returned. If no implementation is available, a type is derived from the
-     * ConfigElement alone. If this derived type is not assignable to {@code type}, a {@link MapperException} is thrown.
+     * ConfigElement alone. If this derived type is not assignable to {@code type}, a {@link MapperException} is
+     * thrown.
      *
-     * @param type the type to resolve
+     * @param type          the type to resolve
      * @param configElement the {@link ConfigElement} used to derive a type if there is no available implementation; can
      *                      be null if no element is known
      * @return the resolved type

@@ -8,7 +8,8 @@ import java.util.Objects;
 /**
  * Convenience extension of {@link Map.Entry} that provides a static utility method for creating entries which support
  * null keys and values.
- * @param <TFirst> the key type
+ *
+ * @param <TFirst>  the key type
  * @param <TSecond> the value type
  */
 public interface Entry<TFirst, TSecond> extends Map.Entry<TFirst, TSecond> {
@@ -16,13 +17,13 @@ public interface Entry<TFirst, TSecond> extends Map.Entry<TFirst, TSecond> {
     /**
      * Creates a new, immutable map entry which may have null keys and values.
      *
-     * @param key the key object
-     * @param value the value object
-     * @return a new immutable entry
-     * @param <TFirst> the key type
+     * @param key       the key object
+     * @param value     the value object
+     * @param <TFirst>  the key type
      * @param <TSecond> the value type
+     * @return a new immutable entry
      */
-    static <TFirst, TSecond> @NotNull Entry<TFirst, TSecond> of(TFirst key, TSecond value) {
+    static <TFirst, TSecond> Map.@NotNull Entry<TFirst, TSecond> of(TFirst key, TSecond value) {
         return new Entry<>() {
             @Override
             public TFirst getKey() {

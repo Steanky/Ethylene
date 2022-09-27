@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.function.Function;
 
 /**
  * <p>This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
@@ -77,7 +76,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
 
                 @Override
-                public Entry<String, Object> next() {
+                public Map.Entry<String, Object> next() {
                     Map.Entry<?, ?> next = iterator.next();
                     return Entry.of(next.getKey().toString(), next.getValue());
                 }
@@ -92,7 +91,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
 
                 @Override
-                public Entry<String, Object> next() {
+                public Map.Entry<String, Object> next() {
                     return Entry.of(null, backing.next());
                 }
             }, makeDecodeCollection(collection.size()));
@@ -108,7 +107,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
 
                 @Override
-                public Entry<String, Object> next() {
+                public Map.Entry<String, Object> next() {
                     return Entry.of(null, array[i++]);
                 }
             }, makeDecodeCollection(array.length));

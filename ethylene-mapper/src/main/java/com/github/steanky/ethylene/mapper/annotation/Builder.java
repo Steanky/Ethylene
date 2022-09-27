@@ -30,7 +30,8 @@ public @interface Builder {
         FIELD,
 
         /**
-         * Construct this object using a specific constructor. Objects made this way do not support circular references.
+         * Construct this object using a specific constructor. Objects made this way do not support circular
+         * references.
          */
         CONSTRUCTOR,
 

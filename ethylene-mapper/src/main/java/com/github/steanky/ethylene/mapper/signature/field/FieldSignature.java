@@ -212,7 +212,7 @@ public class FieldSignature implements Signature {
             return types = List.of(Entry.of(ReflectionUtils.getFieldName(first), Token.ofType(first.getGenericType())));
         }
 
-        Collection<Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
+        Collection<Map.Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
         for (Field field : data.fields) {
             typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), Token.ofType(field.getGenericType())));
         }

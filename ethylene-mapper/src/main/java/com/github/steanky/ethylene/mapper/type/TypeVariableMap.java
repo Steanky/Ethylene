@@ -36,8 +36,8 @@ public final class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>
         if (underlying.isEmpty()) {
             tokenMap = Map.of();
         } else {
-            @SuppressWarnings("unchecked")
-            Map.Entry<TypeVariable<?>, Token<?>>[] tokenArray = new Entry[underlying.size()];
+            @SuppressWarnings("unchecked") Map.Entry<TypeVariable<?>, Token<?>>[] tokenArray =
+                new Entry[underlying.size()];
 
             Iterator<Map.Entry<TypeVariable<?>, Type>> entryIterator = underlying.entrySet().iterator();
             for (int i = 0; i < tokenArray.length && entryIterator.hasNext(); i++) {

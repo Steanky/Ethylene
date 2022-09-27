@@ -2,7 +2,6 @@ package com.github.steanky.ethylene.core.bridge;
 
 import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.core.util.FutureUtils;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +21,7 @@ import java.util.concurrent.*;
  * <p>
  * All methods, unless otherwise noted, will throw a {@link NullPointerException} if any of their arguments are null.
  */
+@SuppressWarnings("unused")
 public final class Configuration {
     private Configuration() {
         throw new AssertionError("Why would you try to do this?");
@@ -79,10 +79,10 @@ public final class Configuration {
      * @param inputCallable  the callable which produces {@link InputStream} instances for reading
      * @param outputCallable the callable which produces {@link OutputStream} instances for writing
      * @param codec          the codec used to encode/decode from the streams
-     * @param executor the {@link Executor} used to asynchronously perform reads and writes
+     * @param executor       the {@link Executor} used to asynchronously perform reads and writes
      * @return a ConfigSource implementation which reads/writes from the given input/output streams
      */
-    public static @NotNull ConfigSource asyncSourceFromStreams(@NotNull Callable<? extends InputStream> inputCallable,
+    public static @NotNull ConfigSource sourceFromStreamsAsync(@NotNull Callable<? extends InputStream> inputCallable,
         @NotNull Callable<? extends OutputStream> outputCallable, @NotNull ConfigCodec codec,
         @NotNull Executor executor) {
         Objects.requireNonNull(inputCallable);
@@ -94,7 +94,7 @@ public final class Configuration {
     }
 
     /**
-     * Convenience overload for {@link Configuration#asyncSourceFromStreams(Callable, Callable, ConfigCodec, Executor)}
+     * Convenience overload for {@link Configuration#sourceFromStreamsAsync(Callable, Callable, ConfigCodec, Executor)}
      * that uses {@link ForkJoinPool#commonPool()} as its executor.
      *
      * @param inputCallable  the callable which produces {@link InputStream} instances for reading
@@ -102,7 +102,7 @@ public final class Configuration {
      * @param codec          the codec used to encode/decode from the streams
      * @return a ConfigSource implementation which reads/writes from the given input/output streams
      */
-    public static @NotNull ConfigSource asyncSourceFromStreams(@NotNull Callable<? extends InputStream> inputCallable,
+    public static @NotNull ConfigSource sourceFromStreamsAsync(@NotNull Callable<? extends InputStream> inputCallable,
         @NotNull Callable<? extends OutputStream> outputCallable, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(inputCallable);
         Objects.requireNonNull(outputCallable);
@@ -130,8 +130,8 @@ public final class Configuration {
      * Alternative to {@link Configuration#sourceFromPath(Path, ConfigCodec)} that uses the provided {@link Executor} to
      * asynchronously read from and write to the given path.
      *
-     * @param path  a path pointing to the file read from and written to
-     * @param codec the codec used to read/write from this file
+     * @param path     a path pointing to the file read from and written to
+     * @param codec    the codec used to read/write from this file
      * @param executor the executor used to asynchronously perform reads and writes
      * @return a ConfigSource implementation which can asynchronously read/write {@link ConfigElement} objects from and
      * to the given file
@@ -189,7 +189,7 @@ public final class Configuration {
      *
      * @param inputStream the InputStream to read from
      * @param codec       the ConfigCodec which will be used to decode the input data
-     * @param executor the executor used to asynchronously read from the input stream
+     * @param executor    the executor used to asynchronously read from the input stream
      * @return a {@link CompletableFuture} which will contain the decoded element
      */
     public static @NotNull CompletableFuture<ConfigElement> readAsync(@NotNull InputStream inputStream,
@@ -275,8 +275,8 @@ public final class Configuration {
      * @param inputStream the InputStream to read from
      * @param codec       the ConfigCodec which will be used to decode the input data
      * @param processor   the processor used to convert a ConfigElement into arbitrary data
+     * @param <TData>     the type of data to read
      * @return an object representing the data from the input stream
-     * @param <TData> the type of data to read
      */
     public static <TData> @NotNull CompletableFuture<TData> readAsync(@NotNull InputStream inputStream,
         @NotNull ConfigCodec codec, @NotNull ConfigProcessor<? extends TData> processor) {
@@ -374,6 +374,18 @@ public final class Configuration {
         writeInternal(outputStream, processor.elementFromData(data), codec);
     }
 
+    /**
+     * Alternative to {@link Configuration#write(OutputStream, ConfigCodec, ConfigProcessor, Object)} that uses the
+     * provided {@link Executor} to asynchronously write data.
+     *
+     * @param outputStream the output stream to write to
+     * @param codec        the codec to use to encode the data
+     * @param processor    the processor used to process the data
+     * @param data         the data object itself
+     * @param executor     the executor used to asynchronously process, encode, and write the data
+     * @param <TData>      the type of data
+     * @return a future indicating the write operation
+     */
     public static <TData> @NotNull CompletableFuture<Void> writeAsync(@NotNull OutputStream outputStream,
         @NotNull ConfigCodec codec, @NotNull ConfigProcessor<? super TData> processor, TData data,
         @NotNull Executor executor) {
@@ -393,6 +405,18 @@ public final class Configuration {
         }, executor);
     }
 
+    /**
+     * Convenience overload for
+     * {@link Configuration#writeAsync(OutputStream, ConfigCodec, ConfigProcessor, Object, Executor)} that uses
+     * {@link ForkJoinPool#commonPool()} to asynchronously write and process data.
+     *
+     * @param outputStream the output stream to write to
+     * @param codec        the codec to use to encode the data
+     * @param processor    the processor used to process the data
+     * @param data         the data object itself
+     * @param <TData>      the type of data
+     * @return a future indicating the write operation
+     */
     public static <TData> @NotNull CompletableFuture<Void> writeAsync(@NotNull OutputStream outputStream,
         @NotNull ConfigCodec codec, @NotNull ConfigProcessor<? super TData> processor, TData data) {
         Objects.requireNonNull(outputStream);
@@ -419,6 +443,15 @@ public final class Configuration {
         return readInternal(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), codec);
     }
 
+    /**
+     * Alternative to {@link Configuration#read(String, ConfigCodec)} which uses the provided executor to asynchronously
+     * read a {@link ConfigElement}.
+     *
+     * @param input    the input string
+     * @param codec    the codec used to decode the input data
+     * @param executor the executor used to
+     * @return a future which will upon completion contain a ConfigElement
+     */
     public static @NotNull CompletableFuture<ConfigElement> readAsync(@NotNull String input, @NotNull ConfigCodec codec,
         @NotNull Executor executor) {
         Objects.requireNonNull(input);
@@ -428,6 +461,14 @@ public final class Configuration {
         return readAsyncInternal(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), codec, executor);
     }
 
+    /**
+     * Convenience overload for {@link Configuration#readAsync(String, ConfigCodec, Executor)} that uses
+     * {@link ForkJoinPool#commonPool()} as its executor.
+     *
+     * @param input the input string
+     * @param codec the codec used to decode the input data
+     * @return a future which will upon completion contain a ConfigElement
+     */
     public static @NotNull CompletableFuture<ConfigElement> readAsync(@NotNull String input,
         @NotNull ConfigCodec codec) {
         Objects.requireNonNull(input);
@@ -458,6 +499,17 @@ public final class Configuration {
             readInternal(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), codec));
     }
 
+    /**
+     * Alternative to {@link Configuration#read(String, ConfigCodec, ConfigProcessor)} that uses the provided
+     * {@link Executor} to asynchronously read a data object.
+     *
+     * @param input     the string to read from
+     * @param codec     the ConfigCodec which will be used to decode the input data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param executor  the executor used to complete the operations
+     * @param <TData>   the type of the decoded data object
+     * @return an object representing the data from the input stream
+     */
     public static <TData> CompletableFuture<TData> readAsync(@NotNull String input, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? extends TData> processor, @NotNull Executor executor) {
         Objects.requireNonNull(input);
@@ -469,6 +521,16 @@ public final class Configuration {
             executor);
     }
 
+    /**
+     * Convenience overload for {@link Configuration#readAsync(String, ConfigCodec, ConfigProcessor, Executor)} which
+     * uses {@link ForkJoinPool#commonPool()} as its executor.
+     *
+     * @param input     the string to read from
+     * @param codec     the ConfigCodec which will be used to decode the input data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param <TData>   the type of the decoded data object
+     * @return an object representing the data from the input stream
+     */
     public static <TData> CompletableFuture<TData> readAsync(@NotNull String input, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? extends TData> processor) {
         Objects.requireNonNull(input);
@@ -483,12 +545,12 @@ public final class Configuration {
      * Writes the given {@link ConfigElement} to a string, using the provided {@link ConfigCodec}. Note that this should
      * never throw an exception under normal circumstances, as the {@link OutputStream} being written to is a simple
      * in-memory {@link ByteArrayOutputStream}. However, an {@link IOException} <i>can still be thrown</i> if there is a
-     * problem with the provided codec or node (perhaps the codec is incapable of parsing one or more of the objects
-     * present in the node?)
+     * problem with the provided codec or element (perhaps the codec is incapable of parsing one or more of the objects
+     * present in the element?)
      *
      * @param element the ConfigElement to write
-     * @param codec   the ConfigCodec used to decode node
-     * @return a string containing the encoded data present in node
+     * @param codec   the ConfigCodec used to decode element
+     * @return a string containing the encoded data present in element
      * @throws IOException if an IO error occurs
      */
     public static @NotNull String write(@NotNull ConfigElement element, @NotNull ConfigCodec codec) throws IOException {
@@ -500,6 +562,16 @@ public final class Configuration {
         return outputStream.toString();
     }
 
+    /**
+     * Alternative to {@link Configuration#write(ConfigElement, ConfigCodec)} that uses the provided {@link Executor} to
+     * asynchronously process and decode the element.
+     *
+     * @param element  the ConfigElement to write
+     * @param codec    the ConfigCodec used to decode element
+     * @param executor the executor used for asynchronous processing and decoding
+     * @return a {@link CompletableFuture} which will eventually contain a string containing the written configuration
+     * data
+     */
     public static @NotNull CompletableFuture<String> writeAsync(@NotNull ConfigElement element,
         @NotNull ConfigCodec codec, @NotNull Executor executor) {
         Objects.requireNonNull(element);
@@ -510,6 +582,15 @@ public final class Configuration {
         return writeAsyncInternal(outputStream, element, codec, executor).thenApply(ignored -> outputStream.toString());
     }
 
+    /**
+     * Convenience overload for {@link Configuration#writeAsync(ConfigElement, ConfigCodec, Executor)} that uses
+     * {@link ForkJoinPool#commonPool()} to asynchronously write its string.
+     *
+     * @param element the ConfigElement to write
+     * @param codec   the ConfigCodec used to decode element
+     * @return a {@link CompletableFuture} which will eventually contain a string containing the written configuration
+     * data
+     */
     public static @NotNull CompletableFuture<String> writeAsync(@NotNull ConfigElement element,
         @NotNull ConfigCodec codec) {
         Objects.requireNonNull(element);
@@ -528,7 +609,7 @@ public final class Configuration {
      * @param processor the processor used to convert a ConfigElement into arbitrary data
      * @param data      the data object to write
      * @param <TData>   the type of data to write
-     * @return a string containing the encoded data present in node
+     * @return a string containing the encoded data present in element
      * @throws IOException if an IO error occurs when writing to the stream
      */
     public static <TData> @NotNull String write(@NotNull ConfigCodec codec,
@@ -541,6 +622,17 @@ public final class Configuration {
         return outputStream.toString();
     }
 
+    /**
+     * Alternative to {@link Configuration#write(ConfigCodec, ConfigProcessor, Object)} that uses the provided
+     * {@link Executor} for asynchronous completion.
+     *
+     * @param codec     the codec to use to encode the data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param data      the data object to write
+     * @param executor  the executor used for asynchronous completion
+     * @param <TData>   the type of data to write
+     * @return a future containing a string with the encoded data present in element
+     */
     public static <TData> @NotNull CompletableFuture<String> writeAsync(@NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? super TData> processor, TData data, @NotNull Executor executor) {
         Objects.requireNonNull(codec);
@@ -552,6 +644,16 @@ public final class Configuration {
             ignored -> outputStream.toString());
     }
 
+    /**
+     * Convenience overload for {@link Configuration#writeAsync(ConfigCodec, ConfigProcessor, Object, Executor)} that
+     * uses {@link ForkJoinPool#commonPool()} as its executor.
+     *
+     * @param codec     the codec to use to encode the data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param data      the data object to write
+     * @param <TData>   the type of data to write
+     * @return a future containing a string with the encoded data present in element
+     */
     public static <TData> @NotNull CompletableFuture<String> writeAsync(@NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? super TData> processor, TData data) {
         Objects.requireNonNull(codec);
@@ -579,6 +681,15 @@ public final class Configuration {
         return readInternal(Files.newInputStream(path), codec);
     }
 
+    /**
+     * Alternative to {@link Configuration#read(Path, ConfigCodec)} that uses the provided {@link Executor} to
+     * asynchronously complete the read operation.
+     *
+     * @param path     the path pointing to the file to read from
+     * @param codec    the codec to use to decode the file
+     * @param executor the executor used for asynchronous completion
+     * @return a future which will eventually contain an element read from the given path
+     */
     public static @NotNull CompletableFuture<ConfigElement> readAsync(@NotNull Path path, @NotNull ConfigCodec codec,
         @NotNull Executor executor) {
         Objects.requireNonNull(path);
@@ -593,6 +704,14 @@ public final class Configuration {
         return FutureUtils.completeCallableAsync(() -> codec.decode(inputStream.call()), executor);
     }
 
+    /**
+     * Convenience overload for {@link Configuration#readAsync(Path, ConfigCodec, Executor)} that uses
+     * {@link ForkJoinPool#commonPool()} as its executor.
+     *
+     * @param path  the path pointing to the file to read from
+     * @param codec the codec to use to decode the file
+     * @return a future which will eventually contain an element read from the given path
+     */
     public static @NotNull CompletableFuture<ConfigElement> readAsync(@NotNull Path path, @NotNull ConfigCodec codec) {
         Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
@@ -620,6 +739,17 @@ public final class Configuration {
         return processor.dataFromElement(readInternal(Files.newInputStream(path), codec));
     }
 
+    /**
+     * Alternative to {@link Configuration#read(Path, ConfigCodec, ConfigProcessor)} that uses the provided
+     * {@link Executor} for asynchronous completion.
+     *
+     * @param path      the file path to read from
+     * @param codec     the ConfigCodec which will be used to decode the input data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param executor  the executor used for asynchronous completion
+     * @param <TData>   the type of data to read
+     * @return a future containing the object representing the data from the input stream
+     */
     public static <TData> CompletableFuture<TData> readAsync(@NotNull Path path, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? extends TData> processor, @NotNull Executor executor) {
         Objects.requireNonNull(path);
@@ -636,6 +766,16 @@ public final class Configuration {
             executor);
     }
 
+    /**
+     * Convenience overload for {@link Configuration#readAsync(Path, ConfigCodec, ConfigProcessor, Executor)} which uses
+     * {@link ForkJoinPool#commonPool()} as its executor.
+     *
+     * @param path      the file path to read from
+     * @param codec     the ConfigCodec which will be used to decode the input data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param <TData>   the type of data to read
+     * @return a future containing the object representing the data from the input stream
+     */
     public static <TData> CompletableFuture<TData> readAsync(@NotNull Path path, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? extends TData> processor) {
         Objects.requireNonNull(path);
@@ -646,7 +786,7 @@ public final class Configuration {
     }
 
     /**
-     * Writes a {@link ConfigNode} to the filesystem. The provided codec will be used to encode the node's data.
+     * Writes a {@link ConfigElement} to the filesystem. The provided codec will be used to encode the element's data.
      *
      * @param path    a path pointing to the file to write to
      * @param element the element to write
@@ -662,6 +802,16 @@ public final class Configuration {
         writeInternal(Files.newOutputStream(path), element, codec);
     }
 
+    /**
+     * Alternative to {@link Configuration#write(Path, ConfigElement, ConfigCodec)} that uses the provided
+     * {@link Executor} for asynchronous completion of the operation.
+     *
+     * @param path     a path pointing to the file to write to
+     * @param element  the element to write
+     * @param codec    the codec to use
+     * @param executor the executor used to perform asynchronous writing and encoding
+     * @return a future which may be used to await the write operation
+     */
     public static @NotNull CompletableFuture<Void> writeAsync(@NotNull Path path, @NotNull ConfigElement element,
         @NotNull ConfigCodec codec, @NotNull Executor executor) {
         Objects.requireNonNull(path);
@@ -680,6 +830,15 @@ public final class Configuration {
         }, executor);
     }
 
+    /**
+     * Convenience overload for {@link Configuration#writeAsync(Path, ConfigElement, ConfigCodec, Executor)} that uses
+     * {@link ForkJoinPool#commonPool()} as its executor.
+     *
+     * @param path    a path pointing to the file to write to
+     * @param element the element to write
+     * @param codec   the codec to use
+     * @return a future which may be used to await the write operation
+     */
     public static @NotNull CompletableFuture<Void> writeAsync(@NotNull Path path, @NotNull ConfigElement element,
         @NotNull ConfigCodec codec) {
         Objects.requireNonNull(path);
@@ -709,6 +868,18 @@ public final class Configuration {
         writeInternal(Files.newOutputStream(path), processor.elementFromData(data), codec);
     }
 
+    /**
+     * Alternative to {@link Configuration#write(Path, ConfigCodec, ConfigProcessor, Object)} which uses the provided
+     * {@link Executor} to asynchronously write data.
+     *
+     * @param path      the path to write to
+     * @param codec     the codec to use to encode the data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param data      the data object to write
+     * @param executor  the executor used for asynchronous writing
+     * @param <TData>   the type of data to write
+     * @return a future which may be used to await the write operation
+     */
     public static <TData> @NotNull CompletableFuture<Void> writeAsync(@NotNull Path path, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? super TData> processor, TData data, @NotNull Executor executor) {
         Objects.requireNonNull(path);
@@ -727,6 +898,17 @@ public final class Configuration {
         }, executor);
     }
 
+    /**
+     * Convenience overload for {@link Configuration#writeAsync(Path, ConfigCodec, ConfigProcessor, Object, Executor)}
+     * which uses {@link ForkJoinPool#commonPool()} as its executor.
+     *
+     * @param path      the path to write to
+     * @param codec     the codec to use to encode the data
+     * @param processor the processor used to convert a ConfigElement into arbitrary data
+     * @param data      the data object to write
+     * @param <TData>   the type of data to write
+     * @return a future which may be used to await the write operation
+     */
     public static <TData> @NotNull CompletableFuture<Void> writeAsync(@NotNull Path path, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? super TData> processor, TData data) {
         Objects.requireNonNull(path);

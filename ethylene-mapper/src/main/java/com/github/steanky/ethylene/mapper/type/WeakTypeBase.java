@@ -18,6 +18,7 @@ abstract non-sealed class WeakTypeBase implements WeakType {
 
     /**
      * Creates a new instance of this class from the provided identifier array.
+     *
      * @param identifier the identifier array
      */
     WeakTypeBase(byte @NotNull [] identifier) {

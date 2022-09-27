@@ -19,10 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.temporal.Temporal;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Provides support for the TOML format. This class overrides
@@ -80,7 +77,7 @@ public class TomlCodec extends AbstractConfigCodec {
                 }
 
                 @Override
-                public Entry<String, Object> next() {
+                public Map.Entry<String, Object> next() {
                     UnmodifiableConfig.Entry next = backing.next();
                     return Entry.of(next.getKey(), next.getValue());
                 }

@@ -44,10 +44,9 @@ import java.util.function.Function;
  * means that most reflection-related objects are unsafe also, because many of them (directly or indirectly) reference a
  * class.
  * <p>
- * Custom implementations of Type (see also: {@link WeakGenericArrayType}, {@link WeakParameterizedType})
- * present a special issue, however, because they are not cached internally by the JDK. Therefore, weak references to
- * these types can be garbage collected <i>too soon</i>, before the classloader responsible for creating them is
- * destroyed.
+ * Custom implementations of Type (see also: {@link WeakGenericArrayType}, {@link WeakParameterizedType}) present a
+ * special issue, however, because they are not cached internally by the JDK. Therefore, weak references to these types
+ * can be garbage collected <i>too soon</i>, before the classloader responsible for creating them is destroyed.
  * <p>
  * This class is designed to contain the <i>only</i> strong references to such types in a weak-key cache, keyed by the
  * {@link Class} to which their lifetime should be scoped. It incidentally performs equality-based caching on said
@@ -85,7 +84,7 @@ class GenericInfo {
     static final Charset CHARSET = StandardCharsets.UTF_8;
 
     //used by GenericInfo#identifier
-    private static final byte[] NIL = new byte[] {0};
+    private static final byte[] NIL = new byte[]{0};
 
     //global mapping of class objects to generic info, may contain classes belonging to various classloaders
     private static final Cache<ClassLoader, GenericInfo> store;
@@ -106,14 +105,20 @@ class GenericInfo {
         cleanupThread.start();
     }
 
+    //initially has a tiny capacity since we don't expect that many bound types per registered class
+    private final Map<Type, Type> canonicalTypes = new ConcurrentHashMap<>(2);
+
+    private GenericInfo() {
+    }
+
     private static void cleanup() {
         //reference cleanup thread never ends
-        while(true) {
+        while (true) {
             try {
                 //wait for a TypeReference to enter the queue
                 //this happens when its associated type is garbage-collected
                 //if there is a parent type, we need to remove it from the map
-                TypeReference reference = (TypeReference)queue.remove();
+                TypeReference reference = (TypeReference) queue.remove();
                 WeakType ownerType = reference.parent == null ? null : reference.parent.get();
 
                 //if ownerType is null, it's already been garbage collected - this is fine, we don't have to do anything
@@ -127,8 +132,7 @@ class GenericInfo {
                         if (genericInfo != null) {
                             genericInfo.canonicalTypes.remove(ownerType);
                         }
-                    }
-                    else {
+                    } else {
                         //null repository means bootstrap owner classloader
                         bootstrapTypes.remove(ownerType);
                     }
@@ -139,47 +143,13 @@ class GenericInfo {
         }
     }
 
-    //custom WeakReference containing some additional data
-    private static class TypeReference extends WeakReference<Type> {
-        private final Reference<WeakType> parent;
-        private final Reference<GenericInfo> repository;
-
-        private TypeReference(Type referent, WeakType parent, ClassLoader parentClassLoader) {
-            super(referent, queue);
-
-            if (parent != null) {
-                this.parent = new WeakReference<>(parent);
-
-                GenericInfo info = parentClassLoader == null ? null : store.getIfPresent(parentClassLoader);
-                if (info != null) {
-                    //if there is a repository, retain only a weak reference to it
-                    this.repository = new WeakReference<>(info);
-                }
-                else {
-                    //no repository means bootstrap or unknown classloader
-                    this.repository = null;
-                }
-            }
-            else {
-                this.parent = null;
-                this.repository = null;
-            }
-        }
-    }
-
-    //initially has a tiny capacity since we don't expect that many bound types per registered class
-    private final Map<Type, Type> canonicalTypes = new ConcurrentHashMap<>(2);
-
-    private GenericInfo() {
-    }
-
     private static @NotNull Type bind(@NotNull WeakType type, @Nullable ClassLoader loader) {
         if (loader == null) {
             return bootstrapTypes.computeIfAbsent(type, Function.identity());
         }
 
-        return store.get(loader, ignored -> new GenericInfo()).canonicalTypes.computeIfAbsent(type, Function
-            .identity());
+        return store.get(loader, ignored -> new GenericInfo()).canonicalTypes.computeIfAbsent(type,
+            Function.identity());
     }
 
     /**
@@ -209,13 +179,11 @@ class GenericInfo {
         if (type instanceof WeakType weakType) {
             //get the canonical instance of this weak type
             return bind(weakType, classLoader);
-        }
-        else if (type instanceof ParameterizedType parameterizedType) {
+        } else if (type instanceof ParameterizedType parameterizedType) {
             Class<?> rawType = (Class<?>) parameterizedType.getRawType();
-            return bind(new WeakParameterizedType(rawType, parameterizedType.getOwnerType(), parameterizedType
-                .getActualTypeArguments()), classLoader);
-        }
-        else if (type instanceof TypeVariable<?> typeVariable) {
+            return bind(new WeakParameterizedType(rawType, parameterizedType.getOwnerType(),
+                parameterizedType.getActualTypeArguments()), classLoader);
+        } else if (type instanceof TypeVariable<?> typeVariable) {
             GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
             int i = 0;
             for (TypeVariable<?> sample : genericDeclaration.getTypeParameters()) {
@@ -227,11 +195,9 @@ class GenericInfo {
             }
 
             return bind(new WeakTypeVariable<>(typeVariable, i), classLoader);
-        }
-        else if (type instanceof WildcardType wildcardType) {
+        } else if (type instanceof WildcardType wildcardType) {
             return bind(new WeakWildcardType(wildcardType), classLoader);
-        }
-        else if(type instanceof GenericArrayType genericArrayType) {
+        } else if (type instanceof GenericArrayType genericArrayType) {
             return bind(new WeakGenericArrayType(genericArrayType.getGenericComponentType()), classLoader);
         }
 
@@ -246,8 +212,8 @@ class GenericInfo {
      * {@link ReflectionUtils#getClassLoader(Type)}, because it may not be fully constructed when this method is
      * invoked.
      *
-     * @param type the type for which to construct a reference
-     * @param parent the parent type
+     * @param type              the type for which to construct a reference
+     * @param parent            the parent type
      * @param parentClassLoader the {@link ClassLoader} of the parent
      * @return a new reference object
      */
@@ -261,10 +227,10 @@ class GenericInfo {
      * {@link GenericInfo#ref(Type, WeakType, ClassLoader)}. Each reference will have the same parent and parent
      * classloader.
      *
-     * @param types an array of type objects from which to construct references
-     * @param typeReferences an empty array of {@link Reference} objects which will be populated by this method
-     * @param typeNames an empty array of strings which will be populated by this method
-     * @param parent the common parent of all the types in the given array
+     * @param types             an array of type objects from which to construct references
+     * @param typeReferences    an empty array of {@link Reference} objects which will be populated by this method
+     * @param typeNames         an empty array of strings which will be populated by this method
+     * @param parent            the common parent of all the types in the given array
      * @param parentClassLoader the classloader of the common parent
      */
     static void populate(@NotNull Type @NotNull [] types, @NotNull Reference<Type> @NotNull [] typeReferences,
@@ -287,32 +253,30 @@ class GenericInfo {
      * <p>
      * [typeIdentifier] 1 byte<br>
      * <p>
-     * [component-1] n bytes, n > 0<br>
-     * [0] 1 byte<br>
+     * [component-1] n bytes, n > 0<br> [0] 1 byte<br>
      * <p>
-     * [component-2] q bytes, q > 0<br>
-     * [0] 1 byte<br>
+     * [component-2] q bytes, q > 0<br> [0] 1 byte<br>
      * <p>
      * [...]<br>
      * <p>
-     * [component-n] p bytes, p > 0<br>
-     * [0] 1 bytes<br>
+     * [component-n] p bytes, p > 0<br> [0] 1 bytes<br>
      * <p>
-     * [metadata] r bytes, r >= 0<p>
-     * Where {@code typeIdentifier} is a single byte representing the generic type component, {@code component} is a
-     * UTF-8 encoded string constructed from the type name of each component type, and {@code 0} is a zero byte.
+     * [metadata] r bytes, r >= 0<p> Where {@code typeIdentifier} is a single byte representing the generic type
+     * component, {@code component} is a UTF-8 encoded string constructed from the type name of each component type, and
+     * {@code 0} is a zero byte.
      * <p>
      * Null components are also represented by the zero byte.
+     *
      * @param typeIdentifier the type identifier byte
-     * @param metadata the metadata string
-     * @param components the type components
+     * @param metadata       the metadata string
+     * @param components     the type components
+     * @return the identifier byte array for the given arguments
      * @see GenericInfo#PARAMETERIZED
      * @see GenericInfo#GENERIC_ARRAY
      * @see GenericInfo#TYPE_VARIABLE
      * @see GenericInfo#WILDCARD
-     * @return the identifier byte array for the given arguments
      */
-    static byte @NotNull [] identifier(byte typeIdentifier, @Nullable String metadata, @Nullable Type ... components) {
+    static byte @NotNull [] identifier(byte typeIdentifier, @Nullable String metadata, @Nullable Type... components) {
         byte[][] componentByteArrays = new byte[components.length][];
 
         int i = 0;
@@ -323,16 +287,13 @@ class GenericInfo {
                 //null type represented by a byte array containing only zero
                 //can be used to separate related groups of types
                 newArray = NIL;
-            }
-            else if (type instanceof WeakType weakType) {
+            } else if (type instanceof WeakType weakType) {
                 //if weak type, use its identifier
                 newArray = weakType.identifier();
-            }
-            else if (type instanceof Class<?> cls) {
+            } else if (type instanceof Class<?> cls) {
                 //if class, use its name (this has a nice, compact encoding)
                 newArray = CHARSET.encode(cls.getName()).array();
-            }
-            else {
+            } else {
                 //if any other type, use its type name
                 newArray = CHARSET.encode(type.getTypeName()).array();
             }
@@ -343,8 +304,8 @@ class GenericInfo {
 
         byte[] encodedMetadata = metadata == null ? NIL : CHARSET.encode(metadata).array();
         //save first byte for type indicator, nameChars.length for length, rest for components
-        byte[] composite = new byte[2 + totalComponentLength + encodedMetadata.length + (Math.max(0, components.length
-            - 1))];
+        byte[] composite =
+            new byte[2 + totalComponentLength + encodedMetadata.length + (Math.max(0, components.length - 1))];
         composite[0] = typeIdentifier;
 
         int offset = 1;
@@ -370,11 +331,38 @@ class GenericInfo {
     /**
      * Convenience overload for {@link GenericInfo#identifier(byte, String, Type...)}. The metadata parameter is set to
      * null.
+     *
      * @param typeIdentifier the type identifier byte
-     * @param components the type components
+     * @param components     the type components
      * @return the identifier byte array for the given arguments and null metadata
      */
-    static byte @NotNull [] identifier(byte typeIdentifier, @Nullable Type ... components) {
+    static byte @NotNull [] identifier(byte typeIdentifier, @Nullable Type... components) {
         return identifier(typeIdentifier, null, components);
+    }
+
+    //custom WeakReference containing some additional data
+    private static class TypeReference extends WeakReference<Type> {
+        private final Reference<WeakType> parent;
+        private final Reference<GenericInfo> repository;
+
+        private TypeReference(Type referent, WeakType parent, ClassLoader parentClassLoader) {
+            super(referent, queue);
+
+            if (parent != null) {
+                this.parent = new WeakReference<>(parent);
+
+                GenericInfo info = parentClassLoader == null ? null : store.getIfPresent(parentClassLoader);
+                if (info != null) {
+                    //if there is a repository, retain only a weak reference to it
+                    this.repository = new WeakReference<>(info);
+                } else {
+                    //no repository means bootstrap or unknown classloader
+                    this.repository = null;
+                }
+            } else {
+                this.parent = null;
+                this.repository = null;
+            }
+        }
     }
 }

@@ -2,7 +2,6 @@ package com.github.steanky.ethylene.mapper.signature;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
-import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.TypeHinter;
 import com.github.steanky.ethylene.mapper.type.Token;

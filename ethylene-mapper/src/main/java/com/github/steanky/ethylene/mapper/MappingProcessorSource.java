@@ -7,7 +7,6 @@ import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Function;
 
@@ -20,17 +19,14 @@ public interface MappingProcessorSource {
 
     class Builder {
         private static final Signature MAP_ENTRY_SIGNATURE =
-            Signature.builder(Token.ofClass(Map.Entry.class),
-                (entry, objects) -> Map.entry(objects[0], objects[1]),
-                (entry) -> List.of(
-                    Signature.type("key", Token.OBJECT, entry.getKey()),
-                    Signature.type("value", Token.OBJECT, entry.getValue())),
-                Entry.of("key", Token.OBJECT),
+            Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Map.entry(objects[0], objects[1]),
+                (entry) -> List.of(Signature.type("key", Token.OBJECT, entry.getKey()),
+                    Signature.type("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
                 Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
 
         private final Collection<Signature> customSignatures = new HashSet<>();
-        private final Collection<Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
-        private final Collection<Entry<Class<?>, SignatureBuilder>> signatureBuilderPreferences = new HashSet<>();
+        private final Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
+        private final Collection<Map.Entry<Class<?>, SignatureBuilder>> signatureBuilderPreferences = new HashSet<>();
         private final Collection<Token<?>> scalarTypes = new HashSet<>();
         private final Collection<ScalarSignature<?>> scalarSignatures = new HashSet<>();
 
@@ -41,22 +37,22 @@ public interface MappingProcessorSource {
         private SignatureBuilder defaultBuilder = FieldSignatureBuilder.INSTANCE;
         private Function<? super Collection<ScalarSignature<?>>, ? extends ScalarSource> scalarSourceFunction =
             signatures -> new BasicScalarSource(buildTypeHinter(), signatures);
-        private Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector>
+        private Function<? super Collection<Map.Entry<Class<?>, SignatureBuilder>>, ? extends SignatureBuilder.Selector>
             signatureBuilderSelectorFunction =
             signaturePreferences -> new BasicSignatureBuilderSelector(defaultBuilder, signaturePreferences);
         private Function<? super Collection<Signature>, ? extends SignatureMatcher.Source>
             signatureMatcherSourceFunction =
             customSignatures -> new BasicSignatureMatcherSource(buildTypeHinter(), getSignatureBuilderSelector(),
                 customSignatures);
-        private Function<? super Collection<Entry<Class<?>, Class<?>>>, ? extends TypeResolver> typeResolverFunction =
-            typeImplementations -> new BasicTypeResolver(buildTypeHinter(), typeImplementations);
+        private Function<? super Collection<Map.Entry<Class<?>, Class<?>>>, ? extends TypeResolver>
+            typeResolverFunction = typeImplementations -> new BasicTypeResolver(buildTypeHinter(), typeImplementations);
 
         Builder() {
         }
 
         private ScalarSource buildScalarSource() {
-            return Objects.requireNonNullElseGet(scalarSource, () -> scalarSource =
-                scalarSourceFunction.apply(scalarSignatures));
+            return Objects.requireNonNullElseGet(scalarSource,
+                () -> scalarSource = scalarSourceFunction.apply(scalarSignatures));
         }
 
         private TypeHinter buildTypeHinter() {
@@ -86,14 +82,14 @@ public interface MappingProcessorSource {
         }
 
         public @NotNull Builder withSignatureBuilderSelectorFunction(
-            @NotNull Function<? super Collection<Entry<Class<?>, SignatureBuilder>>, ?
+            @NotNull Function<? super Collection<Map.Entry<Class<?>, SignatureBuilder>>, ?
                 extends SignatureBuilder.Selector> function) {
             this.signatureBuilderSelectorFunction = Objects.requireNonNull(function);
             return this;
         }
 
         public @NotNull Builder withTypeResolverFunction(
-            @NotNull Function<? super Collection<Entry<Class<?>, Class<?>>>, ? extends TypeResolver> function) {
+            @NotNull Function<? super Collection<Map.Entry<Class<?>, Class<?>>>, ? extends TypeResolver> function) {
             this.typeResolverFunction = Objects.requireNonNull(function);
             return this;
         }

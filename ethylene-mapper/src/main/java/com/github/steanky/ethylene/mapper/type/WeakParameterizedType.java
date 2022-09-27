@@ -2,7 +2,6 @@ package com.github.steanky.ethylene.mapper.type;
 
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,8 +9,6 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Objects;
 
 /**
  * Implementation of {@link ParameterizedType} that retains no strong references to any {@link Type} or {@link Class}

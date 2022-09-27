@@ -15,15 +15,19 @@ public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
     private final String key;
     private final ConfigElement element;
 
+    private ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
+        this.key = key;
+        this.element = Objects.requireNonNull(element);
+    }
+
     /**
      * Creates a new ConfigEntry instance.
      *
      * @param key     the key (name)
      * @param element the value element
      */
-    public ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
-        this.key = key;
-        this.element = Objects.requireNonNull(element);
+    public static @NotNull ConfigEntry of(@Nullable String key, @NotNull ConfigElement element) {
+        return new ConfigEntry(key, element);
     }
 
     /**
@@ -31,28 +35,13 @@ public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
      *
      * @param element the value element
      */
-    public ConfigEntry(@NotNull ConfigElement element) {
-        this(null, element);
+    public static @NotNull ConfigEntry of(@NotNull ConfigElement element) {
+        return new ConfigEntry(null, element);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(key, element);
-    }
-
-    @Override
-    public String getKey() {
-        return key;
-    }
-
-    @Override
-    public ConfigElement getValue() {
-        return element;
-    }
-
-    @Override
-    public ConfigElement setValue(ConfigElement value) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -70,5 +59,20 @@ public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
         }
 
         return false;
+    }
+
+    @Override
+    public String getKey() {
+        return key;
+    }
+
+    @Override
+    public ConfigElement getValue() {
+        return element;
+    }
+
+    @Override
+    public ConfigElement setValue(ConfigElement value) {
+        throw new UnsupportedOperationException();
     }
 }

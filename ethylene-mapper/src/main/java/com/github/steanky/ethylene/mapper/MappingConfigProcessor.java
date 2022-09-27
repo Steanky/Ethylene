@@ -21,8 +21,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
-    private static final int GRAPH_OPTIONS = Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES |
-        Graph.Options.LAZY_ACCUMULATION;
+    private static final int GRAPH_OPTIONS =
+        Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES | Graph.Options.LAZY_ACCUMULATION;
 
     private final Token<T> token;
     private final SignatureMatcher.Source signatureMatcherSource;
@@ -47,68 +47,65 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             SignatureMatcher rootFactory = signatureMatcherSource.matcherFor(rootType);
 
             return (T) Graph.process(new ClassEntry(rootType, element, rootFactory), nodeEntry -> {
-                        ConfigElement nodeElement = nodeEntry.element;
-                        MatchingSignature matchingSignature =
-                            nodeEntry.signatureMatcher.signature(nodeEntry.type, nodeElement, null);
+                    ConfigElement nodeElement = nodeEntry.element;
+                    MatchingSignature matchingSignature =
+                        nodeEntry.signatureMatcher.signature(nodeEntry.type, nodeElement, null);
 
-                        Signature signature = matchingSignature.signature();
-                        int signatureSize = matchingSignature.size();
+                    Signature signature = matchingSignature.signature();
+                    int signatureSize = matchingSignature.size();
 
-                        Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
-                        Iterator<Map.Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
+                    Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
+                    Iterator<Map.Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
 
-                        //if this signature supports circular refs, buildingObject should be non-null
-                        Object buildingObject =
-                            signature.hasBuildingObject() ? signature.initBuildingObject(nodeElement) : null;
-                        nodeEntry.reference.setValue(buildingObject);
+                    //if this signature supports circular refs, buildingObject should be non-null
+                    Object buildingObject =
+                        signature.hasBuildingObject() ? signature.initBuildingObject(nodeElement) : null;
+                    nodeEntry.reference.setValue(buildingObject);
 
-                        //arguments which are needed to create this object
-                        Object[] args = new Object[signatureSize];
+                    //arguments which are needed to create this object
+                    Object[] args = new Object[signatureSize];
 
-                        return Graph.node(new Iterator<>() {
-                            private int i = 0;
+                    return Graph.node(new Iterator<>() {
+                        private int i = 0;
 
-                            @Override
-                            public boolean hasNext() {
-                                return i < signatureSize;
+                        @Override
+                        public boolean hasNext() {
+                            return i < signatureSize;
+                        }
+
+                        @Override
+                        public Map.Entry<Object, ClassEntry> next() {
+                            if (i++ == signatureSize) {
+                                throw new NoSuchElementException();
                             }
 
-                            @Override
-                            public Entry<Object, ClassEntry> next() {
-                                if (i++ == signatureSize) {
-                                    throw new NoSuchElementException();
-                                }
+                            ConfigElement nextElement = elementIterator.next();
+                            Token<?> nextType = typeResolver.resolveType(typeEntryIterator.next().getValue(),
+                                nextElement);
+                            SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType);
 
-                                ConfigElement nextElement = elementIterator.next();
-                                Token<?> nextType = typeResolver.resolveType(typeEntryIterator.next().getValue(),
-                                    nextElement);
-                                SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType);
+                            return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
+                        }
+                    }, Graph.output(nodeEntry.reference, new Graph.Accumulator<>() {
+                        private int i = 0;
 
-                                return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
+                        @Override
+                        public void accept(Object key, Mutable<Object> value, boolean circular) {
+                            if (circular && !signature.hasBuildingObject()) {
+                                throw new MapperException("Signatures which do not supply building objects may " +
+                                    "not be used to construct circular references");
                             }
-                        }, Graph.output(nodeEntry.reference, new Graph.Accumulator<>() {
-                            private int i = 0;
 
-                            @Override
-                            public void accept(Object key, Mutable<Object> value, boolean circular) {
-                                if (circular && !signature.hasBuildingObject()) {
-                                    throw new MapperException("Signatures which do not supply building objects may " +
-                                        "not be used to construct circular references");
-                                }
+                            args[i++] = value.getValue();
 
-                                args[i++] = value.getValue();
-
-                                if (i == args.length) {
-                                    nodeEntry.reference.setValue(signature.buildObject(buildingObject, args));
-                                }
+                            if (i == args.length) {
+                                nodeEntry.reference.setValue(signature.buildObject(buildingObject, args));
                             }
-                        }));
-                    },
-                    this::elementToObjectContainerPredicate,
-                    scalar -> new MutableObject<>(scalarSource.makeObject(scalar.element, scalar.type)),
-                    entry -> entry.element,
-                    GRAPH_OPTIONS)
-                .getValue();
+                        }
+                    }));
+                }, this::elementToObjectContainerPredicate,
+                scalar -> new MutableObject<>(scalarSource.makeObject(scalar.element, scalar.type)),
+                entry -> entry.element, GRAPH_OPTIONS).getValue();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
@@ -122,50 +119,48 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             ElementEntry rootEntry = new ElementEntry(rootType, data, rootMatcher);
 
             return Graph.process(rootEntry, nodeEntry -> {
-                        Object nodeObject = nodeEntry.object;
-                        MatchingSignature typeSignature =
-                            nodeEntry.signatureMatcher.signature(nodeEntry.type, null, nodeObject);
-                        Signature signature = typeSignature.signature();
-                        int size = typeSignature.size();
+                    Object nodeObject = nodeEntry.object;
+                    MatchingSignature typeSignature =
+                        nodeEntry.signatureMatcher.signature(nodeEntry.type, null, nodeObject);
+                    Signature signature = typeSignature.signature();
+                    int size = typeSignature.size();
 
-                        ConfigContainer target = signature.initContainer(size);
-                        nodeEntry.element = target;
+                    ConfigContainer target = signature.initContainer(size);
+                    nodeEntry.element = target;
 
-                        Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
+                    Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
 
-                        return Graph.node(new Iterator<>() {
-                            private int i = 0;
+                    return Graph.node(new Iterator<>() {
+                        private int i = 0;
 
-                            @Override
-                            public boolean hasNext() {
-                                return i < size;
+                        @Override
+                        public boolean hasNext() {
+                            return i < size;
+                        }
+
+                        @Override
+                        public Map.Entry<String, ElementEntry> next() {
+                            if (i++ == size) {
+                                throw new NoSuchElementException();
                             }
 
-                            @Override
-                            public Entry<String, ElementEntry> next() {
-                                if (i++ == size) {
-                                    throw new NoSuchElementException();
-                                }
+                            Signature.TypedObject typedObject = typedObjectIterator.next();
+                            Token<?> objectType = typeResolver.resolveType(typedObject.type(), null);
+                            SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
 
-                                Signature.TypedObject typedObject = typedObjectIterator.next();
-                                Token<?> objectType = typeResolver.resolveType(typedObject.type(), null);
-                                SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
-
-                                return Entry.of(typedObject.name(), new ElementEntry(objectType, typedObject.value(),
-                                    thisMatcher));
-                            }
-                        }, Graph.output(nodeEntry.element, (String key, ConfigElement value, boolean circular) -> {
-                            if (target.isList()) {
-                                target.asList().add(value);
-                            } else {
-                                target.asNode().put(key, value);
-                            }
-                        }));
-                    },
-                    this::objectToElementContainerPredicate,
-                    scalar -> scalarSource.makeElement(scalar.object, scalar.type),
-                    entry -> entry.object,
-                    GRAPH_OPTIONS);
+                            return Entry.of(typedObject.name(),
+                                new ElementEntry(objectType, typedObject.value(), thisMatcher));
+                        }
+                    }, Graph.output(nodeEntry.element, (String key, ConfigElement value, boolean circular) -> {
+                        if (target.isList()) {
+                            target.asList().add(value);
+                        } else {
+                            target.asNode().put(key, value);
+                        }
+                    }));
+                }, this::objectToElementContainerPredicate, scalar -> scalarSource.makeElement(scalar.object,
+                    scalar.type),
+                entry -> entry.object, GRAPH_OPTIONS);
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }

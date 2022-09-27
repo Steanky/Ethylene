@@ -26,8 +26,7 @@ public class BasicScalarSource implements ScalarSource {
 
         if (signatures.isEmpty()) {
             this.returnTypeMap = Map.of();
-        }
-        else {
+        } else {
             //intermediateMap is only used to construct and validate the initial mappings
             Map<Class<?>, Map<ElementType, Set<ScalarSignature<?>>>> intermediateMap = new HashMap<>(signatures.size());
             for (ScalarSignature<?> signature : signatures) {
@@ -81,8 +80,8 @@ public class BasicScalarSource implements ScalarSource {
             }
         }
 
-        throw new MapperException("Could not locate signature with upper bounds '" + upperBounds.getTypeName() +
-            "', no matching signature");
+        throw new MapperException(
+            "Could not locate signature with upper bounds '" + upperBounds.getTypeName() + "', no matching signature");
     }
 
     @Override

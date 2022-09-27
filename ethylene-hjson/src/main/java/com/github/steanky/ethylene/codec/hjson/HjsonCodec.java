@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -67,7 +68,7 @@ public class HjsonCodec extends AbstractConfigCodec {
                 }
 
                 @Override
-                public Entry<String, Object> next() {
+                public Map.Entry<String, Object> next() {
                     JsonObject.Member next = iterator.next();
                     return Entry.of(next.getName(), next.getValue());
                 }
@@ -82,7 +83,7 @@ public class HjsonCodec extends AbstractConfigCodec {
                 }
 
                 @Override
-                public Entry<String, Object> next() {
+                public Map.Entry<String, Object> next() {
                     return Entry.of(null, backing.next());
                 }
             }, makeDecodeCollection(array.size()));

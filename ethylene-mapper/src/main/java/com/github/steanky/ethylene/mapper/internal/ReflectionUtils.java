@@ -55,10 +55,10 @@ public class ReflectionUtils {
      * {@link TypeNotPresentException}.
      *
      * @param typeReferences the references from which to extract types
-     * @param names the corresponding names of each type
-     * @param type the class of type, used to create the type array; must be assignable to {@code TType}
+     * @param names          the corresponding names of each type
+     * @param type           the class of type, used to create the type array; must be assignable to {@code TType}
+     * @param <TType>        the subclass of {@link Type}
      * @return a resolved type array
-     * @param <TType> the subclass of {@link Type}
      */
     @SuppressWarnings("unchecked")
     public static <TType extends Type> @NotNull TType[] resolve(@NotNull Reference<TType>[] typeReferences,
@@ -89,14 +89,11 @@ public class ReflectionUtils {
 
         if (type instanceof Class<?> cls) {
             return cls.getClassLoader();
-        }
-        else if (type instanceof ParameterizedType parameterizedType) {
-            return ((Class<?>)parameterizedType.getRawType()).getClassLoader();
-        }
-        else if (type instanceof TypeVariable<?> typeVariable) {
+        } else if (type instanceof ParameterizedType parameterizedType) {
+            return ((Class<?>) parameterizedType.getRawType()).getClassLoader();
+        } else if (type instanceof TypeVariable<?> typeVariable) {
             return getOwner(typeVariable.getGenericDeclaration()).getClassLoader();
-        }
-        else if (type instanceof GenericArrayType || type instanceof WildcardType) {
+        } else if (type instanceof GenericArrayType || type instanceof WildcardType) {
             return null;
         }
 
@@ -154,12 +151,11 @@ public class ReflectionUtils {
     public static @NotNull Class<?> getOwner(@NotNull GenericDeclaration genericDeclaration) {
         if (genericDeclaration instanceof Class<?> cls) {
             return cls;
-        }
-        else if(genericDeclaration instanceof Executable executable) {
+        } else if (genericDeclaration instanceof Executable executable) {
             return executable.getDeclaringClass();
         }
 
-        throw new IllegalArgumentException("Unexpected subclass of GenericDeclaration '" + genericDeclaration.getClass()
-            .getName() + "'");
+        throw new IllegalArgumentException(
+            "Unexpected subclass of GenericDeclaration '" + genericDeclaration.getClass().getName() + "'");
     }
 }

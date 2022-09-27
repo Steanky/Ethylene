@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.core;
 
-import com.github.steanky.ethylene.core.collection.Entry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -26,7 +25,7 @@ public final class Graph {
         }
 
         @Override
-        public Entry<Object, Object> next() {
+        public Map.Entry<Object, Object> next() {
             throw new NoSuchElementException();
         }
     }, emptyOutput());

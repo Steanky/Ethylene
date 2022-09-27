@@ -12,7 +12,7 @@ public interface ScalarSource {
     /**
      * Creates a {@link ConfigElement} from a given, nullable object and provided upper bounds.
      *
-     * @param data the data object from which to construct an element
+     * @param data        the data object from which to construct an element
      * @param upperBounds the upper bounds of the data type (may contain additional generic information)
      * @return a new ConfigElement from the provided data object
      */
@@ -21,7 +21,7 @@ public interface ScalarSource {
     /**
      * Creates an {@link Object} from a given {@link ConfigElement} and provided upper bounds.
      *
-     * @param element the element from which to create an object
+     * @param element     the element from which to create an object
      * @param upperBounds the upper bounds of the data type (may contain additional generic information)
      * @return a new Object from the provided element
      */

@@ -59,9 +59,11 @@ public class RecordSignature implements Signature {
 
         for (RecordComponent recordComponent : components) {
             try {
-                typedObjects.add(new TypedObject(recordComponent.getName(), Token.ofType(recordComponent
-                    .getGenericType()), recordComponent.getAccessor().invoke(object)));
-            } catch (IllegalAccessException | InvocationTargetException ignored) {}
+                typedObjects.add(
+                    new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
+                        recordComponent.getAccessor().invoke(object)));
+            } catch (IllegalAccessException | InvocationTargetException ignored) {
+            }
         }
 
         return typedObjects;
@@ -171,7 +173,7 @@ public class RecordSignature implements Signature {
             return argumentTypes = List.of(Entry.of(component.getName(), Token.ofType(component.getGenericType())));
         }
 
-        List<Entry<String, Token<?>>> underlyingList = new ArrayList<>(recordComponents.length);
+        List<Map.Entry<String, Token<?>>> underlyingList = new ArrayList<>(recordComponents.length);
         for (RecordComponent component : recordComponents) {
             underlyingList.add(Entry.of(component.getName(), Token.ofType(component.getGenericType())));
         }

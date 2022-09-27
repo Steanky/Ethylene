@@ -5,31 +5,32 @@ import org.junit.jupiter.api.Test;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GenericInfoTest {
     @Test
     void emptyTypeArrayNullMetadata() {
-        byte[] expected = new byte[] {0, 0, 0};
+        byte[] expected = new byte[]{0, 0, 0};
         assertArrayEquals(expected, GenericInfo.identifier((byte) 0));
     }
 
     @Test
     void emptyTypeArrayNonNullSingleCharacterMetadata() {
-        byte[] expected = new byte[] {0, 0, 97};
+        byte[] expected = new byte[]{0, 0, 97};
         assertArrayEquals(expected, GenericInfo.identifier((byte) 0, "a"));
     }
 
     @Test
     void emptyTypeArrayNonNullMultiCharacterMetadata() {
-        byte[] expected = new byte[] {0, 0, 97, 98, 99};
+        byte[] expected = new byte[]{0, 0, 97, 98, 99};
         assertArrayEquals(expected, GenericInfo.identifier((byte) 0, "abc"));
     }
 
     @Test
     void variousTypes() {
         for (int i = 0; i < 100; i++) {
-            byte[] expected = new byte[] {(byte) i, 0, 0};
+            byte[] expected = new byte[]{(byte) i, 0, 0};
             assertArrayEquals(expected, GenericInfo.identifier((byte) i));
         }
     }
@@ -37,7 +38,7 @@ class GenericInfoTest {
     @Test
     void singleClassType() {
         byte[] identifier = GenericInfo.identifier((byte) 0, List.class);
-        String id = GenericInfo.CHARSET.decode(ByteBuffer.wrap(identifier,1, 14)).toString();
+        String id = GenericInfo.CHARSET.decode(ByteBuffer.wrap(identifier, 1, 14)).toString();
         assertEquals("java.util.List", id);
     }
 
@@ -53,7 +54,7 @@ class GenericInfoTest {
 
         byte[] identifier = GenericInfo.identifier((byte) 0, List.class, String.class);
         String expectedString = GenericInfo.CHARSET.decode(ByteBuffer.wrap(expected)).toString();
-        String actualString = GenericInfo.CHARSET.decode(ByteBuffer.wrap(identifier,1, 33)).toString();
+        String actualString = GenericInfo.CHARSET.decode(ByteBuffer.wrap(identifier, 1, 33)).toString();
 
         assertEquals(expectedString, actualString);
     }

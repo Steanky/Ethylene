@@ -8,8 +8,7 @@ import java.lang.reflect.Type;
  * Marker interface used to denote a specialized subclass of {@link Type}. Used to prevent potential accidental misuse
  * of {@link GenericInfo} by limiting which implementations of {@link Type} can be bound.
  * <p>
- * Implementation instances should generally only be used after binding to an "owner" class with
- * {@link GenericInfo}.
+ * Implementation instances should generally only be used after binding to an "owner" class with {@link GenericInfo}.
  * <p>
  * This interface is not part of the public API.
  * <p>
@@ -37,6 +36,7 @@ sealed interface WeakType extends Type permits WeakGenericArrayType, WeakParamet
      * <p>
      * To improve performance, implementations are not required to create defensive copies of their unique identifier
      * array. Unless otherwise specified, callers should assume this array is not safe to modify.
+     *
      * @return the unique identifier array, which must not be modified
      */
     byte @NotNull [] identifier();

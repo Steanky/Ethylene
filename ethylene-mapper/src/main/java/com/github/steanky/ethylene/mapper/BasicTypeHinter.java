@@ -18,8 +18,7 @@ public class BasicTypeHinter implements TypeHinter {
         if (scalarTypes.isEmpty()) {
             this.scalars = Set.of();
             this.nonScalars = Set.of();
-        }
-        else {
+        } else {
             this.scalars = Collections.newSetFromMap(new WeakHashMap<>(scalarTypes.size()));
             for (Token<?> token : scalarTypes) {
                 this.scalars.add(token.get());

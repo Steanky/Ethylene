@@ -2,11 +2,13 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.util.ConfigElementUtils;
+import com.github.steanky.ethylene.core.util.MemoizingSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
 /**
  * <p>Contains functionality and methods common to {@link ConfigNode} implementations. This abstract class does not
@@ -24,8 +26,8 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      */
     protected final Map<String, ConfigElement> mappings;
 
-    private Collection<ConfigEntry> containerCollection;
-    private Collection<ConfigElement> elementCollection;
+    private final Supplier<Collection<ConfigEntry>> entryCollectionSupplier;
+    private final Supplier<Collection<ConfigElement>> elementCollectionSupplier;
 
     /**
      * Construct a new AbstractConfigNode using the provided mappings.
@@ -35,6 +37,32 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      */
     protected AbstractConfigNode(@NotNull Map<String, ConfigElement> mappings) {
         this.mappings = Objects.requireNonNull(mappings);
+        this.entryCollectionSupplier = MemoizingSupplier.of(() -> new AbstractCollection<>() {
+            @Override
+            public Iterator<ConfigEntry> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<Map.Entry<String, ConfigElement>> entryIterator =
+                        mappings.entrySet().iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return entryIterator.hasNext();
+                    }
+
+                    @Override
+                    public ConfigEntry next() {
+                        Map.Entry<String, ConfigElement> next = entryIterator.next();
+                        return ConfigEntry.of(next.getKey(), next.getValue());
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return mappings.size();
+            }
+        });
+        this.elementCollectionSupplier = MemoizingSupplier.of(() -> Collections.unmodifiableCollection(mappings.values()));
     }
 
     /**
@@ -104,37 +132,11 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-        return Objects.requireNonNullElseGet(containerCollection,
-            () -> containerCollection = new AbstractCollection<>() {
-                @Override
-                public Iterator<ConfigEntry> iterator() {
-                    return new Iterator<>() {
-                        private final Iterator<Entry<String, ConfigElement>> entryIterator =
-                            mappings.entrySet().iterator();
-
-                        @Override
-                        public boolean hasNext() {
-                            return entryIterator.hasNext();
-                        }
-
-                        @Override
-                        public ConfigEntry next() {
-                            Entry<String, ConfigElement> next = entryIterator.next();
-                            return new ConfigEntry(next.getKey(), next.getValue());
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return mappings.size();
-                }
-            });
+        return entryCollectionSupplier.get();
     }
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        return Objects.requireNonNullElseGet(elementCollection, () -> elementCollection = Collections
-            .unmodifiableCollection(mappings.values()));
+        return elementCollectionSupplier.get();
     }
 }

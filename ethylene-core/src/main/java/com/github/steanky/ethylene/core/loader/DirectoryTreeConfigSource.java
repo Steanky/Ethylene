@@ -30,7 +30,9 @@ import java.util.stream.Stream;
 
 public class DirectoryTreeConfigSource implements ConfigSource {
     private static final LinkOption[] EMPTY_LINK_OPTION_ARRAY = new LinkOption[0];
+    private static final LinkOption[] NOFOLLOW_LINKS = new LinkOption[]{LinkOption.NOFOLLOW_LINKS};
     private static final FileVisitOption[] EMPTY_FILE_VISIT_OPTION_ARRAY = new FileVisitOption[0];
+    private static final FileVisitOption[] FOLLOW_LINKS = new FileVisitOption[]{FileVisitOption.FOLLOW_LINKS};
 
     private final Path rootPath;
     private final CodecResolver codecResolver;
@@ -55,16 +57,14 @@ public class DirectoryTreeConfigSource implements ConfigSource {
             preferredExtensionName.isEmpty() ? preferredExtensionName : "." + preferredExtensionName;
         this.executor = executor;
         this.supportSymlinks = supportSymlinks;
-        this.fileVisitOptions =
-            supportSymlinks ? new FileVisitOption[]{FileVisitOption.FOLLOW_LINKS} : EMPTY_FILE_VISIT_OPTION_ARRAY;
+        this.fileVisitOptions = supportSymlinks ? FOLLOW_LINKS : EMPTY_FILE_VISIT_OPTION_ARRAY;
     }
 
     private static Object getKey(Path path, boolean followSymlinks) {
         try {
             //try to use file keys if possible (supported by the system & accessible by us)
             //readAttributes follows symlinks (so a symlink to a file and the file itself will have the same key)
-            LinkOption[] options =
-                followSymlinks ? EMPTY_LINK_OPTION_ARRAY : new LinkOption[]{LinkOption.NOFOLLOW_LINKS};
+            LinkOption[] options = followSymlinks ? EMPTY_LINK_OPTION_ARRAY : NOFOLLOW_LINKS;
             Object fileKey = Files.readAttributes(path, BasicFileAttributes.class, options).fileKey();
             if (fileKey != null) {
                 return fileKey;
@@ -132,7 +132,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         }
 
                         @Override
-                        public Entry<String, Path> next() {
+                        public Map.Entry<String, Path> next() {
                             Path path = pathIterator.next();
                             return Entry.of(pathNameInspector.getName(path), path);
                         }
@@ -191,7 +191,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
                 //list of paths
                 //key (first in the entry) is always null because it's unused
-                List<Entry<Object, OutputInfo>> paths = new ArrayList<>(node.size());
+                List<Map.Entry<Object, OutputInfo>> paths = new ArrayList<>(node.size());
                 for (ConfigEntry entry : node.entryCollection()) {
                     String elementName = entry.getKey();
                     ConfigElement entryElement = entry.getValue();
@@ -242,7 +242,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 //use another iterator - this will differ from the results passed to the accumulator only when
                 //there is a circular reference (in which case the OutputInfo passed to the accumulator comes
                 //from some other node)
-                Iterator<Entry<Object, OutputInfo>> actualIterator = paths.iterator();
+                Iterator<Map.Entry<Object, OutputInfo>> actualIterator = paths.iterator();
                 return Graph.node(paths.iterator(), Graph.output(containerEntry, (o, outputInfo, circular) -> {
                     //actually write the files
                     //need to do this here, instead of in, say, the scalar mapper, so we can create

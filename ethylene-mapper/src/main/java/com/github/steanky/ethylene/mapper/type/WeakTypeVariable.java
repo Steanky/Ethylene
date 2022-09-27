@@ -19,9 +19,11 @@ import java.util.function.Supplier;
  * bounds. Said bounds are resolved in the constructor. We can't lazily evaluate the bounds without retaining a strong
  * reference to Type objects (violating the contract of {@link WeakType}) or risking early garbage collection (there is
  * no guarantee that a TypeVariable is cached by the JVM).
+ *
  * @param <TDec> the type of generic declaration
  */
-final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBase implements WeakType, TypeVariable<TDec> {
+final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBase implements WeakType,
+    TypeVariable<TDec> {
     private final int variableIndex;
     private final Reference<Type>[] boundReferences;
     private final String[] boundReferenceNames;
@@ -32,7 +34,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
      * Creates a new {@link WeakTypeVariable} from the given {@link TypeVariable} and generic declaration variable
      * index. This is the index of the given TypeVariable within the {@link GenericDeclaration} it is a part of.
      *
-     * @param variable the TypeVariable from which to create this instance
+     * @param variable      the TypeVariable from which to create this instance
      * @param variableIndex the index of {@code variable} within its
      */
     @SuppressWarnings("unchecked")
@@ -50,9 +52,9 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
             Reference<Class<?>> genericDeclarationReference = new WeakReference<>(type);
             String className = type.getTypeName();
             GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this, type.getClassLoader());
-            this.genericDeclarationSupplier = () -> (TDec)ReflectionUtils.resolve(genericDeclarationReference, className);
-        }
-        else if(genericDeclaration instanceof Method || genericDeclaration instanceof Constructor<?>) {
+            this.genericDeclarationSupplier =
+                () -> (TDec) ReflectionUtils.resolve(genericDeclarationReference, className);
+        } else if (genericDeclaration instanceof Method || genericDeclaration instanceof Constructor<?>) {
             Executable executable = (Executable) genericDeclaration;
 
             //methods/ctors are more complex: retain enough information to resolve the executable + retain softref for
@@ -74,8 +76,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
 
             Mutable<Reference<TDec>> executableReference = new MutableObject<>(new SoftReference<>(genericDeclaration));
             boolean isMethod = genericDeclaration instanceof Method;
-            GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this, declaringClass
-                .getClassLoader());
+            GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this, declaringClass.getClassLoader());
             this.genericDeclarationSupplier = (Supplier<TDec>) () -> {
                 TDec cachedDeclaration = executableReference.getValue().get();
                 if (cachedDeclaration != null) {
@@ -85,8 +86,8 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
                 //the method may have been garbage collected (it is not cached elsewhere)
                 //re-resolve it from the owner class, parameter types, and name
                 Class<?> executableOwner = ReflectionUtils.resolve(declaringClassReference, declaringClassName);
-                Class<?>[] executableParameters = ReflectionUtils.resolve(parameterTypeReferences, parameterTypeNames,
-                    Class.class);
+                Class<?>[] executableParameters =
+                    ReflectionUtils.resolve(parameterTypeReferences, parameterTypeNames, Class.class);
 
                 Executable newExecutable;
                 try {
@@ -104,8 +105,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
                 executableReference.setValue(new SoftReference<>(newGenericDeclaration));
                 return newGenericDeclaration;
             };
-        }
-        else {
+        } else {
             //TypeVariableImpl only supports class, method, and ctor so this shouldn't happen with current JVM
             throw new IllegalArgumentException("Unsupported generic declaration type '" + genericDeclaration + "'");
         }
@@ -121,8 +121,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
             merged[0] = type;
             System.arraycopy(bounds, 0, merged, 1, bounds.length);
             return GenericInfo.identifier(GenericInfo.TYPE_VARIABLE, Integer.toString(variableIndex), merged);
-        }
-        else if (declaration instanceof Executable executable) {
+        } else if (declaration instanceof Executable executable) {
             Class<?>[] parameters = executable.getParameterTypes();
 
             Type[] merged = new Type[bounds.length + parameters.length + 5];
@@ -133,12 +132,11 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
             System.arraycopy(parameters, 0, merged, 3 + bounds.length, parameters.length);
             merged[parameters.length + bounds.length + 3] = null;
             merged[parameters.length + bounds.length + 4] = executable.getDeclaringClass();
-            return GenericInfo.identifier(GenericInfo.TYPE_VARIABLE, (executable instanceof Method ? "M" : "C")
-                + executable.getName() + variableIndex, merged);
-        }
-        else {
-            throw new IllegalArgumentException("Unexpected subclass of GenericDeclaration '" + declaration
-                .getClass() + "'");
+            return GenericInfo.identifier(GenericInfo.TYPE_VARIABLE,
+                (executable instanceof Method ? "M" : "C") + executable.getName() + variableIndex, merged);
+        } else {
+            throw new IllegalArgumentException(
+                "Unexpected subclass of GenericDeclaration '" + declaration.getClass() + "'");
         }
     }
 

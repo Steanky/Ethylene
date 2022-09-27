@@ -12,6 +12,7 @@ import java.lang.annotation.*;
 public @interface Order {
     /**
      * The value of this annotation, which may be any integer.
+     *
      * @return the value of this annotation
      */
     int value();

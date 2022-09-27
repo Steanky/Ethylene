@@ -5,8 +5,6 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Type;
-
 /**
  * Provides basic inspections on {@link Token}s and {@link ConfigElement}s.
  */
@@ -23,7 +21,7 @@ public interface TypeHinter {
      * Determines if the given {@link ConfigElement} may be assigned to the given type.
      *
      * @param element the element to check for assignability to the given type
-     * @param toType the type
+     * @param toType  the type
      * @return true if the element is assignable to the given type; false otherwise
      */
     boolean assignable(@NotNull ConfigElement element, @NotNull Token<?> toType);
@@ -32,7 +30,7 @@ public interface TypeHinter {
      * Calculates the "preferred type" of the given {@link ConfigElement}, given a {@link Token}.
      *
      * @param element the element for which to calculate a preferred type
-     * @param type the type the element being assigned to
+     * @param type    the type the element being assigned to
      * @return the preferred type of this element
      */
     @NotNull Token<?> getPreferredType(@NotNull ConfigElement element, @NotNull Token<?> type);

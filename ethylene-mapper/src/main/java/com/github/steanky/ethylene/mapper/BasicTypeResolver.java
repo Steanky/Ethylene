@@ -4,7 +4,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
-import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
@@ -14,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 public class BasicTypeResolver implements TypeResolver {
@@ -26,7 +26,7 @@ public class BasicTypeResolver implements TypeResolver {
     private final Cache<Class<?>, Object> hierarchyWalkFailures;
 
     public BasicTypeResolver(@NotNull TypeHinter typeHinter,
-        @NotNull Collection<Entry<Class<?>, Class<?>>> typeImplementations) {
+        @NotNull Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
 
         int size = typeImplementations.size();
@@ -37,8 +37,8 @@ public class BasicTypeResolver implements TypeResolver {
         registerTypeImplementations(typeImplementations);
     }
 
-    private void registerTypeImplementations(Collection<Entry<Class<?>, Class<?>>> typeImplementations) {
-        for (Entry<Class<?>, Class<?>> entry : typeImplementations) {
+    private void registerTypeImplementations(Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations) {
+        for (Map.Entry<Class<?>, Class<?>> entry : typeImplementations) {
             Class<?> implementation = entry.getKey();
             Class<?> superclass = entry.getValue();
 

@@ -37,9 +37,9 @@ final class ConfigElementHelper {
 
         if (newElement != null && typeValidator.apply(newElement)) {
             return typeGetter.apply(newElement);
-        } else {
-            return returnSupplier.get();
         }
+
+        return returnSupplier.get();
     }
 
     /**
@@ -64,10 +64,10 @@ final class ConfigElementHelper {
                 return typeGetter.apply(newElement);
             }
 
-            throw new ConfigProcessException("ConfigElement " + newElement + " is of an invalid type");
+            throw new ConfigProcessException("ConfigElement '" + newElement + "' is of an invalid type");
         }
 
-        throw new ConfigProcessException("Path " + pathToString(path) + " is invalid for " + element);
+        throw new ConfigProcessException("Path '" + pathToString(path) + "' is invalid for " + element);
     }
 
     private static String pathToString(@NotNull Object... pathString) {

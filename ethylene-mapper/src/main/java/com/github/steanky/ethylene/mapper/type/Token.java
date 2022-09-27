@@ -7,7 +7,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.*;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -31,6 +34,7 @@ import java.util.function.Supplier;
  * <p>
  * {@link Token#get()} may be used to retrieve the underlying type. This instance is guaranteed to be cached such that
  * there is only one publicly-accessible instance available for each unique Type.
+ *
  * @param <T> the type information to be held in this token
  * @see WeakType
  */
@@ -187,12 +191,14 @@ public abstract class Token<T> implements Supplier<Type> {
 
     public static @NotNull Token<?> ofType(@NotNull Type type) {
         Objects.requireNonNull(type);
-        return new Token<>(GenericInfo.resolveType(type)) {};
+        return new Token<>(GenericInfo.resolveType(type)) {
+        };
     }
 
-    public static <T> @NotNull Token<T> ofClass(@NotNull Class<T> type){
+    public static <T> @NotNull Token<T> ofClass(@NotNull Class<T> type) {
         Objects.requireNonNull(type);
-        return new Token<>(type) {};
+        return new Token<>(type) {
+        };
     }
 
     private static Type[] extractTypeArgumentsFrom(Map<TypeVariable<?>, Type> mappings, TypeVariable<?>[] variables) {
@@ -250,6 +256,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
     /**
      * Determines if this Token contains a type reference.
+     *
      * @return true if this token contains a type reference, false otherwise
      */
     public final boolean hasType() {
@@ -292,11 +299,12 @@ public abstract class Token<T> implements Supplier<Type> {
      * owner. If this token already represents a parameterized type, its raw class is used. The owner type must be
      * assignable to the raw type of the enclosing class.
      *
-     * @param owner the owner class
+     * @param owner  the owner class
      * @param params the parameters to use
      * @return a new token containing the result of parameterizing this type
      * @throws IllegalArgumentException if the given number of types differs from the amount required by this type, or
-     * if the given owner type is not assignable to the raw type of the enclosing class
+     *                                  if the given owner type is not assignable to the raw type of the enclosing
+     *                                  class
      */
     public final @NotNull Token<?> parameterizeWithOwner(@NotNull Token<?> owner,
         @NotNull Token<?> @NotNull ... params) {
@@ -308,7 +316,8 @@ public abstract class Token<T> implements Supplier<Type> {
 
     /**
      * Convenience overload for {@link Token#parameterizeWithOwner(Token, Token[])}.
-     * @param owner the owner class
+     *
+     * @param owner  the owner class
      * @param params the parameters to use
      * @return a new token containing the result of parameterizing this type
      */
@@ -324,7 +333,7 @@ public abstract class Token<T> implements Supplier<Type> {
      * Convenience overload for {@link Token#parameterizeWithOwner(Token, Token[])}. Extracts required type variables
      * from the given {@link TypeVariableMap}.
      *
-     * @param owner the owner class
+     * @param owner         the owner class
      * @param typeVariables the parameters to use
      * @return a new token containing the result of parameterizing this type
      * @throws IllegalArgumentException if the given TypeVariableMap does not contain some necessary types
@@ -341,7 +350,8 @@ public abstract class Token<T> implements Supplier<Type> {
 
     /**
      * Convenience overload for {@link Token#parameterizeWithOwner(Token, TypeVariableMap)}.
-     * @param owner the owner class
+     *
+     * @param owner         the owner class
      * @param typeVariables the parameters to use
      * @return a new token containing the result of parameterizing this type
      * @throws IllegalArgumentException if the given TypeVariableMap does not contain some necessary types
@@ -436,6 +446,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
     /**
      * Determines if this token represents a primitive or wrapper type.
+     *
      * @return true if this token represents a primitive or primitive wrapper type, false otherwise
      */
     public final boolean isPrimitiveOrWrapper() {
@@ -459,7 +470,8 @@ public abstract class Token<T> implements Supplier<Type> {
         Token<?>[] tokens = new Token[args.length];
         for (int i = 0; i < tokens.length; i++) {
             //don't need to re-resolve these types, if they exist, they have already been resolved
-            tokens[i] = new Token<>(args[i]) {};
+            tokens[i] = new Token<>(args[i]) {
+            };
         }
 
         return tokens;
@@ -467,6 +479,7 @@ public abstract class Token<T> implements Supplier<Type> {
 
     /**
      * Determines if this token represents a parameterized type or not.
+     *
      * @return true if the token's underlying type extends {@link ParameterizedType}, false otherwise
      */
     public final boolean isParameterized() {

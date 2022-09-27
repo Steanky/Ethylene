@@ -76,7 +76,7 @@ public class ConstructorSignature implements Signature {
         }
     }
 
-    private static Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
+    private static Map.Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
         Name parameterName = parameter.getAnnotation(Name.class);
         return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
             Token.ofType(parameter.getParameterizedType()));
@@ -229,25 +229,25 @@ public class ConstructorSignature implements Signature {
         if (parameters.length == 1) {
             //alternatively use singleton list
             Parameter first = parameters[0];
-            Entry<String, Token<?>> entry = makeEntry(first, first.isNamePresent());
+            Map.Entry<String, Token<?>> entry = makeEntry(first, first.isNamePresent());
             matchesNames = entry.getKey() != null;
             return types = List.of(entry);
         }
 
         //use a backing ArrayList for n > 1 length
-        List<Entry<String, Token<?>>> entryList = new ArrayList<>(parameters.length);
+        List<Map.Entry<String, Token<?>>> entryList = new ArrayList<>(parameters.length);
 
         Parameter first = parameters[0];
 
         boolean parameterHasName = first.isNamePresent();
-        Entry<String, Token<?>> firstEntry = makeEntry(first, parameterHasName);
+        Map.Entry<String, Token<?>> firstEntry = makeEntry(first, parameterHasName);
         matchesNames = firstEntry.getKey() != null;
 
         entryList.add(firstEntry);
 
         boolean firstNonNullName = firstEntry.getKey() != null;
         for (int i = 1; i < parameters.length; i++) {
-            Entry<String, Token<?>> entry = makeEntry(parameters[i], parameterHasName);
+            Map.Entry<String, Token<?>> entry = makeEntry(parameters[i], parameterHasName);
             if (firstNonNullName == (entry.getKey() == null)) {
                 throw new MapperException("Inconsistent parameter naming");
             }
