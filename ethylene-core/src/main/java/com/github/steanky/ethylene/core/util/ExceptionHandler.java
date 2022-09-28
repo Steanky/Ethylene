@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  *
  * @param <TErr> the type of exception to be handled
  */
-public class ExceptionHandler<TErr extends Exception> {
+public final class ExceptionHandler<TErr extends Exception> {
     private final Class<TErr> exceptionClass;
 
     private TErr exception;

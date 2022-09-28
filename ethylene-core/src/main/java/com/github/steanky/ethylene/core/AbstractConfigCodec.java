@@ -11,18 +11,25 @@ import java.io.OutputStream;
 import java.util.*;
 
 /**
- * <p>This class contains functionality common to many {@link ConfigCodec} implementations. Many of its methods are
- * designed to deeply iterate hierarchical data structures.</p>
+ * <p>This class contains functionality common to {@link ConfigCodec} implementations.</p>
  *
  * <p>In addition to the two abstract methods, {@link AbstractConfigCodec#readObject(InputStream)} and
  * {@link AbstractConfigCodec#writeObject(Object, OutputStream)}, almost every method is designed to be readily
  * subclassed by implementations. In particular, specialized codecs may enable processing of custom objects that are not
  * natively supported by this class.</p>
+ *
+ * <p>Many of the methods make use of functionality exposed by the static utility class {@link Graph}.</p>
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     private final int graphEncodeOptions;
     private final int graphDecodeOptions;
 
+    /**
+     * Constructor, for use by implementing subclasses.
+     *
+     * @param graphEncodeOptions the {@link Graph.Options} bit flags used during encoding
+     * @param graphDecodeOptions the bit flags using during decoding
+     */
     protected AbstractConfigCodec(int graphEncodeOptions, int graphDecodeOptions) {
         this.graphEncodeOptions = graphEncodeOptions;
         this.graphDecodeOptions = graphDecodeOptions;
@@ -65,6 +72,14 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      */
     protected abstract @NotNull Object readObject(@NotNull InputStream input) throws IOException;
 
+    /**
+     * Creates a {@link Graph.Node} object from a given target object; used during decoding. Must be overridden by
+     * codecs whose container objects (maps, lists) are not subclasses of {@link Map}, {@link Collection}, or are
+     * arrays.
+     *
+     * @param target the target object
+     * @return a new graph node
+     */
     protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof Map<?, ?> map) {
             return Graph.node(new Iterator<>() {
@@ -127,11 +142,25 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         return ConfigPrimitive.of(object);
     }
 
+    /**
+     * Creates a {@link Graph.Output} corresponding to a map. May be overridden by subclasses wishing to further
+     * customize output {@link ConfigNode} generation during decoding.
+     *
+     * @param size the size of the map; this is a hint for more efficient construction and may be ignored
+     * @return a new output object linked to a ConfigNode
+     */
     protected @NotNull Graph.Output<ConfigElement, String> makeDecodeMap(int size) {
         ConfigNode node = new LinkedConfigNode(size);
         return Graph.output(node, (k, v, b) -> node.put(k, v));
     }
 
+    /**
+     * Creates a {@link Graph.Output} corresponding to a list. May be overriden by subclasses withing to further
+     * customize {@link ConfigList} generation during decoding.
+     *
+     * @param size the size of the map; this is a hint for more efficient construction and may be ignored
+     * @return a new output object linked to a ConfigList
+     */
     protected @NotNull Graph.Output<ConfigElement, String> makeDecodeCollection(int size) {
         ConfigList list = new ArrayConfigList(size);
         return Graph.output(list, (k, v, b) -> list.add(v));
@@ -147,6 +176,13 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      */
     protected abstract void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException;
 
+    /**
+     * Creates a {@link Graph.Node} object from a given target element; used during encoding. May be overridden to
+     * enable support for additional container-like implementations of {@link ConfigElement}, if necessary.
+     *
+     * @param target the target object
+     * @return a new graph node
+     */
     protected @NotNull Graph.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
         if (target.isNode()) {
             ConfigNode elementNode = target.asNode();
@@ -185,11 +221,25 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         return element.asScalar();
     }
 
+    /**
+     * Creates a {@link Graph.Output} bound to a {@link LinkedHashMap}, used during encoding. Subclasses may override
+     * this to customize the objects produced during encoding.
+     *
+     * @param size the size hint; may be ignored
+     * @return a new graph output bound to a map
+     */
     protected @NotNull Graph.Output<Object, String> makeEncodeMap(int size) {
         Map<String, Object> map = new LinkedHashMap<>(size);
         return Graph.output(map, (k, v, b) -> map.put(k, v));
     }
 
+    /**
+     * Creates a {@link Graph.Output} bound to an {@link ArrayList}, used during encoding. Subclasses may override
+     * this to customize the objects produced during encoding.
+     *
+     * @param size the size hint; may be ignored
+     * @return a new graph output bound to a collection
+     */
     protected @NotNull Graph.Output<Object, String> makeEncodeCollection(int size) {
         Collection<Object> collection = new ArrayList<>(size);
         return Graph.output(collection, (k, v, b) -> collection.add(v));

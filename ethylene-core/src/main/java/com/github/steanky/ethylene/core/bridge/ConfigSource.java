@@ -32,7 +32,6 @@ public interface ConfigSource {
      * @param element the element to write to the in
      * @return a {@link CompletableFuture} object, which may be used to query or await the completion of the write
      * operation. {@link CompletableFuture#get()} will return null for the returned value.
-     * @throws NullPointerException if element is null
      */
     @NotNull CompletableFuture<Void> write(@NotNull ConfigElement element);
 }

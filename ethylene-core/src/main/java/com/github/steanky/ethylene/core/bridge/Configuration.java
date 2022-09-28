@@ -15,11 +15,15 @@ import java.util.concurrent.*;
 
 /**
  * Contains many static utility methods to simplify the process of reading and writing configuration data from a variety
- * of sources, either synchronously or asynchronously. Asynchronous methods generally support user-supplied
- * {@link Executor}s, but in the event one is not given, an overload exists which uses {@link ForkJoinPool#commonPool()}
- * as a default.<p>
+ * of sources, either synchronously or asynchronously.
+ * <p>
+ * Asynchronous methods (methods whose names end in {@code async}) generally support user-supplied {@link Executor}s,
+ * but in the event one is not given, an overload exists which uses {@link ForkJoinPool#commonPool()} as a default.
  * <p>
  * All methods, unless otherwise noted, will throw a {@link NullPointerException} if any of their arguments are null.
+ * Synchronous read and write methods will throw {@link IOException}s if an IO error occurs, which will include any
+ * problems relating to processing {@link ConfigElement}s. Asynchronous methods will have their
+ * {@link CompletableFuture} objects completed exceptionally with the corresponding exception in this case.
  */
 @SuppressWarnings("unused")
 public final class Configuration {
@@ -169,7 +173,6 @@ public final class Configuration {
      * @param inputStream the InputStream to read from
      * @param codec       the ConfigCodec which will be used to decode the input data
      * @return a {@link ConfigElement} object representing the decoded configuration data
-     * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
      */
     public static @NotNull ConfigElement read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec)
         throws IOException {
@@ -231,7 +234,6 @@ public final class Configuration {
      * @param processor   the processor used to convert a ConfigElement into arbitrary data
      * @param <TData>     the type of data to read
      * @return an object representing the data from the input stream
-     * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
      */
     public static <TData> TData read(@NotNull InputStream inputStream, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? extends TData> processor) throws IOException {
@@ -364,7 +366,6 @@ public final class Configuration {
      * @param processor    the processor used to convert a ConfigElement into arbitrary data
      * @param data         the data object to write
      * @param <TData>      the type of data to write
-     * @throws IOException if an IO error occurs when writing to the stream
      */
     public static <TData> void write(@NotNull OutputStream outputStream, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? super TData> processor, TData data) throws IOException {
@@ -487,7 +488,6 @@ public final class Configuration {
      * @param processor the processor used to convert a ConfigElement into arbitrary data
      * @param <TData>   the type of data to read
      * @return an object representing the data from the input stream
-     * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
      */
     public static <TData> TData read(@NotNull String input, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? extends TData> processor) throws IOException {
@@ -551,7 +551,6 @@ public final class Configuration {
      * @param element the ConfigElement to write
      * @param codec   the ConfigCodec used to decode element
      * @return a string containing the encoded data present in element
-     * @throws IOException if an IO error occurs
      */
     public static @NotNull String write(@NotNull ConfigElement element, @NotNull ConfigCodec codec) throws IOException {
         Objects.requireNonNull(element);
@@ -610,7 +609,6 @@ public final class Configuration {
      * @param data      the data object to write
      * @param <TData>   the type of data to write
      * @return a string containing the encoded data present in element
-     * @throws IOException if an IO error occurs when writing to the stream
      */
     public static <TData> @NotNull String write(@NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? super TData> processor, TData data) throws IOException {
@@ -671,8 +669,6 @@ public final class Configuration {
      * @param path  the path pointing to the file to read from
      * @param codec the codec to use to decode the file
      * @return a {@link ConfigElement} representing the file's configuration data
-     * @throws IOException          if the config data contained in the file is invalid or if an IO error occurred
-     * @throws NullPointerException if any of the arguments are null
      */
     public static @NotNull ConfigElement read(@NotNull Path path, @NotNull ConfigCodec codec) throws IOException {
         Objects.requireNonNull(path);
@@ -728,7 +724,6 @@ public final class Configuration {
      * @param processor the processor used to convert a ConfigElement into arbitrary data
      * @param <TData>   the type of data to read
      * @return an object representing the data from the input stream
-     * @throws IOException if an IO error occurs or the InputStream does not contain valid data for the codec
      */
     public static <TData> TData read(@NotNull Path path, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? extends TData> processor) throws IOException {

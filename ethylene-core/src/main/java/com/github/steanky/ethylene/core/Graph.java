@@ -9,7 +9,9 @@ import java.util.function.Supplier;
 
 /**
  * This utility class can be used to aid the process of designing generalized topology-preserving object graph
- * transformations.
+ * transformations. It is used by many of Ethylene's components, whenever it is necessary to deeply traverse graph-like
+ * structures of any kind, or create a new topologically-equivalent graph comprised of different objects from a given
+ * input graph.
  */
 public final class Graph {
     //shared empty accumulator which is just a no-op
@@ -42,6 +44,25 @@ public final class Graph {
             ArrayDeque::new, flags);
     }
 
+    /**
+     * Processes the given input graph, starting at the root object {@code rootInput}.
+     * <p>
+     *
+     *
+     * @param rootInput
+     * @param nodeFunction
+     * @param containerPredicate
+     * @param scalarMapper
+     * @param visitKeyMapper
+     * @param visitedSupplier
+     * @param stackSupplier
+     * @param flags
+     * @return
+     * @param <TIn>
+     * @param <TOut>
+     * @param <TKey>
+     * @param <TVisit>
+     */
     public static <TIn, TOut, TKey, TVisit> TOut process(TIn rootInput,
         @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
         @NotNull Predicate<? super TIn> containerPredicate, @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
