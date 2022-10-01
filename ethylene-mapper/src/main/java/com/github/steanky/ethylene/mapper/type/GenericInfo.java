@@ -117,7 +117,7 @@ class GenericInfo {
             try {
                 //wait for a TypeReference to enter the queue
                 //this happens when its associated type is garbage-collected
-                //if there is a parent type, we need to remove it from the map
+                //if there is a parent type, we need to remove it from its map
                 TypeReference reference = (TypeReference) queue.remove();
                 WeakType ownerType = reference.parent == null ? null : reference.parent.get();
 
@@ -157,8 +157,8 @@ class GenericInfo {
      * returned type is guaranteed to be safe for storage in a {@link Reference}, meaning that it will only be garbage
      * collected when:
      * <ul>
-     *   <li>{@code classLoader} is garbage collected, or</li>
-     *   <li>one of the <b>child types</b> of the provided type is garbage collected.</li>
+     *   <li>it is a {@link Class} whose {@link ClassLoader} has been garbage collected</li>
+     *   <li>it is a {@link Type} object with a child type that has been garbage collected</li>
      * </ul>
      * Child types are defined as types that comprise another type. For example, {@link ParameterizedType} may have any
      * number of "type parameters" who are in this case its children. Likewise, {@link WildcardType} has upper and lower
@@ -303,7 +303,8 @@ class GenericInfo {
         }
 
         byte[] encodedMetadata = metadata == null ? NIL : CHARSET.encode(metadata).array();
-        //save first byte for type indicator, nameChars.length for length, rest for components
+
+        //save first byte for type indicator, space for encoded metadata, space for null byte separators
         byte[] composite =
             new byte[2 + totalComponentLength + encodedMetadata.length + (Math.max(0, components.length - 1))];
         composite[0] = typeIdentifier;

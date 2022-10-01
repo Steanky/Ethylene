@@ -395,9 +395,7 @@ public abstract class Token<T> implements Supplier<Type> {
             throw new IllegalStateException("This token does not represent an array type");
         }
 
-        Type component = TypeUtils.getArrayComponentType(type);
-        ClassLoader loader = ReflectionUtils.getClassLoader(component);
-        return Token.ofType(GenericInfo.resolveType(component));
+        return Token.ofType(GenericInfo.resolveType(TypeUtils.getArrayComponentType(type)));
     }
 
     /**

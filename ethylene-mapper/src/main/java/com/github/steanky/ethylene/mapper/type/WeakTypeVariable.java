@@ -54,9 +54,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
             GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this, type.getClassLoader());
             this.genericDeclarationSupplier =
                 () -> (TDec) ReflectionUtils.resolve(genericDeclarationReference, className);
-        } else if (genericDeclaration instanceof Method || genericDeclaration instanceof Constructor<?>) {
-            Executable executable = (Executable) genericDeclaration;
-
+        } else if (genericDeclaration instanceof Executable executable) {
             //methods/ctors are more complex: retain enough information to resolve the executable + retain softref for
             //caching purposes
             Class<?> declaringClass = executable.getDeclaringClass();
@@ -77,7 +75,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
             Mutable<Reference<TDec>> executableReference = new MutableObject<>(new SoftReference<>(genericDeclaration));
             boolean isMethod = genericDeclaration instanceof Method;
             GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this, declaringClass.getClassLoader());
-            this.genericDeclarationSupplier = (Supplier<TDec>) () -> {
+            this.genericDeclarationSupplier = () -> {
                 TDec cachedDeclaration = executableReference.getValue().get();
                 if (cachedDeclaration != null) {
                     return cachedDeclaration;

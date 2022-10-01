@@ -11,6 +11,9 @@ import java.util.Objects;
  * primitives as well as String are compatible.
  */
 public final class ConfigPrimitive implements ConfigElement {
+    /**
+     * The shared {@link ConfigPrimitive} containing null.
+     */
     public static final ConfigPrimitive NULL = new ConfigPrimitive(null);
 
     private final Object object;
