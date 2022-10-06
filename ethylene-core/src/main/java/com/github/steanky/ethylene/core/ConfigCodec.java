@@ -61,9 +61,22 @@ public interface ConfigCodec {
      */
     @NotNull String getPreferredExtension();
 
+    /**
+     * Gets the name of this codec. This is generally a human-readable abbreviation used to refer to the codec, as in
+     * the case of JSON, TOML, etc.
+     *
+     * @return the name of this codec
+     */
     @NotNull String getName();
 
-    default @NotNull EnumSet<ElementType> supportedTopLevelTypes() {
+    /**
+     * Returns a new {@link Set} describing all the {@link ElementType}s which may be found as a top-level element for
+     * this codec. The "top level element" is the element directly returned by a call to
+     * {@link ConfigCodec#decode(InputStream)}.
+     *
+     * @return the valid top-level types
+     */
+    default @NotNull Set<ElementType> supportedTopLevelTypes() {
         return EnumSet.of(ElementType.NODE);
     }
 }

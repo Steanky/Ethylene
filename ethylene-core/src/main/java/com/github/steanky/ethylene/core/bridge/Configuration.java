@@ -295,8 +295,6 @@ public final class Configuration {
      * @param outputStream the OutputStream to write to
      * @param codec        the codec to use to encode the data
      * @param element      the element that will be written
-     * @throws IOException          if an IO error occurs when writing to the stream
-     * @throws NullPointerException if any of the arguments are null
      */
     public static void write(@NotNull OutputStream outputStream, @NotNull ConfigCodec codec,
         @NotNull ConfigElement element) throws IOException {
@@ -434,8 +432,6 @@ public final class Configuration {
      * @param input the string to read from
      * @param codec the {@link ConfigCodec} which will be used to decode the input string
      * @return a {@link ConfigElement} object representing the decoded configuration data
-     * @throws IOException          if the string does not contain valid data for the codec
-     * @throws NullPointerException if any of the arguments are null
      */
     public static @NotNull ConfigElement read(@NotNull String input, @NotNull ConfigCodec codec) throws IOException {
         Objects.requireNonNull(input);
@@ -786,7 +782,6 @@ public final class Configuration {
      * @param path    a path pointing to the file to write to
      * @param element the element to write
      * @param codec   the codec to use
-     * @throws IOException if an IO error occurred
      */
     public static void write(@NotNull Path path, @NotNull ConfigElement element, @NotNull ConfigCodec codec)
         throws IOException {
@@ -852,7 +847,6 @@ public final class Configuration {
      * @param processor the processor used to convert a ConfigElement into arbitrary data
      * @param data      the data object to write
      * @param <TData>   the type of data to write
-     * @throws IOException if an IO error occurs when writing to the stream
      */
     public static <TData> void write(@NotNull Path path, @NotNull ConfigCodec codec,
         @NotNull ConfigProcessor<? super TData> processor, TData data) throws IOException {

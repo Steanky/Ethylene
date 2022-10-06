@@ -66,7 +66,7 @@ public class BasicTypeResolver implements TypeResolver {
 
         ElementType hint = typeHinter.getHint(type);
         if (type.isArrayType() || type.isPrimitiveOrWrapper()) {
-            if (element != null && !hint.compatible(element)) {
+            if (element != null && element.type() != hint) {
                 throw new MapperException("Incompatible type assignment '" + hint + "' to '" + type + "'");
             }
 
@@ -122,7 +122,7 @@ public class BasicTypeResolver implements TypeResolver {
         }
 
         //there was no defined "implementation" class, so try to intelligently guess one that will work with our element
-        if (element == null || hint.compatible(element)) {
+        if (element == null || hint == element.type()) {
             //trivial case: null elements are compatible with everything, directly-compatible hints are also good
             return type;
         }

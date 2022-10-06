@@ -56,8 +56,9 @@ public class YamlCodec extends AbstractConfigCodec {
 
     @Override
     protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
-        try {
-            Iterable<Object> objectIterable = loadSupplier.get().loadAllFromInputStream(input);
+        Load load = Objects.requireNonNull(loadSupplier.get(), "loadSupplier value");
+        try (input) {
+            Iterable<Object> objectIterable = load.loadAllFromInputStream(input);
             List<Object> objectList = new ArrayList<>();
             for (Object object : objectIterable) {
                 objectList.add(object);
@@ -76,16 +77,20 @@ public class YamlCodec extends AbstractConfigCodec {
 
     @Override
     protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
-        try {
-            StreamDataWriter writer = new YamlOutputStreamWriter(output, Charset.defaultCharset()) {
-                @Override
-                public void processIOException(IOException e) {
-                }
-            };
-
-            dumpSupplier.get().dump(object, writer);
-            writer.flush();
-        } catch (YamlEngineException exception) {
+        Dump dump = Objects.requireNonNull(dumpSupplier.get(), "dumpSupplier value");
+        try (YamlOutputStreamWriter writer = new YamlOutputStreamWriter(output, Charset.defaultCharset()) {
+            @Override
+            public void processIOException(IOException e) {
+            }
+        }) {
+            if (object instanceof Iterable<?> objects) {
+                dump.dumpAll(objects.iterator(), writer);
+            }
+            else {
+                dump.dump(object, writer);
+            }
+        }
+        catch (YamlEngineException exception) {
             throw new IOException(exception);
         }
     }
@@ -106,7 +111,7 @@ public class YamlCodec extends AbstractConfigCodec {
     }
 
     @Override
-    public @NotNull EnumSet<ElementType> supportedTopLevelTypes() {
+    public @NotNull Set<ElementType> supportedTopLevelTypes() {
         //always return a new set, EnumSet static methods produce modifiable collections
         return EnumSet.allOf(ElementType.class);
     }
