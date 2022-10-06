@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.signature.*;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -19,7 +20,7 @@ public interface MappingProcessorSource {
 
     class Builder {
         private static final Signature MAP_ENTRY_SIGNATURE =
-            Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Map.entry(objects[0], objects[1]),
+            Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Entry.of(objects[0], objects[1]),
                 (entry) -> List.of(Signature.type("key", Token.OBJECT, entry.getKey()),
                     Signature.type("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
                 Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
@@ -75,9 +76,9 @@ public interface MappingProcessorSource {
         }
 
         public @NotNull Builder withStandardTypeImplementations() {
-            typeImplementations.add(Entry.of(ArrayList.class, Collection.class));
-            typeImplementations.add(Entry.of(HashMap.class, Map.class));
-            typeImplementations.add(Entry.of(HashSet.class, Set.class));
+            typeImplementations.add(Map.entry(ArrayList.class, Collection.class));
+            typeImplementations.add(Map.entry(HashMap.class, Map.class));
+            typeImplementations.add(Map.entry(HashSet.class, Set.class));
             return this;
         }
 
@@ -128,15 +129,13 @@ public interface MappingProcessorSource {
         }
 
         public @NotNull Builder withTypeImplementation(@NotNull Class<?> implementation, @NotNull Class<?> superclass) {
-            typeImplementations.add(
-                Entry.of(Objects.requireNonNull(implementation), Objects.requireNonNull(superclass)));
+            typeImplementations.add(Map.entry(implementation, superclass));
             return this;
         }
 
         public @NotNull Builder withSignatureBuilderPreference(@NotNull Class<?> type,
             @NotNull SignatureBuilder signatureBuilder) {
-            signatureBuilderPreferences.add(
-                Entry.of(Objects.requireNonNull(type), Objects.requireNonNull(signatureBuilder)));
+            signatureBuilderPreferences.add(Map.entry(type, signatureBuilder));
             return this;
         }
 

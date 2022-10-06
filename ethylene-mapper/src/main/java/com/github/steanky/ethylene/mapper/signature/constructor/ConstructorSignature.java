@@ -78,8 +78,12 @@ public class ConstructorSignature implements Signature {
 
     private static Map.Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
         Name parameterName = parameter.getAnnotation(Name.class);
-        return Entry.of(parameterHasName ? parameter.getName() : (parameterName != null ? parameterName.value() : null),
-            Token.ofType(parameter.getParameterizedType()));
+        Token<?> parameterType = Token.ofType(parameter.getParameterizedType());
+        if (parameterName != null) {
+            return Entry.of(parameterName.value(), parameterType);
+        }
+
+        return Entry.of(parameterHasName ? parameter.getName() : null, parameterType);
     }
 
     @Override

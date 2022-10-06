@@ -16,6 +16,9 @@ import java.util.Objects;
  * public API.
  */
 public class ReflectionUtils {
+    /**
+     * The shared empty type array.
+     */
     public static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
     /**

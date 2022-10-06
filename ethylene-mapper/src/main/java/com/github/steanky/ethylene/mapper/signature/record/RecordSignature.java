@@ -130,7 +130,7 @@ public class RecordSignature implements Signature {
         try {
             if (widenAccess) {
                 Constructor<?> constructor = rawClass.getDeclaredConstructor(types);
-                if (!constructor.canAccess(null) && !constructor.trySetAccessible()) {
+                if (!constructor.trySetAccessible()) {
                     throw new MapperException("Failed to widen access for record constructor '" + constructor + "'");
                 }
 
@@ -150,9 +150,8 @@ public class RecordSignature implements Signature {
         RecordComponent[] recordComponents = resolveComponents();
         Class<?>[] types = new Class[recordComponents.length];
 
-        int i = 0;
-        for (RecordComponent component : recordComponents) {
-            types[i++] = component.getType();
+        for (int i = 0; i < recordComponents.length; i++) {
+            types[i] = recordComponents[i].getType();
         }
 
         return types;

@@ -90,8 +90,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         private int i = 0;
 
                         @Override
-                        public void accept(Object key, Mutable<Object> value, boolean circular) {
-                            if (circular && !signature.hasBuildingObject()) {
+                        public void accept(Object key, Mutable<Object> value, boolean visited) {
+                            if (visited && !signature.hasBuildingObject()) {
                                 throw new MapperException("Signatures which do not supply building objects may " +
                                     "not be used to construct circular references");
                             }

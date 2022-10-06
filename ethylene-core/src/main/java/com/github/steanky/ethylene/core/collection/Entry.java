@@ -6,16 +6,49 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Convenience extension of {@link Map.Entry} that provides a static utility method for creating entries which support
+ * Convenience extension of {@link Map.Entry} that provides static utility methods for creating entries which support
  * null keys and values.
+ * <p>
+ * In addition to complying with the general contract of {@link Map.Entry}, implementations must be equality-comparable
+ * to all other {@link Map.Entry}.
  *
- * @param <TFirst>  the key type
- * @param <TSecond> the value type
+ * @param <TKey>  the key type
+ * @param <TValue> the value type
  */
-public interface Entry<TFirst, TSecond> extends Map.Entry<TFirst, TSecond> {
+public interface Entry<TKey, TValue> extends Map.Entry<TKey, TValue> {
+    /**
+     * Abstract implementation of {@link Entry} which supplies basic {@link Object#hashCode()} and
+     * {@link Object#equals(Object)} methods that comply with the general contract of {@link Map.Entry}.
+     *
+     * @param <TKey>  the key type
+     * @param <TValue> the value type
+     */
+    abstract class AbstractEntry<TKey, TValue> implements Entry<TKey, TValue> {
+        @Override
+        public final int hashCode() {
+            return Objects.hash(getKey(), getValue());
+        }
+
+        @Override
+        public final boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            if (obj == this) {
+                return true;
+            }
+
+            if (obj instanceof Map.Entry<?, ?> entry) {
+                return Objects.equals(getKey(), entry.getKey()) && Objects.equals(getValue(), entry.getValue());
+            }
+
+            return false;
+        }
+    }
 
     /**
-     * Creates a new, immutable map entry which may have null keys and values.
+     * Creates a new, immutable key and value map entry which may have null keys and values.
      *
      * @param key       the key object
      * @param value     the value object
@@ -24,7 +57,7 @@ public interface Entry<TFirst, TSecond> extends Map.Entry<TFirst, TSecond> {
      * @return a new immutable entry
      */
     static <TFirst, TSecond> Map.@NotNull Entry<TFirst, TSecond> of(TFirst key, TSecond value) {
-        return new Entry<>() {
+        return new AbstractEntry<>() {
             @Override
             public TFirst getKey() {
                 return key;
@@ -36,36 +69,70 @@ public interface Entry<TFirst, TSecond> extends Map.Entry<TFirst, TSecond> {
             }
 
             @Override
-            public int hashCode() {
-                return Objects.hash(key, value);
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj == null) {
-                    return false;
-                }
-
-                if (obj == this) {
-                    return true;
-                }
-
-                if (obj instanceof Map.Entry<?, ?> entry) {
-                    return Objects.equals(key, entry.getKey()) && Objects.equals(value, entry.getValue());
-                }
-
-                return false;
-            }
-
-            @Override
             public String toString() {
                 return "ImmutableEntry{key=" + key + ", value=" + value + "}";
             }
         };
     }
 
+    /**
+     * Creates a new, mutable key and value map entry which may have null keys and values.
+     *
+     * @param key the initial key object
+     * @param value the initial value object
+     * @return a new mutable entry
+     * @param <TFirst>  the key type
+     * @param <TSecond> the value type
+     */
+    static <TFirst, TSecond> Map.@NotNull Entry<TFirst, TSecond> mutable(TFirst key, TSecond value) {
+        return new AbstractEntry<>() {
+            private TFirst key;
+            private TSecond value;
+
+            @Override
+            public TFirst getKey() {
+                return key;
+            }
+
+            @Override
+            public TSecond getValue() {
+                return value;
+            }
+
+            @Override
+            public TSecond setValue(TSecond value) {
+                TSecond old = this.value;
+                this.value = value;
+                return old;
+            }
+
+            @Override
+            public TFirst setKey(TFirst key) {
+                TFirst old = this.key;
+                this.key = key;
+                return old;
+            }
+
+            @Override
+            public String toString() {
+                return "MutableEntry{key=" + key + ", value=" + value + "}";
+            }
+        };
+    }
+
     @Override
-    default TSecond setValue(TSecond value) {
-        throw new UnsupportedOperationException("Immutable entry");
+    default TValue setValue(TValue value) {
+        throw new UnsupportedOperationException("Value-immutable entry");
+    }
+
+    /**
+     * Sets the key value.
+     *
+     * @param key the new key value
+     * @throws UnsupportedOperationException if this is not an immutable {@link Entry}
+     * @return the old key
+     */
+    default TKey setKey(TKey key) {
+        throw new UnsupportedOperationException("Key-immutable entry");
     }
 }

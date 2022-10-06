@@ -93,11 +93,11 @@ public class FieldSignature implements Signature {
             }
 
             if (defaultExclude) {
-                if (!field.isAnnotationPresent(Include.class)) {
+                if (!includePresent) {
                     //exclude fields by default, require @Include annotation
                     continue;
                 }
-            } else if (field.isAnnotationPresent(Exclude.class)) {
+            } else if (excludePresent) {
                 //include fields by default, require @Exclude
                 continue;
             } else if (!widenAccess && (!Modifier.isPublic(modifiers) || Modifier.isFinal(modifiers))) {
