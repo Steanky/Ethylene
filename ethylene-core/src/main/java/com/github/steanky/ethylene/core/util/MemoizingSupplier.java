@@ -29,7 +29,7 @@ public final class MemoizingSupplier<TData> implements Supplier<TData> {
      * @return a supplier that performs value caching
      * @param <T> the type of object returned by the supplier
      */
-    public static <T> Supplier<T> of(@NotNull Supplier<? extends T> supplier) {
+    public static <T> @NotNull Supplier<T> of(@NotNull Supplier<? extends T> supplier) {
         Objects.requireNonNull(supplier);
         return new MemoizingSupplier<>(supplier);
     }

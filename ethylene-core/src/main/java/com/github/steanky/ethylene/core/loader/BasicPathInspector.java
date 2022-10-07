@@ -4,16 +4,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 
-public class BasicPathNameInspector implements PathNameInspector {
+/**
+ * Basic implementation of {@link PathInspector}.
+ */
+public class BasicPathInspector implements PathInspector {
     /**
      * The singleton instance. This class is immutable.
      */
-    public static final PathNameInspector INSTANCE = new BasicPathNameInspector();
+    public static final PathInspector INSTANCE = new BasicPathInspector();
 
     private static final char EXTENSION_SEPARATOR = '.';
     private static final String EMPTY_STRING = "";
 
-    private BasicPathNameInspector() {
+    private BasicPathInspector() {
 
     }
 

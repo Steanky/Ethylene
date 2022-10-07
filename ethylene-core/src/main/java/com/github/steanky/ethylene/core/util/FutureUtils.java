@@ -18,7 +18,7 @@ public final class FutureUtils {
     /**
      * Completes the given callable. Asynchronicity (or lack thereof) is determined by the provided Executor, which if
      * non-null will be used to asynchronously execute the callable. This case is semantically identical to
-     * {@link FutureUtils#completeCallableAsync(Callable, Executor)}. Otherwise, if non-null, this method is equivalent
+     * {@link FutureUtils#completeCallableAsync(Callable, Executor)}. Otherwise, if null, this method is equivalent
      * to {@link FutureUtils#completeCallableSync(Callable)}.
      *
      * @param callable the callable to invoke

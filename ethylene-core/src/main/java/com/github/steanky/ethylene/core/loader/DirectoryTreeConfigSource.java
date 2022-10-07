@@ -28,6 +28,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A specialized {@link ConfigSource} implementation based off of a filesystem, which may consist of any number of
+ * nested directories, multiple files, etc, when given a root {@link Path} to use. If this root path is a file, it will
+ * be read to and written from normally. Reads and writes may occur synchronously or asynchronously. If an
+ * {@link Executor} is provided when constructing this instance, it will be used to asynchronously perform reads and
+ * writes. If {@code null} is passed instead, reads and writes will proceed synchronously.
+ */
 public class DirectoryTreeConfigSource implements ConfigSource {
     private static final LinkOption[] EMPTY_LINK_OPTION_ARRAY = new LinkOption[0];
     private static final LinkOption[] NOFOLLOW_LINKS = new LinkOption[]{LinkOption.NOFOLLOW_LINKS};
@@ -36,7 +43,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
 
     private final Path rootPath;
     private final CodecResolver codecResolver;
-    private final PathNameInspector pathNameInspector;
+    private final PathInspector pathNameInspector;
     private final ConfigCodec preferredCodec;
     private final String preferredExtensionName;
     private final String preferredExtension;
@@ -44,12 +51,24 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     private final boolean supportSymlinks;
     private final FileVisitOption[] fileVisitOptions;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param rootPath the root folder or file
+     * @param codecResolver the {@link CodecResolver} used to find codecs for specific files
+     * @param pathInspector the {@link PathInspector} used to extract path names and extensions
+     * @param preferredCodec the {@link ConfigCodec} to use when writing files that do not already exist
+     * @param executor the {@link Executor} to use to asynchronously read and write files; when null, reads and writes
+     *                 will proceed asynchronously
+     * @param supportSymlinks whether to read and create symbolic links when faced with circular/duplicate references
+     *                        in the input data or file hierarchy
+     */
     public DirectoryTreeConfigSource(@NotNull Path rootPath, @NotNull CodecResolver codecResolver,
-        @NotNull PathNameInspector pathNameInspector, @NotNull ConfigCodec preferredCodec, @Nullable Executor executor,
+        @NotNull PathInspector pathInspector, @NotNull ConfigCodec preferredCodec, @Nullable Executor executor,
         boolean supportSymlinks) {
         this.rootPath = Objects.requireNonNull(rootPath);
         this.codecResolver = Objects.requireNonNull(codecResolver);
-        this.pathNameInspector = Objects.requireNonNull(pathNameInspector);
+        this.pathNameInspector = Objects.requireNonNull(pathInspector);
         this.preferredCodec = Objects.requireNonNull(preferredCodec);
 
         this.preferredExtensionName = preferredCodec.getPreferredExtension();
@@ -208,9 +227,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                     } else {
                         //path doesn't exist, but that could be because of an extension
                         //filter the existing paths to those whose name matches
-                        List<Path> targets =
-                            existingPaths.stream().filter(path -> pathNameInspector.getName(path).equals(elementName))
-                                .toList();
+                        List<Path> targets = existingPaths.stream().filter(path -> pathNameInspector.getName(path)
+                            .equals(elementName)).toList();
 
                         if (targets.isEmpty()) {
                             //no file found at all - we'll write a new one using our preferred extension

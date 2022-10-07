@@ -7,9 +7,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A {@link CodecResolver} which allows registration.
+ */
 public class RegistrableCodecResolver implements CodecResolver {
     private final Map<String, ConfigCodec> codecMap;
 
+    /**
+     * Creates a new instance of this class with no registered codecs.
+     */
     public RegistrableCodecResolver() {
         this.codecMap = new HashMap<>(4);
     }
@@ -29,6 +35,11 @@ public class RegistrableCodecResolver implements CodecResolver {
         return codecMap.containsKey(extension);
     }
 
+    /**
+     * Registers a particular codec with this resolver.
+     *
+     * @param codec the codec to resolve
+     */
     public void registerCodec(@NotNull ConfigCodec codec) {
         Set<String> extensions = codec.getPreferredExtensions();
         if (extensions.isEmpty()) {
