@@ -162,7 +162,6 @@ public final class Graph {
                         }
 
                         node.output.accumulator.accept(entryKey, out, circular);
-
                     }
 
                     continue;
@@ -436,6 +435,7 @@ public final class Graph {
     public static final class Node<TIn, TOut, TKey> {
         private final Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator;
         private final Output<TOut, ? super TKey> output;
+
         private NodeResult<TKey, TOut> result;
 
         private Node(@NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator,

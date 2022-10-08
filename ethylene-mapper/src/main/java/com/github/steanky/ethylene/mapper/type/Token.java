@@ -189,12 +189,26 @@ public abstract class Token<T> implements Supplier<Type> {
         }
     }
 
+    /**
+     * Creates a new {@link Token} containing the provided {@link Type}.
+     *
+     * @param type the type to store
+     * @return a new token containing the type
+     */
     public static @NotNull Token<?> ofType(@NotNull Type type) {
         Objects.requireNonNull(type);
         return new Token<>(GenericInfo.resolveType(type)) {
         };
     }
 
+    /**
+     * Creates a new {@link Token} containing the provided class. Useful when it is necessary to supply a non-wildcard
+     * type.
+     *
+     * @param type the class which will be contained in the token
+     * @return the new token
+     * @param <T> the type contained in the token
+     */
     public static <T> @NotNull Token<T> ofClass(@NotNull Class<T> type) {
         Objects.requireNonNull(type);
         return new Token<>(type) {
@@ -468,7 +482,7 @@ public abstract class Token<T> implements Supplier<Type> {
         Token<?>[] tokens = new Token[args.length];
         for (int i = 0; i < tokens.length; i++) {
             //don't need to re-resolve these types, if they exist, they have already been resolved
-            tokens[i] = new Token<>(args[i]) {
+            tokens[i] = new Token<>(GenericInfo.resolveType(args[i])) {
             };
         }
 

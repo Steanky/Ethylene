@@ -20,6 +20,12 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+/**
+ * A {@link ConfigProcessor} which uses the object mapper API in order to convert most types to and from
+ * {@link ConfigElement}s.
+ *
+ * @param <T> the type of object to serialize/deserialize
+ */
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private static final int GRAPH_OPTIONS =
         Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES | Graph.Options.LAZY_ACCUMULATION;
@@ -148,8 +154,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             Token<?> objectType = typeResolver.resolveType(typedObject.type(), null);
                             SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
 
-                            return Entry.of(typedObject.name(),
-                                new ElementEntry(objectType, typedObject.value(), thisMatcher));
+                            return Entry.of(typedObject.name(), new ElementEntry(objectType, typedObject.value(),
+                                thisMatcher));
                         }
                     }, Graph.output(nodeEntry.element, (String key, ConfigElement value, boolean circular) -> {
                         if (target.isList()) {
