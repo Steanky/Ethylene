@@ -5,6 +5,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public record MatchingSignature(@NotNull Signature signature, Collection<ConfigElement> elements,
+public record MatchingSignature(@NotNull Signature<?> signature, Collection<ConfigElement> elements,
                                 Collection<Signature.TypedObject> objects, int size) {
 }

@@ -97,7 +97,7 @@ public final class FutureUtils {
      * @param <TReturn>        The return value
      * @param <TErr>           The type of {@link Throwable} to throw
      * @return the result of Future#get()
-     * @throws TErr if an ExecutionException occurs when calling the future's get() method
+     * @throws TErr                 if an ExecutionException occurs when calling the future's get() method
      * @throws InterruptedException if the call to {@link Future#get()} is interrupted
      */
     public static <TReturn, TErr extends Throwable> TReturn getAndWrapException(

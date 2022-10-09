@@ -10,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+/**
+ * Basic implementation of {@link ScalarSource}.
+ */
 public class BasicScalarSource implements ScalarSource {
     private static final int ELEMENT_TYPE_SIZE = ElementType.values().length;
     private static final ScalarSignature<?>[] EMPTY_SIGNATURE_ARRAY = new ScalarSignature[0];
@@ -19,6 +22,12 @@ public class BasicScalarSource implements ScalarSource {
     private final TypeHinter typeHinter;
     private final Map<Class<?>, Map<ElementType, ScalarSignature<?>[]>> returnTypeMap;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param typeHinter the {@link TypeHinter} used to obtain information about types
+     * @param signatures a collection of custom {@link ScalarSignature} objects
+     */
     @SuppressWarnings("unchecked")
     public BasicScalarSource(@NotNull TypeHinter typeHinter,
         @NotNull Collection<? extends ScalarSignature<?>> signatures) {

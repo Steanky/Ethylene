@@ -16,17 +16,29 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.util.*;
 
+/**
+ * Basic implementation of {@link SignatureMatcher.Source}.
+ */
 public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
-    private static final Signature[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
+    private static final Signature<?>[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
 
     private final TypeHinter typeHinter;
     private final SignatureBuilder.Selector signatureSelector;
 
     private final Cache<Type, SignatureMatcher> signatureCache;
-    private final Cache<Class<?>, Set<Signature>> customSignatureCache;
+    private final Cache<Class<?>, Set<Signature<?>>> customSignatureCache;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param typeHinter        the {@link TypeHinter} used to obtain information about types
+     * @param signatureSelector the {@link SignatureBuilder.Selector} used to select signature builders for custom
+     *                          objects
+     * @param customSignatures  a collection of custom signatures
+     */
     public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter,
-        @NotNull SignatureBuilder.Selector signatureSelector, @NotNull Collection<Signature> customSignatures) {
+        @NotNull SignatureBuilder.Selector signatureSelector,
+        @NotNull Collection<? extends Signature<?>> customSignatures) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.signatureSelector = Objects.requireNonNull(signatureSelector);
 
@@ -36,8 +48,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
         registerCustomSignatures(customSignatures);
     }
 
-    private void registerCustomSignatures(Collection<Signature> signatures) {
-        for (Signature signature : signatures) {
+    private void registerCustomSignatures(Collection<? extends Signature<?>> signatures) {
+        for (Signature<?> signature : signatures) {
             customSignatureCache.get(signature.returnType().rawType(), ignored -> new HashSet<>(1)).add(signature);
         }
     }
@@ -48,8 +60,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
         //this is fine for all subclasses of Type that can be returned by tokens, but not for tokens themselves as they
         //are not expected to be cached in any way
         return signatureCache.get(token.get(), ignored -> {
-            for (Class<?> superclass : ClassUtils.hierarchy(token.rawType(), ClassUtils.Interfaces.INCLUDE)) {
-                Set<Signature> signatures = customSignatureCache.getIfPresent(superclass);
+            for (Class<?> superclass : token.hierarchy(ClassUtils.Interfaces.INCLUDE)) {
+                Set<Signature<?>> signatures = customSignatureCache.getIfPresent(superclass);
                 if (signatures != null) {
                     return new BasicSignatureMatcher(signatures.toArray(EMPTY_SIGNATURE_ARRAY), typeHinter);
                 }
@@ -58,20 +70,21 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
             return switch (typeHinter.getHint(token)) {
                 case LIST -> {
                     if (token.isArrayType()) {
-                        Signature[] arraySignature = new Signature[]{new ArraySignature(token.componentType())};
+                        Signature<?>[] arraySignature = new Signature[]{new ArraySignature<>(token.componentType())};
                         yield new BasicSignatureMatcher(arraySignature, typeHinter);
                     } else {
                         if (token.isSubclassOf(Collection.class)) {
                             Token<?> parameterized = token.parameterize(token.supertypeVariables(Collection.class));
                             Token<?>[] args = parameterized.actualTypeParameters();
-                            Signature[] collectionSignature = new Signature[]{new CollectionSignature(args[0], token)};
+                            Signature<?>[] collectionSignature =
+                                new Signature[]{new CollectionSignature<>(args[0], token)};
 
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
                         } else if (token.isSubclassOf(Map.class)) {
                             Token<?> parameterized = token.parameterize(token.supertypeVariables(Map.class));
                             Token<?>[] args = parameterized.actualTypeParameters();
 
-                            Signature[] mapSignature = new Signature[]{new MapSignature(args[0], args[1], token)};
+                            Signature<?>[] mapSignature = new Signature[]{new MapSignature<>(args[0], args[1], token)};
                             yield new BasicSignatureMatcher(mapSignature, typeHinter);
                         }
                     }

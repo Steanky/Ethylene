@@ -10,18 +10,18 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public class BasicSignatureMatcher implements SignatureMatcher {
-    private final Signature[] signatures;
+    private final Signature<?>[] signatures;
     private final TypeHinter typeHinter;
 
-    public BasicSignatureMatcher(@NotNull Signature @NotNull [] signatures, @NotNull TypeHinter typeHinter) {
-        Signature[] copy = new Signature[signatures.length];
+    public BasicSignatureMatcher(@NotNull Signature<?> @NotNull [] signatures, @NotNull TypeHinter typeHinter) {
+        Signature<?>[] copy = new Signature[signatures.length];
         System.arraycopy(signatures, 0, copy, 0, signatures.length);
-        Arrays.sort(copy, Comparator.comparing(Signature::priority).reversed());
+        Arrays.sort(copy, Comparator.comparing(sig -> ((Signature<?>) sig).priority()).reversed());
         this.signatures = copy;
         this.typeHinter = Objects.requireNonNull(typeHinter);
     }
 
-    private MatchingSignature matchingFromObject(Signature signature, Object providedObject) {
+    private MatchingSignature matchingFromObject(Signature<?> signature, Object providedObject) {
         Objects.requireNonNull(providedObject);
 
         Collection<Signature.TypedObject> objectData = signature.objectData(providedObject);
@@ -75,7 +75,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         return new MatchingSignature(signature, null, typeCollection, length);
     }
 
-    private MatchingSignature matchingFromElement(Signature signature, ConfigElement providedElement) {
+    private MatchingSignature matchingFromElement(Signature<?> signature, ConfigElement providedElement) {
         Objects.requireNonNull(providedElement);
 
         boolean matchNames = signature.matchesArgumentNames();
@@ -133,7 +133,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
     private MatchingSignature signatureForElement(Token<?> typeToken, ConfigElement providedElement,
         Object providedObject) {
-        for (Signature signature : signatures) {
+        for (Signature<?> signature : signatures) {
             if (!signature.returnType().isSubclassOf(typeToken)) {
                 continue;
             }

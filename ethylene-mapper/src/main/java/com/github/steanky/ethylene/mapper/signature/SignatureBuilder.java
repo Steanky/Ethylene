@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 @FunctionalInterface
 public interface SignatureBuilder {
-    @NotNull Signature @NotNull [] buildSignatures(@NotNull Token<?> type);
+    @NotNull Signature<?> @NotNull [] buildSignatures(@NotNull Token<?> type);
 
     @FunctionalInterface
     interface Selector {

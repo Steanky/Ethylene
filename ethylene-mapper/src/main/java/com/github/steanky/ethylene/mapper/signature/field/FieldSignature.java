@@ -25,8 +25,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
-public class FieldSignature implements Signature {
-    private final Token<?> genericReturnType;
+public class FieldSignature<T> implements Signature<T> {
+    private final Token<T> genericReturnType;
 
     private final Reference<Class<?>> rawTypeReference;
     private final String rawTypeName;
@@ -36,7 +36,7 @@ public class FieldSignature implements Signature {
 
     private Collection<Map.Entry<String, Token<?>>> types;
 
-    public FieldSignature(@NotNull Token<?> genericReturnType) {
+    public FieldSignature(@NotNull Token<T> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
 
         Class<?> rawType = genericReturnType.rawType();
@@ -193,7 +193,7 @@ public class FieldSignature implements Signature {
     }
 
     @Override
-    public @NotNull Token<?> returnType() {
+    public @NotNull Token<T> returnType() {
         return genericReturnType;
     }
 

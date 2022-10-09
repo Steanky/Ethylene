@@ -27,9 +27,9 @@ public final class ConfigPrimitive implements ConfigElement {
      * a number of restricted types; otherwise, an {@link IllegalArgumentException} will be thrown.
      *
      * @param object the object to wrap
+     * @return a ConfigPrimitive instance
      * @throws IllegalArgumentException if the provided object is a type other than a String, Number, Boolean, or
      *                                  Character and is not null
-     * @return a ConfigPrimitive instance
      */
     public static @NotNull ConfigPrimitive of(@Nullable Object object) {
         if (object == null) {

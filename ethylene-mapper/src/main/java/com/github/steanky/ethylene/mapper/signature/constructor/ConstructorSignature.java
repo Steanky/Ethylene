@@ -28,7 +28,7 @@ import java.util.*;
 /**
  * Signature based off of a particular constructor.
  */
-public class ConstructorSignature implements Signature {
+public class ConstructorSignature<T> implements Signature<T> {
     private static final Comparator<? super Field> COMPARATOR = Comparator.comparing(field -> {
         Order order = field.getAnnotation(Order.class);
         if (order != null) {
@@ -38,7 +38,7 @@ public class ConstructorSignature implements Signature {
         return 0;
     });
 
-    private final Token<?> genericReturnType;
+    private final Token<T> genericReturnType;
     private final Reference<Class<?>> rawClassReference;
     private final String rawClassName;
     private final Reference<Class<?>>[] parameterTypes;
@@ -58,7 +58,7 @@ public class ConstructorSignature implements Signature {
     private Reference<Field[]> fieldsReference = new SoftReference<>(null);
 
     @SuppressWarnings("unchecked")
-    public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Token<?> genericReturnType) {
+    public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Token<T> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
         this.constructorReference = new SoftReference<>(Objects.requireNonNull(constructor));
 
@@ -181,7 +181,7 @@ public class ConstructorSignature implements Signature {
     }
 
     @Override
-    public @NotNull Token<?> returnType() {
+    public @NotNull Token<T> returnType() {
         return genericReturnType;
     }
 

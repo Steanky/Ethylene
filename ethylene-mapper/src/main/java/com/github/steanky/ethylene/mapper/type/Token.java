@@ -388,13 +388,14 @@ public abstract class Token<T> implements Supplier<Type> {
      *
      * @return a new token representing an array type
      */
-    public final @NotNull Token<?> arrayType() {
+    @SuppressWarnings("unchecked")
+    public final @NotNull Token<T[]> arrayType() {
         Type type = get();
         if (type instanceof Class<?> cls) {
-            return Token.ofType(cls.arrayType());
+            return (Token<T[]>) Token.ofType(cls.arrayType());
         }
 
-        return Token.ofType(GenericInfo.resolveType(new WeakGenericArrayType(type)));
+        return (Token<T[]>) Token.ofType(GenericInfo.resolveType(new WeakGenericArrayType(type)));
     }
 
     /**

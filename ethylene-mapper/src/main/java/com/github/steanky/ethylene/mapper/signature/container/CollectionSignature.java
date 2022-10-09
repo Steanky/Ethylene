@@ -13,8 +13,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class CollectionSignature extends ContainerSignatureBase {
-    public CollectionSignature(@NotNull Token<?> componentType, @NotNull Token<?> collectionClass) {
+public class CollectionSignature<T> extends ContainerSignatureBase<T> {
+    public CollectionSignature(@NotNull Token<?> componentType, @NotNull Token<T> collectionClass) {
         super(componentType, collectionClass);
     }
 

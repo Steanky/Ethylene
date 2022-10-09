@@ -13,7 +13,7 @@ probably won't approve ideas that:
 * Are related, but massively increase the scope of the project
 * Have already been done well by other people
 
-If you're reporting a bug, provide as many details as you can. I'll look into just about anything but it _really_ helps
+If you're reporting a bug, provide as many details as you can. I'll look into just about anything, but it _really_ helps
 if I have lots to go off of. I especially like it when bug reports include lots of code samples. There's no such thing
 as too much detail!
 
@@ -32,7 +32,7 @@ Pull requests should be made to the `dev` branch, not the `main` branch. If you 
 myself and correct any minor issues or inconsistencies. If your code doesn't work and I can't easily see the fix, I'll
 notify you.
 
-If you try to pull request something questionable, I might outright deny it. If you have doubts about whether or not
+If you try to pull request something questionable, I might outright deny it. If you have doubts about whether
 your contribution would be accepted, create an issue for it _first_, before writing any code.
 
 ### Style Guidelines
@@ -59,7 +59,7 @@ Code style isn't hugely important. However, contributions should follow some bas
     * Javadoc should be written in formal American English, without major typos or grammatical issues.
     * When mentioning other classes in Javadoc, use @link the first time it is mentioned. You don't have to do this
       for "common" classes like `String` or `Object`.
-    * Methods should, within reason, use @throws to describe all of the exceptions that can be thrown.
+    * Methods should, within reason, use @throws to describe all the exceptions that can be thrown.
 * Avoid duplicating code.
 * Don't use Lombok.
 * Avoid introducing unnecessary dependencies. For example, there's no need to add a dependency on Apache Commons if you'

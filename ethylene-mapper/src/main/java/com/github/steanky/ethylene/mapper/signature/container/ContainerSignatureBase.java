@@ -18,12 +18,12 @@ import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class ContainerSignatureBase implements Signature {
+public abstract class ContainerSignatureBase<T> implements Signature<T> {
     protected final Map.Entry<String, Token<?>> entry;
-    protected final Token<?> containerType;
+    protected final Token<T> containerType;
     protected Reference<ConstructorInfo> constructorInfoReference = new SoftReference<>(null);
 
-    public ContainerSignatureBase(@NotNull Token<?> componentType, @NotNull Token<?> containerType) {
+    public ContainerSignatureBase(@NotNull Token<?> componentType, @NotNull Token<T> containerType) {
         this.entry = Entry.of(null, componentType);
         this.containerType = containerType;
     }
@@ -114,7 +114,7 @@ public abstract class ContainerSignatureBase implements Signature {
     }
 
     @Override
-    public @NotNull Token<?> returnType() {
+    public @NotNull Token<T> returnType() {
         return containerType;
     }
 

@@ -20,7 +20,7 @@ import java.util.function.ToIntFunction;
  * Represents something that may create a particular object from configuration data, and vice-versa. It also supplies
  * information necessary to determine what types are required to construct objects.
  */
-public interface Signature {
+public interface Signature<TReturn> {
     @SafeVarargs
     static <T> Builder<T> builder(@NotNull Token<T> type,
         @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
@@ -66,7 +66,7 @@ public interface Signature {
 
     @NotNull ElementType typeHint();
 
-    @NotNull Token<?> returnType();
+    @NotNull Token<TReturn> returnType();
 
     default int priority() {
         return 0;
@@ -152,7 +152,7 @@ public interface Signature {
             return this;
         }
 
-        public @NotNull Signature build() {
+        public @NotNull Signature<T> build() {
             Collection<Map.Entry<String, Token<?>>> argumentTypes = List.copyOf(this.argumentTypes);
             IntFunction<? extends ConfigContainer> containerFunction = this.containerFunction;
             ToIntFunction<? super ConfigElement> lengthFunction = this.lengthFunction;
@@ -162,7 +162,7 @@ public interface Signature {
             int priority = this.priority;
             Function<? super ConfigElement, ?> buildingObjectInitializer = this.buildingObjectInitializer;
 
-            return new Signature() {
+            return new Signature<>() {
                 @Override
                 public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
                     return argumentTypes;
@@ -220,7 +220,7 @@ public interface Signature {
                 }
 
                 @Override
-                public @NotNull Token<?> returnType() {
+                public @NotNull Token<T> returnType() {
                     return returnType;
                 }
 

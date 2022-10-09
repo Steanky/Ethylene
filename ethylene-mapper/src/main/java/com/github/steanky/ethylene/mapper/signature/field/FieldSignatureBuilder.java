@@ -12,7 +12,7 @@ public class FieldSignatureBuilder implements SignatureBuilder {
     }
 
     @Override
-    public @NotNull Signature @NotNull [] buildSignatures(@NotNull Token<?> type) {
-        return new Signature[]{new FieldSignature(type)};
+    public @NotNull Signature<?> @NotNull [] buildSignatures(@NotNull Token<?> type) {
+        return new Signature[]{new FieldSignature<>(type)};
     }
 }

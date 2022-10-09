@@ -65,21 +65,23 @@ dependencies {
 For Maven, you'd add the repository like this:
 
 ```xml
+
 <repositories>
-  <repository>
-    <id>steank-f1g-ethylene</id>
-    <url>https://dl.cloudsmith.io/public/steank-f1g/ethylene/maven/</url>
-  </repository>
+    <repository>
+        <id>steank-f1g-ethylene</id>
+        <url>https://dl.cloudsmith.io/public/steank-f1g/ethylene/maven/</url>
+    </repository>
 </repositories>
 ```
 
 And the dependency like _this_:
 
 ```xml
+
 <dependency>
-  <groupId>com.github.steanky</groupId>
-  <artifactId>ethylene-core</artifactId>
-  <version>1.0.0</version>
+    <groupId>com.github.steanky</groupId>
+    <artifactId>ethylene-core</artifactId>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -92,7 +94,7 @@ configuration data.
 To read some configuration data from a source (let's say a file, `/tmp/config.json`), you can do something like this:
 
 ```java
-ConfigNode node = Configuration.read(new File("/tmp/config.json"), new JsonCodec()).asNode();
+ConfigNode node=Configuration.read(new File("/tmp/config.json"),new JsonCodec()).asNode();
 ```
 
 The `node` object will contain the data stored in the file we just read from. Ethylene knew how to interpret that data
@@ -103,12 +105,16 @@ Now, let's assume that our file contains the following json:
 
 ```json
 {
-  "string" : "This is a string!",
-  "number" : 100,
-  "developer" : {
-    "name" : "Steanky",
-    "repositories" : [ "Ethylene", "Polymer", "RegularCommands" ]
-  }
+    "string": "This is a string!",
+    "number": 100,
+    "developer": {
+        "name": "Steanky",
+        "repositories": [
+            "Ethylene",
+            "Polymer",
+            "RegularCommands"
+        ]
+    }
 }
 ```
 
@@ -126,34 +132,34 @@ Here are some of the other ways you can access data:
 //number == 100
 int number=node.get("number").asNumber().intValue();
 
-        //nested objects, like developer, are themselves ConfigNode objects
-        ConfigNode developer=node.get("developer").asNode();
+    //nested objects, like developer, are themselves ConfigNode objects
+    ConfigNode developer=node.get("developer").asNode();
 
-        //name.equals("Steanky")
-        String name=developer.get("name");
+    //name.equals("Steanky")
+    String name=developer.get("name");
 
-        //support for lists
-        ConfigList list=developer.get("repositories").asList();
+    //support for lists
+    ConfigList list=developer.get("repositories").asList();
 
-        //repository.equals("Polymer")
-        String repository=list.get(1).asString();
+    //repository.equals("Polymer")
+    String repository=list.get(1).asString();
 
-        //you can also directly access nested elements using getElement and providing a "path array" representing member names:
-        //name.equals("Steanky")
-        String name=node.getElement("developer","name").asString();
+    //you can also directly access nested elements using getElement and providing a "path array" representing member names:
+    //name.equals("Steanky")
+    String name=node.getElement("developer","name").asString();
 
-        //you can freely mix string keys and indices to access elements in lists using a path array:
-        //polymer.equals("Polymer")
-        String polymer=node.getElement("developer","repositories",1).asString();
+    //you can freely mix string keys and indices to access elements in lists using a path array:
+    //polymer.equals("Polymer")
+    String polymer=node.getElement("developer","repositories",1).asString();
 
-        //ConfigNode and ConfigList objects are fully integrated into Java's type system. they implement Map<String, ConfigElement> and List<ConfigElement>, respectively:
-        Map<String, ConfigElement> exampleMap=developer;
-        List<ConfigElement> exampleList=list;
+    //ConfigNode and ConfigList objects are fully integrated into Java's type system. they implement Map<String, ConfigElement> and List<ConfigElement>, respectively:
+    Map<String, ConfigElement> exampleMap=developer;
+    List<ConfigElement> exampleList=list;
 
-        //they're also mutable:
-        list.remove(0); //removes "Ethylene"
-        developer.put("age", ConfigPrimitive.of(69)); //adds an age field
-        developer.clear(); //clears all entries from developer
+    //they're also mutable:
+    list.remove(0); //removes "Ethylene"
+    developer.put("age",ConfigPrimitive.of(69)); //adds an age field
+    developer.clear(); //clears all entries from developer
 ```
 
 For additional examples, check out the `example-project` module.

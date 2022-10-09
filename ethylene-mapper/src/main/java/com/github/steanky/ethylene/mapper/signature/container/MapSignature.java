@@ -13,8 +13,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-public class MapSignature extends ContainerSignatureBase {
-    public MapSignature(@NotNull Token<?> keyType, @NotNull Token<?> valueType, @NotNull Token<?> mapType) {
+public class MapSignature<T> extends ContainerSignatureBase<T> {
+    public MapSignature(@NotNull Token<?> keyType, @NotNull Token<?> valueType, @NotNull Token<T> mapType) {
         super(Token.ofType(Map.Entry.class).parameterize(keyType, valueType), mapType);
     }
 

@@ -43,13 +43,13 @@ public interface MappingProcessorSource {
      * or an entry/collection containing null is given.
      */
     class Builder {
-        private static final Signature MAP_ENTRY_SIGNATURE =
+        @SuppressWarnings("rawtypes") private static final Signature<Map.Entry> MAP_ENTRY_SIGNATURE =
             Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Entry.of(objects[0], objects[1]),
                 (entry) -> List.of(Signature.type("key", Token.OBJECT, entry.getKey()),
                     Signature.type("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
                 Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
 
-        private final Collection<Signature> customSignatures = new HashSet<>();
+        private final Collection<Signature<?>> customSignatures = new HashSet<>();
         private final Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
         private final Collection<Map.Entry<Class<?>, ? extends SignatureBuilder>> signatureBuilderPreferences =
             new HashSet<>();
@@ -64,8 +64,8 @@ public interface MappingProcessorSource {
         private BiFunction<? super SignatureBuilder, ? super Collection<? extends Map.Entry<Class<?>, ?
             extends SignatureBuilder>>, ? extends SignatureBuilder.Selector>
             signatureBuilderSelectorFunction = BasicSignatureBuilderSelector::new;
-        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<Signature>, ?
-            extends SignatureMatcher.Source>
+        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
+            extends Signature<?>>, ? extends SignatureMatcher.Source>
             signatureMatcherSourceFunction = BasicSignatureMatcherSource::new;
         private BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>, ?
             extends TypeResolver>
@@ -98,8 +98,8 @@ public interface MappingProcessorSource {
         }
 
         /**
-         * Adds standard type implementations to this builders. This will allow the resulting {@link ConfigProcessor}s
-         * to process {@link Collection}, {@link Map}, and {@link Set} types.
+         * Adds standard type implementations to this builder. This will allow the resulting {@link ConfigProcessor}s to
+         * process {@link Collection}, {@link Map}, and {@link Set} types.
          *
          * @return this builder, for chaining
          */
@@ -175,7 +175,7 @@ public interface MappingProcessorSource {
          */
         public @NotNull Builder withSignatureMatcherSourceFunction(
             @NotNull TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
-                extends Signature>, ? extends SignatureMatcher.Source> function) {
+                extends Signature<?>>, ? extends SignatureMatcher.Source> function) {
             this.signatureMatcherSourceFunction = Objects.requireNonNull(function);
             return this;
         }
@@ -186,7 +186,7 @@ public interface MappingProcessorSource {
          * @param signature the custom signature to add
          * @return this builder, for chaining
          */
-        public @NotNull Builder withCustomSignature(@NotNull Signature signature) {
+        public @NotNull Builder withCustomSignature(@NotNull Signature<?> signature) {
             customSignatures.add(Objects.requireNonNull(signature));
             return this;
         }
@@ -197,7 +197,7 @@ public interface MappingProcessorSource {
          * @param signatures a collection of custom signatures to add
          * @return this builder, for chaining
          */
-        public @NotNull Builder withCustomSignatures(@NotNull Iterable<? extends Signature> signatures) {
+        public @NotNull Builder withCustomSignatures(@NotNull Iterable<? extends Signature<?>> signatures) {
             CollectionUtils.addAll(signatures, customSignatures);
             return this;
         }

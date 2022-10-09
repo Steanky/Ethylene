@@ -11,8 +11,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class ArraySignature extends ContainerSignatureBase {
-    public ArraySignature(@NotNull Token<?> componentType) {
+public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
+    public ArraySignature(@NotNull Token<T> componentType) {
         super(componentType, componentType.arrayType());
     }
 

@@ -20,8 +20,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.*;
 
-public class RecordSignature implements Signature {
-    private final Token<?> genericReturnType;
+public class RecordSignature<T> implements Signature<T> {
+    private final Token<T> genericReturnType;
 
     private final Reference<Class<?>> rawClassReference;
     private final String rawClassName;
@@ -34,7 +34,7 @@ public class RecordSignature implements Signature {
     //safe, does not actually retain strong references to Type objects
     private Collection<Map.Entry<String, Token<?>>> argumentTypes;
 
-    public RecordSignature(@NotNull Token<?> genericReturnType) {
+    public RecordSignature(@NotNull Token<T> genericReturnType) {
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
 
         Class<?> rawClass = genericReturnType.rawType();
@@ -112,7 +112,7 @@ public class RecordSignature implements Signature {
     }
 
     @Override
-    public @NotNull Token<?> returnType() {
+    public @NotNull Token<T> returnType() {
         return genericReturnType;
     }
 
