@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public interface CodecResolver {
     /**
      * Resolves the codec, given the provided name.
+     *
      * @param name the name
      * @return a {@link ConfigCodec}
      * @throws IllegalArgumentException if no codec exists with the provided name

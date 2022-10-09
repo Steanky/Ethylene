@@ -29,6 +29,7 @@ public final class ConfigPrimitive implements ConfigElement {
      * @param object the object to wrap
      * @throws IllegalArgumentException if the provided object is a type other than a String, Number, Boolean, or
      *                                  Character and is not null
+     * @return a ConfigPrimitive instance
      */
     public static @NotNull ConfigPrimitive of(@Nullable Object object) {
         if (object == null) {

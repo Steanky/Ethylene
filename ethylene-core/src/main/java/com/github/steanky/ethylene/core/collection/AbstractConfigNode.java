@@ -62,7 +62,8 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
                 return mappings.size();
             }
         });
-        this.elementCollectionSupplier = MemoizingSupplier.of(() -> Collections.unmodifiableCollection(mappings.values()));
+        this.elementCollectionSupplier =
+            MemoizingSupplier.of(() -> Collections.unmodifiableCollection(mappings.values()));
     }
 
     /**

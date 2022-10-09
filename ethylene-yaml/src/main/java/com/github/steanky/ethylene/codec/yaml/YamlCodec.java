@@ -85,12 +85,10 @@ public class YamlCodec extends AbstractConfigCodec {
         }) {
             if (object instanceof Iterable<?> objects) {
                 dump.dumpAll(objects.iterator(), writer);
-            }
-            else {
+            } else {
                 dump.dump(object, writer);
             }
-        }
-        catch (YamlEngineException exception) {
+        } catch (YamlEngineException exception) {
             throw new IOException(exception);
         }
     }

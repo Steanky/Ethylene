@@ -127,7 +127,9 @@ public final class ExceptionHandler<TErr extends Exception> {
      * value of the ThrowingFunction is used.
      *
      * @param function        the function to call
+     * @param value           the value to call the function with
      * @param defaultSupplier the supplier used to provide the default value; only called if an exception occurs
+     * @param <TAccept>       the accepted type
      * @param <TReturn>       the return value type
      * @return the value returned by the default supplier if an exception occurred, otherwise the value returned by the
      * ThrowingFunction

@@ -39,12 +39,12 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     /**
      * Creates a new instance of this class.
      *
-     * @param token the type of object this processor will be able to process
+     * @param token                  the type of object this processor will be able to process
      * @param signatureMatcherSource the {@link SignatureMatcher.Source} used to create signature matchers
-     * @param typeHinter the {@link TypeHinter} used to determine information about types
-     * @param typeResolver the {@link TypeResolver} used to resolve types into concrete implementations
-     * @param scalarSource the {@link ScalarSource} used to produce scalar types from {@link ConfigElement}s, and vice
-     *                     versa
+     * @param typeHinter             the {@link TypeHinter} used to determine information about types
+     * @param typeResolver           the {@link TypeResolver} used to resolve types into concrete implementations
+     * @param scalarSource           the {@link ScalarSource} used to produce scalar types from {@link ConfigElement}s,
+     *                               and vice versa
      */
     public MappingConfigProcessor(@NotNull Token<T> token, @NotNull SignatureMatcher.Source signatureMatcherSource,
         @NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver, @NotNull ScalarSource scalarSource) {
@@ -65,7 +65,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             return (T) Graph.process(new ClassEntry(rootType, element, rootFactory), nodeEntry -> {
                     ConfigElement nodeElement = nodeEntry.element;
                     MatchingSignature matchingSignature =
-                        nodeEntry.signatureMatcher.signature(nodeEntry.type, nodeElement, null);
+                        nodeEntry.signatureMatcher.signatureForElement(nodeEntry.type, nodeElement);
 
                     Signature signature = matchingSignature.signature();
                     int signatureSize = matchingSignature.size();
@@ -137,7 +137,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
             return Graph.process(rootEntry, nodeEntry -> {
                     Object nodeObject = nodeEntry.object;
                     MatchingSignature typeSignature =
-                        nodeEntry.signatureMatcher.signature(nodeEntry.type, null, nodeObject);
+                        nodeEntry.signatureMatcher.signatureForObject(nodeEntry.type, nodeObject);
                     Signature signature = typeSignature.signature();
                     int size = typeSignature.size();
 
@@ -164,8 +164,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             Token<?> objectType = typeResolver.resolveType(typedObject.type(), null);
                             SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
 
-                            return Entry.of(typedObject.name(), new ElementEntry(objectType, typedObject.value(),
-                                thisMatcher));
+                            return Entry.of(typedObject.name(),
+                                new ElementEntry(objectType, typedObject.value(), thisMatcher));
                         }
                     }, Graph.output(nodeEntry.element, (String key, ConfigElement value, boolean circular) -> {
                         if (target.isList()) {

@@ -22,12 +22,12 @@ public final class MemoizingSupplier<TData> implements Supplier<TData> {
     }
 
     /**
-     * Creates a new {@link Supplier} from the given supplier. The new supplier will cache the result of the
-     * underlying supplier such that it will only be called once.
+     * Creates a new {@link Supplier} from the given supplier. The new supplier will cache the result of the underlying
+     * supplier such that it will only be called once.
      *
      * @param supplier the underlying supplier
+     * @param <T>      the type of object returned by the supplier
      * @return a supplier that performs value caching
-     * @param <T> the type of object returned by the supplier
      */
     public static <T> @NotNull Supplier<T> of(@NotNull Supplier<? extends T> supplier) {
         Objects.requireNonNull(supplier);

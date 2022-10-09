@@ -206,8 +206,8 @@ public abstract class Token<T> implements Supplier<Type> {
      * type.
      *
      * @param type the class which will be contained in the token
+     * @param <T>  the type contained in the token
      * @return the new token
-     * @param <T> the type contained in the token
      */
     public static <T> @NotNull Token<T> ofClass(@NotNull Class<T> type) {
         Objects.requireNonNull(type);

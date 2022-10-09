@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.mapper.signature.record;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
-import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
@@ -169,12 +168,12 @@ public class RecordSignature implements Signature {
 
         if (recordComponents.length == 1) {
             RecordComponent component = recordComponents[0];
-            return argumentTypes = List.of(Entry.of(component.getName(), Token.ofType(component.getGenericType())));
+            return argumentTypes = List.of(Map.entry(component.getName(), Token.ofType(component.getGenericType())));
         }
 
         List<Map.Entry<String, Token<?>>> underlyingList = new ArrayList<>(recordComponents.length);
         for (RecordComponent component : recordComponents) {
-            underlyingList.add(Entry.of(component.getName(), Token.ofType(component.getGenericType())));
+            underlyingList.add(Map.entry(component.getName(), Token.ofType(component.getGenericType())));
         }
 
         return argumentTypes = Collections.unmodifiableCollection(underlyingList);

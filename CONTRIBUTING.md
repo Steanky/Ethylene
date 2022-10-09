@@ -43,7 +43,7 @@ Code style isn't hugely important. However, contributions should follow some bas
   variables, `SHOUTY_SNAKE_CASE` for `static final` fields, `PascalCase` for
   classnames, [recommended package naming conventions](https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html)
   , ...
-* Use Java 16 language features where appropriate.
+* Use Java 17 language features where appropriate.
     * However, don't use `var`. This might be controversial, but I made the decision to not use `var` in any of the
       Ethylene modules I've made, and that should remain consistent.
 * Include lots of comments, particularly whenever methods or classes get complicated. You don't _need_ to add comments

@@ -16,6 +16,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Standard implementation of {@link TypeResolver}.
+ */
 public class BasicTypeResolver implements TypeResolver {
     private static final Object PRESENT = new Object();
 
@@ -25,6 +28,13 @@ public class BasicTypeResolver implements TypeResolver {
     private final Cache<Class<?>, Reference<Class<?>>> exactCache;
     private final Cache<Class<?>, Object> hierarchyWalkFailures;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param typeHinter          the {@link TypeHinter} used to provide information about types and
+     *                            {@link ConfigElement}s
+     * @param typeImplementations a collection of custom type implementations
+     */
     public BasicTypeResolver(@NotNull TypeHinter typeHinter,
         @NotNull Collection<? extends Map.Entry<Class<?>, Class<?>>> typeImplementations) {
         this.typeHinter = Objects.requireNonNull(typeHinter);

@@ -25,8 +25,8 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
         registerSignaturePreferences(signaturePreferences);
     }
 
-    private void registerSignaturePreferences(Collection<? extends Map.Entry<Class<?>, ? extends SignatureBuilder>>
-        signaturePreferences) {
+    private void registerSignaturePreferences(
+        Collection<? extends Map.Entry<Class<?>, ? extends SignatureBuilder>> signaturePreferences) {
         for (Map.Entry<Class<?>, ? extends SignatureBuilder> preference : signaturePreferences) {
             Class<?> type = preference.getKey();
             SignatureBuilder signatureBuilder = preference.getValue();

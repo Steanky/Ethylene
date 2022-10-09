@@ -18,8 +18,8 @@ public final class FutureUtils {
     /**
      * Completes the given callable. Asynchronicity (or lack thereof) is determined by the provided Executor, which if
      * non-null will be used to asynchronously execute the callable. This case is semantically identical to
-     * {@link FutureUtils#completeCallableAsync(Callable, Executor)}. Otherwise, if null, this method is equivalent
-     * to {@link FutureUtils#completeCallableSync(Callable)}.
+     * {@link FutureUtils#completeCallableAsync(Callable, Executor)}. Otherwise, if null, this method is equivalent to
+     * {@link FutureUtils#completeCallableSync(Callable)}.
      *
      * @param callable the callable to invoke
      * @param executor the executor used to run the callable asynchronously
@@ -97,8 +97,8 @@ public final class FutureUtils {
      * @param <TReturn>        The return value
      * @param <TErr>           The type of {@link Throwable} to throw
      * @return the result of Future#get()
-     * @throws TErr if an ExecutionException or {@link InterruptedException} occurs when calling the future's get()
-     *              method
+     * @throws TErr if an ExecutionException occurs when calling the future's get() method
+     * @throws InterruptedException if the call to {@link Future#get()} is interrupted
      */
     public static <TReturn, TErr extends Throwable> TReturn getAndWrapException(
         @NotNull Future<? extends TReturn> future, @NotNull Function<Throwable, TErr> exceptionWrapper,

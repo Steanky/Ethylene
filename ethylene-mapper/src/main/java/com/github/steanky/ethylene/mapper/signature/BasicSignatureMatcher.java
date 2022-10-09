@@ -131,8 +131,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         return new MatchingSignature(signature, targetCollection, null, length);
     }
 
-    @Override
-    public @NotNull MatchingSignature signature(@NotNull Token<?> typeToken, ConfigElement providedElement,
+    private MatchingSignature signatureForElement(Token<?> typeToken, ConfigElement providedElement,
         Object providedObject) {
         for (Signature signature : signatures) {
             if (!signature.returnType().isSubclassOf(typeToken)) {
@@ -142,8 +141,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             MatchingSignature matching;
             if (providedElement == null) {
                 matching = matchingFromObject(signature, providedObject);
-            }
-            else {
+            } else {
                 matching = matchingFromElement(signature, providedElement);
             }
 
@@ -153,5 +151,16 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         }
 
         throw new MapperException("Unable to find matching signature for element '" + providedElement + "'");
+    }
+
+    @Override
+    public @NotNull MatchingSignature signatureForElement(@NotNull Token<?> desiredType,
+        @NotNull ConfigElement providedElement) {
+        return signatureForElement(desiredType, providedElement, null);
+    }
+
+    @Override
+    public @NotNull MatchingSignature signatureForObject(@NotNull Token<?> desiredType, @NotNull Object object) {
+        return signatureForElement(desiredType, null, object);
     }
 }

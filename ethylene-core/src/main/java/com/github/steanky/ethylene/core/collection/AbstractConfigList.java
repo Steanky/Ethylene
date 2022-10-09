@@ -6,8 +6,6 @@ import com.github.steanky.ethylene.core.util.MemoizingSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
 import java.util.*;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;

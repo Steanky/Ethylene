@@ -8,12 +8,20 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Type;
 import java.util.*;
 
+/**
+ * Basic implementation of {@link TypeHinter}.
+ */
 public class BasicTypeHinter implements TypeHinter {
     private static final Token<?> ARRAY_LIST = Token.ofClass(ArrayList.class).parameterize(Object.class);
 
     private final Set<Type> scalars;
     private final Set<Type> nonScalars;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param scalarTypes a collection of scalar types
+     */
     public BasicTypeHinter(@NotNull Collection<Token<?>> scalarTypes) {
         if (scalarTypes.isEmpty()) {
             this.scalars = Set.of();

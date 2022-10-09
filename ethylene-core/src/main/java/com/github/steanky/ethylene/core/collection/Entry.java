@@ -12,41 +12,10 @@ import java.util.Objects;
  * In addition to complying with the general contract of {@link Map.Entry}, implementations must be equality-comparable
  * to all other {@link Map.Entry}.
  *
- * @param <TKey>  the key type
+ * @param <TKey>   the key type
  * @param <TValue> the value type
  */
 public interface Entry<TKey, TValue> extends Map.Entry<TKey, TValue> {
-    /**
-     * Abstract implementation of {@link Entry} which supplies basic {@link Object#hashCode()} and
-     * {@link Object#equals(Object)} methods that comply with the general contract of {@link Map.Entry}.
-     *
-     * @param <TKey>  the key type
-     * @param <TValue> the value type
-     */
-    abstract class AbstractEntry<TKey, TValue> implements Entry<TKey, TValue> {
-        @Override
-        public final int hashCode() {
-            return Objects.hash(getKey(), getValue());
-        }
-
-        @Override
-        public final boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-
-            if (obj == this) {
-                return true;
-            }
-
-            if (obj instanceof Map.Entry<?, ?> entry) {
-                return Objects.equals(getKey(), entry.getKey()) && Objects.equals(getValue(), entry.getValue());
-            }
-
-            return false;
-        }
-    }
-
     /**
      * Creates a new, immutable key and value map entry which may have null keys and values.
      *
@@ -78,11 +47,11 @@ public interface Entry<TKey, TValue> extends Map.Entry<TKey, TValue> {
     /**
      * Creates a new, mutable key and value map entry which may have null keys and values.
      *
-     * @param key the initial key object
-     * @param value the initial value object
-     * @return a new mutable entry
+     * @param key       the initial key object
+     * @param value     the initial value object
      * @param <TFirst>  the key type
      * @param <TSecond> the value type
+     * @return a new mutable entry
      */
     static <TFirst, TSecond> Map.@NotNull Entry<TFirst, TSecond> mutable(TFirst key, TSecond value) {
         return new AbstractEntry<>() {
@@ -129,10 +98,41 @@ public interface Entry<TKey, TValue> extends Map.Entry<TKey, TValue> {
      * Sets the key value.
      *
      * @param key the new key value
-     * @throws UnsupportedOperationException if this is not an immutable {@link Entry}
      * @return the old key
+     * @throws UnsupportedOperationException if this is not an immutable {@link Entry}
      */
     default TKey setKey(TKey key) {
         throw new UnsupportedOperationException("Key-immutable entry");
+    }
+
+    /**
+     * Abstract implementation of {@link Entry} which supplies basic {@link Object#hashCode()} and
+     * {@link Object#equals(Object)} methods that comply with the general contract of {@link Map.Entry}.
+     *
+     * @param <TKey>   the key type
+     * @param <TValue> the value type
+     */
+    abstract class AbstractEntry<TKey, TValue> implements Entry<TKey, TValue> {
+        @Override
+        public final int hashCode() {
+            return Objects.hash(getKey(), getValue());
+        }
+
+        @Override
+        public final boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+
+            if (obj == this) {
+                return true;
+            }
+
+            if (obj instanceof Map.Entry<?, ?> entry) {
+                return Objects.equals(getKey(), entry.getKey()) && Objects.equals(getValue(), entry.getValue());
+            }
+
+            return false;
+        }
     }
 }

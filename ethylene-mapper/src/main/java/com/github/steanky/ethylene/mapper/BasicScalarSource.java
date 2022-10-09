@@ -20,7 +20,8 @@ public class BasicScalarSource implements ScalarSource {
     private final Map<Class<?>, Map<ElementType, ScalarSignature<?>[]>> returnTypeMap;
 
     @SuppressWarnings("unchecked")
-    public BasicScalarSource(@NotNull TypeHinter typeHinter, @NotNull Collection<? extends ScalarSignature<?>> signatures) {
+    public BasicScalarSource(@NotNull TypeHinter typeHinter,
+        @NotNull Collection<? extends ScalarSignature<?>> signatures) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         Objects.requireNonNull(signatures);
 

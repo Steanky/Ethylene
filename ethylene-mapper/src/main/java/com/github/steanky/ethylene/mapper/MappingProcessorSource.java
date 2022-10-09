@@ -29,9 +29,9 @@ public interface MappingProcessorSource {
     /**
      * Supplies a {@link ConfigProcessor} capable of processing the given data type.
      *
-     * @param token the type of data to process
-     * @return a ConfigProcessor which may process the given data type
+     * @param token   the type of data to process
      * @param <TData> the type of data which can be processed
+     * @return a ConfigProcessor which may process the given data type
      */
     <TData> @NotNull ConfigProcessor<TData> processorFor(@NotNull Token<TData> token);
 
@@ -51,7 +51,8 @@ public interface MappingProcessorSource {
 
         private final Collection<Signature> customSignatures = new HashSet<>();
         private final Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
-        private final Collection<Map.Entry<Class<?>, ? extends SignatureBuilder>> signatureBuilderPreferences = new HashSet<>();
+        private final Collection<Map.Entry<Class<?>, ? extends SignatureBuilder>> signatureBuilderPreferences =
+            new HashSet<>();
         private final Collection<Token<?>> scalarTypes = new HashSet<>();
         private final Collection<ScalarSignature<?>> scalarSignatures = new HashSet<>();
 
@@ -60,11 +61,14 @@ public interface MappingProcessorSource {
         private Function<? super Collection<Token<?>>, ? extends TypeHinter> typeHinterFunction = BasicTypeHinter::new;
         private BiFunction<? super TypeHinter, ? super Collection<? extends ScalarSignature<?>>, ? extends ScalarSource>
             scalarSourceFunction = BasicScalarSource::new;
-        private BiFunction<? super SignatureBuilder, ? super Collection<? extends Map.Entry<Class<?>, ? extends SignatureBuilder>>,
-            ? extends SignatureBuilder.Selector> signatureBuilderSelectorFunction = BasicSignatureBuilderSelector::new;
-        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<Signature>, ? extends SignatureMatcher.Source>
+        private BiFunction<? super SignatureBuilder, ? super Collection<? extends Map.Entry<Class<?>, ?
+            extends SignatureBuilder>>, ? extends SignatureBuilder.Selector>
+            signatureBuilderSelectorFunction = BasicSignatureBuilderSelector::new;
+        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<Signature>, ?
+            extends SignatureMatcher.Source>
             signatureMatcherSourceFunction = BasicSignatureMatcherSource::new;
-        private BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>, ? extends TypeResolver>
+        private BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>, ?
+            extends TypeResolver>
             typeResolverFunction = BasicTypeResolver::new;
 
         Builder() {
@@ -74,7 +78,7 @@ public interface MappingProcessorSource {
          * Supplies a {@link Function} which may be used to construct a custom {@link TypeHinter}.
          *
          * @param typeHinterFunction the function used to create TypeHinters, which accepts a collection of
-         * {@link Token} objects corresponding to custom scalar types
+         *                           {@link Token} objects corresponding to custom scalar types
          * @return this builder, for chaining
          */
         public @NotNull Builder withTypeHinterFunction(
@@ -116,8 +120,8 @@ public interface MappingProcessorSource {
          * @return this builder, for chaining
          */
         public @NotNull Builder withSignatureBuilderSelectorFunction(
-            @NotNull BiFunction<? super SignatureBuilder, ? super Collection<? extends Map.Entry<Class<?>, ? extends
-                SignatureBuilder>>, ? extends SignatureBuilder.Selector> function) {
+            @NotNull BiFunction<? super SignatureBuilder, ? super Collection<? extends Map.Entry<Class<?>, ?
+                extends SignatureBuilder>>, ? extends SignatureBuilder.Selector> function) {
             this.signatureBuilderSelectorFunction = Objects.requireNonNull(function);
             return this;
         }
@@ -130,8 +134,8 @@ public interface MappingProcessorSource {
          * @return this builder, for chaining
          */
         public @NotNull Builder withTypeResolverFunction(
-            @NotNull BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>,
-                ? extends TypeResolver> function) {
+            @NotNull BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>, ?
+                extends TypeResolver> function) {
             this.typeResolverFunction = Objects.requireNonNull(function);
             return this;
         }
@@ -144,8 +148,8 @@ public interface MappingProcessorSource {
          * @return this builder, for chaining
          */
         public @NotNull Builder withScalarSourceFunction(
-            @NotNull BiFunction<? super TypeHinter, ? super Collection<? extends ScalarSignature<?>>,
-                ? extends ScalarSource> function) {
+            @NotNull BiFunction<? super TypeHinter, ? super Collection<? extends ScalarSignature<?>>, ?
+                extends ScalarSource> function) {
             this.scalarSourceFunction = Objects.requireNonNull(function);
             return this;
         }
@@ -170,8 +174,8 @@ public interface MappingProcessorSource {
          * @return this builder, for chaining
          */
         public @NotNull Builder withSignatureMatcherSourceFunction(
-            @NotNull TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector,
-                ? super Collection<? extends Signature>, ? extends SignatureMatcher.Source> function) {
+            @NotNull TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
+                extends Signature>, ? extends SignatureMatcher.Source> function) {
             this.signatureMatcherSourceFunction = Objects.requireNonNull(function);
             return this;
         }
@@ -224,7 +228,7 @@ public interface MappingProcessorSource {
          * Specifies an implementation-superclass pair.
          *
          * @param implementation the implementation
-         * @param superclass the superclass
+         * @param superclass     the superclass
          * @return this builder, for chaining
          */
 
@@ -239,7 +243,8 @@ public interface MappingProcessorSource {
          * @param entries the implementation-superclass pairs
          * @return this builder, for chaining
          */
-        public @NotNull Builder withTypeImplementations(@NotNull Iterable<? extends Map.Entry<Class<?>, Class<?>>> entries) {
+        public @NotNull Builder withTypeImplementations(
+            @NotNull Iterable<? extends Map.Entry<Class<?>, Class<?>>> entries) {
             CollectionUtils.addAll(entries, typeImplementations);
             return this;
         }
@@ -247,7 +252,7 @@ public interface MappingProcessorSource {
         /**
          * Specifies a {@link SignatureBuilder} preference for the given class.
          *
-         * @param type the class
+         * @param type             the class
          * @param signatureBuilder the builder preference
          * @return this builder, for chaining
          */
@@ -263,8 +268,8 @@ public interface MappingProcessorSource {
          * @param entries the type-signature builder pairs to register
          * @return this builder, for chaining
          */
-        public @NotNull Builder withSignatureBuilderPreferences(@NotNull Iterable<? extends Map.Entry<Class<?>,
-            ? extends SignatureBuilder>> entries) {
+        public @NotNull Builder withSignatureBuilderPreferences(
+            @NotNull Iterable<? extends Map.Entry<Class<?>, ? extends SignatureBuilder>> entries) {
             CollectionUtils.addAll(entries, signatureBuilderPreferences);
             return this;
         }
@@ -279,8 +284,8 @@ public interface MappingProcessorSource {
          */
         public @NotNull MappingProcessorSource build() {
             TypeHinter hinter = typeHinterFunction.apply(scalarTypes);
-            SignatureBuilder.Selector selector = signatureBuilderSelectorFunction.apply(defaultSignatureBuilder,
-                signatureBuilderPreferences);
+            SignatureBuilder.Selector selector =
+                signatureBuilderSelectorFunction.apply(defaultSignatureBuilder, signatureBuilderPreferences);
             SignatureMatcher.Source source = signatureMatcherSourceFunction.apply(hinter, selector, customSignatures);
             TypeResolver resolver = typeResolverFunction.apply(hinter, typeImplementations);
             ScalarSource scalarSource = scalarSourceFunction.apply(hinter, scalarSignatures);

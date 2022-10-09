@@ -54,14 +54,14 @@ public class DirectoryTreeConfigSource implements ConfigSource {
     /**
      * Creates a new instance of this class.
      *
-     * @param rootPath the root folder or file
-     * @param codecResolver the {@link CodecResolver} used to find codecs for specific files
-     * @param pathInspector the {@link PathInspector} used to extract path names and extensions
-     * @param preferredCodec the {@link ConfigCodec} to use when writing files that do not already exist
-     * @param executor the {@link Executor} to use to asynchronously read and write files; when null, reads and writes
-     *                 will proceed asynchronously
-     * @param supportSymlinks whether to read and create symbolic links when faced with circular/duplicate references
-     *                        in the input data or file hierarchy
+     * @param rootPath        the root folder or file
+     * @param codecResolver   the {@link CodecResolver} used to find codecs for specific files
+     * @param pathInspector   the {@link PathInspector} used to extract path names and extensions
+     * @param preferredCodec  the {@link ConfigCodec} to use when writing files that do not already exist
+     * @param executor        the {@link Executor} to use to asynchronously read and write files; when null, reads and
+     *                        writes will proceed asynchronously
+     * @param supportSymlinks whether to read and create symbolic links when faced with circular/duplicate references in
+     *                        the input data or file hierarchy
      */
     public DirectoryTreeConfigSource(@NotNull Path rootPath, @NotNull CodecResolver codecResolver,
         @NotNull PathInspector pathInspector, @NotNull ConfigCodec preferredCodec, @Nullable Executor executor,
@@ -227,8 +227,9 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                     } else {
                         //path doesn't exist, but that could be because of an extension
                         //filter the existing paths to those whose name matches
-                        List<Path> targets = existingPaths.stream().filter(path -> pathNameInspector.getName(path)
-                            .equals(elementName)).toList();
+                        List<Path> targets =
+                            existingPaths.stream().filter(path -> pathNameInspector.getName(path).equals(elementName))
+                                .toList();
 
                         if (targets.isEmpty()) {
                             //no file found at all - we'll write a new one using our preferred extension

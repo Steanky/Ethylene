@@ -29,7 +29,7 @@ class GenericInfoTest {
 
     @Test
     void variousTypes() {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 255; i++) {
             byte[] expected = new byte[]{(byte) i, 0, 0};
             assertArrayEquals(expected, GenericInfo.identifier((byte) i));
         }

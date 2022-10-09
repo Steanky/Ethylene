@@ -37,6 +37,7 @@ public enum ElementType {
     public boolean isList() {
         return this == LIST;
     }
+
     /**
      * Determines if this type is a node.
      *

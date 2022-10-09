@@ -15,8 +15,8 @@ public final class CollectionUtils {
      * the collection one by one.
      *
      * @param objects the iterable used as a source of elements
-     * @param target the target collection to add elements to
-     * @param <T> the upper bound of the element source type, and the lower bound of the collection type
+     * @param target  the target collection to add elements to
+     * @param <T>     the upper bound of the element source type, and the lower bound of the collection type
      */
     @SuppressWarnings("unchecked")
     public static <T> void addAll(@NotNull Iterable<? extends T> objects, @NotNull Collection<? super T> target) {
@@ -25,9 +25,8 @@ public final class CollectionUtils {
 
         if (objects instanceof Collection<?>) {
             //this cast is safe
-            target.addAll((Collection<? extends T>)objects);
-        }
-        else {
+            target.addAll((Collection<? extends T>) objects);
+        } else {
             for (T element : objects) {
                 target.add(element);
             }

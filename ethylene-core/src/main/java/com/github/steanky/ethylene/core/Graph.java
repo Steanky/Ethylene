@@ -53,16 +53,17 @@ public final class Graph {
      * identity function for visit key mapping, the parameterless {@link IdentityHashMap} constructor for constructing
      * references, and the parameterless {@link ArrayDeque} constructor for the node stack.
      *
-     * @param rootInput the input object; this is the root of the input graph
-     * @param nodeFunction the function used to create new {@link Node}s
+     * @param rootInput          the input object; this is the root of the input graph
+     * @param nodeFunction       the function used to create new {@link Node}s
      * @param containerPredicate the {@link Predicate} used to determine "container" objects (from which Nodes will be
      *                           made; true values indicate the object is a container, false indicates it is a scalar
-     * @param scalarMapper the function used to map scalar input to scalar output
-     * @param flags the flags which determine traversal and translation behavior; see {@link Graph.Options}
+     * @param scalarMapper       the function used to map scalar input to scalar output
+     * @param flags              the flags which determine traversal and translation behavior; see
+     *                           {@link Graph.Options}
+     * @param <TIn>              the input type
+     * @param <TOut>             the output type
+     * @param <TKey>             the key type
      * @return the root of the new object graph
-     * @param <TIn> the input type
-     * @param <TOut> the output type
-     * @param <TKey> the key type
      */
     public static <TIn, TOut, TKey> TOut process(TIn rootInput,
         @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
@@ -76,23 +77,24 @@ public final class Graph {
      * Processes the given input graph, starting at the root object {@code rootInput}. The exact behavior is dependent
      * on the {@code flags} parameter (see {@link Graph.Options} for details).
      *
-     * @param rootInput the input object; this is the root of the input graph
-     * @param nodeFunction the function used to create new {@link Node}s
+     * @param rootInput          the input object; this is the root of the input graph
+     * @param nodeFunction       the function used to create new {@link Node}s
      * @param containerPredicate the {@link Predicate} used to determine "container" objects (from which Nodes will be
-     *                           made; true values indicate the object is a container, false indicates it is a scalar
-     * @param scalarMapper the function used to map scalar input to scalar output
-     * @param visitKeyMapper the function used to map input objects to keys used to track reference identity; can be
-     *                       null if references aren't being tracked
-     * @param visitedSupplier the supplier used to create the visitation map; can be null if references aren't being
-     *                        tracked
-     * @param stackSupplier the supplier used to create the node stack; can be null if the input object is a scalar, or
-     *                      if
-     * @param flags the flags which determine traversal and translation behavior; see {@link Graph.Options}
+     *                           made; true values indicate the object is a container, false indicates it is a scalar)
+     * @param scalarMapper       the function used to map scalar input to scalar output
+     * @param visitKeyMapper     the function used to map input objects to keys used to track reference identity; can be
+     *                           null if references aren't being tracked
+     * @param visitedSupplier    the supplier used to create the visitation map; can be null if references aren't being
+     *                           tracked
+     * @param stackSupplier      the supplier used to create the node stack; can be null if the input object is a
+     *                           scalar, or if
+     * @param flags              the flags which determine traversal and translation behavior; see
+     *                           {@link Graph.Options}
+     * @param <TIn>              the input type
+     * @param <TOut>             the output type
+     * @param <TKey>             the key type
+     * @param <TVisit>           the type of the objects used to track input references
      * @return the root of the new object graph
-     * @param <TIn> the input type
-     * @param <TOut> the output type
-     * @param <TKey> the key type
-     * @param <TVisit> the type of the objects used to track input references
      */
     public static <TIn, TOut, TKey, TVisit> TOut process(TIn rootInput,
         @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
@@ -257,21 +259,22 @@ public final class Graph {
      * Convenience overload for
      * {@link Graph#process(Object, Function, Predicate, Function, Function, Supplier, Supplier, int)} that uses the
      * {@link IdentityHashMap} constructor as its visitation map supplier and the {@link ArrayDeque} constructor as its
-     * node stack.
+     * node stack supplier.
      *
-     * @param rootInput the input object; this is the root of the input graph
-     * @param nodeFunction the function used to create new {@link Node}s
+     * @param rootInput          the input object; this is the root of the input graph
+     * @param nodeFunction       the function used to create new {@link Node}s
      * @param containerPredicate the {@link Predicate} used to determine "container" objects (from which Nodes will be
      *                           made; true values indicate the object is a container, false indicates it is a scalar
-     * @param scalarMapper the function used to map scalar input to scalar output
-     * @param visitKeyMapper the function used to map input objects to keys used to track reference identity; can be
-     *                       null if references aren't being tracked
-     * @param flags the flags which determine traversal and translation behavior; see {@link Graph.Options}
+     * @param scalarMapper       the function used to map scalar input to scalar output
+     * @param visitKeyMapper     the function used to map input objects to keys used to track reference identity; can be
+     *                           null if references aren't being tracked
+     * @param flags              the flags which determine traversal and translation behavior; see
+     *                           {@link Graph.Options}
+     * @param <TIn>              the input type
+     * @param <TOut>             the output type
+     * @param <TKey>             the key type
+     * @param <TVisit>           the type of the objects used to track input references
      * @return the root of the new object graph
-     * @param <TIn> the input type
-     * @param <TOut> the output type
-     * @param <TKey> the key type
-     * @param <TVisit> the type of the objects used to track input references
      */
     public static <TIn, TOut, TKey, TVisit> TOut process(TIn rootInput,
         @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
@@ -285,11 +288,11 @@ public final class Graph {
      * Creates a new {@link Node} given an iterator and output object.
      *
      * @param inputIterator the input iterator
-     * @param output the output object
+     * @param output        the output object
+     * @param <TIn>         the input type
+     * @param <TOut>        the output type
+     * @param <TKey>        the input key
      * @return a new node
-     * @param <TIn> the input type
-     * @param <TOut> the output type
-     * @param <TKey> the input key
      */
     public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
         @NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator,
@@ -301,10 +304,10 @@ public final class Graph {
      * Creates a new {@link Node} given an iterator and using the empty output.
      *
      * @param inputIterator the input iterator
+     * @param <TIn>         the input type
+     * @param <TOut>        the output type
+     * @param <TKey>        the input key
      * @return a new node with an empty output
-     * @param <TIn> the input type
-     * @param <TOut> the output type
-     * @param <TKey> the input key
      */
     public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
         @NotNull Iterator<? extends Map.Entry<TKey, TIn>> inputIterator) {
@@ -314,9 +317,9 @@ public final class Graph {
     /**
      * Returns the shared, empty {@link Output} instance.
      *
-     * @return the shared empty Output
      * @param <TKey> the input key
      * @param <TOut> the output type
+     * @return the shared empty Output
      */
     @SuppressWarnings("unchecked")
     public static <TKey, TOut> @NotNull Output<TKey, TOut> emptyOutput() {
@@ -326,11 +329,11 @@ public final class Graph {
     /**
      * Creates a new {@link Output} from some given data and an {@link Accumulator}.
      *
-     * @param data the output data
+     * @param data        the output data
      * @param accumulator the accumulator
+     * @param <TOut>      the output data type
+     * @param <TKey>      the key type
      * @return a new Output object
-     * @param <TOut> the output data type
-     * @param <TKey> the key type
      */
     public static <TOut, TKey> @NotNull Output<TOut, TKey> output(TOut data,
         @NotNull Accumulator<? super TKey, ? super TOut> accumulator) {
@@ -340,10 +343,10 @@ public final class Graph {
     /**
      * The shared, empty {@link Node} with an empty output.
      *
-     * @return an empty node with an empty output
-     * @param <TIn> the input type
+     * @param <TIn>  the input type
      * @param <TOut> the output type
      * @param <TKey> the key type
+     * @return an empty node with an empty output
      */
     @SuppressWarnings("unchecked")
     public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> emptyNode() {
@@ -361,8 +364,8 @@ public final class Graph {
         /**
          * Accepts a value, adding it to some unspecified object, usually a collection or map.
          *
-         * @param key the key component of the value
-         * @param out the value component
+         * @param key     the key component of the value
+         * @param out     the value component
          * @param visited whether this input has been visited before
          */
         void accept(TKey key, TOut out, boolean visited);
@@ -428,7 +431,7 @@ public final class Graph {
      * Represents a specific "node" in a graph, which has an iterator of "inputs" and a single "output" object
      * corresponding to a node in the new object graph.
      *
-     * @param <TIn> the type of input object
+     * @param <TIn>  the type of input object
      * @param <TOut> the type of output object
      * @param <TKey> the key type
      */

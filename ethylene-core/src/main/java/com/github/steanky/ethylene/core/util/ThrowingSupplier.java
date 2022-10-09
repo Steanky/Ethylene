@@ -6,7 +6,7 @@ import java.util.function.Supplier;
  * A {@link Supplier}-like function that may throw a specific kind of exception.
  *
  * @param <TReturn> the return type
- * @param <TErr> the exception type
+ * @param <TErr>    the exception type
  */
 @FunctionalInterface
 public interface ThrowingSupplier<TReturn, TErr extends Exception> {

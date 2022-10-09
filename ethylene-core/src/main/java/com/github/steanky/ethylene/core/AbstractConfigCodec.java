@@ -234,8 +234,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     }
 
     /**
-     * Creates a {@link Graph.Output} bound to an {@link ArrayList}, used during encoding. Subclasses may override
-     * this to customize the objects produced during encoding.
+     * Creates a {@link Graph.Output} bound to an {@link ArrayList}, used during encoding. Subclasses may override this
+     * to customize the objects produced during encoding.
      *
      * @param size the size hint; may be ignored
      * @return a new graph output bound to a collection

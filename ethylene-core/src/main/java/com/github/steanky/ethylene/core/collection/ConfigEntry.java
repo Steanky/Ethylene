@@ -25,6 +25,7 @@ public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
      *
      * @param key     the key (name)
      * @param element the value element
+     * @return a new ConfigEntry instance
      */
     public static @NotNull ConfigEntry of(@Nullable String key, @NotNull ConfigElement element) {
         return new ConfigEntry(key, element);
@@ -34,6 +35,7 @@ public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
      * Creates a new ConfigEntry instance with a null key.
      *
      * @param element the value element
+     * @return a new ConfigEntry instance
      */
     public static @NotNull ConfigEntry of(@NotNull ConfigElement element) {
         return new ConfigEntry(null, element);
