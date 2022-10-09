@@ -31,10 +31,10 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
     /**
      * Creates a new instance of this class.
      *
-     * @param typeHinter        the {@link TypeHinter} used to obtain information about types
+     * @param typeHinter the {@link TypeHinter} used to obtain information about types
      * @param signatureSelector the {@link SignatureBuilder.Selector} used to select signature builders for custom
      *                          objects
-     * @param customSignatures  a collection of custom signatures
+     * @param customSignatures a collection of custom signatures
      */
     public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter,
         @NotNull SignatureBuilder.Selector signatureSelector,
@@ -50,7 +50,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
 
     private void registerCustomSignatures(Collection<? extends Signature<?>> signatures) {
         for (Signature<?> signature : signatures) {
-            customSignatureCache.get(signature.returnType().rawType(), ignored -> new HashSet<>(1)).add(signature);
+            customSignatureCache.get(signature.returnType().rawType(), ignored -> new HashSet<>(1))
+                .add(signature);
         }
     }
 
@@ -76,8 +77,7 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
                         if (token.isSubclassOf(Collection.class)) {
                             Token<?> parameterized = token.parameterize(token.supertypeVariables(Collection.class));
                             Token<?>[] args = parameterized.actualTypeParameters();
-                            Signature<?>[] collectionSignature =
-                                new Signature[]{new CollectionSignature<>(args[0], token)};
+                            Signature<?>[] collectionSignature = new Signature[]{new CollectionSignature<>(args[0], token)};
 
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter);
                         } else if (token.isSubclassOf(Map.class)) {

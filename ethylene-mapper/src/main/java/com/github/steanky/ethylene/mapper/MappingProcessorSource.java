@@ -64,8 +64,8 @@ public interface MappingProcessorSource {
         private BiFunction<? super SignatureBuilder, ? super Collection<? extends Map.Entry<Class<?>, ?
             extends SignatureBuilder>>, ? extends SignatureBuilder.Selector>
             signatureBuilderSelectorFunction = BasicSignatureBuilderSelector::new;
-        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
-            extends Signature<?>>, ? extends SignatureMatcher.Source>
+        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<? extends Signature<?>>, ?
+            extends SignatureMatcher.Source>
             signatureMatcherSourceFunction = BasicSignatureMatcherSource::new;
         private BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>, ?
             extends TypeResolver>
@@ -98,8 +98,8 @@ public interface MappingProcessorSource {
         }
 
         /**
-         * Adds standard type implementations to this builder. This will allow the resulting {@link ConfigProcessor}s to
-         * process {@link Collection}, {@link Map}, and {@link Set} types.
+         * Adds standard type implementations to this builder. This will allow the resulting {@link ConfigProcessor}s
+         * to process {@link Collection}, {@link Map}, and {@link Set} types.
          *
          * @return this builder, for chaining
          */

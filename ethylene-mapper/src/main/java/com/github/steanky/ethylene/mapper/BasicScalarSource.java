@@ -16,8 +16,6 @@ import java.util.*;
 public class BasicScalarSource implements ScalarSource {
     private static final int ELEMENT_TYPE_SIZE = ElementType.values().length;
     private static final ScalarSignature<?>[] EMPTY_SIGNATURE_ARRAY = new ScalarSignature[0];
-    private static final Comparator<ScalarSignature<?>> SCALAR_SIGNATURE_COMPARATOR =
-        Comparator.comparing((ScalarSignature<?> signature) -> signature.priority()).reversed();
 
     private final TypeHinter typeHinter;
     private final Map<Class<?>, Map<ElementType, ScalarSignature<?>[]>> returnTypeMap;
@@ -59,7 +57,7 @@ public class BasicScalarSource implements ScalarSource {
                 int i = 0;
                 for (Map.Entry<ElementType, Set<ScalarSignature<?>>> subEntry : subMap.entrySet()) {
                     ScalarSignature<?>[] signatureArray = subEntry.getValue().toArray(EMPTY_SIGNATURE_ARRAY);
-                    Arrays.sort(signatureArray, SCALAR_SIGNATURE_COMPARATOR);
+                    Arrays.sort(signatureArray);
                     array[i++] = Map.entry(subEntry.getKey(), signatureArray);
                 }
 

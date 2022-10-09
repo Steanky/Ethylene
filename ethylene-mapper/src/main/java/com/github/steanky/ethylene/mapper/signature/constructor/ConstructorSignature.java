@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Order;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
@@ -28,7 +29,7 @@ import java.util.*;
 /**
  * Signature based off of a particular constructor.
  */
-public class ConstructorSignature<T> implements Signature<T> {
+public class ConstructorSignature<T> extends PrioritizedBase implements Signature<T> {
     private static final Comparator<? super Field> COMPARATOR = Comparator.comparing(field -> {
         Order order = field.getAnnotation(Order.class);
         if (order != null) {
@@ -59,6 +60,7 @@ public class ConstructorSignature<T> implements Signature<T> {
 
     @SuppressWarnings("unchecked")
     public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Token<T> genericReturnType) {
+        super(0);
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
         this.constructorReference = new SoftReference<>(Objects.requireNonNull(constructor));
 

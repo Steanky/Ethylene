@@ -11,18 +11,17 @@ public interface SignatureMatcher {
     /**
      * Finds a {@link MatchingSignature} given a return type and {@link ConfigElement}.
      *
-     * @param desiredType     the desired type
+     * @param desiredType the desired type
      * @param providedElement the {@link ConfigElement}
      * @return a MatchingSignature
      */
-    @NotNull MatchingSignature signatureForElement(@NotNull Token<?> desiredType,
-        @NotNull ConfigElement providedElement);
+    @NotNull MatchingSignature signatureForElement(@NotNull Token<?> desiredType, @NotNull ConfigElement providedElement);
 
     /**
      * Finds a {@link MatchingSignature} given a return type and {@link Object}.
      *
      * @param desiredType the desired type
-     * @param object      some object
+     * @param object some object
      * @return a MatchingSignature
      */
     @NotNull MatchingSignature signatureForObject(@NotNull Token<?> desiredType, @NotNull Object object);

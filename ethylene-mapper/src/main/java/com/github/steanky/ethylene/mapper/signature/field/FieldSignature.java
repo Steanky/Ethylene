@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.annotation.Exclude;
 import com.github.steanky.ethylene.mapper.annotation.Include;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
@@ -25,7 +26,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
-public class FieldSignature<T> implements Signature<T> {
+public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     private final Token<T> genericReturnType;
 
     private final Reference<Class<?>> rawTypeReference;
@@ -37,6 +38,7 @@ public class FieldSignature<T> implements Signature<T> {
     private Collection<Map.Entry<String, Token<?>>> types;
 
     public FieldSignature(@NotNull Token<T> genericReturnType) {
+        super(0);
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
 
         Class<?> rawType = genericReturnType.rawType();

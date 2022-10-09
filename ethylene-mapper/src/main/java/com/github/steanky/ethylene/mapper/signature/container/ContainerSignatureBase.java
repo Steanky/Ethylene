@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
@@ -18,12 +19,13 @@ import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class ContainerSignatureBase<T> implements Signature<T> {
+public abstract class ContainerSignatureBase<T> extends PrioritizedBase implements Signature<T> {
     protected final Map.Entry<String, Token<?>> entry;
     protected final Token<T> containerType;
     protected Reference<ConstructorInfo> constructorInfoReference = new SoftReference<>(null);
 
     public ContainerSignatureBase(@NotNull Token<?> componentType, @NotNull Token<T> containerType) {
+        super(0);
         this.entry = Entry.of(null, componentType);
         this.containerType = containerType;
     }

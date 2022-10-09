@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
@@ -20,7 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.*;
 
-public class RecordSignature<T> implements Signature<T> {
+public class RecordSignature<T> extends PrioritizedBase implements Signature<T> {
     private final Token<T> genericReturnType;
 
     private final Reference<Class<?>> rawClassReference;
@@ -35,6 +36,7 @@ public class RecordSignature<T> implements Signature<T> {
     private Collection<Map.Entry<String, Token<?>>> argumentTypes;
 
     public RecordSignature(@NotNull Token<T> genericReturnType) {
+        super(0);
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
 
         Class<?> rawClass = genericReturnType.rawType();

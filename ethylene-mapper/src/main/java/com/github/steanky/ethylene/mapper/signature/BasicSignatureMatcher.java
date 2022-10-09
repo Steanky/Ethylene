@@ -16,7 +16,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     public BasicSignatureMatcher(@NotNull Signature<?> @NotNull [] signatures, @NotNull TypeHinter typeHinter) {
         Signature<?>[] copy = new Signature[signatures.length];
         System.arraycopy(signatures, 0, copy, 0, signatures.length);
-        Arrays.sort(copy, Comparator.comparing(sig -> ((Signature<?>) sig).priority()).reversed());
+        Arrays.sort(copy);
         this.signatures = copy;
         this.typeHinter = Objects.requireNonNull(typeHinter);
     }

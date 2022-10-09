@@ -12,10 +12,6 @@ import java.util.*;
  * methods on {@link Token}. They are primarily meant to be used with methods like
  * {@link Token#parameterize(TypeVariableMap)}.
  * <p>
- * This class has a package-private constructor. This is because it would be possible to supply arbitrary instances of
- * {@link Type}, which could lead to issues as they are stored in tokens using {@link Token#ofType(Type)}, and are thus
- * subject to the constraints discussed further in the documentation for that method.
- * <p>
  * This map may contain value references to {@link Token} objects whose types have been garbage-collected. It may also
  * contain strong references to {@link TypeVariable} objects, which can in some circumstances contain an indirect
  * reference to the classloader. Therefore, instances of this class are not suitable for long-term storage.
@@ -26,9 +22,7 @@ public final class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>
     private Set<Entry<TypeVariable<?>, Token<?>>> entrySet;
 
     /**
-     * Creates a new instance of this class based on the underlying, trusted map, which should never be modified after
-     * creation. Its type implementations must either be JDK-cached instances, subclasses of {@link WeakType}, or else
-     * subject to some level of caching to prevent instances from being garbage collected too soon.
+     * Creates a new instance of this class based on the underlying map.
      *
      * @param underlying the underlying map
      */
@@ -36,8 +30,7 @@ public final class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>
         if (underlying.isEmpty()) {
             tokenMap = Map.of();
         } else {
-            @SuppressWarnings("unchecked") Map.Entry<TypeVariable<?>, Token<?>>[] tokenArray =
-                new Entry[underlying.size()];
+            @SuppressWarnings("unchecked") Map.Entry<TypeVariable<?>, Token<?>>[] tokenArray = new Entry[underlying.size()];
 
             Iterator<Map.Entry<TypeVariable<?>, Type>> entryIterator = underlying.entrySet().iterator();
             for (int i = 0; i < tokenArray.length && entryIterator.hasNext(); i++) {
@@ -80,16 +73,21 @@ public final class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>
      *
      * @return an unmodifiable map of TypeVariables to Types
      */
+    @SuppressWarnings("unchecked")
     public @NotNull @Unmodifiable Map<TypeVariable<?>, Type> resolve() {
         if (tokenMap.isEmpty()) {
             return Map.of();
         }
 
-        Map<TypeVariable<?>, Type> entries = new HashMap<>(tokenMap.size());
-        for (Entry<TypeVariable<?>, Token<?>> entry : tokenMap.entrySet()) {
-            entries.put(entry.getKey(), entry.getValue().get());
+        Map.Entry<TypeVariable<?>, Type>[] array = new Entry[tokenMap.size()];
+        Iterator<Map.Entry<TypeVariable<?>, Token<?>>> iterator = tokenMap.entrySet().iterator();
+
+        //tokenMap is immutable and won't change size
+        for (int i = 0; i < array.length; i++) {
+            Map.Entry<TypeVariable<?>, Token<?>> entry = iterator.next();
+            array[i] = Map.entry(entry.getKey(), entry.getValue().get());
         }
 
-        return Collections.unmodifiableMap(entries);
+        return Map.ofEntries(array);
     }
 }

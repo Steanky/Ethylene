@@ -6,7 +6,10 @@ import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.github.steanky.ethylene.mapper.Prioritized;
+import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.type.Token;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,7 +23,7 @@ import java.util.function.ToIntFunction;
  * Represents something that may create a particular object from configuration data, and vice-versa. It also supplies
  * information necessary to determine what types are required to construct objects.
  */
-public interface Signature<TReturn> {
+public interface Signature<TReturn> extends Prioritized {
     @SafeVarargs
     static <T> Builder<T> builder(@NotNull Token<T> type,
         @NotNull BiFunction<? super T, ? super Object[], ?> constructor,
@@ -53,7 +56,7 @@ public interface Signature<TReturn> {
     }
 
     default @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-        throw new IllegalStateException("Unsupported operation");
+        throw new UnsupportedOperationException("This signature does not support pre-initialized building objects");
     }
 
     @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args);
@@ -68,13 +71,115 @@ public interface Signature<TReturn> {
 
     @NotNull Token<TReturn> returnType();
 
-    default int priority() {
-        return 0;
-    }
-
     record TypedObject(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
     }
 
+    /**
+     * Signature implementation. Used internally by {@link Signature.Builder}. Not part of the public API.
+     */
+    @ApiStatus.Internal
+    class SignatureImpl<T> extends PrioritizedBase implements Signature<T> {
+        private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
+        private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
+        private final BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction;
+        private final Function<? super ConfigElement, ?> buildingObjectInitializer;
+        private final BiFunction<? super T, ? super Object[], ?> constructor;
+        private final boolean matchNames;
+        private final boolean matchTypeHints;
+        private final BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer>
+            lengthFunction;
+        private final ElementType typeHint;
+        private final Token<T> returnType;
+
+        private SignatureImpl(int priority,
+            Collection<Map.Entry<String, Token<?>>> argumentTypes,
+            Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+            BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction,
+            Function<? super ConfigElement, ?> buildingObjectInitializer,
+            BiFunction<? super T, ? super Object[], ?> constructor, boolean matchNames, boolean matchTypeHints,
+            BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer>
+                lengthFunction, ElementType typeHint, Token<T> returnType) {
+            super(priority);
+            this.argumentTypes = argumentTypes;
+            this.objectSignatureExtractor = objectSignatureExtractor;
+            this.containerFunction = containerFunction;
+            this.buildingObjectInitializer = buildingObjectInitializer;
+            this.constructor = constructor;
+            this.matchNames = matchNames;
+            this.matchTypeHints = matchTypeHints;
+            this.lengthFunction = lengthFunction;
+            this.typeHint = typeHint;
+            this.returnType = returnType;
+        }
+
+        @Override
+        public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
+            return argumentTypes;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+            return objectSignatureExtractor.apply((T) object);
+        }
+
+        @Override
+        public @NotNull ConfigContainer initContainer(int sizeHint) {
+            return containerFunction.apply(typeHint, sizeHint);
+        }
+
+        @Override
+        public boolean hasBuildingObject() {
+            return buildingObjectInitializer != null;
+        }
+
+        @Override
+        public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
+            if (buildingObjectInitializer == null) {
+                //throws an exception
+                return Signature.super.initBuildingObject(element);
+            }
+
+            return buildingObjectInitializer.apply(element);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+            return constructor.apply((T) buildingObject, args);
+        }
+
+        @Override
+        public boolean matchesArgumentNames() {
+            return matchNames;
+        }
+
+        @Override
+        public boolean matchesTypeHints() {
+            return matchTypeHints;
+        }
+
+        @Override
+        public int length(@Nullable ConfigElement element) {
+            return lengthFunction.apply(argumentTypes, element);
+        }
+
+        @Override
+        public @NotNull ElementType typeHint() {
+            return typeHint;
+        }
+
+        @Override
+        public @NotNull Token<T> returnType() {
+            return returnType;
+        }
+    }
+
+    /**
+     * Utility builder which can be used to create custom {@link Signature} implementations.
+     *
+     * @param <T> the type of object this signature produces
+     */
     class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ?> constructor;
         private final Token<T> returnType;
@@ -86,17 +191,15 @@ public interface Signature<TReturn> {
         private boolean matchTypeHints;
         private ElementType typeHint = ElementType.NODE;
         private Function<? super ConfigElement, ?> buildingObjectInitializer;
-        private ToIntFunction<? super ConfigElement> lengthFunction = new ToIntFunction<>() {
-            @Override
-            public int applyAsInt(ConfigElement value) {
-                return argumentTypes.size();
-            }
-        };
-        private IntFunction<? extends ConfigContainer> containerFunction = (IntFunction<ConfigContainer>) value -> {
-            if (typeHint == ElementType.LIST) {
-                return new ArrayConfigList(value);
+        private BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer>
+            lengthFunction = (types, element) -> types.size();
+
+        private BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction =
+            (elementType, size) -> {
+            if (elementType == ElementType.LIST) {
+                return new ArrayConfigList(size);
             } else {
-                return new LinkedConfigNode(value);
+                return new LinkedConfigNode(size);
             }
         };
 
@@ -110,8 +213,7 @@ public interface Signature<TReturn> {
 
             this.argumentTypes = new ArrayList<>(arguments.length);
             for (Map.Entry<String, Token<?>> entry : arguments) {
-                argumentTypes.add(
-                    Entry.of(Objects.requireNonNull(entry.getKey()), Objects.requireNonNull(entry.getValue())));
+                argumentTypes.add(Map.entry(entry.getKey(), entry.getValue()));
             }
         }
 
@@ -141,94 +243,22 @@ public interface Signature<TReturn> {
             return this;
         }
 
-        public @NotNull Builder<T> withLengthFunction(@NotNull ToIntFunction<? super ConfigElement> lengthFunction) {
+        public @NotNull Builder<T> withLengthFunction(@NotNull BiFunction<? super Collection<? extends
+            Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer> lengthFunction) {
             this.lengthFunction = Objects.requireNonNull(lengthFunction);
             return this;
         }
 
         public @NotNull Builder<T> withContainerFunction(
-            @NotNull IntFunction<? extends ConfigContainer> containerFunction) {
+            @NotNull BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction) {
             this.containerFunction = Objects.requireNonNull(containerFunction);
             return this;
         }
 
         public @NotNull Signature<T> build() {
-            Collection<Map.Entry<String, Token<?>>> argumentTypes = List.copyOf(this.argumentTypes);
-            IntFunction<? extends ConfigContainer> containerFunction = this.containerFunction;
-            ToIntFunction<? super ConfigElement> lengthFunction = this.lengthFunction;
-            boolean matchNames = this.matchNames;
-            boolean matchTypeHints = this.matchTypeHints;
-            ElementType typeHint = this.typeHint;
-            int priority = this.priority;
-            Function<? super ConfigElement, ?> buildingObjectInitializer = this.buildingObjectInitializer;
-
-            return new Signature<>() {
-                @Override
-                public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
-                    return argumentTypes;
-                }
-
-                @SuppressWarnings("unchecked")
-                @Override
-                public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
-                    return objectSignatureExtractor.apply((T) object);
-                }
-
-                @Override
-                public @NotNull ConfigContainer initContainer(int sizeHint) {
-                    return containerFunction.apply(sizeHint);
-                }
-
-                @Override
-                public boolean hasBuildingObject() {
-                    return buildingObjectInitializer != null;
-                }
-
-                @Override
-                public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
-                    return buildingObjectInitializer.apply(element);
-                }
-
-                @SuppressWarnings("unchecked")
-                @Override
-                public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
-                    return constructor.apply((T) buildingObject, args);
-                }
-
-                @Override
-                public boolean matchesArgumentNames() {
-                    return matchNames;
-                }
-
-                @Override
-                public boolean matchesTypeHints() {
-                    return matchTypeHints;
-                }
-
-                @Override
-                public int length(@Nullable ConfigElement element) {
-                    if (lengthFunction != null) {
-                        return lengthFunction.applyAsInt(element);
-                    }
-
-                    return argumentTypes.size();
-                }
-
-                @Override
-                public @NotNull ElementType typeHint() {
-                    return typeHint;
-                }
-
-                @Override
-                public @NotNull Token<T> returnType() {
-                    return returnType;
-                }
-
-                @Override
-                public int priority() {
-                    return priority;
-                }
-            };
+            return new SignatureImpl<>(priority, List.copyOf(argumentTypes), objectSignatureExtractor,
+                containerFunction, buildingObjectInitializer, constructor, matchNames, matchTypeHints, lengthFunction,
+                typeHint, returnType);
         }
     }
 }
