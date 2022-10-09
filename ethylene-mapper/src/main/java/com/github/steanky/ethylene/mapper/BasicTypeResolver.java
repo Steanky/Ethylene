@@ -26,7 +26,7 @@ public class BasicTypeResolver implements TypeResolver {
     private final Cache<Class<?>, Object> hierarchyWalkFailures;
 
     public BasicTypeResolver(@NotNull TypeHinter typeHinter,
-        @NotNull Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations) {
+        @NotNull Collection<? extends Map.Entry<Class<?>, Class<?>>> typeImplementations) {
         this.typeHinter = Objects.requireNonNull(typeHinter);
 
         int size = typeImplementations.size();
@@ -37,7 +37,7 @@ public class BasicTypeResolver implements TypeResolver {
         registerTypeImplementations(typeImplementations);
     }
 
-    private void registerTypeImplementations(Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations) {
+    private void registerTypeImplementations(Collection<? extends Map.Entry<Class<?>, Class<?>>> typeImplementations) {
         for (Map.Entry<Class<?>, Class<?>> entry : typeImplementations) {
             Class<?> implementation = entry.getKey();
             Class<?> superclass = entry.getValue();

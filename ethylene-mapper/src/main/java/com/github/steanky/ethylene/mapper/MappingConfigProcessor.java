@@ -36,6 +36,16 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final TypeResolver typeResolver;
     private final ScalarSource scalarSource;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param token the type of object this processor will be able to process
+     * @param signatureMatcherSource the {@link SignatureMatcher.Source} used to create signature matchers
+     * @param typeHinter the {@link TypeHinter} used to determine information about types
+     * @param typeResolver the {@link TypeResolver} used to resolve types into concrete implementations
+     * @param scalarSource the {@link ScalarSource} used to produce scalar types from {@link ConfigElement}s, and vice
+     *                     versa
+     */
     public MappingConfigProcessor(@NotNull Token<T> token, @NotNull SignatureMatcher.Source signatureMatcherSource,
         @NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver, @NotNull ScalarSource scalarSource) {
         this.token = Objects.requireNonNull(token);

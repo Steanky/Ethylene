@@ -13,8 +13,8 @@ import java.util.Arrays;
 abstract non-sealed class WeakTypeBase implements WeakType {
     private final byte[] identifier;
 
-    private boolean hashed;
     private int hash;
+    private boolean hashed;
 
     /**
      * Creates a new instance of this class from the provided identifier array.

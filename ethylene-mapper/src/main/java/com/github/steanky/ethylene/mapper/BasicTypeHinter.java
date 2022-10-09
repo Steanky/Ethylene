@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 public class BasicTypeHinter implements TypeHinter {
-    private static final Token<?> ARRAY_LIST = Token.ofType(ArrayList.class).parameterize(Object.class);
+    private static final Token<?> ARRAY_LIST = Token.ofClass(ArrayList.class).parameterize(Object.class);
 
     private final Set<Type> scalars;
     private final Set<Type> nonScalars;

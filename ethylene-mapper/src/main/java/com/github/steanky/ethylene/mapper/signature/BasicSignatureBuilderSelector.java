@@ -18,15 +18,16 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
     private final Cache<Class<?>, SignatureBuilder> builderTypeCache;
 
     public BasicSignatureBuilderSelector(@NotNull SignatureBuilder defaultBuilder,
-        @NotNull Collection<Map.Entry<Class<?>, SignatureBuilder>> signaturePreferences) {
+        @NotNull Collection<? extends Map.Entry<Class<?>, ? extends SignatureBuilder>> signaturePreferences) {
         this.defaultBuilder = Objects.requireNonNull(defaultBuilder);
         this.builderTypeCache = Caffeine.newBuilder().initialCapacity(signaturePreferences.size()).weakKeys().build();
 
         registerSignaturePreferences(signaturePreferences);
     }
 
-    private void registerSignaturePreferences(Collection<Map.Entry<Class<?>, SignatureBuilder>> signaturePreferences) {
-        for (Map.Entry<Class<?>, SignatureBuilder> preference : signaturePreferences) {
+    private void registerSignaturePreferences(Collection<? extends Map.Entry<Class<?>, ? extends SignatureBuilder>>
+        signaturePreferences) {
+        for (Map.Entry<Class<?>, ? extends SignatureBuilder> preference : signaturePreferences) {
             Class<?> type = preference.getKey();
             SignatureBuilder signatureBuilder = preference.getValue();
 
