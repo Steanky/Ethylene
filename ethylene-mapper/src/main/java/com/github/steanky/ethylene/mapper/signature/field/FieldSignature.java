@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.mapper.signature.field;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
@@ -126,7 +125,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     }
 
     @Override
-    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+    public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
         SignatureData data = resolveData();
 
         Collection<TypedObject> typedObjects = new ArrayList<>(data.fields.size());
@@ -154,19 +153,19 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     }
 
     @Override
-    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
+    public @NotNull T initBuildingObject(@NotNull ConfigElement element) {
         return getBuildingObject();
     }
 
     @Override
-    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
         try {
             if (buildingObject != null) {
                 finishObject(buildingObject, args);
                 return buildingObject;
             }
 
-            Object object = getBuildingObject();
+            T object = getBuildingObject();
             finishObject(object, args);
             return object;
         } catch (IllegalAccessException e) {
@@ -187,11 +186,6 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     @Override
     public int length(@Nullable ConfigElement element) {
         return resolveTypes().size();
-    }
-
-    @Override
-    public @NotNull ElementType typeHint() {
-        return ElementType.NODE;
     }
 
     @Override
@@ -238,11 +232,12 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
         return cached;
     }
 
-    private Object getBuildingObject() {
+    @SuppressWarnings("unchecked")
+    private T getBuildingObject() {
         SignatureData data = resolveData();
 
         try {
-            return data.constructor.newInstance();
+            return (T) data.constructor.newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new MapperException(e);
         }

@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
@@ -83,7 +82,7 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
     }
 
     @Override
-    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
+    public @NotNull T initBuildingObject(@NotNull ConfigElement element) {
         if (!element.isContainer()) {
             throw new MapperException("Expected container, got '" + element.type() + "'");
         }
@@ -111,16 +110,11 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
     }
 
     @Override
-    public @NotNull ElementType typeHint() {
-        return ElementType.LIST;
-    }
-
-    @Override
     public @NotNull Token<T> returnType() {
         return containerType;
     }
 
-    protected abstract @NotNull Object makeBuildingObject(@NotNull ConfigContainer container);
+    protected abstract @NotNull T makeBuildingObject(@NotNull ConfigContainer container);
 
     protected record ConstructorInfo(boolean parameterless, Constructor<?> constructor) {
     }

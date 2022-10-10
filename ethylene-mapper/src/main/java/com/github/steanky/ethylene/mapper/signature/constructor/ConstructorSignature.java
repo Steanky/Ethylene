@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.mapper.signature.constructor;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
@@ -94,7 +93,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
     }
 
     @Override
-    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+    public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
         Collection<Map.Entry<String, Token<?>>> types = resolveTypeCollection();
 
         Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
@@ -146,15 +145,16 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         return new LinkedConfigNode(sizeHint);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             throw new MapperException("ConstructorSignature does not support pre-initialized building objects");
         }
 
         try {
             //it is the caller's responsibility to check argument length!
-            return resolveConstructor().newInstance(args);
+            return (T) resolveConstructor().newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new MapperException(e);
         }
@@ -175,11 +175,6 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
     @Override
     public int length(@Nullable ConfigElement element) {
         return resolveConstructor().getParameterCount();
-    }
-
-    @Override
-    public @NotNull ElementType typeHint() {
-        return ElementType.NODE;
     }
 
     @Override

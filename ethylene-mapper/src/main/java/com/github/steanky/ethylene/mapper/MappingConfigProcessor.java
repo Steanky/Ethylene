@@ -67,7 +67,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                     MatchingSignature matchingSignature =
                         nodeEntry.signatureMatcher.signatureForElement(nodeEntry.type, nodeElement);
 
-                    Signature<?> signature = matchingSignature.signature();
+                    Signature<Object> signature = (Signature<Object>) matchingSignature.signature();
                     int signatureSize = matchingSignature.size();
 
                     Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();

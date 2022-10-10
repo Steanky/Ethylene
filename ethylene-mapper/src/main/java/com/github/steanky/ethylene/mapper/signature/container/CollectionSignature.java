@@ -20,7 +20,7 @@ public class CollectionSignature<T> extends ContainerSignatureBase<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+    public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
         Collection<Object> objectCollection = (Collection<Object>) object;
 
         return new AbstractCollection<>() {
@@ -51,16 +51,16 @@ public class CollectionSignature<T> extends ContainerSignatureBase<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             Collection<Object> buildingCollection = (Collection<Object>) buildingObject;
             buildingCollection.addAll(Arrays.asList(args));
-            return buildingCollection;
+            return (T) buildingCollection;
         }
 
         Collection<Object> collection = makeNewCollection(args.length);
         collection.addAll(Arrays.asList(args));
-        return collection;
+        return (T) collection;
     }
 
     @SuppressWarnings("unchecked")
@@ -80,8 +80,9 @@ public class CollectionSignature<T> extends ContainerSignatureBase<T> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
-        return makeNewCollection(container.entryCollection().size());
+    protected @NotNull T makeBuildingObject(@NotNull ConfigContainer container) {
+        return (T) makeNewCollection(container.entryCollection().size());
     }
 }

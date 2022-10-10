@@ -17,7 +17,7 @@ public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
     }
 
     @Override
-    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+    public @NotNull Collection<TypedObject> objectData(@NotNull T @NotNull [] object) {
         int size = Array.getLength(object);
         return new AbstractCollection<>() {
             @Override
@@ -48,19 +48,21 @@ public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
         };
     }
 
-    @SuppressWarnings("SuspiciousSystemArraycopy")
+
+    @SuppressWarnings({"SuspiciousSystemArraycopy", "unchecked"})
     @Override
-    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public T @NotNull [] buildObject(@NotNull T @Nullable [] buildingObject, Object @NotNull [] args) {
         if (buildingObject == null) {
-            return args;
+            return (T[]) args;
         }
 
         System.arraycopy(args, 0, buildingObject, 0, args.length);
         return buildingObject;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
-        return new Object[container.elementCollection().size()];
+    protected @NotNull T @NotNull [] makeBuildingObject(@NotNull ConfigContainer container) {
+        return (T[]) new Object[container.elementCollection().size()];
     }
 }

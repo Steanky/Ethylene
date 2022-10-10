@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.mapper.signature.record;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
@@ -54,7 +53,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
     }
 
     @Override
-    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+    public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
         RecordComponent[] components = resolveComponents();
         Collection<TypedObject> typedObjects = new ArrayList<>(components.length);
 
@@ -80,14 +79,15 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             throw new MapperException("Pre-initialized building objects are not supported by this signature");
         }
 
         try {
-            return resolveConstructor().newInstance(args);
+            return (T) resolveConstructor().newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new MapperException(e);
         }
@@ -106,11 +106,6 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
     @Override
     public int length(@Nullable ConfigElement element) {
         return resolveArgumentTypes().size();
-    }
-
-    @Override
-    public @NotNull ElementType typeHint() {
-        return ElementType.NODE;
     }
 
     @Override

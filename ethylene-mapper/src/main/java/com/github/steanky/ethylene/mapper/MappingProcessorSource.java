@@ -45,9 +45,9 @@ public interface MappingProcessorSource {
     class Builder {
         @SuppressWarnings("rawtypes") private static final Signature<Map.Entry> MAP_ENTRY_SIGNATURE =
             Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Entry.of(objects[0], objects[1]),
-                (entry) -> List.of(Signature.type("key", Token.OBJECT, entry.getKey()),
-                    Signature.type("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
-                Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
+                (entry) -> List.of(new Signature.TypedObject("key", Token.OBJECT, entry.getKey()),
+                    new Signature.TypedObject("value", Token.OBJECT, entry.getValue())), Entry.of("key",
+                    Token.OBJECT), Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
 
         private final Collection<Signature<?>> customSignatures = new HashSet<>();
         private final Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();

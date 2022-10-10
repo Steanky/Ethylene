@@ -21,7 +21,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         this.typeHinter = Objects.requireNonNull(typeHinter);
     }
 
-    private MatchingSignature matchingFromObject(Signature<?> signature, Object providedObject) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private MatchingSignature matchingFromObject(Signature signature, Object providedObject) {
         Objects.requireNonNull(providedObject);
 
         Collection<Signature.TypedObject> objectData = signature.objectData(providedObject);

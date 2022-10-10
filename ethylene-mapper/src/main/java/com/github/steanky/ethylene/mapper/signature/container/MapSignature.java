@@ -20,7 +20,7 @@ public class MapSignature<T> extends ContainerSignatureBase<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public @NotNull Collection<TypedObject> objectData(@NotNull Object object) {
+    public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
         Map<Object, Object> map = (Map<Object, Object>) object;
 
         return new AbstractCollection<>() {
@@ -50,16 +50,16 @@ public class MapSignature<T> extends ContainerSignatureBase<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             Map<Object, Object> buildingMap = (Map<Object, Object>) buildingObject;
             finishMap(buildingMap, args);
-            return buildingMap;
+            return (T) buildingMap;
         }
 
         Map<Object, Object> map = getMap(args.length);
         finishMap(map, args);
-        return map;
+        return (T) map;
     }
 
     @SuppressWarnings("unchecked")
@@ -84,8 +84,9 @@ public class MapSignature<T> extends ContainerSignatureBase<T> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
-        return getMap(container.entryCollection().size());
+    protected @NotNull T makeBuildingObject(@NotNull ConfigContainer container) {
+        return (T) getMap(container.entryCollection().size());
     }
 }
