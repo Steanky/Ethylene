@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.mapper.signature.constructor;
 
 import com.github.steanky.ethylene.mapper.annotation.Widen;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
@@ -8,9 +9,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
 
+/**
+ * {@link SignatureBuilder} implementation for {@link ConstructorSignature}. This class is singleton; its instance can
+ * be obtained through {@link ConstructorSignatureBuilder#INSTANCE}.
+ */
 public class ConstructorSignatureBuilder implements SignatureBuilder {
+    /**
+     * The singleton instance of this class.
+     */
     public static final ConstructorSignatureBuilder INSTANCE = new ConstructorSignatureBuilder();
-    private static final Signature<?>[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
 
     private ConstructorSignatureBuilder() {
     }
@@ -35,7 +42,7 @@ public class ConstructorSignatureBuilder implements SignatureBuilder {
         }
 
         if (j == 0) {
-            return EMPTY_SIGNATURE_ARRAY;
+            return ReflectionUtils.EMPTY_SIGNATURE_ARRAY;
         }
 
         if (j < signatures.length) {

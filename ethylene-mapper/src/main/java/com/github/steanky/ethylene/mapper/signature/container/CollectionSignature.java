@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper.signature.container;
 
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +14,18 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
+/**
+ * {@link Signature} implementation for all {@link Collection}s.
+ *
+ * @param <T> the actual type of the collection
+ */
 public class CollectionSignature<T> extends ContainerSignatureBase<T> {
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param componentType the component type of the collection
+     * @param collectionClass the full generic information of the collection
+     */
     public CollectionSignature(@NotNull Token<?> componentType, @NotNull Token<T> collectionClass) {
         super(componentType, collectionClass);
     }

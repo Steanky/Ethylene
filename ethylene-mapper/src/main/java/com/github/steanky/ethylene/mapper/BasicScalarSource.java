@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.mapper;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,6 @@ import java.util.*;
  */
 public class BasicScalarSource implements ScalarSource {
     private static final int ELEMENT_TYPE_SIZE = ElementType.values().length;
-    private static final ScalarSignature<?>[] EMPTY_SIGNATURE_ARRAY = new ScalarSignature[0];
 
     private final TypeHinter typeHinter;
     private final Map<Class<?>, Map<ElementType, ScalarSignature<?>[]>> returnTypeMap;
@@ -56,7 +56,8 @@ public class BasicScalarSource implements ScalarSource {
 
                 int i = 0;
                 for (Map.Entry<ElementType, Set<ScalarSignature<?>>> subEntry : subMap.entrySet()) {
-                    ScalarSignature<?>[] signatureArray = subEntry.getValue().toArray(EMPTY_SIGNATURE_ARRAY);
+                    ScalarSignature<?>[] signatureArray = subEntry.getValue().toArray(ReflectionUtils
+                        .EMPTY_SCALAR_SIGNATURE_ARRAY);
                     Arrays.sort(signatureArray);
                     array[i++] = Map.entry(subEntry.getKey(), signatureArray);
                 }

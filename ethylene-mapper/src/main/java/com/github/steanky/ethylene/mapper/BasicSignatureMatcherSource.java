@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.mapper;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.BasicSignatureMatcher;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureBuilder;
@@ -20,8 +21,6 @@ import java.util.*;
  * Basic implementation of {@link SignatureMatcher.Source}.
  */
 public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
-    private static final Signature<?>[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
-
     private final TypeHinter typeHinter;
     private final SignatureBuilder.Selector signatureSelector;
 
@@ -64,7 +63,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
             for (Class<?> superclass : token.hierarchy(ClassUtils.Interfaces.INCLUDE)) {
                 Set<Signature<?>> signatures = customSignatureCache.getIfPresent(superclass);
                 if (signatures != null) {
-                    return new BasicSignatureMatcher(signatures.toArray(EMPTY_SIGNATURE_ARRAY), typeHinter);
+                    return new BasicSignatureMatcher(signatures.toArray(ReflectionUtils.EMPTY_SIGNATURE_ARRAY),
+                        typeHinter);
                 }
             }
 

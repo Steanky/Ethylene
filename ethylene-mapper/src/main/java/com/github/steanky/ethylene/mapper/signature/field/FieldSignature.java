@@ -25,6 +25,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+/**
+ * {@link Signature} based on field assignment. This signature supports building objects. Fields may be included and
+ * excluded using {@link Include} and {@link Exclude}. Member access will be widened if the type itself is annotated
+ * with {@link Widen}.
+ *
+ * @param <T> the actual type of the object this signature creates
+ */
 public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     private final Token<T> genericReturnType;
 
@@ -36,6 +43,11 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
     private Collection<Map.Entry<String, Token<?>>> types;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param genericReturnType the actual type returned by this signature
+     */
     public FieldSignature(@NotNull Token<T> genericReturnType) {
         super(0);
         this.genericReturnType = Objects.requireNonNull(genericReturnType);

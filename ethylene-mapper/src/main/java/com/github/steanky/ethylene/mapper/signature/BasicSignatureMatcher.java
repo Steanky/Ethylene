@@ -9,10 +9,20 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+/**
+ * Basic implementation of {@link SignatureMatcher}. Capable of matching based on type hints, type names, or both,
+ * depending on what is supported by each signature it manages. It respects signature priority.
+ */
 public class BasicSignatureMatcher implements SignatureMatcher {
     private final Signature<?>[] signatures;
     private final TypeHinter typeHinter;
 
+    /**
+     * Creates a new instance of this class
+     *
+     * @param signatures the signatures array; note that this is copied so it is safe to modify the array later
+     * @param typeHinter the {@link TypeHinter} used to extract type information when matching type hints
+     */
     public BasicSignatureMatcher(@NotNull Signature<?> @NotNull [] signatures, @NotNull TypeHinter typeHinter) {
         Signature<?>[] copy = new Signature[signatures.length];
         System.arraycopy(signatures, 0, copy, 0, signatures.length);

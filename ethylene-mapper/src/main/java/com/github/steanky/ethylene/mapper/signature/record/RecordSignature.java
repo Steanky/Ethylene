@@ -20,6 +20,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.*;
 
+/**
+ * {@link Signature} implementation meant to create record types. This does not support building objects.
+ *
+ * @param <T> the actual type of the record
+ */
 public class RecordSignature<T> extends PrioritizedBase implements Signature<T> {
     private final Token<T> genericReturnType;
 
@@ -34,6 +39,11 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
     //safe, does not actually retain strong references to Type objects
     private Collection<Map.Entry<String, Token<?>>> argumentTypes;
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param genericReturnType the return type of this signature
+     */
     public RecordSignature(@NotNull Token<T> genericReturnType) {
         super(0);
         this.genericReturnType = Objects.requireNonNull(genericReturnType);

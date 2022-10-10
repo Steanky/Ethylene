@@ -26,7 +26,7 @@ import java.lang.reflect.Parameter;
 import java.util.*;
 
 /**
- * Signature based off of a particular constructor.
+ * {@link Signature} that uses a constructor to create its objects. This does not support building objects.
  */
 public class ConstructorSignature<T> extends PrioritizedBase implements Signature<T> {
     private static final Comparator<? super Field> COMPARATOR = Comparator.comparing(field -> {
@@ -57,6 +57,13 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
     private Reference<Map<String, Field>> namedFieldsReference = new SoftReference<>(null);
     private Reference<Field[]> fieldsReference = new SoftReference<>(null);
 
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param constructor the {@link Constructor} used to create new objects and from which to obtain signature
+     *                    information
+     * @param genericReturnType the full generic type of the object created by the constructor
+     */
     @SuppressWarnings("unchecked")
     public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Token<T> genericReturnType) {
         super(0);

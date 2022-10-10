@@ -17,19 +17,49 @@ import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
+/**
+ * Shared base class for all containers (maps, collections, and arrays). It supports building objects and caches
+ * constructor information for performance.
+ *
+ * @param <T> the container type
+ * @see MapSignature
+ * @see CollectionSignature
+ * @see ArraySignature
+ */
 public abstract class ContainerSignatureBase<T> extends PrioritizedBase implements Signature<T> {
+    /**
+     * The immutable {@link Map.Entry} returned by the {@link Signature#argumentTypes()} iterator for this class.
+     */
     protected final Map.Entry<String, Token<?>> entry;
-    protected final Token<T> containerType;
-    protected Reference<ConstructorInfo> constructorInfoReference = new SoftReference<>(null);
 
+    /**
+     * The container type token, for use by subclasses.
+     */
+    protected final Token<T> containerType;
+
+    private Reference<ConstructorInfo> constructorInfoReference = new SoftReference<>(null);
+
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param componentType the "component type" of this container; for example, a Map's component type would be some
+     *                      generic {@link Map.Entry}
+     * @param containerType the full generic type of the container
+     */
     public ContainerSignatureBase(@NotNull Token<?> componentType, @NotNull Token<T> containerType) {
         super(0);
         this.entry = Entry.of(null, componentType);
         this.containerType = containerType;
     }
 
-    protected @NotNull ConstructorInfo resolveConstructor() {
+    /**
+     * Resolves the constructor information for this signature, caching values as necessary.
+     *
+     * @return a {@link ConstructorInfo} instance representing the constructor information
+     */
+    protected final @NotNull ConstructorInfo resolveConstructor() {
         ConstructorInfo cached = constructorInfoReference.get();
         if (cached != null) {
             return cached;
@@ -114,8 +144,31 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
         return containerType;
     }
 
+    /**
+     * Creates the building object for this container.
+     *
+     * @param container the {@link ConfigContainer} used to create the building object
+     * @return the new building object
+     */
     protected abstract @NotNull T makeBuildingObject(@NotNull ConfigContainer container);
 
-    protected record ConstructorInfo(boolean parameterless, Constructor<?> constructor) {
+    /**
+     * Information about a constructor. Container constructors may be parameterless (in which case they take no
+     * parameters) or non-parameterless (in which case they take a single integer value for their initial size).
+     *
+     * @param parameterless whether this constructor is parameterless
+     * @param constructor the constructor itself
+     */
+    protected record ConstructorInfo(boolean parameterless, @NotNull Constructor<?> constructor) {
+        /**
+         * Creates a new instance of this record.
+         *
+         * @param parameterless whether this constructor is parameterless
+         * @param constructor the constructor itself
+         */
+        public ConstructorInfo(boolean parameterless, @NotNull Constructor<?> constructor) {
+            this.parameterless = parameterless;
+            this.constructor = Objects.requireNonNull(constructor);
+        }
     }
 }

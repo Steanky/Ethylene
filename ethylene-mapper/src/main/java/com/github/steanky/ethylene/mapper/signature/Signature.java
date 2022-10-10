@@ -286,9 +286,9 @@ public interface Signature<TReturn> extends Prioritized {
         };
 
         @SafeVarargs
-        private Builder(@NotNull Token<T> returnType, @NotNull BiFunction<? super T, ? super Object[], ? extends T> constructor,
-            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
-            @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
+        private Builder(@NotNull Token<T> returnType, @NotNull BiFunction<? super T, ? super Object[],
+            ? extends T> constructor, @NotNull Function<? super T, ? extends Collection<TypedObject>>
+            objectSignatureExtractor, @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
             this.returnType = Objects.requireNonNull(returnType);
             this.objectSignatureExtractor = Objects.requireNonNull(objectSignatureExtractor);
@@ -299,44 +299,92 @@ public interface Signature<TReturn> extends Prioritized {
             }
         }
 
+        /**
+         * Specifies a custom priority for the signature.
+         *
+         * @param priority the new priority
+         * @return this builder, for chaining
+         */
         public @NotNull Builder<T> withPriority(int priority) {
             this.priority = priority;
             return this;
         }
 
+        /**
+         * Specifies that the signature should match argument names.
+         *
+         * @return this builder, for chaining
+         */
         public @NotNull Builder<T> matchingNames() {
             this.matchNames = true;
             return this;
         }
 
+        /**
+         * Specifies that this signature should match type hints.
+         *
+         * @return this builder, for chaining
+         */
         public @NotNull Builder<T> matchingTypeHints() {
             this.matchTypeHints = true;
             return this;
         }
 
+        /**
+         * Specifies the type hint of this signature.
+         *
+         * @param typeHint the type hint of this signature
+         * @return this builder, for chaining
+         */
         public @NotNull Builder<T> withTypeHint(@NotNull ElementType typeHint) {
             this.typeHint = Objects.requireNonNull(typeHint);
             return this;
         }
 
+        /**
+         * Supplies a building object initializer for this signature. Doing so implies that the signature supports
+         * building objects.
+         *
+         * @param buildingObjectInitializer the object initializer
+         * @return this builder, for chaining
+         */
         public @NotNull Builder<T> withBuildingObjectInitializer(
             @NotNull Function<? super ConfigElement, ? extends T> buildingObjectInitializer) {
             this.buildingObjectInitializer = Objects.requireNonNull(buildingObjectInitializer);
             return this;
         }
 
+        /**
+         * Specifies a function used to compute the signature's length, given a {@link ConfigElement}.
+         *
+         * @param lengthFunction the length function
+         * @return this builder, for chaining
+         */
         public @NotNull Builder<T> withLengthFunction(@NotNull BiFunction<? super Collection<? extends
             Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer> lengthFunction) {
             this.lengthFunction = Objects.requireNonNull(lengthFunction);
             return this;
         }
 
+        /**
+         * Specifies a function used to produce {@link ConfigContainer}s, for use when converting object data to
+         * configuration data.
+         *
+         * @param containerFunction the function which creates a new {@link ConfigContainer} implementation from the
+         *                          provided type hint and length
+         * @return this builder, for chaining
+         */
         public @NotNull Builder<T> withContainerFunction(
             @NotNull BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction) {
             this.containerFunction = Objects.requireNonNull(containerFunction);
             return this;
         }
 
+        /**
+         * Builds the signature according to the parameters outlined by the builder.
+         *
+         * @return a new {@link Signature} implementation
+         */
         public @NotNull Signature<T> build() {
             return new SignatureImpl<>(priority, List.copyOf(argumentTypes), objectSignatureExtractor,
                 containerFunction, buildingObjectInitializer, constructor, matchNames, matchTypeHints, lengthFunction,

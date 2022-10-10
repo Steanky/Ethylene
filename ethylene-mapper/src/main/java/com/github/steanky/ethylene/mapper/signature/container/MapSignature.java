@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.mapper.signature.container;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.type.Token;
+import com.github.steanky.ethylene.mapper.signature.Signature;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,7 +14,20 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+
+/**
+ * {@link Signature} implementation for creating maps of any type.
+ *
+ * @param <T> the type of map to create
+ */
 public class MapSignature<T> extends ContainerSignatureBase<T> {
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param keyType the map's key type
+     * @param valueType the map's value type
+     * @param mapType the map's full generic type
+     */
     public MapSignature(@NotNull Token<?> keyType, @NotNull Token<?> valueType, @NotNull Token<T> mapType) {
         super(Token.ofType(Map.Entry.class).parameterize(keyType, valueType), mapType);
     }

@@ -1,6 +1,8 @@
 package com.github.steanky.ethylene.mapper.internal;
 
 import com.github.steanky.ethylene.mapper.annotation.Name;
+import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
+import com.github.steanky.ethylene.mapper.signature.Signature;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,6 +22,16 @@ public class ReflectionUtils {
      * The shared empty type array.
      */
     public static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
+
+    /**
+     * The shared empty {@link Signature} array.
+     */
+    public static final Signature<?>[] EMPTY_SIGNATURE_ARRAY = new Signature[0];
+
+    /**
+     * The shared empty {@link ScalarSignature} array.
+     */
+    public static final ScalarSignature<?>[] EMPTY_SCALAR_SIGNATURE_ARRAY = new ScalarSignature[0];
 
     /**
      * Extracts the name of a field. This is either its name as defined in the source code, or the value of a present

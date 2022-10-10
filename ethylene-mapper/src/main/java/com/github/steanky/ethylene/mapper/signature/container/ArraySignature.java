@@ -11,7 +11,17 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * Signature implementation for all array types.
+ *
+ * @param <T> the component type of the array
+ */
 public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param componentType the component type of the array
+     */
     public ArraySignature(@NotNull Token<T> componentType) {
         super(componentType, componentType.arrayType());
     }
