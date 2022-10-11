@@ -3,3 +3,7 @@ plugins {
 }
 
 group 'com.github.steanky'
+
+dependencies {
+    testImplementation project(':ethylene-json')
+}

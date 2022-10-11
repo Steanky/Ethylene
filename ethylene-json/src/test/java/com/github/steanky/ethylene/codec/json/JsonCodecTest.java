@@ -13,30 +13,30 @@ class JsonCodecTest {
     private static final String BAD_JSON = "{ \"this json is\" : \"missing a curly bracket\"";
 
     private static final String GOOD_JSON = """
-            {
-                "top_level_string" : "string",
-                "number" : 420,
-                "child" : {
-                    "child_number" : 69,
-                    "child_array" : [
-                        {
-                            "name" : "test",
-                            "value" : 69420
-                        },
-                        "string",
-                        "another_string",
-                        0.69
-                    ]
-                }
+        {
+            "top_level_string" : "string",
+            "number" : 420,
+            "child" : {
+                "child_number" : 69,
+                "child_array" : [
+                    {
+                        "name" : "test",
+                        "value" : 69420
+                    },
+                    "string",
+                    "another_string",
+                    0.69
+                ]
             }
-            """;
+        }
+        """;
 
     private final JsonCodec codec = new JsonCodec();
 
     @Test
     void throwsFormatErrorOnBadJson() {
-        assertThrows(IOException.class, () -> codec.decode(
-                new ByteArrayInputStream(BAD_JSON.getBytes(StandardCharsets.UTF_8))));
+        assertThrows(IOException.class,
+            () -> codec.decode(new ByteArrayInputStream(BAD_JSON.getBytes(StandardCharsets.UTF_8))));
     }
 
     @Test

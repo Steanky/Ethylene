@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.codec.json;
 
-import com.github.steanky.ethylene.core.codec.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.AbstractConfigCodec;
+import com.github.steanky.ethylene.core.Graph;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -10,31 +11,36 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Provides support for the JSON format.
  */
 public class JsonCodec extends AbstractConfigCodec {
-    private static final List<String> EXTENSIONS = List.of("json");
-
     /**
      * The default {@link Gson} instance used to read and write data.
      */
     public static final Gson DEFAULT_GSON = new Gson();
 
-    private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {}.getType();
-
+    private static final String NAME = "JSON";
+    private static final String PREFERRED_EXTENSION = "json";
+    private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
+    private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {
+    }.getType();
+    private static final int ENCODE_OPTIONS = Graph.Options.TRACK_REFERENCES;
+    private static final int DECODE_OPTIONS = Graph.Options.NONE;
     private final Gson gson;
 
     /**
      * Creates a new JsonCodec using the provided {@link Gson} instance to read and write data.
+     *
      * @param gson the Gson instance to use
      * @throws NullPointerException if gson is null
      */
     public JsonCodec(@NotNull Gson gson) {
+        super(ENCODE_OPTIONS, DECODE_OPTIONS);
         this.gson = Objects.requireNonNull(gson);
     }
 
@@ -42,31 +48,40 @@ public class JsonCodec extends AbstractConfigCodec {
      * Creates a new JsonCodec using the default {@link Gson} ({@link JsonCodec#DEFAULT_GSON}) to read and write data.
      */
     public JsonCodec() {
+        super(ENCODE_OPTIONS, DECODE_OPTIONS);
         this.gson = DEFAULT_GSON;
     }
 
     @Override
     protected @NotNull Map<String, Object> readObject(@NotNull InputStream input) throws IOException {
-        try(InputStreamReader reader = new InputStreamReader(input)) {
+        try (InputStreamReader reader = new InputStreamReader(input)) {
             return gson.fromJson(reader, MAP_TYPE);
-        }
-        catch (JsonIOException | JsonSyntaxException exception) {
+        } catch (JsonIOException | JsonSyntaxException exception) {
             throw new IOException(exception);
         }
     }
 
     @Override
     protected void writeObject(@NotNull Object object, @NotNull OutputStream output) throws IOException {
-        try(OutputStreamWriter writer = new OutputStreamWriter(output)) {
+        try (OutputStreamWriter writer = new OutputStreamWriter(output)) {
             gson.toJson(object, writer);
-        }
-        catch (JsonIOException exception) {
+        } catch (JsonIOException exception) {
             throw new IOException(exception);
         }
     }
 
     @Override
-    public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
+    public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
         return EXTENSIONS;
+    }
+
+    @Override
+    public @NotNull String getPreferredExtension() {
+        return PREFERRED_EXTENSION;
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return NAME;
     }
 }

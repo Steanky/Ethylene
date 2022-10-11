@@ -8,6 +8,7 @@ import java.io.IOException;
 public class ConfigProcessException extends IOException {
     /**
      * Constructs a new ConfigProcessException with the provided message.
+     *
      * @param message a descriptive message
      */
     public ConfigProcessException(String message) {
@@ -16,6 +17,7 @@ public class ConfigProcessException extends IOException {
 
     /**
      * Constructs a new ConfigProcessException with the provided cause.
+     *
      * @param cause the {@link Throwable} responsible for this exception
      */
     public ConfigProcessException(Throwable cause) {
@@ -24,8 +26,9 @@ public class ConfigProcessException extends IOException {
 
     /**
      * Constructs a new ConfigProcessException with the provided message and cause.
+     *
      * @param message a descriptive message
-     * @param cause the {@link Throwable} responsible for this exception
+     * @param cause   the {@link Throwable} responsible for this exception
      */
     public ConfigProcessException(String message, Throwable cause) {
         super(message, cause);

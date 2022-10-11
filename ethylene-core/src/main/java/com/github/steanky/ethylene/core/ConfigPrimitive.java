@@ -11,22 +11,47 @@ import java.util.Objects;
  * primitives as well as String are compatible.
  */
 public final class ConfigPrimitive implements ConfigElement {
-    private Object object;
-
     /**
-     * Creates a new ConfigPrimitive instance wrapping the provided {@link Object}. The object may only subclass one of
-     * a number of restricted types; otherwise, an {@link IllegalArgumentException} will be thrown.
-     * @param object the object to wrap
-     * @throws IllegalArgumentException if the provided object is a type other than a String, Number, Boolean, or
-     * Character and is not null
+     * The shared {@link ConfigPrimitive} containing null.
      */
-    public ConfigPrimitive(@Nullable Object object) {
+    public static final ConfigPrimitive NULL = new ConfigPrimitive(null);
+
+    private final Object object;
+
+    private ConfigPrimitive(@Nullable Object object) {
         this.object = validateType(object);
     }
 
+    /**
+     * Returns a new ConfigPrimitive instance wrapping the provided {@link Object}. The object may only subclass one of
+     * a number of restricted types; otherwise, an {@link IllegalArgumentException} will be thrown.
+     *
+     * @param object the object to wrap
+     * @return a ConfigPrimitive instance
+     * @throws IllegalArgumentException if the provided object is a type other than a String, Number, Boolean, or
+     *                                  Character and is not null
+     */
+    public static @NotNull ConfigPrimitive of(@Nullable Object object) {
+        if (object == null) {
+            return NULL;
+        }
+
+        return new ConfigPrimitive(object);
+    }
+
+    /**
+     * Determines if the given object may be used to construct a {@link ConfigPrimitive}.
+     *
+     * @param object the object in question
+     * @return true if the object is a valid type for ConfigPrimitive; false otherwise
+     */
+    public static boolean isPrimitive(@Nullable Object object) {
+        return object == null || object instanceof String || object instanceof Number || object instanceof Boolean ||
+            object instanceof Character;
+    }
+
     private static Object validateType(Object object) {
-        if(!(object == null || object instanceof String || object instanceof Number || object instanceof Boolean
-                || object instanceof Character)) {
+        if (!isPrimitive(object)) {
             throw new IllegalArgumentException("Object " + object + " not a valid type for ConfigPrimitive");
         }
 
@@ -34,7 +59,7 @@ public final class ConfigPrimitive implements ConfigElement {
     }
 
     private static <TReturn> TReturn convert(Object object, Class<TReturn> classType) {
-        if(classType.isInstance(object)) {
+        if (classType.isInstance(object)) {
             return classType.cast(object);
         }
 
@@ -42,28 +67,13 @@ public final class ConfigPrimitive implements ConfigElement {
     }
 
     @Override
-    public boolean isString() {
-        return object instanceof String || object instanceof Character;
+    public boolean isNull() {
+        return object == null;
     }
 
     @Override
-    public @NotNull String asString() {
-        if(object instanceof Character character) {
-            //don't distinguish between char and string
-            return character.toString();
-        }
-
-        return convert(object, String.class);
-    }
-
-    @Override
-    public boolean isNumber() {
-        return object instanceof Number;
-    }
-
-    @Override
-    public @NotNull Number asNumber() {
-        return convert(object, Number.class);
+    public @NotNull ElementType type() {
+        return ElementType.SCALAR;
     }
 
     @Override
@@ -77,32 +87,38 @@ public final class ConfigPrimitive implements ConfigElement {
     }
 
     @Override
-    public boolean isObject() {
+    public boolean isNumber() {
+        return object instanceof Number;
+    }
+
+    @Override
+    public @NotNull Number asNumber() {
+        return convert(object, Number.class);
+    }
+
+    @Override
+    public boolean isString() {
+        return object instanceof String || object instanceof Character;
+    }
+
+    @Override
+    public @NotNull String asString() {
+        if (object instanceof Character character) {
+            //don't distinguish between char and string
+            return character.toString();
+        }
+
+        return convert(object, String.class);
+    }
+
+    @Override
+    public boolean isScalar() {
         return true;
     }
 
     @Override
-    public boolean isNull() {
-        return object == null;
-    }
-
-    @Override
-    public Object asObject() {
+    public Object asScalar() {
         return object;
-    }
-
-    /**
-     * Sets the object wrapped by this ConfigPrimitive.
-     * @param object the new object
-     * @throws IllegalArgumentException if the provided object is not a valid type
-     */
-    public void setObject(@Nullable Object object) {
-        this.object = validateType(object);
-    }
-
-    @Override
-    public String toString() {
-        return Objects.toString(object);
     }
 
     @Override
@@ -112,26 +128,23 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean equals(Object obj) {
-        if(this == obj) {
+        if (this == obj) {
             return true;
         }
 
-        if(obj == null) {
+        if (obj == null) {
             return false;
         }
 
-        if(obj instanceof ConfigPrimitive primitive) {
+        if (obj instanceof ConfigPrimitive primitive) {
             return Objects.equals(object, primitive.object);
         }
 
         return false;
     }
 
-    /**
-     * Equivalent to {@code new ConfigPrimitive(null)}.
-     * @return a new ConfigPrimitive containing null
-     */
-    public static @NotNull ConfigPrimitive nil() {
-        return new ConfigPrimitive(null);
+    @Override
+    public String toString() {
+        return Objects.toString(object);
     }
 }
