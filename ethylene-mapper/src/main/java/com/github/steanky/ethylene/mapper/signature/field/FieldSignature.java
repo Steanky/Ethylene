@@ -71,7 +71,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
             return rawClass.getConstructor();
         } catch (NoSuchMethodException e) {
-            throw new MapperException(e);
+            throw new MapperException("Could not resolve parameterless constructor", e);
         }
     }
 

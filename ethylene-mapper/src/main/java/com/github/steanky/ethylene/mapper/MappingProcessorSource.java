@@ -42,7 +42,7 @@ public interface MappingProcessorSource {
      * All methods, unless otherwise noted, will throw a {@link NullPointerException} if null is passed as an argument,
      * or an entry/collection containing null is given.
      */
-    class Builder {
+    final class Builder {
         @SuppressWarnings("rawtypes") private static final Signature<Map.Entry> MAP_ENTRY_SIGNATURE =
             Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Entry.of(objects[0], objects[1]),
                 (entry) -> List.of(new Signature.TypedObject("key", Token.OBJECT, entry.getKey()),
@@ -71,7 +71,7 @@ public interface MappingProcessorSource {
             extends TypeResolver>
             typeResolverFunction = BasicTypeResolver::new;
 
-        Builder() {
+        private Builder() {
         }
 
         /**

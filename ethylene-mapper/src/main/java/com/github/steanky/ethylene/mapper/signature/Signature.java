@@ -167,7 +167,7 @@ public interface Signature<TReturn> extends Prioritized {
      * Signature implementation. Used internally by {@link Signature.Builder}. Not part of the public API.
      */
     @ApiStatus.Internal
-    class SignatureImpl<T> extends PrioritizedBase implements Signature<T> {
+    final class SignatureImpl<T> extends PrioritizedBase implements Signature<T> {
         private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
         private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
         private final BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction;
@@ -262,7 +262,7 @@ public interface Signature<TReturn> extends Prioritized {
      *
      * @param <T> the type of object this signature produces
      */
-    class Builder<T> {
+    final class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ? extends T> constructor;
         private final Token<T> returnType;
         private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
