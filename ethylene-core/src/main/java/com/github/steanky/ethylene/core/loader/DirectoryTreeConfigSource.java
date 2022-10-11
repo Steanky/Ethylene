@@ -268,7 +268,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                     //symlinks when indicated to do so by the circular flag
                     OutputInfo actualInfo = actualIterator.next().getValue();
 
-                    if (circular && supportSymlinks) {
+                    if (circular) {
                         //make a symlink to the target file/directory instead of making a copy
                         //strip the extension if the link target is a directory
                         Path link = outputInfo.isDirectory ?
@@ -284,6 +284,9 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                         exceptionHandler.run(() -> Configuration.write(actualInfo.path, actualInfo.element,
                             codecResolver.hasCodec(extension) ? codecResolver.resolve(extension) : preferredCodec));
                     }
+
+                    //we may end up writing nothing if: symlink support is disabled, and we're trying to write a
+                    //directory
                 }));
             }, potentialContainer -> {
                 if (!potentialContainer.element.isNode()) {

@@ -400,9 +400,9 @@ public final class Graph {
         public static final int TRACK_SCALAR_REFERENCES = 2;
 
         /**
-         * Equivalent to combining REFERENCE_TRACKING and TRACK_SCALAR_REFERENCE.
+         * Equivalent to combining TRACK_REFERENCES and TRACK_SCALAR_REFERENCES.
          */
-        public static final int TRACK_ALL_REFERENCES = 3;
+        public static final int TRACK_ALL_REFERENCES = TRACK_REFERENCES | TRACK_SCALAR_REFERENCES;
 
         /**
          * Causes graphs to be processed in a depth-first manner.
