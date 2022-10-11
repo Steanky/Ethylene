@@ -2,12 +2,13 @@ package com.github.steanky.ethylene.codec.toml;
 
 import org.junit.jupiter.api.Test;
 
-import java.sql.Date;
+import java.time.Instant;
+import java.time.temporal.Temporal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigDateTest {
-    private static final Date DATE = new Date(87894211525L);
+    private static final Temporal DATE = Instant.ofEpochMilli(87894211525L);
 
     private final ConfigDate testDate;
 
@@ -17,7 +18,7 @@ class ConfigDateTest {
 
     @Test
     void correctType() {
-        assertTrue(testDate.isObject());
+        assertTrue(testDate.isScalar());
         assertTrue(testDate.isString());
         assertFalse(testDate.isBoolean());
         assertFalse(testDate.isList());
@@ -27,18 +28,11 @@ class ConfigDateTest {
 
     @Test
     void correctDate() {
-        assertSame(DATE, testDate.getDate());
+        assertSame(DATE, testDate.getTemporal());
     }
 
     @Test
     void correctObject() {
-        assertSame(DATE, testDate.asObject());
-    }
-
-    @Test
-    void setChangesDate() {
-        Date newDate = new Date(4789422);
-        testDate.setDate(newDate);
-        assertSame(newDate, testDate.getDate());
+        assertSame(DATE, testDate.asScalar());
     }
 }

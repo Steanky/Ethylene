@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.codec.yaml;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.bridge.ConfigBridges;
+import com.github.steanky.ethylene.core.bridge.Configuration;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ class YamlCodecTest {
     @Test
     void simpleYaml() throws IOException {
         String simpleYaml = "key: \"value\"";
-        ConfigElement element = ConfigBridges.read(simpleYaml, codec);
+        ConfigElement element = Configuration.read(simpleYaml, codec);
 
         assertTrue(element.isNode());
         assertEquals("value", element.asNode().get("key").asString());
@@ -23,7 +23,7 @@ class YamlCodecTest {
     @Test
     void multiDocumentYaml() throws IOException {
         String yaml = "key: \"value\"\n---\nanother_key: \"another value\"";
-        ConfigElement element = ConfigBridges.read(yaml, codec);
+        ConfigElement element = Configuration.read(yaml, codec);
 
         assertTrue(element.isList());
         assertSame(2, element.asList().size());

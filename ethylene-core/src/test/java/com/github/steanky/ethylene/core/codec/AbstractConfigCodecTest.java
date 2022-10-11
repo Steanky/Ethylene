@@ -1,12 +1,14 @@
 package com.github.steanky.ethylene.core.codec;
 
+import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +27,7 @@ class AbstractConfigCodecTest {
     private static final String LIST_KEY = "list";
     private static final String SUB_LIST_KEY = "sub_list";
     private static final String SUB_LIST_NODES_KEY = "sub_list_nodes";
+    private static final String PARENT_REF = "parent_ref";
 
     private static final String SUB_ROOT_KEY = "sub_root";
 
@@ -49,19 +52,30 @@ class AbstractConfigCodecTest {
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> subRoot = new HashMap<>();
 
-        testCodec = new AbstractConfigCodec() {
+        testCodec = new AbstractConfigCodec(Graph.Options.TRACK_REFERENCES, Graph.Options.TRACK_REFERENCES) {
             @Override
-            public @Unmodifiable @NotNull List<String> getPreferredExtensions() {
-                return Collections.emptyList();
+            public @Unmodifiable @NotNull Set<String> getPreferredExtensions() {
+                return Set.of();
             }
 
             @Override
-            protected @NotNull Object readObject(@NotNull InputStream input)  {
+            public @NotNull String getPreferredExtension() {
+                return "";
+            }
+
+            @Override
+            public @NotNull String getName() {
+                return "test";
+            }
+
+            @Override
+            protected @NotNull Object readObject(@NotNull InputStream input) {
                 return root;
             }
 
             @Override
-            protected void writeObject(@NotNull Object object, @NotNull OutputStream output) {}
+            protected void writeObject(@NotNull Object object, @NotNull OutputStream output) {
+            }
         };
 
         root.put(INTEGER_KEY, INTEGER_VALUE);
@@ -73,11 +87,13 @@ class AbstractConfigCodecTest {
         root.put(SUB_ROOT_KEY, subRoot);
 
         List<Object> subListNodes = new ArrayList<>();
+
         subRoot.put(SUB_STRING_KEY, SUB_STRING_VALUE);
         subRoot.put(SUB_LIST_KEY, SUB_LIST_VALUE);
         subRoot.put(SUB_LIST_NODES_KEY, subListNodes);
+        subRoot.put(PARENT_REF, root);
 
-        for(int i = 0; i < SUB_NODE_COUNT; i++) {
+        for (int i = 0; i < SUB_NODE_COUNT; i++) {
             Map<String, Object> subNode = new HashMap<>();
             subNode.put(SUB_NODE_KEY_PREFIX + i, i);
             subListNodes.add(subNode);
@@ -99,7 +115,7 @@ class AbstractConfigCodecTest {
     void validTopLevelFlatStringList() {
         ConfigList array = resultingElement.getElement(LIST_KEY).asList();
         List<String> equivalent = new ArrayList<>();
-        for(ConfigElement element : array) {
+        for (ConfigElement element : array) {
             equivalent.add(element.asString());
         }
 
@@ -110,7 +126,7 @@ class AbstractConfigCodecTest {
     void validNestedFlatStringList() {
         ConfigList array = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_KEY).asList();
         List<String> equivalent = new ArrayList<>();
-        for(ConfigElement element : array) {
+        for (ConfigElement element : array) {
             equivalent.add(element.asString());
         }
 
@@ -119,16 +135,16 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedPrimitives() {
-        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY)
-                .asString());
+        assertEquals(SUB_STRING_VALUE,
+            resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY).asString());
     }
 
     @Test
     void validNestedArrayNodes() {
-        ConfigList subNodes = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_NODES_KEY)
-                .asList();
+        ConfigList subNodes =
+            resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_NODES_KEY).asList();
 
-        for(int i = 0; i < SUB_NODE_COUNT; i++) {
+        for (int i = 0; i < SUB_NODE_COUNT; i++) {
             ConfigNode element = subNodes.get(i).asNode();
             assertEquals(i, element.getElement(SUB_NODE_KEY_PREFIX + i).asNumber().intValue());
         }
@@ -159,7 +175,7 @@ class AbstractConfigCodecTest {
         assertFalse(resultingElement.isString());
         assertFalse(resultingElement.isList());
         assertFalse(resultingElement.isNumber());
-        assertFalse(resultingElement.isObject());
+        assertFalse(resultingElement.isScalar());
     }
 
     @Test
@@ -168,7 +184,7 @@ class AbstractConfigCodecTest {
         assertThrows(IllegalStateException.class, resultingElement::asString);
         assertThrows(IllegalStateException.class, resultingElement::asList);
         assertThrows(IllegalStateException.class, resultingElement::asNumber);
-        assertThrows(IllegalStateException.class, resultingElement::asObject);
+        assertThrows(IllegalStateException.class, resultingElement::asScalar);
     }
 
     @Test
@@ -199,24 +215,17 @@ class AbstractConfigCodecTest {
     @Test
     void encodeClosesStream() throws IOException {
         OutputStream stream = OutputStream.nullOutputStream();
-        testCodec.encode(Mockito.mock(ConfigNode.class), stream);
+        testCodec.encode(new LinkedConfigNode(), stream);
 
         assertThrows(IOException.class, () -> stream.write(0));
     }
 
-    @SuppressWarnings("CollectionAddedToSelf")
     @Test
-    void correctSelfReferentialMapping() {
-        Map<String, Object> root = new LinkedHashMap<>();
-        root.put("number", 69);
-        root.put("string", "this is a string");
+    void correctSelfReferentialMapping() throws IOException {
+        ConfigElement element = testCodec.decode(InputStream.nullInputStream());
+        ConfigNode root = element.asNode();
 
-        root.put("selfReference", root);
-
-        ConfigElement element = testCodec.mapInput(root, testCodec::deserializeObject, testCodec::makeDecodeMap,
-                testCodec::makeEncodeMap, Object.class, ConfigElement.class);
-        assertTrue(element.isNode());
-        assertSame(element.asNode().get("selfReference"), element);
+        assertSame(root, element.getElementOrThrow(SUB_ROOT_KEY, PARENT_REF));
     }
 
     @Test

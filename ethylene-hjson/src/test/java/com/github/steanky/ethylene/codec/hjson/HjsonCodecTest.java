@@ -16,15 +16,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class HjsonCodecTest {
     private static final String TEST_HJSON = """
-            {
-                #this is a comment
-                test_value: "this is a value"
-                another_value: 69
-                array: [ "one", "two", "three" ]
-                sub: {
-                    sub_string: "test"
-                }
-            }""";
+        {
+            #this is a comment
+            test_value: "this is a value"
+            another_value: 69
+            array: [ "one", "two", "three" ]
+            sub: {
+                sub_string: "test"
+            }
+        }""";
 
     private final HjsonCodec codec = new HjsonCodec();
 
@@ -40,15 +40,15 @@ class HjsonCodecTest {
     @Test
     void writesHjson() throws IOException {
         ConfigNode node = new LinkedConfigNode();
-        node.put("test_string", new ConfigPrimitive("value"));
-        node.put("test_number", new ConfigPrimitive(1.0));
+        node.put("test_string", ConfigPrimitive.of("value"));
+        node.put("test_number", ConfigPrimitive.of(1.0));
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         codec.encode(node, stream);
 
         String hjson = stream.toString(Charset.defaultCharset());
-        ConfigNode secondNode = codec.decode(new ByteArrayInputStream(hjson.getBytes(Charset.defaultCharset())))
-                .asNode();
+        ConfigNode secondNode =
+            codec.decode(new ByteArrayInputStream(hjson.getBytes(Charset.defaultCharset()))).asNode();
         assertEquals(node, secondNode);
     }
 }

@@ -1,29 +1,36 @@
 package com.github.steanky.ethylene.codec.toml;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigPrimitive;
+import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Date;
+import java.time.temporal.Temporal;
 import java.util.Objects;
 
 /**
- * A ConfigElement wrapping a date, required since dates have first-class support in TOML.
+ * Represents a TOML date. This is a scalar whose object type is {@link Temporal}.
+ *
+ * @see ConfigElement
+ * @see ConfigPrimitive
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class ConfigDate implements ConfigElement {
-    private Date date;
+    private final Temporal temporal;
 
     /**
-     * Construct a new ConfigDate wrapping the provided {@link Date}.
-     * @param date the date to wrap
+     * Construct a new ConfigDate wrapping the provided {@link Temporal}.
+     *
+     * @param temporal the date to wrap
      * @throws NullPointerException if date is null
      */
-    public ConfigDate(@NotNull Date date) {
-        this.date = Objects.requireNonNull(date);
+    public ConfigDate(@NotNull Temporal temporal) {
+        this.temporal = Objects.requireNonNull(temporal);
     }
 
     @Override
-    public boolean isObject() {
-        return true;
+    public ElementType type() {
+        return ElementType.SCALAR;
     }
 
     @Override
@@ -34,28 +41,25 @@ public class ConfigDate implements ConfigElement {
     @Override
     public @NotNull String asString() {
         //override asString to avoid requiring the user to handle Date objects directly
-        return date.toString();
+        return temporal.toString();
     }
 
     @Override
-    public @NotNull Object asObject() {
-        return date;
+    public boolean isScalar() {
+        return true;
+    }
+
+    @Override
+    public @NotNull Object asScalar() {
+        return temporal;
     }
 
     /**
-     * Sets the {@link Date} wrapped by this ConfigDate object.
-     * @param date the date to set
-     * @throws NullPointerException if date is null
+     * Gets the {@link Temporal} wrapped by this ConfigDate object.
+     *
+     * @return the wrapped Temporal
      */
-    public void setDate(@NotNull Date date) {
-        this.date = Objects.requireNonNull(date);
-    }
-
-    /**
-     * Gets the date wrapped by this ConfigDate object.
-     * @return the wrapped date
-     */
-    public @NotNull Date getDate() {
-        return date;
+    public @NotNull Temporal getTemporal() {
+        return temporal;
     }
 }

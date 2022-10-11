@@ -9,23 +9,25 @@ import java.util.function.Function;
 
 /**
  * General ConfigProcessor implementation used to convert subclasses of Number.
+ *
  * @param <TNumber> the subclass of Number to convert
  */
 class NumberConfigProcessor<TNumber extends Number> implements ConfigProcessor<TNumber> {
-    private final Function<Number, TNumber> converter;
+    private final Function<? super Number, ? extends TNumber> converter;
 
     /**
      * Creates a new instance of this class using the provided conversion function, which will generally be used to
      * convert a Number to a more specific implementation.
+     *
      * @param converter the conversion function
      */
-    NumberConfigProcessor(@NotNull Function<Number, TNumber> converter) {
+    NumberConfigProcessor(@NotNull Function<? super Number, ? extends TNumber> converter) {
         this.converter = Objects.requireNonNull(converter);
     }
 
     @Override
     public TNumber dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
-        if(!element.isNumber()) {
+        if (!element.isNumber()) {
             throw new ConfigProcessException("Element must be a number");
         }
 
@@ -34,6 +36,6 @@ class NumberConfigProcessor<TNumber extends Number> implements ConfigProcessor<T
 
     @Override
     public @NotNull ConfigElement elementFromData(TNumber number) {
-        return new ConfigPrimitive(number);
+        return ConfigPrimitive.of(number);
     }
 }
