@@ -4,8 +4,8 @@ plugins {
     id 'ethylene.java-conventions'
 }
 
-group 'com.example'
-version '0.13.0'
+group 'com.github.steanky'
+version '0.14.0'
 
 publishing {
     publications {

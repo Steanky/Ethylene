@@ -2,8 +2,6 @@ plugins {
     id 'ethylene.library-conventions'
 }
 
-group 'com.github.steanky'
-
 dependencies {
     api project(':ethylene-core')
     api 'org.snakeyaml:snakeyaml-engine:2.3'
