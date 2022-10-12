@@ -60,4 +60,9 @@ public class LinkedConfigNode extends AbstractConfigNode {
     public LinkedConfigNode(int initialCapacity, float loadFactor, boolean accessOrder) {
         super(new LinkedHashMap<>(initialCapacity, loadFactor, accessOrder));
     }
+
+    @Override
+    public @NotNull ConfigContainer emptyCopy() {
+        return new LinkedConfigNode(size());
+    }
 }

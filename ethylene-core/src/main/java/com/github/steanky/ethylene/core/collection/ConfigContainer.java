@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.util.ConfigElementUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -39,4 +40,31 @@ public interface ConfigContainer extends ConfigElement {
      * @return an immutable, read-through collection representing the {@link ConfigElement}s contained in this object
      */
     @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection();
+
+    /**
+     * Creates a new, empty {@link ConfigContainer} implementation with the same capacity and characteristics as this
+     * one. Implementations may choose not to implement this method. If it is supported, the returned container must
+     * be of the same class as the container in which it is contained.
+     * <p>
+     * Implementations that do not implement this method will not be correctly copied using
+     * {@link ConfigContainer#copy()}; they will be replaced by a default type instead.
+     *
+     * @return a new, empty ConfigContainer
+     * @throws UnsupportedOperationException if this ConfigContainer implementation does not support this functionality
+     */
+    default @NotNull ConfigContainer emptyCopy() {
+        throw new UnsupportedOperationException("This ConfigContainer does not support copying");
+    }
+
+    /**
+     * Creates an exact, deep copy of this {@link ConfigContainer}, preserving the entire configuration tree, including
+     * circular references. Each container present in the new tree is guaranteed to be a different object than its
+     * equivalent in the original tree. However, it is unspecified whether scalars are copied or not; the original
+     * instances may or may not be reused, dependent on the implementation.
+     *
+     * @return an exact, deep copy of this ConfigContainer
+     */
+    default @NotNull ConfigContainer copy() {
+        return ConfigElementUtils.clone(this);
+    }
 }

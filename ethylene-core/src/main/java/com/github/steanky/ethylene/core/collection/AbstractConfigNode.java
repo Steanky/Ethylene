@@ -1,12 +1,14 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.util.ConfigElementUtils;
 import com.github.steanky.ethylene.core.util.MemoizingSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 

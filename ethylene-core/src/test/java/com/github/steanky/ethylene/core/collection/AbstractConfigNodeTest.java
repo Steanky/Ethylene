@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigPrimitive;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -68,5 +69,23 @@ class AbstractConfigNodeTest {
         list.add(ConfigPrimitive.of(10));
 
         assertEquals("$0{self=$0, list=$1{$1, $0, [10]}}", node.toString());
+    }
+
+    @SuppressWarnings("CollectionAddedToSelf")
+    @Test
+    void cloneTest() {
+        ConfigNode node = ConfigNode.of("a", 10, "b", ConfigList.of("a"));
+        node.put("self", node);
+        node.get("b").asList().add(node);
+
+        ConfigNode copy = node.copy();
+
+        assertNotSame(node, copy);
+        assertNotSame(node, copy.get("self"));
+        assertNotSame(node.get("b"), copy.get("b"));
+        assertNotSame(node.get("b").asList().get(1), copy);
+
+        assertSame(copy, copy.get("self"));
+        assertSame(copy, copy.get("b").asList().get(1));
     }
 }
