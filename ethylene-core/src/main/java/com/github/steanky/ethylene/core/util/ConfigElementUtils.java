@@ -1,13 +1,17 @@
 package com.github.steanky.ethylene.core.util;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.Graph;
+import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigEntry;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Simple utilities for ConfigElements.
@@ -68,5 +72,40 @@ public final class ConfigElementUtils {
     public static String toString(@NotNull ConfigElement input) {
         Objects.requireNonNull(input);
         return toStringInternal(input, new IdentityHashMap<>());
+    }
+
+    /**
+     * Deep-copies the provided {@link ConfigContainer}, maintaining the extract structure of the input tree, including
+     * circular references.
+     *
+     * @param original the original
+     * @return an exact copy of the input
+     */
+    public static @NotNull ConfigContainer clone(@NotNull ConfigContainer original) {
+        return (ConfigContainer) Graph.process(original, (ConfigElement node) -> {
+            ConfigContainer configContainer = node.asContainer();
+
+            ConfigContainer result;
+            try {
+                //use the implementation's copy method...
+                result = configContainer.emptyCopy();
+            }
+            catch (UnsupportedOperationException e) {
+                //...unless we can't due to it not being supported, in which case use reasonable defaults
+                int size = configContainer.entryCollection().size();
+                result = configContainer.isNode() ? new LinkedConfigNode(size) : new ArrayConfigList(size);
+            }
+
+            ConfigContainer out = result;
+            return Graph.node(configContainer.entryCollection().iterator(), Graph.output(out,
+                (Graph.Accumulator<? super String, ? super ConfigElement>) (key, element, circular) -> {
+                    if (out.isNode()) {
+                        out.asNode().put(key, element);
+                    }
+                    else {
+                        out.asList().add(element);
+                    }
+                }));
+        }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES);
     }
 }

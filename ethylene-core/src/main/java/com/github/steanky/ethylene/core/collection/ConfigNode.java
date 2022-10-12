@@ -119,4 +119,9 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     default void putBoolean(@NotNull String key, boolean value) {
         put(key, ConfigPrimitive.of(value));
     }
+
+    @Override
+    default @NotNull ConfigNode copy() {
+        return (ConfigNode) ConfigContainer.super.copy();
+    }
 }

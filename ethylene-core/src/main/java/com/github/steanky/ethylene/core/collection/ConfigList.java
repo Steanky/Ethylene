@@ -93,4 +93,9 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
     default void addBoolean(boolean value) {
         add(ConfigPrimitive.of(value));
     }
+
+    @Override
+    default @NotNull ConfigList copy() {
+        return (ConfigList) ConfigContainer.super.copy();
+    }
 }

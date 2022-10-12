@@ -46,4 +46,9 @@ public class ArrayConfigList extends AbstractConfigList implements RandomAccess 
     public void trimToSize() {
         ((ArrayList<?>) list).trimToSize();
     }
+
+    @Override
+    public @NotNull ConfigContainer emptyCopy() {
+        return new ArrayConfigList(size());
+    }
 }
