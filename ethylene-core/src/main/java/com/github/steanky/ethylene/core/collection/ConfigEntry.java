@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * <p>Represents a particular key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is like a
- * list, the key will be null.</p>
+ * Represents an immutable key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is like a list,
+ * the key will be null.
  */
 public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
     private final String key;

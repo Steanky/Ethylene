@@ -1,14 +1,11 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.Graph;
-import com.github.steanky.ethylene.core.util.ConfigElementUtils;
-import com.github.steanky.ethylene.core.util.MemoizingSupplier;
+import com.github.steanky.toolkit.function.MemoizingSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
@@ -39,7 +36,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
      */
     protected AbstractConfigNode(@NotNull Map<String, ConfigElement> mappings) {
         this.mappings = Objects.requireNonNull(mappings);
-        this.entryCollectionSupplier = MemoizingSupplier.of(() -> new AbstractCollection<>() {
+        this.entryCollectionSupplier = new MemoizingSupplier<>(() -> new AbstractCollection<>() {
             @Override
             public Iterator<ConfigEntry> iterator() {
                 return new Iterator<>() {
@@ -65,7 +62,7 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
             }
         });
         this.elementCollectionSupplier =
-            MemoizingSupplier.of(() -> Collections.unmodifiableCollection(mappings.values()));
+            new MemoizingSupplier<>(() -> Collections.unmodifiableCollection(mappings.values()));
     }
 
     /**

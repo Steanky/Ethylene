@@ -4,6 +4,9 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        url 'https://dl.cloudsmith.io/public/steank-f1g/toolkit/maven/'
+    }
 }
 
 java {
@@ -20,6 +23,9 @@ test {
 }
 
 dependencies {
+    implementation 'com.github.steanky:toolkit-function:0.1.0'
+    implementation 'com.github.steanky:toolkit-collection:0.1.0'
+
     //annotations
     compileOnly 'org.jetbrains:annotations:22.0.0'
     testCompileOnly 'org.jetbrains:annotations:22.0.0'

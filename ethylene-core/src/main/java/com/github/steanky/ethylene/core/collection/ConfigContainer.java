@@ -1,7 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.util.ConfigElementUtils;
+import jdk.jshell.execution.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -10,7 +10,9 @@ import java.util.Map;
 
 /**
  * Represents a {@link ConfigElement} capable of holding other ConfigElements. ConfigContainer objects are generally
- * also either {@link Map} or {@link Collection} implementations.
+ * also either {@link Map} or {@link Collection} implementations, but this is not required.
+ * <p>
+ *
  */
 public interface ConfigContainer extends ConfigElement {
     @Override
@@ -42,9 +44,9 @@ public interface ConfigContainer extends ConfigElement {
     @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection();
 
     /**
-     * Creates a new, empty {@link ConfigContainer} implementation with the same capacity and characteristics as this
-     * one. Implementations may choose not to implement this method. If it is supported, the returned container must
-     * be of the same class as the container in which it is contained.
+     * Creates a new, empty {@link ConfigContainer} implementation with the same initial capacity (if supported) and
+     * any other applicable characteristics as this one. Implementations may choose not to implement this method. If it
+     * is supported, the returned container must be of the same class.
      * <p>
      * Implementations that do not implement this method will not be correctly copied using
      * {@link ConfigContainer#copy()}; they will be replaced by a default type instead.
@@ -65,6 +67,6 @@ public interface ConfigContainer extends ConfigElement {
      * @return an exact, deep copy of this ConfigContainer
      */
     default @NotNull ConfigContainer copy() {
-        return ConfigElementUtils.clone(this);
+        return Utils.clone(this);
     }
 }

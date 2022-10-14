@@ -1,8 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.util.ConfigElementUtils;
-import com.github.steanky.ethylene.core.util.MemoizingSupplier;
+import com.github.steanky.toolkit.function.MemoizingSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -37,7 +36,7 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      */
     protected AbstractConfigList(@NotNull List<ConfigElement> list) {
         this.list = Objects.requireNonNull(list);
-        this.entryCollectionSupplier = MemoizingSupplier.of(() -> new AbstractCollection<>() {
+        this.entryCollectionSupplier = new MemoizingSupplier<>(() -> new AbstractCollection<>() {
             @Override
             public Iterator<ConfigEntry> iterator() {
                 return new Iterator<>() {
@@ -60,7 +59,7 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
                 return list.size();
             }
         });
-        this.elementCollectionSupplier = MemoizingSupplier.of(() -> new AbstractCollection<>() {
+        this.elementCollectionSupplier = new MemoizingSupplier<>(() -> new AbstractCollection<>() {
             @Override
             public Iterator<ConfigElement> iterator() {
                 return new Iterator<>() {
