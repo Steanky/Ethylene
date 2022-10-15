@@ -26,7 +26,7 @@ class MappingProcessorSourceIntegrationTest {
         Signature<ObjectWithCustomSignature> signature = Signature.<ObjectWithCustomSignature>builder(new Token<>() {
                                                                                                       }, (ignored,
                 args) -> new ObjectWithCustomSignature((int) args[0]),
-            object -> List.of(new Signature.TypedObject("value", Token.INTEGER, object.value)),
+            object -> List.of(object.value),
             Map.entry("value", Token.INTEGER)).build();
 
         MappingProcessorSource source = MappingProcessorSource.builder().withCustomSignature(signature).build();

@@ -5,9 +5,11 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.Prioritized;
 import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.type.Token;
+import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +36,7 @@ public interface Signature<TReturn> extends Prioritized {
     @SafeVarargs
     static <T> Builder<T> builder(@NotNull Token<T> type,
         @NotNull BiFunction<? super T, ? super Object[], ? extends T> constructor,
-        @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+        @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
         @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
         return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
     }
@@ -170,7 +172,7 @@ public interface Signature<TReturn> extends Prioritized {
     @ApiStatus.Internal
     final class SignatureImpl<T> extends PrioritizedBase implements Signature<T> {
         private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
-        private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
+        private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
         private final BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction;
         private final Function<? super ConfigElement, ? extends T> buildingObjectInitializer;
         private final BiFunction<? super T, ? super Object[], ? extends T> constructor;
@@ -183,7 +185,7 @@ public interface Signature<TReturn> extends Prioritized {
         private final Token<T> returnType;
 
         private SignatureImpl(int priority, Collection<Map.Entry<String, Token<?>>> argumentTypes,
-            Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+            Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
             BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction,
             Function<? super ConfigElement, ? extends T> buildingObjectInitializer,
             BiFunction<? super T, ? super Object[], ? extends T> constructor, boolean matchNames,
@@ -210,7 +212,38 @@ public interface Signature<TReturn> extends Prioritized {
 
         @Override
         public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
-            return objectSignatureExtractor.apply(object);
+            Collection<Object> args = objectSignatureExtractor.apply(object);
+            if (args.size() != argumentTypes.size()) {
+                throw new MapperException("Unexpected number of arguments; needed " + argumentTypes.size() + ", got " +
+                    args.size());
+            }
+
+            return new AbstractCollection<>() {
+                @Override
+                public Iterator<TypedObject> iterator() {
+                    return new Iterator<>() {
+                        private final Iterator<Object> objectIterator = args.iterator();
+                        private final Iterator<Map.Entry<String, Token<?>>> entryIterator = argumentTypes.iterator();
+
+                        @Override
+                        public boolean hasNext() {
+                            return objectIterator.hasNext() && entryIterator.hasNext();
+                        }
+
+                        @Override
+                        public TypedObject next() {
+                            Object object = objectIterator.next();
+                            Map.Entry<String, Token<?>> entry = entryIterator.next();
+                            return new TypedObject(entry.getKey(), entry.getValue(), object);
+                        }
+                    };
+                }
+
+                @Override
+                public int size() {
+                    return argumentTypes.size();
+                }
+            };
         }
 
         @Override
@@ -267,7 +300,7 @@ public interface Signature<TReturn> extends Prioritized {
     final class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ? extends T> constructor;
         private final Token<T> returnType;
-        private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
+        private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
         private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
 
         private int priority;
@@ -290,7 +323,7 @@ public interface Signature<TReturn> extends Prioritized {
         @SafeVarargs
         private Builder(@NotNull Token<T> returnType,
             @NotNull BiFunction<? super T, ? super Object[], ? extends T> constructor,
-            @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+            @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
             @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
             this.returnType = Objects.requireNonNull(returnType);
