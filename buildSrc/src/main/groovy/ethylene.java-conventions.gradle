@@ -23,8 +23,8 @@ test {
 }
 
 dependencies {
-    implementation 'com.github.steanky:toolkit-function:0.1.0'
-    implementation 'com.github.steanky:toolkit-collection:0.1.0'
+    implementation 'com.github.steanky:toolkit-function:0.1.1'
+    implementation 'com.github.steanky:toolkit-collection:0.1.1'
 
     //annotations
     compileOnly 'org.jetbrains:annotations:22.0.0'

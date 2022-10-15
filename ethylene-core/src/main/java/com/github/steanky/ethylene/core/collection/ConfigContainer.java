@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import jdk.jshell.execution.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -61,12 +60,28 @@ public interface ConfigContainer extends ConfigElement {
     /**
      * Creates an exact, deep copy of this {@link ConfigContainer}, preserving the entire configuration tree, including
      * circular references. Each container present in the new tree is guaranteed to be a different object than its
-     * equivalent in the original tree. However, it is unspecified whether scalars are copied or not; the original
-     * instances may or may not be reused, dependent on the implementation.
+     * equivalent in the original tree, except when:
+     *
+     * <ol>
+     *     <li>the element is a scalar type, or</li>
+     *     <li>the element is an immutable collection type</li>
+     * </ol>
      *
      * @return an exact, deep copy of this ConfigContainer
      */
     default @NotNull ConfigContainer copy() {
-        return Utils.clone(this);
+        return ContainerUtils.clone(this);
+    }
+
+    /**
+     * Creates an immutable copy of this ConfigContainer, preserving the entire configuration tree, including circular
+     * references. Any sub-containers are converted to an immutable equivalent if necessary. As with
+     * {@link ConfigContainer#copy()}, only scalar types and immutable collection types are left unchanged between the
+     * input and output graph.
+     *
+     * @return an immutable copy of this ConfigContainer, whose contents will not change even if the underlying
+     */
+    default @NotNull ConfigContainer immutableCopy() {
+        return ContainerUtils.immutableCopy(this);
     }
 }
