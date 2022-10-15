@@ -25,9 +25,6 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      */
     protected final List<ConfigElement> list;
 
-    private final Supplier<Collection<ConfigEntry>> entryCollectionSupplier;
-    private final Supplier<Collection<ConfigElement>> elementCollectionSupplier;
-
     /**
      * Construct a new AbstractConfigList using the provided list to store its elements.
      *
@@ -36,52 +33,6 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
      */
     protected AbstractConfigList(@NotNull List<ConfigElement> list) {
         this.list = Objects.requireNonNull(list);
-        this.entryCollectionSupplier = new MemoizingSupplier<>(() -> new AbstractCollection<>() {
-            @Override
-            public Iterator<ConfigEntry> iterator() {
-                return new Iterator<>() {
-                    private final Iterator<ConfigElement> elementIterator = list.iterator();
-
-                    @Override
-                    public boolean hasNext() {
-                        return elementIterator.hasNext();
-                    }
-
-                    @Override
-                    public ConfigEntry next() {
-                        return ConfigEntry.of(elementIterator.next());
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return list.size();
-            }
-        });
-        this.elementCollectionSupplier = new MemoizingSupplier<>(() -> new AbstractCollection<>() {
-            @Override
-            public Iterator<ConfigElement> iterator() {
-                return new Iterator<>() {
-                    private final Iterator<ConfigElement> elementIterator = list.iterator();
-
-                    @Override
-                    public boolean hasNext() {
-                        return elementIterator.hasNext();
-                    }
-
-                    @Override
-                    public ConfigElement next() {
-                        return elementIterator.next();
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return list.size();
-            }
-        });
     }
 
     /**
@@ -144,12 +95,55 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-        return entryCollectionSupplier.get();
+        return new AbstractCollection<>() {
+            @Override
+            public Iterator<ConfigEntry> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<ConfigElement> elementIterator = list.iterator();
 
+                    @Override
+                    public boolean hasNext() {
+                        return elementIterator.hasNext();
+                    }
+
+                    @Override
+                    public ConfigEntry next() {
+                        return ConfigEntry.of(elementIterator.next());
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return list.size();
+            }
+        };
     }
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        return elementCollectionSupplier.get();
+        return new AbstractCollection<>() {
+            @Override
+            public Iterator<ConfigElement> iterator() {
+                return new Iterator<>() {
+                    private final Iterator<ConfigElement> elementIterator = list.iterator();
+
+                    @Override
+                    public boolean hasNext() {
+                        return elementIterator.hasNext();
+                    }
+
+                    @Override
+                    public ConfigElement next() {
+                        return elementIterator.next();
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return list.size();
+            }
+        };
     }
 }

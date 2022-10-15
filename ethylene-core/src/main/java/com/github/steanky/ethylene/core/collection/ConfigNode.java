@@ -130,4 +130,9 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     default @NotNull ConfigNode immutableCopy() {
         return (ConfigNode) ConfigContainer.super.immutableCopy();
     }
+
+    @Override
+    default @NotNull ConfigNode immutableView() {
+        return (ConfigNode) ConfigContainer.super.immutableView();
+    }
 }

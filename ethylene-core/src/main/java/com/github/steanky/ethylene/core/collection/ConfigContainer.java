@@ -38,8 +38,7 @@ public interface ConfigContainer extends ConfigElement {
 
     /**
      * Returns the <i>element collection</i> maintained by this ConfigContainer. The collection must be immutable and
-     * read-through, so changes in the underlying container are reflected in the collection. Additionally, repeated
-     * calls to this method should return the same instance.
+     * read-through, so changes in the underlying container are reflected in the collection.
      *
      * @return an immutable, read-through collection representing the {@link ConfigElement}s contained in this object
      */
@@ -86,5 +85,17 @@ public interface ConfigContainer extends ConfigElement {
      */
     default @NotNull ConfigContainer immutableCopy() {
         return Containers.immutableCopy(this);
+    }
+
+    /**
+     * Creates an immutable view of this ConfigContainer, preserving the entire configuration tree, including circular
+     * references. Any sub-containers are converted to an immutable view equivalent if necessary. As with
+     * {@link ConfigContainer#copy()}, only scalar types and immutable collection types are left unchanged between the
+     * input and output graph.
+     *
+     * @return an immutable copy of this ConfigContainer, whose contents will change if this container changes
+     */
+    default @NotNull ConfigContainer immutableView() {
+        return Containers.immutableView(this);
     }
 }
