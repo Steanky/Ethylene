@@ -1,13 +1,12 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.toolkit.function.MemoizingSupplier;
+import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 import java.util.function.IntFunction;
-import java.util.function.Supplier;
 
 /**
  * <p>Contains functionality and methods common to many {@link ConfigList} implementations. This abstract class does
@@ -90,60 +89,16 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
 
     @Override
     public String toString() {
-        return ConfigElementUtils.toString(this);
+        return ConfigElements.toString(this);
     }
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-        return new AbstractCollection<>() {
-            @Override
-            public Iterator<ConfigEntry> iterator() {
-                return new Iterator<>() {
-                    private final Iterator<ConfigElement> elementIterator = list.iterator();
-
-                    @Override
-                    public boolean hasNext() {
-                        return elementIterator.hasNext();
-                    }
-
-                    @Override
-                    public ConfigEntry next() {
-                        return ConfigEntry.of(elementIterator.next());
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return list.size();
-            }
-        };
+        return Iterators.mappedView(ConfigEntry::of, list);
     }
 
     @Override
     public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        return new AbstractCollection<>() {
-            @Override
-            public Iterator<ConfigElement> iterator() {
-                return new Iterator<>() {
-                    private final Iterator<ConfigElement> elementIterator = list.iterator();
-
-                    @Override
-                    public boolean hasNext() {
-                        return elementIterator.hasNext();
-                    }
-
-                    @Override
-                    public ConfigElement next() {
-                        return elementIterator.next();
-                    }
-                };
-            }
-
-            @Override
-            public int size() {
-                return list.size();
-            }
-        };
+        return Collections.unmodifiableCollection(list);
     }
 }

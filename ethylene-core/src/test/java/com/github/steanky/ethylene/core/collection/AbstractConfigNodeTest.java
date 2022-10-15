@@ -1,8 +1,6 @@
 package com.github.steanky.ethylene.core.collection;
 
-import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -120,7 +118,21 @@ class AbstractConfigNodeTest {
         ConfigNode node = ConfigNode.of("test", 10, "sub", ConfigNode.of("test", 69));
         ConfigNode copy = node.immutableCopy();
 
-        assertThrows(UnsupportedOperationException.class, () -> copy.get("sub").asNode().put("test",
-            ConfigPrimitive.NULL));
+        assertThrows(UnsupportedOperationException.class,
+            () -> copy.get("sub").asNode().put("test", ConfigPrimitive.NULL));
+    }
+
+    @Test
+    void viewTest() {
+        ConfigNode underlying = ConfigNode.of("test", 10);
+
+        ConfigNode view = underlying.immutableView();
+        assertThrows(UnsupportedOperationException.class, () -> view.put("test", ConfigPrimitive.NULL));
+
+        assertEquals(10, view.get("test").asNumber());
+
+        underlying.putNumber("second", 20);
+
+        assertEquals(20, view.get("second").asNumber());
     }
 }

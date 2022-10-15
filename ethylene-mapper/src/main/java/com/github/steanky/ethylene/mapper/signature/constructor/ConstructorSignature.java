@@ -60,8 +60,8 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
     /**
      * Creates a new instance of this class.
      *
-     * @param constructor the {@link Constructor} used to create new objects and from which to obtain signature
-     *                    information
+     * @param constructor       the {@link Constructor} used to create new objects and from which to obtain signature
+     *                          information
      * @param genericReturnType the full generic type of the object created by the constructor
      */
     @SuppressWarnings("unchecked")

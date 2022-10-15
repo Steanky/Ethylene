@@ -157,14 +157,14 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
      * parameters) or non-parameterless (in which case they take a single integer value for their initial size).
      *
      * @param parameterless whether this constructor is parameterless
-     * @param constructor the constructor itself
+     * @param constructor   the constructor itself
      */
     protected record ConstructorInfo(boolean parameterless, @NotNull Constructor<?> constructor) {
         /**
          * Creates a new instance of this record.
          *
          * @param parameterless whether this constructor is parameterless
-         * @param constructor the constructor itself
+         * @param constructor   the constructor itself
          */
         public ConstructorInfo(boolean parameterless, @NotNull Constructor<?> constructor) {
             this.parameterless = parameterless;

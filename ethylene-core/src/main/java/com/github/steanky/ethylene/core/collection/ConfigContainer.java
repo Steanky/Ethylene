@@ -29,8 +29,7 @@ public interface ConfigContainer extends ConfigElement {
 
     /**
      * Returns the <i>entry collection</i> maintained by this ConfigContainer. The collection must be immutable and
-     * read-through, so changes in the underlying container are reflected in the entry collection. Additionally,
-     * repeated calls to this method should return the same instance.
+     * read-through, so changes in the underlying container are reflected in the entry collection.
      *
      * @return an immutable, read-through collection representing the entries contained in this object
      */
@@ -45,9 +44,9 @@ public interface ConfigContainer extends ConfigElement {
     @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection();
 
     /**
-     * Creates a new, empty {@link ConfigContainer} implementation with the same initial capacity (if supported) and
-     * any other applicable characteristics as this one. Implementations may choose not to implement this method. If it
-     * is supported, the returned container must be of the same class.
+     * Creates a new, empty {@link ConfigContainer} implementation with the same initial capacity (if supported) and any
+     * other applicable characteristics as this one. Implementations may choose not to implement this method. If it is
+     * supported, the returned container must be of the same class.
      * <p>
      * Implementations that do not implement this method will not be correctly copied using
      * {@link ConfigContainer#copy()}; they will be replaced by a default type instead.

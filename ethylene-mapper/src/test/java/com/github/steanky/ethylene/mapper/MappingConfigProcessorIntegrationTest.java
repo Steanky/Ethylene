@@ -38,7 +38,7 @@ class MappingConfigProcessorIntegrationTest {
 
     public MappingConfigProcessorIntegrationTest() {
         @SuppressWarnings("rawtypes") Signature<Map.Entry> mapEntry = Signature.builder(new Token<Map.Entry>() {
-                                                                             },
+                                                                                        },
             (entry, objects) -> Map.entry(objects[0], objects[1]),
             (entry) -> List.of(new Signature.TypedObject("key", new Token<>() {
             }, entry.getKey()), new Signature.TypedObject("value", new Token<>() {

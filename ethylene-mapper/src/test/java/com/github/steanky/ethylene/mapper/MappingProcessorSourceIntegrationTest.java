@@ -21,41 +21,37 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("CollectionAddedToSelf")
 class MappingProcessorSourceIntegrationTest {
-    @Nested
-    class Builder {
-        private static MappingProcessorSource standardSource() {
-            return MappingProcessorSource.builder()
-                .withStandardSignatures()
-                .withStandardTypeImplementations()
-                .build();
-        }
+    @Test
+    void simpleCustomSignature() throws ConfigProcessException {
+        Signature<ObjectWithCustomSignature> signature = Signature.<ObjectWithCustomSignature>builder(new Token<>() {
+                                                                                                      }, (ignored,
+                args) -> new ObjectWithCustomSignature((int) args[0]),
+            object -> List.of(new Signature.TypedObject("value", Token.INTEGER, object.value)),
+            Map.entry("value", Token.INTEGER)).build();
 
-        @Test
-        void boundedWildcard() throws ConfigProcessException {
-            MappingProcessorSource mappingProcessor = standardSource();
-            ConfigProcessor<Collection<? extends String>> processor = mappingProcessor.processorFor(new Token<>() {});
-            ConfigList data = ConfigList.of("this", "is", "a", "test");
-            Collection<? extends String> strings = processor.dataFromElement(data);
+        MappingProcessorSource source = MappingProcessorSource.builder().withCustomSignature(signature).build();
+        ConfigProcessor<ObjectWithCustomSignature> processor =
+            source.processorFor(Token.ofClass(ObjectWithCustomSignature.class));
 
-            assertLinesMatch(strings.stream().map(Function.identity()), data.stream().map(
-                ConfigElement::asString));
+        ConfigNode node = ConfigNode.of("value", 10);
+        ObjectWithCustomSignature result = processor.dataFromElement(node);
+        assertEquals(10, result.value);
 
-            ConfigElement element = processor.elementFromData(strings);
-            assertEquals(data, element);
-        }
+        ConfigElement element = processor.elementFromData(result);
+        assertEquals(node, element);
+    }
 
-        @Test
-        void wildcard() throws ConfigProcessException {
-            MappingProcessorSource mappingProcessor = standardSource();
-            ConfigProcessor<Collection<?>> processor = mappingProcessor.processorFor(new Token<>() {});
-            ConfigList data = ConfigList.of(0, "string", 0.5F, 0.5D, 154566546546564L);
-            Collection<?> objects = processor.dataFromElement(data);
+    @Test
+    void selfReferentialObject() throws ConfigProcessException {
+        MappingProcessorSource source = MappingProcessorSource.builder().build();
+        ConfigProcessor<SelfReferentialObject> processor =
+            source.processorFor(Token.ofClass(SelfReferentialObject.class));
 
-            assertArrayEquals(data.stream().map(ConfigElement::asScalar).toArray(), objects.toArray());
+        ConfigNode node = ConfigNode.of();
+        node.put("self", node);
 
-            ConfigElement element = processor.elementFromData(objects);
-            assertEquals(data, element);
-        }
+        SelfReferentialObject self = processor.dataFromElement(node);
+        assertSame(self, self.self);
     }
 
     private static class ObjectWithCustomSignature {
@@ -77,34 +73,38 @@ class MappingProcessorSourceIntegrationTest {
         }
     }
 
-    @Test
-    void simpleCustomSignature() throws ConfigProcessException {
-        Signature<ObjectWithCustomSignature> signature = Signature.<ObjectWithCustomSignature>builder(new Token<>() {
-        }, (ignored, args) -> new ObjectWithCustomSignature((int) args[0]), object -> List.of(new Signature
-            .TypedObject("value", Token.INTEGER, object.value)), Map.entry("value", Token.INTEGER)).build();
+    @Nested
+    class Builder {
+        private static MappingProcessorSource standardSource() {
+            return MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations().build();
+        }
 
-        MappingProcessorSource source = MappingProcessorSource.builder().withCustomSignature(signature).build();
-        ConfigProcessor<ObjectWithCustomSignature> processor = source.processorFor(Token
-            .ofClass(ObjectWithCustomSignature.class));
+        @Test
+        void boundedWildcard() throws ConfigProcessException {
+            MappingProcessorSource mappingProcessor = standardSource();
+            ConfigProcessor<Collection<? extends String>> processor = mappingProcessor.processorFor(new Token<>() {
+            });
+            ConfigList data = ConfigList.of("this", "is", "a", "test");
+            Collection<? extends String> strings = processor.dataFromElement(data);
 
-        ConfigNode node = ConfigNode.of("value", 10);
-        ObjectWithCustomSignature result = processor.dataFromElement(node);
-        assertEquals(10, result.value);
+            assertLinesMatch(strings.stream().map(Function.identity()), data.stream().map(ConfigElement::asString));
 
-        ConfigElement element = processor.elementFromData(result);
-        assertEquals(node, element);
-    }
+            ConfigElement element = processor.elementFromData(strings);
+            assertEquals(data, element);
+        }
 
-    @Test
-    void selfReferentialObject() throws ConfigProcessException {
-        MappingProcessorSource source = MappingProcessorSource.builder().build();
-        ConfigProcessor<SelfReferentialObject> processor = source.processorFor(Token
-            .ofClass(SelfReferentialObject.class));
+        @Test
+        void wildcard() throws ConfigProcessException {
+            MappingProcessorSource mappingProcessor = standardSource();
+            ConfigProcessor<Collection<?>> processor = mappingProcessor.processorFor(new Token<>() {
+            });
+            ConfigList data = ConfigList.of(0, "string", 0.5F, 0.5D, 154566546546564L);
+            Collection<?> objects = processor.dataFromElement(data);
 
-        ConfigNode node = ConfigNode.of();
-        node.put("self", node);
+            assertArrayEquals(data.stream().map(ConfigElement::asScalar).toArray(), objects.toArray());
 
-        SelfReferentialObject self = processor.dataFromElement(node);
-        assertSame(self, self.self);
+            ConfigElement element = processor.elementFromData(objects);
+            assertEquals(data, element);
+        }
     }
 }

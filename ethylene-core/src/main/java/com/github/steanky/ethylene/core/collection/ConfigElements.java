@@ -1,20 +1,17 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.ethylene.core.ElementType;
-import com.github.steanky.ethylene.core.Graph;
-import com.github.steanky.ethylene.core.collection.*;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnmodifiableView;
 
-import java.util.*;
-import java.util.function.Function;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * Simple utilities for ConfigElements.
  */
-final class ConfigElementUtils {
-    private ConfigElementUtils() {
+final class ConfigElements {
+    private ConfigElements() {
         throw new AssertionError("Why?");
     }
 

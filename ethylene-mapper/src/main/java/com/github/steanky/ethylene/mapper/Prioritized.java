@@ -10,6 +10,7 @@ package com.github.steanky.ethylene.mapper;
 public interface Prioritized extends Comparable<Prioritized> {
     /**
      * The priority of this object. Can be any integer, which is allowed to change over the object's lifetime.
+     *
      * @return this object's priority
      */
     int priority();

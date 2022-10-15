@@ -320,9 +320,9 @@ public final class Graph {
     /**
      * Returns the shared, empty {@link Accumulator} instance.
      *
-     * @return the shared empty Accumulator
      * @param <TKey> the key type
      * @param <TOut> the output type
+     * @return the shared empty Accumulator
      */
     @SuppressWarnings("unchecked")
     public static <TKey, TOut> @NotNull Accumulator<TKey, TOut> emptyAccumulator() {

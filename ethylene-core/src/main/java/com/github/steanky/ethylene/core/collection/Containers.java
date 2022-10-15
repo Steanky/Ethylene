@@ -29,16 +29,14 @@ final class Containers {
             Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
             if (configContainer instanceof Immutable) {
                 //don't write anything to this accumulator
-                return Graph.node(entryCollection.iterator(), Graph.output(configContainer, Graph
-                    .emptyAccumulator()));
+                return Graph.node(entryCollection.iterator(), Graph.output(configContainer, Graph.emptyAccumulator()));
             }
 
             ConfigContainer result;
             try {
                 //use the implementation's copy method...
                 result = configContainer.emptyCopy();
-            }
-            catch (UnsupportedOperationException e) {
+            } catch (UnsupportedOperationException e) {
                 //...unless we can't due to it not being supported, in which case use reasonable defaults
                 int size = entryCollection.size();
                 result = configContainer.isNode() ? new LinkedConfigNode(size) : new ArrayConfigList(size);
@@ -48,8 +46,7 @@ final class Containers {
             return Graph.node(entryCollection.iterator(), Graph.output(out, (key, element, circular) -> {
                 if (out.isNode()) {
                     out.asNode().put(key, element);
-                }
-                else {
+                } else {
                     out.asList().add(element);
                 }
             }));
@@ -68,8 +65,8 @@ final class Containers {
             Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
 
             if (entryCollection.isEmpty()) {
-                ConfigContainer emptyContainer = configContainer.isNode() ? EmptyImmutableConfigNode.INSTANCE :
-                    EmptyImmutableConfigList.INSTANCE;
+                ConfigContainer emptyContainer =
+                    configContainer.isNode() ? EmptyImmutableConfigNode.INSTANCE : EmptyImmutableConfigList.INSTANCE;
                 return Graph.node(Iterators.iterator(), Graph.output(emptyContainer, Graph.emptyAccumulator()));
             }
 
@@ -84,8 +81,7 @@ final class Containers {
                 Map<String, ConfigElement> underlyingMap = new LinkedHashMap<>(size, 1F);
                 ConfigNode immutableNode = new ImmutableConfigNode(underlyingMap);
                 output = Graph.output(immutableNode, (k, v, b) -> underlyingMap.put(k, v));
-            }
-            else {
+            } else {
                 ConfigElement[] underlyingArray = new ConfigElement[size];
                 ConfigList immutableList = new ImmutableConfigList(underlyingArray);
                 output = Graph.output(immutableList, new Graph.Accumulator<>() {
@@ -122,8 +118,7 @@ final class Containers {
             ConfigContainer view;
             if (configContainer.isNode()) {
                 view = new ConfigNodeView(configContainer.asNode());
-            }
-            else {
+            } else {
                 view = new ConfigListView(configContainer.asList());
             }
 
@@ -148,12 +143,6 @@ final class Containers {
             return underlying.elementCollection();
         }
 
-        @NotNull
-        @Override
-        public Set<Entry<String, ConfigElement>> entrySet() {
-            return Collections.unmodifiableSet(underlying.entrySet());
-        }
-
         @Override
         public int size() {
             return underlying.size();
@@ -174,6 +163,11 @@ final class Containers {
             return underlying.containsKey(key);
         }
 
+        @Override
+        public ConfigElement get(Object key) {
+            return underlying.get(key);
+        }
+
         @NotNull
         @Override
         public Set<String> keySet() {
@@ -184,6 +178,12 @@ final class Containers {
         @Override
         public Collection<ConfigElement> values() {
             return Collections.unmodifiableCollection(underlying.values());
+        }
+
+        @NotNull
+        @Override
+        public Set<Entry<String, ConfigElement>> entrySet() {
+            return Collections.unmodifiableSet(underlying.entrySet());
         }
     }
 
@@ -210,11 +210,6 @@ final class Containers {
         }
 
         @Override
-        public int size() {
-            return underlying.size();
-        }
-
-        @Override
         public int indexOf(Object o) {
             return underlying.indexOf(o);
         }
@@ -222,6 +217,11 @@ final class Containers {
         @Override
         public int lastIndexOf(Object o) {
             return underlying.lastIndexOf(o);
+        }
+
+        @Override
+        public int size() {
+            return underlying.size();
         }
     }
 
@@ -249,11 +249,6 @@ final class Containers {
         }
 
         @Override
-        public int size() {
-            return 0;
-        }
-
-        @Override
         public int indexOf(Object o) {
             return -1;
         }
@@ -262,13 +257,19 @@ final class Containers {
         public int lastIndexOf(Object o) {
             return -1;
         }
+
+        @Override
+        public int size() {
+            return 0;
+        }
     }
 
     private static final class EmptyImmutableConfigNode extends AbstractMap<String, ConfigElement> implements
         ConfigNode, Immutable {
         private static final ConfigNode INSTANCE = new EmptyImmutableConfigNode();
 
-        private EmptyImmutableConfigNode() {}
+        private EmptyImmutableConfigNode() {
+        }
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
@@ -278,12 +279,6 @@ final class Containers {
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
             return Collections.emptyList();
-        }
-
-        @NotNull
-        @Override
-        public Set<Entry<String, ConfigElement>> entrySet() {
-            return Collections.emptySet();
         }
 
         @Override
@@ -306,6 +301,11 @@ final class Containers {
             return false;
         }
 
+        @Override
+        public ConfigElement get(Object key) {
+            return null;
+        }
+
         @NotNull
         @Override
         public Set<String> keySet() {
@@ -316,6 +316,12 @@ final class Containers {
         @Override
         public Collection<ConfigElement> values() {
             return Collections.emptyList();
+        }
+
+        @NotNull
+        @Override
+        public Set<Entry<String, ConfigElement>> entrySet() {
+            return Collections.emptySet();
         }
     }
 
@@ -329,31 +335,12 @@ final class Containers {
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return new AbstractCollection<>() {
-                @Override
-                public Iterator<ConfigEntry> iterator() {
-                    return new Iterator<>() {
-                        private final Iterator<Map.Entry<String, ConfigElement>> entryIterator = map.entrySet()
-                            .iterator();
+            return Iterators.mappedView(entry -> ConfigEntry.of(entry.getKey(), entry.getValue()), map.entrySet());
+        }
 
-                        @Override
-                        public boolean hasNext() {
-                            return entryIterator.hasNext();
-                        }
-
-                        @Override
-                        public ConfigEntry next() {
-                            Map.Entry<String, ConfigElement> next = entryIterator.next();
-                            return ConfigEntry.of(next.getKey(), next.getValue());
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return map.size();
-                }
-            };
+        @Override
+        public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
+            return map.values();
         }
 
         @Override
@@ -382,11 +369,6 @@ final class Containers {
             return map.keySet();
         }
 
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-            return map.values();
-        }
-
         @NotNull
         @Override
         public Set<Entry<String, ConfigElement>> entrySet() {
@@ -394,7 +376,8 @@ final class Containers {
         }
     }
 
-    private static final class ImmutableConfigList extends AbstractList<ConfigElement> implements ConfigList, Immutable {
+    private static final class ImmutableConfigList extends AbstractList<ConfigElement> implements ConfigList,
+        Immutable {
         private final ConfigElement[] elements;
 
         private ImmutableConfigList(ConfigElement[] elements) {
@@ -403,29 +386,7 @@ final class Containers {
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return new AbstractCollection<>() {
-                @Override
-                public Iterator<ConfigEntry> iterator() {
-                    return new Iterator<>() {
-                        private int i;
-
-                        @Override
-                        public boolean hasNext() {
-                            return i < elements.length;
-                        }
-
-                        @Override
-                        public ConfigEntry next() {
-                            return ConfigEntry.of(elements[i++]);
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return elements.length;
-                }
-            };
+            return Iterators.mappedView(ConfigEntry::of, elements);
         }
 
         @Override
