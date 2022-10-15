@@ -11,7 +11,10 @@ import java.util.Map;
  * Represents a {@link ConfigElement} capable of holding other ConfigElements. ConfigContainer objects are generally
  * also either {@link Map} or {@link Collection} implementations, but this is not required.
  * <p>
- *
+ * ConfigContainer implementations may be immutable or mutable. Immutable implementations do not support mutating
+ * methods like {@link Collection#add(Object)}, but their contents may still change over their lifetime through other
+ * means, for example if they have a backing collection and the backing collection changes. Immutable implementations
+ * may be identified by checking {@code instanceof Immutable}.
  */
 public interface ConfigContainer extends ConfigElement {
     @Override
@@ -70,7 +73,7 @@ public interface ConfigContainer extends ConfigElement {
      * @return an exact, deep copy of this ConfigContainer
      */
     default @NotNull ConfigContainer copy() {
-        return ContainerUtils.clone(this);
+        return Containers.copy(this);
     }
 
     /**
@@ -79,9 +82,9 @@ public interface ConfigContainer extends ConfigElement {
      * {@link ConfigContainer#copy()}, only scalar types and immutable collection types are left unchanged between the
      * input and output graph.
      *
-     * @return an immutable copy of this ConfigContainer, whose contents will not change even if the underlying
+     * @return an immutable copy of this ConfigContainer, whose contents will not change even if this container changes
      */
     default @NotNull ConfigContainer immutableCopy() {
-        return ContainerUtils.immutableCopy(this);
+        return Containers.immutableCopy(this);
     }
 }

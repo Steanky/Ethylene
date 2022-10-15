@@ -3,7 +3,6 @@ package com.github.steanky.ethylene.core.collection;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.toolkit.collection.Iterators;
-import com.github.steanky.toolkit.function.Wrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -11,9 +10,9 @@ import java.util.*;
 import java.util.function.Function;
 
 /**
- * Internal utilities for collections. Not part of the public API.
+ * Internal utilities for containers. Not part of the public API.
  */
-final class ContainerUtils {
+final class Containers {
     /**
      * Deep-copies the provided {@link ConfigContainer}, maintaining the extract structure of the input tree, including
      * circular references, and the implementation types of every container encountered (when possible).
@@ -24,7 +23,7 @@ final class ContainerUtils {
      * @param original the original
      * @return an exact copy of the input
      */
-    static @NotNull ConfigContainer clone(@NotNull ConfigContainer original) {
+    static @NotNull ConfigContainer copy(@NotNull ConfigContainer original) {
         return (ConfigContainer) Graph.process(original, (ConfigElement node) -> {
             ConfigContainer configContainer = node.asContainer();
             Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
@@ -71,47 +70,36 @@ final class ContainerUtils {
             if (entryCollection.isEmpty()) {
                 ConfigContainer emptyContainer = configContainer.isNode() ? EmptyImmutableConfigNode.INSTANCE :
                     EmptyImmutableConfigList.INSTANCE;
+                return Graph.node(Iterators.iterator(), Graph.output(emptyContainer, Graph.emptyAccumulator()));
+            }
 
-                return Graph.node(Iterators.iterator(), Graph.output(Wrapper.of(emptyContainer),
-                    Graph.emptyAccumulator()));
+            if (configContainer instanceof Immutable) {
+                //don't go deeper into this node, its children are obligated to be immutable
+                return Graph.node(Iterators.iterator(), Graph.output(configContainer, Graph.emptyAccumulator()));
             }
 
             int size = entryCollection.size();
-            Wrapper<ConfigElement> result = Wrapper.ofNull();
-            Graph.Output<Wrapper<ConfigElement>, String> output;
+            Graph.Output<ConfigElement, String> output;
             if (configContainer.isNode()) {
-                ConfigEntry[] entries = new ConfigEntry[size];
-                output = Graph.output(result, new Graph.Accumulator<>() {
-                    private int i;
-
-                    @Override
-                    public void accept(String s, Wrapper<ConfigElement> configElementWrapper, boolean visited) {
-                        entries[i++] = ConfigEntry.of(s, configElementWrapper.get());
-
-                        if (i == size) {
-                            result.set(new ImmutableConfigNode(entries));
-                        }
-                    }
-                });
+                Map<String, ConfigElement> underlyingMap = new HashMap<>(size, 1F);
+                ConfigNode immutableNode = new ImmutableConfigNode(underlyingMap);
+                output = Graph.output(immutableNode, (k, v, b) -> underlyingMap.put(k, v));
             }
             else {
-                ConfigElement[] elements = new ConfigElement[size];
-                output = Graph.output(result, new Graph.Accumulator<>() {
+                ConfigElement[] underlyingArray = new ConfigElement[size];
+                ConfigList immutableList = new ImmutableConfigList(underlyingArray);
+                output = Graph.output(immutableList, new Graph.Accumulator<>() {
                     private int i;
-                    @Override
-                    public void accept(String s, Wrapper<ConfigElement> configElementWrapper, boolean visited) {
-                        elements[i++] = configElementWrapper.get();
 
-                        if (i == size) {
-                            result.set(new ImmutableConfigList(elements));
-                        }
+                    @Override
+                    public void accept(String s, ConfigElement element, boolean visited) {
+                        underlyingArray[i++] = element;
                     }
                 });
             }
 
             return Graph.node(entryCollection.iterator(), output);
-        }, ConfigElement::isContainer, Wrapper::of, Graph.Options.TRACK_REFERENCES | Graph.Options
-            .LAZY_ACCUMULATION | Graph.Options.DEPTH_FIRST).get().asContainer();
+        }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES).asContainer();
     }
 
     private static class EmptyImmutableConfigList extends AbstractList<ConfigElement> implements ConfigList, Immutable {
@@ -211,8 +199,8 @@ final class ContainerUtils {
         Immutable {
         private final Map<String, ConfigElement> map;
 
-        private ImmutableConfigNode(ConfigEntry[] entries) {
-            this.map = Map.ofEntries(entries);
+        private ImmutableConfigNode(Map<String, ConfigElement> trusted) {
+            this.map = trusted;
         }
 
         @Override
@@ -286,7 +274,7 @@ final class ContainerUtils {
         private final ConfigElement[] elements;
 
         private ImmutableConfigList(ConfigElement[] elements) {
-            this.elements = Arrays.copyOf(elements, elements.length);
+            this.elements = elements;
         }
 
         @Override
