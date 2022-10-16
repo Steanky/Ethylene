@@ -4,4 +4,7 @@ plugins {
 
 dependencies {
     testImplementation project(':ethylene-json')
+
+    api 'com.github.steanky:toolkit-function:0.1.3'
+    api 'com.github.steanky:toolkit-collection:0.1.3'
 }
