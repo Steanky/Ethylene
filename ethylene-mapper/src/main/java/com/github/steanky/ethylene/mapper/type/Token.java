@@ -472,6 +472,15 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     /**
+     * Returns true if this token represents an enum type; false otherwise.
+     *
+     * @return true if this token is an enum type, false otherwise
+     */
+    public final boolean isEnumType() {
+        return rawType().isEnum();
+    }
+
+    /**
      * Checks if this type is a subclass of the given type.
      *
      * @param type the potential supertype

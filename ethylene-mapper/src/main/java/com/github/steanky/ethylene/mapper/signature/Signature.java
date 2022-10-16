@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.Prioritized;
 import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.type.Token;
@@ -24,17 +25,17 @@ public interface Signature<TReturn> extends Prioritized {
     /**
      * Creates a new signature builder.
      *
-     * @param type the object that will be created by the signature
-     * @param constructor the constructor used by the signature to create objects
+     * @param type                     the object that will be created by the signature
+     * @param constructor              the constructor used by the signature to create objects
      * @param objectSignatureExtractor the function which extracts information about objects of the signature's type
-     * @param arguments the types needed for the signature to create objects
+     * @param arguments                the types needed for the signature to create objects
+     * @param <T>                      the type of object which will be created by the signature
      * @return a new {@link Signature.Builder} instance
-     * @param <T> the type of object which will be created by the signature
      */
     @SafeVarargs
     static <T> Builder<T> builder(@NotNull Token<T> type,
         @NotNull BiFunction<? super T, ? super Object[], ? extends T> constructor,
-        @NotNull Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+        @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
         @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
         return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
     }
@@ -96,7 +97,7 @@ public interface Signature<TReturn> extends Prioritized {
      * Builds an object.
      *
      * @param buildingObject the building object; may be null if {@link Signature#hasBuildingObject()} returns false
-     * @param args the arguments from which to create or populate an object
+     * @param args           the arguments from which to create or populate an object
      * @return a new object if this signature does not have a building object; otherwise, if a building object is
      * provided, populates it
      */
@@ -111,6 +112,7 @@ public interface Signature<TReturn> extends Prioritized {
 
     /**
      * Whether this signature should respect type hints when being matched.
+     *
      * @return true if this signature should respect type hints, false otherwise
      */
     boolean matchesTypeHints();
@@ -134,16 +136,16 @@ public interface Signature<TReturn> extends Prioritized {
     /**
      * An object which has generic type information and optionally a name associated with it.
      *
-     * @param name the name of this typed object
-     * @param type the generic type information associated with the object
+     * @param name  the name of this typed object
+     * @param type  the generic type information associated with the object
      * @param value the object itself
      */
     record TypedObject(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
         /**
          * Creates a new instance of this record.
          *
-         * @param name the name of this TypedObject; can be null to indicate no name
-         * @param type the type associated with the value object
+         * @param name  the name of this TypedObject; can be null to indicate no name
+         * @param type  the type associated with the value object
          * @param value the value object itself
          */
         public TypedObject(@Nullable String name, @NotNull Token<?> type, Object value) {
@@ -155,7 +157,7 @@ public interface Signature<TReturn> extends Prioritized {
         /**
          * Creates a new instance of this record with a null name.
          *
-         * @param type the type associated with the value object
+         * @param type  the type associated with the value object
          * @param value the value object itself
          */
         public TypedObject(@NotNull Token<?> type, Object value) {
@@ -169,25 +171,26 @@ public interface Signature<TReturn> extends Prioritized {
     @ApiStatus.Internal
     final class SignatureImpl<T> extends PrioritizedBase implements Signature<T> {
         private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
-        private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
+        private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
         private final BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction;
         private final Function<? super ConfigElement, ? extends T> buildingObjectInitializer;
         private final BiFunction<? super T, ? super Object[], ? extends T> constructor;
         private final boolean matchNames;
         private final boolean matchTypeHints;
-        private final BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer>
+        private final BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement,
+            Integer>
             lengthFunction;
         private final ElementType typeHint;
         private final Token<T> returnType;
 
-        private SignatureImpl(int priority,
-            Collection<Map.Entry<String, Token<?>>> argumentTypes,
-            Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor,
+        private SignatureImpl(int priority, Collection<Map.Entry<String, Token<?>>> argumentTypes,
+            Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
             BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction,
             Function<? super ConfigElement, ? extends T> buildingObjectInitializer,
             BiFunction<? super T, ? super Object[], ? extends T> constructor, boolean matchNames,
-            boolean matchTypeHints, BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>,
-            ? super ConfigElement, Integer> lengthFunction, ElementType typeHint, Token<T> returnType) {
+            boolean matchTypeHints,
+            BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer> lengthFunction,
+            ElementType typeHint, Token<T> returnType) {
             super(priority);
             this.argumentTypes = argumentTypes;
             this.objectSignatureExtractor = objectSignatureExtractor;
@@ -208,7 +211,38 @@ public interface Signature<TReturn> extends Prioritized {
 
         @Override
         public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
-            return objectSignatureExtractor.apply(object);
+            Collection<Object> args = objectSignatureExtractor.apply(object);
+            if (args.size() != argumentTypes.size()) {
+                throw new MapperException(
+                    "Unexpected number of arguments; needed " + argumentTypes.size() + ", got " + args.size());
+            }
+
+            return new AbstractCollection<>() {
+                @Override
+                public Iterator<TypedObject> iterator() {
+                    return new Iterator<>() {
+                        private final Iterator<Object> objectIterator = args.iterator();
+                        private final Iterator<Map.Entry<String, Token<?>>> entryIterator = argumentTypes.iterator();
+
+                        @Override
+                        public boolean hasNext() {
+                            return objectIterator.hasNext() && entryIterator.hasNext();
+                        }
+
+                        @Override
+                        public TypedObject next() {
+                            Object object = objectIterator.next();
+                            Map.Entry<String, Token<?>> entry = entryIterator.next();
+                            return new TypedObject(entry.getKey(), entry.getValue(), object);
+                        }
+                    };
+                }
+
+                @Override
+                public int size() {
+                    return argumentTypes.size();
+                }
+            };
         }
 
         @Override
@@ -265,7 +299,7 @@ public interface Signature<TReturn> extends Prioritized {
     final class Builder<T> {
         private final BiFunction<? super T, ? super Object[], ? extends T> constructor;
         private final Token<T> returnType;
-        private final Function<? super T, ? extends Collection<TypedObject>> objectSignatureExtractor;
+        private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
         private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
 
         private int priority;
@@ -278,17 +312,18 @@ public interface Signature<TReturn> extends Prioritized {
 
         private BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction =
             (elementType, size) -> {
-            if (elementType == ElementType.LIST) {
-                return new ArrayConfigList(size);
-            } else {
-                return new LinkedConfigNode(size);
-            }
-        };
+                if (elementType == ElementType.LIST) {
+                    return new ArrayConfigList(size);
+                } else {
+                    return new LinkedConfigNode(size);
+                }
+            };
 
         @SafeVarargs
-        private Builder(@NotNull Token<T> returnType, @NotNull BiFunction<? super T, ? super Object[],
-            ? extends T> constructor, @NotNull Function<? super T, ? extends Collection<TypedObject>>
-            objectSignatureExtractor, @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
+        private Builder(@NotNull Token<T> returnType,
+            @NotNull BiFunction<? super T, ? super Object[], ? extends T> constructor,
+            @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
+            @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
             this.returnType = Objects.requireNonNull(returnType);
             this.objectSignatureExtractor = Objects.requireNonNull(objectSignatureExtractor);
@@ -360,8 +395,9 @@ public interface Signature<TReturn> extends Prioritized {
          * @param lengthFunction the length function
          * @return this builder, for chaining
          */
-        public @NotNull Builder<T> withLengthFunction(@NotNull BiFunction<? super Collection<? extends
-            Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer> lengthFunction) {
+        public @NotNull Builder<T> withLengthFunction(
+            @NotNull BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement,
+                Integer> lengthFunction) {
             this.lengthFunction = Objects.requireNonNull(lengthFunction);
             return this;
         }

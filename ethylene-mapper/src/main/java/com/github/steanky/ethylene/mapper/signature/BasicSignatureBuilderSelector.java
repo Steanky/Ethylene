@@ -24,7 +24,7 @@ public class BasicSignatureBuilderSelector implements SignatureBuilder.Selector 
     /**
      * Creates a new instance of this class.
      *
-     * @param defaultBuilder the default builder, to be used when an unrecognized type is passed
+     * @param defaultBuilder       the default builder, to be used when an unrecognized type is passed
      * @param signaturePreferences a collection of class-signature builder pairs corresponding to recognized types and
      *                             their preferred builders
      */

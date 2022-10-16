@@ -10,8 +10,8 @@ import com.github.steanky.ethylene.core.collection.ConfigEntry;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
-import com.github.steanky.ethylene.core.util.ExceptionHandler;
 import com.github.steanky.ethylene.core.util.FutureUtils;
+import com.github.steanky.toolkit.function.ExceptionHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

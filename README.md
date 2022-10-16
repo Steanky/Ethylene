@@ -2,22 +2,27 @@
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-Ethylene is a open-source, lightweight, general-purpose compatibility layer standing between the developer and the chaotic world of configuration file formats. The purpose of this library is simple: decouple any specific configuration format (TOML, JSON, YML, etc) from the code that uses it. Using Ethylene, you can mix and match formats such as these, and more, with minimal effort. 
+Ethylene is a open-source, lightweight, general-purpose compatibility layer standing between the developer and the
+chaotic world of configuration file formats. The purpose of this library is simple: decouple any specific configuration
+format (TOML, JSON, YML, etc) from the code that uses it. Using Ethylene, you can mix and match formats such as these,
+and more, with minimal effort.
 
-Ethylene does not implement any parsers; rather, its various modules each depend on a particular parser, and provide a compatibility layer for it. 
+Ethylene does not implement any parsers; rather, its various modules each depend on a particular parser, and provide a
+compatibility layer for it.
 
-_Ethylene is currently in early development; the public API should be considered unstable and liable to change over time. Version 1.0.0 will mark the first stable release._
+_Ethylene is currently in early development; the public API should be considered unstable and liable to change over
+time. Version 1.0.0 will mark the first stable release._
 
 ## Table of Contents
 
 - [Background](#background)
 - [Install](#install)
 - [Usage](#usage)
-  - [Core](#core)
-    - [ConfigElement](#configelement)
-    - [Configuration class](#configuration) 
-    - [Codecs](#codecs)
-  - [Mapper](#mapper)
+    - [Core](#core)
+        - [ConfigElement](#configelement)
+        - [Configuration class](#configuration)
+        - [Codecs](#codecs)
+    - [Mapper](#mapper)
 - [Maintainers](#maintainers)
 - [Contributing](#contributing)
 - [License](#license)
@@ -25,7 +30,9 @@ _Ethylene is currently in early development; the public API should be considered
 
 ## Background
 
-Ethylene started out of a need to avoid depending on a particular configuration file format while working on a personal project. Over time, it has evolved to act as a common interface for reading and writing configuration to and from various sources.
+Ethylene started out of a need to avoid depending on a particular configuration file format while working on a personal
+project. Over time, it has evolved to act as a common interface for reading and writing configuration to and from
+various sources.
 
 ## Install
 
@@ -59,25 +66,32 @@ cd ./Ethylene
 ./gradlew build
 ```
 
-There are separate artifacts published for each configuration format natively supported by Ethylene, plus an artifact for `ethylene-core` which contains all core functionality and is a dependency of all other modules. Finally, there is `ethylene-mapper` which provides support for converting arbitrary configuration directly into POJOs and vice-versa.
+There are separate artifacts published for each configuration format natively supported by Ethylene, plus an artifact
+for `ethylene-core` which contains all core functionality and is a dependency of all other modules. Finally, there
+is `ethylene-mapper` which provides support for converting arbitrary configuration directly into POJOs and vice-versa.
 
-All module names start with `ethylene-`. Configuration format modules follow the format `ethylene-[format]`, where `[format]` is replaced with the lowercase format name (ex. `toml`, `yaml`). 
+All module names start with `ethylene-`. Configuration format modules follow the format `ethylene-[format]`,
+where `[format]` is replaced with the lowercase format name (ex. `toml`, `yaml`).
 
 ## Usage
 
-Using Ethylene starts with picking the correct modules. Users will always need `ethylene-core`, at the very least, and usually at least one format module which adds support for a particular configuration format. 
+Using Ethylene starts with picking the correct modules. Users will always need `ethylene-core`, at the very least, and
+usually at least one format module which adds support for a particular configuration format.
 
-For more specific information on individual classes not covered here, please see the relevant Javadoc. 
+For more specific information on individual classes not covered here, please see the relevant Javadoc.
 
 ### Core
 
-Ethylene Core contains most of the API intended for use by developers. It provides convenient entrypoints like `com.github.steanky.ethylene.core.bridge.Configuration`, which contains a selection of static utility methods.
+Ethylene Core contains most of the API intended for use by developers. It provides convenient entrypoints
+like `com.github.steanky.ethylene.core.bridge.Configuration`, which contains a selection of static utility methods.
 
 #### ConfigElement
 
-ConfigElement is the common supertype of all configuration data objects. It may represent _scalar_ data, like a string, or it may represent a list of other ConfigElements, or a map of named (string) keys to other ConfigElements. 
+ConfigElement is the common supertype of all configuration data objects. It may represent _scalar_ data, like a string,
+or it may represent a list of other ConfigElements, or a map of named (string) keys to other ConfigElements.
 
-Lists of ConfigElements are represented by ConfigList, whereas maps of strings to ConfigElements are represented by ConfigNode. 
+Lists of ConfigElements are represented by ConfigList, whereas maps of strings to ConfigElements are represented by
+ConfigNode.
 
 #### Configuration
 
@@ -100,13 +114,18 @@ ConfigElement element = Configuration.read(json, jsonCodec);
 String value = element.getStringOrThrow("key");
 ```
 
-`Configuration` contains many more methods for reading from and writing to various sources, both synchronously and asynchronously.
+`Configuration` contains many more methods for reading from and writing to various sources, both synchronously and
+asynchronously.
 
 #### Codecs
 
-Codecs are a fundamental component of Ethylene. Each codec is an object representing a particular configuration format. They communicate with a parser directly.
+Codecs are a fundamental component of Ethylene. Each codec is an object representing a particular configuration format.
+They communicate with a parser directly.
 
-For example, `JsonCodec`, from `ethylene-json`, uses Google's Gson internally to read and write JSON data from various sources. This codec allows you to configure the underlying parser directly by passing in a `Gson` instance to the constructor. It also has a parameterless constructor that uses a default `Gson`, for convenience. Codecs for other parsers provide similar functionality.
+For example, `JsonCodec`, from `ethylene-json`, uses Google's Gson internally to read and write JSON data from various
+sources. This codec allows you to configure the underlying parser directly by passing in a `Gson` instance to the
+constructor. It also has a parameterless constructor that uses a default `Gson`, for convenience. Codecs for other
+parsers provide similar functionality.
 
 ### Mapper
 

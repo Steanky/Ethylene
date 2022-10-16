@@ -2,10 +2,10 @@ package com.github.steanky.ethylene.mapper;
 
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
-import com.github.steanky.ethylene.mapper.internal.CollectionUtils;
 import com.github.steanky.ethylene.mapper.signature.*;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
+import com.github.steanky.toolkit.collection.Iterators;
 import org.apache.commons.lang3.function.TriFunction;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,8 +46,8 @@ public interface MappingProcessorSource {
         @SuppressWarnings("rawtypes") private static final Signature<Map.Entry> MAP_ENTRY_SIGNATURE =
             Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Entry.of(objects[0], objects[1]),
                 (entry) -> List.of(new Signature.TypedObject("key", Token.OBJECT, entry.getKey()),
-                    new Signature.TypedObject("value", Token.OBJECT, entry.getValue())), Entry.of("key",
-                    Token.OBJECT), Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
+                    new Signature.TypedObject("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
+                Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
 
         private final Collection<Signature<?>> customSignatures = new HashSet<>();
         private final Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
@@ -64,8 +64,8 @@ public interface MappingProcessorSource {
         private BiFunction<? super SignatureBuilder, ? super Collection<? extends Map.Entry<Class<?>, ?
             extends SignatureBuilder>>, ? extends SignatureBuilder.Selector>
             signatureBuilderSelectorFunction = BasicSignatureBuilderSelector::new;
-        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<? extends Signature<?>>, ?
-            extends SignatureMatcher.Source>
+        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
+            extends Signature<?>>, ? extends SignatureMatcher.Source>
             signatureMatcherSourceFunction = BasicSignatureMatcherSource::new;
         private BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>, ?
             extends TypeResolver>
@@ -98,8 +98,8 @@ public interface MappingProcessorSource {
         }
 
         /**
-         * Adds standard type implementations to this builder. This will allow the resulting {@link ConfigProcessor}s
-         * to process {@link Collection}, {@link Map}, and {@link Set} types.
+         * Adds standard type implementations to this builder. This will allow the resulting {@link ConfigProcessor}s to
+         * process {@link Collection}, {@link Map}, and {@link Set} types.
          *
          * @return this builder, for chaining
          */
@@ -198,7 +198,7 @@ public interface MappingProcessorSource {
          * @return this builder, for chaining
          */
         public @NotNull Builder withCustomSignatures(@NotNull Iterable<? extends Signature<?>> signatures) {
-            CollectionUtils.addAll(signatures, customSignatures);
+            Iterators.addAll(signatures, customSignatures);
             return this;
         }
 
@@ -210,6 +210,7 @@ public interface MappingProcessorSource {
          */
         public @NotNull Builder withScalarSignature(@NotNull ScalarSignature<?> signature) {
             scalarSignatures.add(Objects.requireNonNull(signature));
+            scalarTypes.add(signature.objectType());
             return this;
         }
 
@@ -220,7 +221,10 @@ public interface MappingProcessorSource {
          * @return this builder, for chaining
          */
         public @NotNull Builder withScalarSignatures(@NotNull Iterable<? extends ScalarSignature<?>> signatures) {
-            CollectionUtils.addAll(signatures, scalarSignatures);
+            Iterators.addAll(signatures, scalarSignatures);
+            for (ScalarSignature<?> signature : signatures) {
+                scalarTypes.add(signature.objectType());
+            }
             return this;
         }
 
@@ -245,7 +249,7 @@ public interface MappingProcessorSource {
          */
         public @NotNull Builder withTypeImplementations(
             @NotNull Iterable<? extends Map.Entry<Class<?>, Class<?>>> entries) {
-            CollectionUtils.addAll(entries, typeImplementations);
+            Iterators.addAll(entries, typeImplementations);
             return this;
         }
 
@@ -270,7 +274,7 @@ public interface MappingProcessorSource {
          */
         public @NotNull Builder withSignatureBuilderPreferences(
             @NotNull Iterable<? extends Map.Entry<Class<?>, ? extends SignatureBuilder>> entries) {
-            CollectionUtils.addAll(entries, signatureBuilderPreferences);
+            Iterators.addAll(entries, signatureBuilderPreferences);
             return this;
         }
 

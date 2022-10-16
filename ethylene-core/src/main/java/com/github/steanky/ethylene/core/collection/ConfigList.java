@@ -98,4 +98,14 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
     default @NotNull ConfigList copy() {
         return (ConfigList) ConfigContainer.super.copy();
     }
+
+    @Override
+    default @NotNull ConfigList immutableCopy() {
+        return (ConfigList) ConfigContainer.super.immutableCopy();
+    }
+
+    @Override
+    default @NotNull ConfigList immutableView() {
+        return (ConfigList) ConfigContainer.super.immutableView();
+    }
 }

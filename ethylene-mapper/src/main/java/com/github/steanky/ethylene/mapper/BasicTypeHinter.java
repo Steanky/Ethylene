@@ -40,7 +40,7 @@ public class BasicTypeHinter implements TypeHinter {
     public @NotNull ElementType getHint(@NotNull Token<?> type) {
         if (type.isSubclassOf(Map.class) || type.isSubclassOf(Collection.class) || type.isArrayType()) {
             return ElementType.LIST;
-        } else if (type.isPrimitiveOrWrapper() || type.isSubclassOf(String.class)) {
+        } else if (type.isPrimitiveOrWrapper() || type.isSubclassOf(String.class) || type.isEnumType()) {
             return ElementType.SCALAR;
         }
 

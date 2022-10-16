@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core;
 
+import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -31,17 +32,7 @@ public final class Graph {
     //shared empty Output with null data and the empty accumulator
     private static final Output<?, ?> EMPTY_OUTPUT = new Output<>(null, EMPTY_ACCUMULATOR);
     //shared empty Node with an empty iterator and the empty output
-    private static final Node<?, ?, ?> EMPTY_NODE = new Node<>(new Iterator<>() {
-        @Override
-        public boolean hasNext() {
-            return false;
-        }
-
-        @Override
-        public Map.Entry<?, ?> next() {
-            throw new NoSuchElementException();
-        }
-    }, emptyOutput());
+    private static final Node<?, ?, ?> EMPTY_NODE = new Node<>(Iterators.iterator(), emptyOutput());
 
     private Graph() {
         throw new UnsupportedOperationException();
@@ -324,6 +315,18 @@ public final class Graph {
     @SuppressWarnings("unchecked")
     public static <TKey, TOut> @NotNull Output<TKey, TOut> emptyOutput() {
         return (Output<TKey, TOut>) EMPTY_OUTPUT;
+    }
+
+    /**
+     * Returns the shared, empty {@link Accumulator} instance.
+     *
+     * @param <TKey> the key type
+     * @param <TOut> the output type
+     * @return the shared empty Accumulator
+     */
+    @SuppressWarnings("unchecked")
+    public static <TKey, TOut> @NotNull Accumulator<TKey, TOut> emptyAccumulator() {
+        return (Accumulator<TKey, TOut>) EMPTY_ACCUMULATOR;
     }
 
     /**

@@ -23,7 +23,7 @@ public class CollectionSignature<T> extends ContainerSignatureBase<T> {
     /**
      * Creates a new instance of this class.
      *
-     * @param componentType the component type of the collection
+     * @param componentType   the component type of the collection
      * @param collectionClass the full generic information of the collection
      */
     public CollectionSignature(@NotNull Token<?> componentType, @NotNull Token<T> collectionClass) {

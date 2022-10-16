@@ -17,6 +17,7 @@ import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
 import java.util.*;
 
@@ -65,14 +66,24 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
         RecordComponent[] components = resolveComponents();
+        Class<?> rawClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
+        boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
         Collection<TypedObject> typedObjects = new ArrayList<>(components.length);
 
         for (RecordComponent recordComponent : components) {
             try {
+                Method accessor = recordComponent.getAccessor();
+                if (widenAccess) {
+                    if (!accessor.trySetAccessible()) {
+                        throw new MapperException("Failed to widen record accessor");
+                    }
+                }
+
                 typedObjects.add(
                     new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
-                        recordComponent.getAccessor().invoke(object)));
-            } catch (IllegalAccessException | InvocationTargetException ignored) {
+                        accessor.invoke(object)));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new MapperException(e);
             }
         }
 
