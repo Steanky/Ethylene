@@ -75,6 +75,9 @@ class MappingProcessorSourceIntegrationTest {
 
     @Nested
     class Builder {
+        @Widen
+        private record PrivateRecord(String value) {}
+
         private static MappingProcessorSource standardSource() {
             return MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations().build();
         }
@@ -105,6 +108,20 @@ class MappingProcessorSourceIntegrationTest {
 
             ConfigElement element = processor.elementFromData(objects);
             assertEquals(data, element);
+        }
+
+        @Test
+        void privateRecord() throws ConfigProcessException {
+            MappingProcessorSource source = standardSource();
+            ConfigProcessor<PrivateRecord> processor = source.processorFor(Token.ofClass(PrivateRecord.class));
+
+            ConfigNode node = ConfigNode.of("value", "test");
+            PrivateRecord record = processor.dataFromElement(node);
+
+            assertEquals("test", record.value);
+
+            ConfigNode newNode = processor.elementFromData(record).asNode();
+            assertEquals("test", newNode.getStringOrThrow("value"));
         }
     }
 }
