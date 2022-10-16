@@ -18,6 +18,48 @@ import java.util.function.Function;
  */
 public interface ScalarSignature<TScalar> extends Prioritized {
     /**
+     * Creates a new, basic ScalarSignature implementation.
+     *
+     * @param priority       the priority of the signature
+     * @param type           the type created/interpreted by the signature
+     * @param elementType    the element type
+     * @param scalarCreator  the function used to create the scalar objects
+     * @param elementCreator the function used to create the scalar elements
+     * @param <T>            the scalar type
+     * @return the ScalarSignature
+     */
+    static <T> @NotNull ScalarSignature<T> of(int priority, @NotNull Token<T> type, @NotNull ElementType elementType,
+        @NotNull Function<? super ConfigElement, ? extends T> scalarCreator,
+        @NotNull Function<? super T, ? extends ConfigElement> elementCreator) {
+        Objects.requireNonNull(type);
+        Objects.requireNonNull(elementType);
+        Objects.requireNonNull(scalarCreator);
+        Objects.requireNonNull(elementCreator);
+
+        return new ScalarSignatureImpl<>(priority, type, elementType, scalarCreator, elementCreator);
+    }
+
+    /**
+     * Equivalent to {@link ScalarSignature#of(int, Token, ElementType, Function, Function)}, but uses a default
+     * priority of 0 and has a scalar element type.
+     *
+     * @param type           the type created/interpreted by the signature
+     * @param scalarCreator  the function used to create the scalar objects
+     * @param elementCreator the function used to create the scalar elements
+     * @param <T>            the scalar type
+     * @return the ScalarSignature
+     */
+    static <T> @NotNull ScalarSignature<T> of(@NotNull Token<T> type,
+        @NotNull Function<? super ConfigElement, ? extends T> scalarCreator,
+        @NotNull Function<? super T, ? extends ConfigElement> elementCreator) {
+        Objects.requireNonNull(type);
+        Objects.requireNonNull(scalarCreator);
+        Objects.requireNonNull(elementCreator);
+
+        return new ScalarSignatureImpl<>(0, type, ElementType.SCALAR, scalarCreator, elementCreator);
+    }
+
+    /**
      * Gets a token representing the scalar type.
      *
      * @return a token representing the scalar type
@@ -49,49 +91,6 @@ public interface ScalarSignature<TScalar> extends Prioritized {
     @NotNull ConfigElement createElement(@Nullable TScalar scalar);
 
     /**
-     * Creates a new, basic ScalarSignature implementation.
-     *
-     * @param priority the priority of the signature
-     * @param type the type created/interpreted by the signature
-     * @param elementType the element type
-     * @param scalarCreator the function used to create the scalar objects
-     * @param elementCreator the function used to create the scalar elements
-     * @return the ScalarSignature
-     * @param <T> the scalar type
-     */
-    static <T> @NotNull ScalarSignature<T> of(int priority, @NotNull Token<T> type,
-        @NotNull ElementType elementType,
-        @NotNull Function<? super ConfigElement, ? extends T> scalarCreator,
-        @NotNull Function<? super T, ? extends ConfigElement> elementCreator) {
-        Objects.requireNonNull(type);
-        Objects.requireNonNull(elementType);
-        Objects.requireNonNull(scalarCreator);
-        Objects.requireNonNull(elementCreator);
-
-        return new ScalarSignatureImpl<>(priority, type, elementType, scalarCreator, elementCreator);
-    }
-
-    /**
-     * Equivalent to {@link ScalarSignature#of(int, Token, ElementType, Function, Function)}, but uses a default
-     * priority of 0 and has a scalar element type.
-     *
-     *  @param type the type created/interpreted by the signature
-     * @param scalarCreator the function used to create the scalar objects
-     * @param elementCreator the function used to create the scalar elements
-     * @return the ScalarSignature
-     * @param <T> the scalar type
-     */
-    static <T> @NotNull ScalarSignature<T> of(@NotNull Token<T> type,
-        @NotNull Function<? super ConfigElement, ? extends T> scalarCreator,
-        @NotNull Function<? super T, ? extends ConfigElement> elementCreator) {
-        Objects.requireNonNull(type);
-        Objects.requireNonNull(scalarCreator);
-        Objects.requireNonNull(elementCreator);
-
-        return new ScalarSignatureImpl<>(0, type, ElementType.SCALAR, scalarCreator, elementCreator);
-    }
-
-    /**
      * Basic {@link ScalarSignature} implementation. Not part of the public API.
      *
      * @param <T> the scalar type
@@ -102,8 +101,7 @@ public interface ScalarSignature<TScalar> extends Prioritized {
         private final Function<? super ConfigElement, ? extends T> scalarCreator;
         private final Function<? super T, ? extends ConfigElement> elementCreator;
 
-        private ScalarSignatureImpl(int priority, @NotNull Token<T> type,
-            @NotNull ElementType elementType,
+        private ScalarSignatureImpl(int priority, @NotNull Token<T> type, @NotNull ElementType elementType,
             @NotNull Function<? super ConfigElement, ? extends T> scalarCreator,
             @NotNull Function<? super T, ? extends ConfigElement> elementCreator) {
             super(priority);

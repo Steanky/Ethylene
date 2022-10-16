@@ -9,7 +9,6 @@ import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.Prioritized;
 import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.type.Token;
-import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -214,8 +213,8 @@ public interface Signature<TReturn> extends Prioritized {
         public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
             Collection<Object> args = objectSignatureExtractor.apply(object);
             if (args.size() != argumentTypes.size()) {
-                throw new MapperException("Unexpected number of arguments; needed " + argumentTypes.size() + ", got " +
-                    args.size());
+                throw new MapperException(
+                    "Unexpected number of arguments; needed " + argumentTypes.size() + ", got " + args.size());
             }
 
             return new AbstractCollection<>() {

@@ -72,6 +72,7 @@ public class BasicScalarSource implements ScalarSource {
         return scalarSignature.createElement(scalarSignature.objectType().cast(castTarget));
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private ScalarSignature<?> resolveSignature(Token<?> dataType, Token<?> upperBounds) {
         Class<?> raw = dataType.rawType();
         Map<ElementType, ScalarSignature<?>[]> typeMappings = returnTypeMap.get(raw);
@@ -87,6 +88,10 @@ public class BasicScalarSource implements ScalarSource {
                 }
 
             }
+        }
+
+        if (upperBounds.isEnumType()) {
+            return new EnumSignature<>((Token<Enum>) upperBounds);
         }
 
         throw new MapperException(

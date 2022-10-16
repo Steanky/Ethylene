@@ -82,7 +82,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                     Object[] args = new Object[signatureSize];
 
                     return Graph.node(new Iterator<>() {
-                        private int i = 0;
+                        private int i;
 
                         @Override
                         public boolean hasNext() {
@@ -103,7 +103,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
                         }
                     }, Graph.output(nodeEntry.reference, new Graph.Accumulator<>() {
-                        private int i = 0;
+                        private int i;
 
                         @Override
                         public void accept(Object key, Mutable<Object> value, boolean visited) {
@@ -147,7 +147,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                     Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
 
                     return Graph.node(new Iterator<>() {
-                        private int i = 0;
+                        private int i;
 
                         @Override
                         public boolean hasNext() {

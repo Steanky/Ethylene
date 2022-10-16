@@ -1,6 +1,7 @@
 package com.github.steanky.ethylene.mapper;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
@@ -25,8 +26,7 @@ class MappingProcessorSourceIntegrationTest {
     void simpleCustomSignature() throws ConfigProcessException {
         Signature<ObjectWithCustomSignature> signature = Signature.<ObjectWithCustomSignature>builder(new Token<>() {
                                                                                                       }, (ignored,
-                args) -> new ObjectWithCustomSignature((int) args[0]),
-            object -> List.of(object.value),
+                args) -> new ObjectWithCustomSignature((int) args[0]), object -> List.of(object.value),
             Map.entry("value", Token.INTEGER)).build();
 
         MappingProcessorSource source = MappingProcessorSource.builder().withCustomSignature(signature).build();
@@ -75,9 +75,6 @@ class MappingProcessorSourceIntegrationTest {
 
     @Nested
     class Builder {
-        @Widen
-        private record PrivateRecord(String value) {}
-
         private static MappingProcessorSource standardSource() {
             return MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations().build();
         }
@@ -122,6 +119,26 @@ class MappingProcessorSourceIntegrationTest {
 
             ConfigNode newNode = processor.elementFromData(record).asNode();
             assertEquals("test", newNode.getStringOrThrow("value"));
+        }
+
+        @Test
+        void enums() throws ConfigProcessException {
+            MappingProcessorSource source = standardSource();
+
+            ConfigProcessor<TestEnum> processor = source.processorFor(Token.ofClass(TestEnum.class));
+            TestEnum value = processor.dataFromElement(ConfigPrimitive.of("SECOND"));
+            assertEquals(TestEnum.SECOND, value);
+
+            ConfigElement element = processor.elementFromData(value);
+            assertEquals("SECOND", element.asString());
+        }
+
+        private enum TestEnum {
+            FIRST, SECOND, THIRD
+        }
+
+        @Widen
+        private record PrivateRecord(String value) {
         }
     }
 }
