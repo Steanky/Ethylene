@@ -18,7 +18,7 @@ publishing {
         maven {
             //use project name for package name; such as ethylene-core
             name project.name
-            url 'https://maven.cloudsmith.io/steank-f1g/ethylene/'
+            url 'https://maven.cloudsmith.io/steanky/ethylene/'
 
             //credentials are provided through environment variables
             credentials {
