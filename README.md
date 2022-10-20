@@ -45,7 +45,7 @@ For Gradle, add the repository URL like this:
 ```groovy
 repositories {
     maven {
-        url 'https://dl.cloudsmith.io/public/steank-f1g/ethylene/maven/'
+        url 'https://dl.cloudsmith.io/public/steanky/ethylene/maven/'
     }
 }
 ```
