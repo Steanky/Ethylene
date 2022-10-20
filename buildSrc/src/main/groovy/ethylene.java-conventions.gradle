@@ -5,7 +5,7 @@ plugins {
 repositories {
     mavenCentral()
     maven {
-        url 'https://dl.cloudsmith.io/public/steank-f1g/toolkit/maven/'
+        url 'https://dl.cloudsmith.io/public/steanky/toolkit/maven/'
     }
 }
 
