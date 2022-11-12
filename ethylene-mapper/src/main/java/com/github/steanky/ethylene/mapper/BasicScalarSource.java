@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.type.Token;
+import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,6 +78,15 @@ public class BasicScalarSource implements ScalarSource {
         Class<?> raw = dataType.rawType();
         Map<ElementType, ScalarSignature<?>[]> typeMappings = returnTypeMap.get(raw);
 
+        if (typeMappings == null) {
+            for (Class<?> type : dataType.hierarchy(ClassUtils.Interfaces.INCLUDE)) {
+                typeMappings = returnTypeMap.get(type);
+                if (typeMappings != null) {
+                    break;
+                }
+            }
+        }
+
         if (typeMappings != null) {
             ScalarSignature<?>[] signatures = typeMappings.get(typeHinter.getHint(dataType));
 
@@ -86,7 +96,6 @@ public class BasicScalarSource implements ScalarSource {
                         return scalarSignature;
                     }
                 }
-
             }
         }
 

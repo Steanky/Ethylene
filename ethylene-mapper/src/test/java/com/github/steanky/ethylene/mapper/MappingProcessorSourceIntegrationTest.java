@@ -152,6 +152,22 @@ class MappingProcessorSourceIntegrationTest {
             assertEquals(UUID.fromString("59be2a51-f5cb-4ae9-ae26-bfbd6968cf93"), r.uuid);
         }
 
+        @Test
+        void inheritedScalar() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().withScalarSignature(
+                    ScalarSignature.of(Token.ofClass(SimpleScalar.class), element ->
+                        new SimpleScalar(element.asString()), scalar -> ConfigPrimitive.of(scalar.value)))
+                .withStandardSignatures().withStandardTypeImplementations()
+                .build();
+
+            ConfigProcessor<SimpleScalar> simpleScalar = source.processorFor(Token.ofClass(SimpleScalar.class));
+            ConfigElement element = simpleScalar.elementFromData(new SubSimpleScalar("test"));
+
+            assertEquals("test", element.asString());
+            SimpleScalar scalar = simpleScalar.dataFromElement(element);
+            assertEquals("test", scalar.value);
+        }
+
         private enum TestEnum {
             FIRST, SECOND, THIRD
         }
@@ -161,5 +177,19 @@ class MappingProcessorSourceIntegrationTest {
         }
 
         public record RecordWithCustomObjectInSignature(UUID uuid) {}
+
+        public class SimpleScalar {
+            private final String value;
+
+            public SimpleScalar(String value) {
+                this.value = value;
+            }
+        }
+
+        public class SubSimpleScalar extends SimpleScalar {
+            public SubSimpleScalar(String value) {
+                super(value);
+            }
+        }
     }
 }
