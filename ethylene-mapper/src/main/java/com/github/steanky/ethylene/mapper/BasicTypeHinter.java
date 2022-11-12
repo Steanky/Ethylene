@@ -89,7 +89,14 @@ public class BasicTypeHinter implements TypeHinter {
                 }
 
                 //simple assignability check
-                yield toType.isSuperclassOf(scalar.getClass());
+                boolean supertype = toType.isSuperclassOf(scalar.getClass());
+
+                //if not assignable, check the hint type
+                if (!supertype) {
+                    yield getHint(toType) == ElementType.SCALAR;
+                }
+
+                yield true;
             }
         };
     }
@@ -103,6 +110,11 @@ public class BasicTypeHinter implements TypeHinter {
                 Object scalar = element.asScalar();
                 if (scalar == null) {
                     //null is assignable to anything
+                    yield upperBounds;
+                }
+
+                boolean supertype = upperBounds.isSuperclassOf(scalar.getClass());
+                if (!supertype) {
                     yield upperBounds;
                 }
 

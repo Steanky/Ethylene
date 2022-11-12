@@ -8,6 +8,7 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.annotation.Include;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
+import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.junit.jupiter.api.Nested;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -133,6 +135,23 @@ class MappingProcessorSourceIntegrationTest {
             assertEquals("SECOND", element.asString());
         }
 
+        @Test
+        void customSignature() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().withScalarSignature(
+                ScalarSignature.of(Token.ofClass(UUID.class), element -> UUID.fromString(element.asString()), uuid ->
+                    ConfigPrimitive.of(uuid.toString()))).withStandardSignatures().withStandardTypeImplementations()
+                .build();
+
+            ConfigProcessor<RecordWithCustomObjectInSignature> proc = source.processorFor(
+                Token.ofClass(RecordWithCustomObjectInSignature.class));
+
+            RecordWithCustomObjectInSignature r = proc.dataFromElement(ConfigNode.of("uuid",
+                ConfigPrimitive.of("59be2a51-f5cb-4ae9-ae26-bfbd6968cf93")));
+
+            assertNotNull(r);
+            assertEquals(UUID.fromString("59be2a51-f5cb-4ae9-ae26-bfbd6968cf93"), r.uuid);
+        }
+
         private enum TestEnum {
             FIRST, SECOND, THIRD
         }
@@ -140,5 +159,7 @@ class MappingProcessorSourceIntegrationTest {
         @Widen
         private record PrivateRecord(String value) {
         }
+
+        public record RecordWithCustomObjectInSignature(UUID uuid) {}
     }
 }
