@@ -168,6 +168,22 @@ class MappingProcessorSourceIntegrationTest {
             assertEquals("test", scalar.value);
         }
 
+        @Test
+        void ignoringLengths() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().ignoringLengths().build();
+
+            ConfigProcessor<SimpleRecord> proc = source.processorFor(Token.ofClass(SimpleRecord.class));
+            ConfigNode nodeWithTooManyEntries = ConfigNode.of("unused", "this value is unused", "first",
+                "first value", "key in between values", "this is also unused", "second", 69, "third",
+                "another unused value");
+
+            SimpleRecord rec = proc.dataFromElement(nodeWithTooManyEntries);
+
+            assertEquals("first value", rec.first);
+            assertEquals(69, rec.second);
+        }
+
+
         private enum TestEnum {
             FIRST, SECOND, THIRD
         }
@@ -177,6 +193,8 @@ class MappingProcessorSourceIntegrationTest {
         }
 
         public record RecordWithCustomObjectInSignature(UUID uuid) {}
+
+        public record SimpleRecord(String first, int second) {}
 
         public class SimpleScalar {
             private final String value;

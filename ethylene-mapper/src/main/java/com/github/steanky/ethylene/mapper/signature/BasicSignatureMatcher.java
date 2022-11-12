@@ -16,6 +16,7 @@ import java.util.*;
 public class BasicSignatureMatcher implements SignatureMatcher {
     private final Signature<?>[] signatures;
     private final TypeHinter typeHinter;
+    private final boolean matchLength;
 
     /**
      * Creates a new instance of this class
@@ -23,12 +24,14 @@ public class BasicSignatureMatcher implements SignatureMatcher {
      * @param signatures the signatures array; note that this is copied so it is safe to modify the array later
      * @param typeHinter the {@link TypeHinter} used to extract type information when matching type hints
      */
-    public BasicSignatureMatcher(@NotNull Signature<?> @NotNull [] signatures, @NotNull TypeHinter typeHinter) {
+    public BasicSignatureMatcher(@NotNull Signature<?> @NotNull [] signatures, @NotNull TypeHinter typeHinter,
+        boolean matchLength) {
         Signature<?>[] copy = new Signature[signatures.length];
         System.arraycopy(signatures, 0, copy, 0, signatures.length);
         Arrays.sort(copy);
         this.signatures = copy;
         this.typeHinter = Objects.requireNonNull(typeHinter);
+        this.matchLength = matchLength;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -38,7 +41,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         Collection<Signature.TypedObject> objectData = signature.objectData(providedObject);
 
         int length = signature.length(null);
-        if (length > -1 && length != objectData.size()) {
+        if (matchLength && length > -1 && length != objectData.size()) {
             return null;
         }
 
@@ -96,7 +99,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
         Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
         int length = signature.length(providedElement);
-        if (elementCollection.size() != length) {
+        if (matchLength && elementCollection.size() != length) {
             return null;
         }
 

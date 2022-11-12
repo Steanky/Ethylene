@@ -49,7 +49,7 @@ class MappingConfigProcessorIntegrationTest {
             Set.of(Entry.of(ArrayList.class, Collection.class), Entry.of(HashSet.class, Set.class),
                 Entry.of(HashMap.class, Map.class)));
         source = new BasicSignatureMatcherSource(typeHinter,
-            new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE, Set.of()), Set.of(mapEntry));
+            new BasicSignatureBuilderSelector(ConstructorSignatureBuilder.INSTANCE, Set.of()), Set.of(mapEntry), false);
         scalarSource = new BasicScalarSource(typeHinter, Set.of());
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {

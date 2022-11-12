@@ -6,7 +6,6 @@ import com.github.steanky.ethylene.mapper.signature.*;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.toolkit.collection.Iterators;
-import org.apache.commons.lang3.function.TriFunction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -57,6 +56,7 @@ public interface MappingProcessorSource {
         private final Collection<ScalarSignature<?>> scalarSignatures = new HashSet<>();
 
         private SignatureBuilder defaultSignatureBuilder = FieldSignatureBuilder.INSTANCE;
+        private boolean matchLengths;
 
         private Function<? super Collection<Token<?>>, ? extends TypeHinter> typeHinterFunction = BasicTypeHinter::new;
         private BiFunction<? super TypeHinter, ? super Collection<? extends ScalarSignature<?>>, ? extends ScalarSource>
@@ -64,14 +64,15 @@ public interface MappingProcessorSource {
         private BiFunction<? super SignatureBuilder, ? super Collection<? extends Map.Entry<Class<?>, ?
             extends SignatureBuilder>>, ? extends SignatureBuilder.Selector>
             signatureBuilderSelectorFunction = BasicSignatureBuilderSelector::new;
-        private TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
-            extends Signature<?>>, ? extends SignatureMatcher.Source>
+        private QuadFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
+            extends Signature<?>>, ? super Boolean, ? extends SignatureMatcher.Source>
             signatureMatcherSourceFunction = BasicSignatureMatcherSource::new;
         private BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>, ?
             extends TypeResolver>
             typeResolverFunction = BasicTypeResolver::new;
 
         private Builder() {
+            this.matchLengths = true;
         }
 
         /**
@@ -166,16 +167,17 @@ public interface MappingProcessorSource {
         }
 
         /**
-         * Specifies a {@link TriFunction} which may be used to construct custom implementations of
-         * {@link SignatureMatcher.Source}, given a collection of {@link Signature} objects corresponding to all custom
-         * signatures.
+         * Specifies a {@link QuadFunction} which may be used to construct custom implementations of
+         * {@link SignatureMatcher.Source}, given a {@link TypeHinter}, {@link SignatureBuilder.Selector}, collection
+         * of {@link Signature} objects corresponding to all custom signatures, and a boolean indicating whether
+         * signature lengths should be used in matching.
          *
          * @param function the function used to construct SignatureMatcher.Source objects
          * @return this builder, for chaining
          */
         public @NotNull Builder withSignatureMatcherSourceFunction(
-            @NotNull TriFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
-                extends Signature<?>>, ? extends SignatureMatcher.Source> function) {
+            @NotNull QuadFunction<? super TypeHinter, ? super SignatureBuilder.Selector, ? super Collection<?
+                extends Signature<?>>, ? super Boolean, ? extends SignatureMatcher.Source> function) {
             this.signatureMatcherSourceFunction = Objects.requireNonNull(function);
             return this;
         }
@@ -279,6 +281,17 @@ public interface MappingProcessorSource {
         }
 
         /**
+         * Causes processors created by this builder to allow for elements whose length is greater than the number of
+         * arguments strictly required by a given signature to be used to create the signature.
+         *
+         * @return this builder, for chaining
+         */
+        public @NotNull Builder ignoringLengths() {
+            this.matchLengths = false;
+            return this;
+        }
+
+        /**
          * Builds a new {@link MappingProcessorSource} given the builder's current parameters. This method can be called
          * multiple times in order to create multiple unique instances. If the builder's parameters change between
          * invocations of this method, MappingProcessorSources created prior to the changes will <i>not</i> reflect
@@ -290,7 +303,8 @@ public interface MappingProcessorSource {
             TypeHinter hinter = typeHinterFunction.apply(scalarTypes);
             SignatureBuilder.Selector selector =
                 signatureBuilderSelectorFunction.apply(defaultSignatureBuilder, signatureBuilderPreferences);
-            SignatureMatcher.Source source = signatureMatcherSourceFunction.apply(hinter, selector, customSignatures);
+            SignatureMatcher.Source source = signatureMatcherSourceFunction.apply(hinter, selector, customSignatures,
+                matchLengths);
             TypeResolver resolver = typeResolverFunction.apply(hinter, typeImplementations);
             ScalarSource scalarSource = scalarSourceFunction.apply(hinter, scalarSignatures);
 
