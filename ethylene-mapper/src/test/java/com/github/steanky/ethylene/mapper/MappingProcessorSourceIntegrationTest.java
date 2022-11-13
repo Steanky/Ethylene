@@ -183,6 +183,17 @@ class MappingProcessorSourceIntegrationTest {
             assertEquals(69, rec.second);
         }
 
+        @Test
+        void doubleToFloatConversion() throws  ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().build();
+
+            ConfigProcessor<TestRecord> test = source.processorFor(Token.ofClass(TestRecord.class));
+            ConfigNode node = ConfigNode.of("value", 0.5D);
+
+            TestRecord testRecord = test.dataFromElement(node);
+            assertEquals(0.5F, testRecord.value);
+        }
+
 
         private enum TestEnum {
             FIRST, SECOND, THIRD
@@ -195,6 +206,8 @@ class MappingProcessorSourceIntegrationTest {
         public record RecordWithCustomObjectInSignature(UUID uuid) {}
 
         public record SimpleRecord(String first, int second) {}
+
+        public record TestRecord(float value) {}
 
         public class SimpleScalar {
             private final String value;
