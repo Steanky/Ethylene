@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.Graph;
+import com.github.steanky.toolkit.collection.Containers;
 import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -12,7 +13,7 @@ import java.util.function.Function;
 /**
  * Internal utilities for containers. Not part of the public API.
  */
-final class Containers {
+final class ConfigContainers {
     /**
      * Deep-copies the provided {@link ConfigContainer}, maintaining the extract structure of the input tree, including
      * circular references, and the implementation types of every container encountered (when possible).
@@ -335,7 +336,7 @@ final class Containers {
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return Iterators.mappedView(entry -> ConfigEntry.of(entry.getKey(), entry.getValue()), map.entrySet());
+            return Containers.mappedView(entry -> ConfigEntry.of(entry.getKey(), entry.getValue()), map.entrySet());
         }
 
         @Override
@@ -386,12 +387,12 @@ final class Containers {
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return Iterators.mappedView(ConfigEntry::of, elements);
+            return Containers.mappedView(ConfigEntry::of, elements);
         }
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-            return Iterators.arrayView(elements);
+            return Containers.arrayView(elements);
         }
 
         @Override

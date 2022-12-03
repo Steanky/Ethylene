@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.signature.*;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
+import com.github.steanky.toolkit.collection.Containers;
 import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 
@@ -200,7 +201,7 @@ public interface MappingProcessorSource {
          * @return this builder, for chaining
          */
         public @NotNull Builder withCustomSignatures(@NotNull Iterable<? extends Signature<?>> signatures) {
-            Iterators.addAll(signatures, customSignatures);
+            Containers.addAll(signatures, customSignatures);
             return this;
         }
 
@@ -223,7 +224,7 @@ public interface MappingProcessorSource {
          * @return this builder, for chaining
          */
         public @NotNull Builder withScalarSignatures(@NotNull Iterable<? extends ScalarSignature<?>> signatures) {
-            Iterators.addAll(signatures, scalarSignatures);
+            Containers.addAll(signatures, scalarSignatures);
             for (ScalarSignature<?> signature : signatures) {
                 scalarTypes.add(signature.objectType());
             }
@@ -251,7 +252,7 @@ public interface MappingProcessorSource {
          */
         public @NotNull Builder withTypeImplementations(
             @NotNull Iterable<? extends Map.Entry<Class<?>, Class<?>>> entries) {
-            Iterators.addAll(entries, typeImplementations);
+            Containers.addAll(entries, typeImplementations);
             return this;
         }
 
@@ -276,7 +277,7 @@ public interface MappingProcessorSource {
          */
         public @NotNull Builder withSignatureBuilderPreferences(
             @NotNull Iterable<? extends Map.Entry<Class<?>, ? extends SignatureBuilder>> entries) {
-            Iterators.addAll(entries, signatureBuilderPreferences);
+            Containers.addAll(entries, signatureBuilderPreferences);
             return this;
         }
 

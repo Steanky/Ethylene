@@ -71,7 +71,7 @@ public interface ConfigContainer extends ConfigElement {
      * @return an exact, deep copy of this ConfigContainer
      */
     default @NotNull ConfigContainer copy() {
-        return Containers.copy(this);
+        return ConfigContainers.copy(this);
     }
 
     /**
@@ -83,7 +83,7 @@ public interface ConfigContainer extends ConfigElement {
      * @return an immutable copy of this ConfigContainer, whose contents will not change even if this container changes
      */
     default @NotNull ConfigContainer immutableCopy() {
-        return Containers.immutableCopy(this);
+        return ConfigContainers.immutableCopy(this);
     }
 
     /**
@@ -95,6 +95,6 @@ public interface ConfigContainer extends ConfigElement {
      * @return an immutable copy of this ConfigContainer, whose contents will change if this container changes
      */
     default @NotNull ConfigContainer immutableView() {
-        return Containers.immutableView(this);
+        return ConfigContainers.immutableView(this);
     }
 }
