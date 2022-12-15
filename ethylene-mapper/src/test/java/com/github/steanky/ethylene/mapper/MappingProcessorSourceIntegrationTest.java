@@ -6,7 +6,9 @@ import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
+import com.github.steanky.ethylene.mapper.annotation.Builder;
 import com.github.steanky.ethylene.mapper.annotation.Include;
+import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
@@ -14,10 +16,7 @@ import com.github.steanky.ethylene.mapper.type.Token;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -194,6 +193,18 @@ class MappingProcessorSourceIntegrationTest {
             assertEquals(0.5F, testRecord.value);
         }
 
+        @Test
+        void nullToObject() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().build();
+
+            ConfigProcessor<TestRecord> test = source.processorFor(Token.ofClass(TestRecord.class));
+            TestRecord record = test.dataFromElement(ConfigPrimitive.NULL);
+
+            assertNull(record);
+
+            ConfigElement element = test.elementFromData(null);
+            assertTrue(element.isNull(), "element is not null");
+        }
 
         private enum TestEnum {
             FIRST, SECOND, THIRD

@@ -93,6 +93,10 @@ class MappingConfigProcessorIntegrationTest {
         }
     }
 
+    public static class ParameterlessClass {
+        public ParameterlessClass() {}
+    }
+
     @Widen
     @Include
     @Builder(Builder.BuilderType.FIELD)
@@ -207,6 +211,20 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Objects {
+        @Test
+        void parameterlessClass() throws ConfigProcessException {
+            ConfigProcessor<ParameterlessClass> processor = new MappingConfigProcessor<>(new Token<>() {
+            }, source, typeHinter, typeResolver, scalarSource);
+
+            ParameterlessClass parameterlessClass = processor.dataFromElement(ConfigNode.of());
+            assertNotNull(parameterlessClass);
+
+            ConfigElement element = processor.elementFromData(new ParameterlessClass());
+            assertNotNull(element);
+            assertTrue(element.isNode(), "element is not a node");
+            assertTrue(element.asNode().isEmpty(), "element node is not empty");
+        }
+
         @Test
         void map() throws ConfigProcessException {
             ConfigProcessor<Map<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {

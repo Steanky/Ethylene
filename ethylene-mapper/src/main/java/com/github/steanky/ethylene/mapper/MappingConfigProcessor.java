@@ -11,6 +11,8 @@ import com.github.steanky.ethylene.mapper.signature.MatchingSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.mapper.type.Token;
+import com.github.steanky.toolkit.collection.Iterators;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.NotNull;
@@ -70,13 +72,22 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                     Signature<Object> signature = (Signature<Object>) matchingSignature.signature();
                     int signatureSize = matchingSignature.size();
 
-                    Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
-                    Iterator<Map.Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
-
                     //if this signature supports circular refs, buildingObject should be non-null
                     Object buildingObject =
                         signature.hasBuildingObject() ? signature.initBuildingObject(nodeElement) : null;
+
+                    //immediately create parameterless objects as they wouldn't be constructed otherwise
+                    if (signatureSize == 0) {
+                        nodeEntry.reference.setValue(signature.buildObject(buildingObject,
+                            ArrayUtils.EMPTY_OBJECT_ARRAY));
+                        return Graph.node(Iterators.iterator(), Graph.output(nodeEntry.reference,
+                            Graph.emptyAccumulator()));
+                    }
+
                     nodeEntry.reference.setValue(buildingObject);
+
+                    Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
+                    Iterator<Map.Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
 
                     //arguments which are needed to create this object
                     Object[] args = new Object[signatureSize];

@@ -73,7 +73,7 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
             return ConfigPrimitive.NULL;
         }
 
-        return ConfigPrimitive.of(data.toString());
+        return ConfigPrimitive.of(data.name());
     }
 
     private TEnum lookup(String name) {
