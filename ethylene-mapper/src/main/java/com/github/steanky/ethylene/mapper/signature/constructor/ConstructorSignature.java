@@ -8,6 +8,7 @@ import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Order;
+import com.github.steanky.ethylene.mapper.annotation.Priority;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
@@ -66,7 +67,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
      */
     @SuppressWarnings("unchecked")
     public ConstructorSignature(@NotNull Constructor<?> constructor, @NotNull Token<T> genericReturnType) {
-        super(0);
+        super(computePriority(constructor));
         this.genericReturnType = Objects.requireNonNull(genericReturnType);
         this.constructorReference = new SoftReference<>(Objects.requireNonNull(constructor));
 
@@ -82,6 +83,15 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
             parameterTypes[i] = new WeakReference<>(referent);
             parameterTypeNames[i] = referent.getTypeName();
         }
+    }
+
+    private static int computePriority(Constructor<?> constructor) {
+        Priority priority = constructor.getAnnotation(Priority.class);
+        if (priority == null) {
+            return 0;
+        }
+
+        return priority.value();
     }
 
     private static Map.Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
