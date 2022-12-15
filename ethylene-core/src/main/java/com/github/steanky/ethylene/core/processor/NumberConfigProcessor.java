@@ -27,6 +27,10 @@ class NumberConfigProcessor<TNumber extends Number> implements ConfigProcessor<T
 
     @Override
     public TNumber dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+        if (element.isNull()) {
+            return null;
+        }
+
         if (!element.isNumber()) {
             throw new ConfigProcessException("Element must be a number");
         }

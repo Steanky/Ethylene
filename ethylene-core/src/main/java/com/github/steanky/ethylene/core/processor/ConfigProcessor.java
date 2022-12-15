@@ -23,6 +23,10 @@ public interface ConfigProcessor<TData> {
     ConfigProcessor<ConfigNode> CONFIG_NODE = new ConfigProcessor<>() {
         @Override
         public ConfigNode dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if (element.isNull()) {
+                return null;
+            }
+
             if (!element.isNode()) {
                 throw new ConfigProcessException("Element must be a node");
             }
@@ -32,7 +36,7 @@ public interface ConfigProcessor<TData> {
 
         @Override
         public @NotNull ConfigElement elementFromData(ConfigNode node) {
-            return node;
+            return Objects.requireNonNullElse(node, ConfigPrimitive.NULL);
         }
     };
 
@@ -42,6 +46,10 @@ public interface ConfigProcessor<TData> {
     ConfigProcessor<ConfigList> CONFIG_LIST = new ConfigProcessor<>() {
         @Override
         public ConfigList dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if (element.isNull()) {
+                return null;
+            }
+
             if (!element.isList()) {
                 throw new ConfigProcessException("Element must be a list");
             }
@@ -51,7 +59,7 @@ public interface ConfigProcessor<TData> {
 
         @Override
         public @NotNull ConfigElement elementFromData(ConfigList list) {
-            return list;
+            return Objects.requireNonNullElse(list, ConfigPrimitive.NULL);
         }
     };
 
@@ -61,6 +69,10 @@ public interface ConfigProcessor<TData> {
     ConfigProcessor<ConfigContainer> CONFIG_CONTAINER = new ConfigProcessor<>() {
         @Override
         public ConfigContainer dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if (element.isNull()) {
+                return null;
+            }
+
             if (!element.isContainer()) {
                 throw new ConfigProcessException("Element must be a container");
             }
@@ -70,7 +82,8 @@ public interface ConfigProcessor<TData> {
 
         @Override
         public @NotNull ConfigElement elementFromData(ConfigContainer container) {
-            return container;
+            return Objects.requireNonNullElse(container, ConfigPrimitive.NULL);
+
         }
     };
 
@@ -80,6 +93,10 @@ public interface ConfigProcessor<TData> {
     ConfigProcessor<String> STRING = new ConfigProcessor<>() {
         @Override
         public String dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if (element.isNull()) {
+                return null;
+            }
+
             if (!element.isString()) {
                 throw new ConfigProcessException("Element must be a string");
             }
@@ -134,6 +151,10 @@ public interface ConfigProcessor<TData> {
     ConfigProcessor<Boolean> BOOLEAN = new ConfigProcessor<>() {
         @Override
         public Boolean dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+            if (element.isNull()) {
+                return null;
+            }
+
             if (!element.isBoolean()) {
                 throw new ConfigProcessException("Element is not a boolean");
             }
@@ -197,7 +218,7 @@ public interface ConfigProcessor<TData> {
 
             @Override
             public @NotNull ConfigElement elementFromData(TReturn tReturn) {
-                return new LinkedConfigNode(0);
+                return ConfigNode.of();
             }
         };
     }
@@ -225,6 +246,10 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public TMap dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+                if (element.isNull()) {
+                    return null;
+                }
+
                 ConfigList list = CONFIG_LIST.dataFromElement(element);
                 TMap map = mapFunction.apply(list.size());
                 for (ConfigElement entry : element.asList()) {
@@ -242,6 +267,10 @@ public interface ConfigProcessor<TData> {
 
             @Override
             public @NotNull ConfigElement elementFromData(TMap map) throws ConfigProcessException {
+                if (map == null) {
+                    return ConfigPrimitive.NULL;
+                }
+
                 ConfigList list = new ArrayConfigList(map.size());
                 for (Map.Entry<TKey, TValue> mapEntry : map.entrySet()) {
                     ConfigNode nodeEntry = new LinkedConfigNode(2);
@@ -297,6 +326,10 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public M dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+                if (element.isNull()) {
+                    return null;
+                }
+
                 ConfigNode node = CONFIG_NODE.dataFromElement(element);
                 M map = mapFunction.apply(node.size());
                 for (ConfigEntry entry : node.entryCollection()) {
@@ -308,6 +341,10 @@ public interface ConfigProcessor<TData> {
 
             @Override
             public @NotNull ConfigElement elementFromData(M m) throws ConfigProcessException {
+                if (m == null) {
+                    return ConfigPrimitive.NULL;
+                }
+
                 ConfigNode node = new LinkedConfigNode(m.size());
                 for (Map.Entry<String, TData> entry : m.entrySet()) {
                     node.put(entry.getKey(), ConfigProcessor.this.elementFromData(entry.getValue()));
@@ -343,6 +380,10 @@ public interface ConfigProcessor<TData> {
         return new ConfigProcessor<>() {
             @Override
             public TCollection dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+                if (element.isNull()) {
+                    return null;
+                }
+
                 ConfigList list = CONFIG_LIST.dataFromElement(element);
                 TCollection container = collectionSupplier.apply(list.size());
                 for (ConfigElement sample : list) {
@@ -354,6 +395,10 @@ public interface ConfigProcessor<TData> {
 
             @Override
             public @NotNull ConfigElement elementFromData(TCollection container) throws ConfigProcessException {
+                if (container == null) {
+                    return ConfigPrimitive.NULL;
+                }
+
                 ConfigList list = new ArrayConfigList(container.size());
                 for (TData data : container) {
                     list.add(ConfigProcessor.this.elementFromData(data));
@@ -396,6 +441,10 @@ public interface ConfigProcessor<TData> {
             @SuppressWarnings("unchecked")
             @Override
             public TData[] dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+                if (element.isNull()) {
+                    return null;
+                }
+
                 ConfigList list = CONFIG_LIST.dataFromElement(element);
                 TData[] data = (TData[]) new Object[list.size()];
                 int i = 0;
@@ -408,6 +457,10 @@ public interface ConfigProcessor<TData> {
 
             @Override
             public @NotNull ConfigElement elementFromData(TData[] data) throws ConfigProcessException {
+                if (data == null) {
+                    return ConfigPrimitive.NULL;
+                }
+
                 ConfigList list = new ArrayConfigList(data.length);
                 for (TData sample : data) {
                     list.add(ConfigProcessor.this.elementFromData(sample));

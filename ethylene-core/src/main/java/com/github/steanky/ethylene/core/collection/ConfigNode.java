@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +17,36 @@ import java.util.Objects;
  * {@link ConfigPrimitive} instance containing null.</p>
  */
 public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, ConfigContainer {
+    /**
+     * Overload of {@link ConfigNode#of(Object...)}. Returns a new, empty {@link LinkedConfigNode}.
+     * @return a new, empty, mutable ConfigNode
+     */
+    static @NotNull ConfigNode of() {
+        return new LinkedConfigNode(0);
+    }
+
+    /**
+     * Overload of {@link ConfigNode#of(Object...)}. Returns a new {@link LinkedConfigNode} with an initial capacity
+     * of 1, populated by the single given key and value.
+     *
+     * @param key the key to initially populate the map with
+     * @param value the value to initially populate the map with
+     * @return a new, mutable ConfigNode containing exactly 1 entry
+     */
+    static @NotNull ConfigNode of(@NotNull String key, @Nullable Object value) {
+        Objects.requireNonNull(key);
+
+        ConfigNode node = new LinkedConfigNode(1);
+        if (value instanceof ConfigElement element) {
+            node.put(key, element);
+        }
+        else {
+            node.put(key, ConfigPrimitive.of(value));
+        }
+
+        return node;
+    }
+
     /**
      * Creates a new mutable, ordered ConfigNode implementation from the given object array. The array must be
      * even-length, with all even indices interpreted as keys, and all odd indices interpreted as the value

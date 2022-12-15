@@ -48,6 +48,10 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
 
     @Override
     public TEnum dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
+        if (element.isNull()) {
+            return null;
+        }
+
         if (!element.isString()) {
             throw new ConfigProcessException("Element must be a string");
         }
@@ -64,9 +68,9 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
     }
 
     @Override
-    public @NotNull ConfigElement elementFromData(TEnum data) throws ConfigProcessException {
+    public @NotNull ConfigElement elementFromData(TEnum data) {
         if (data == null) {
-            throw new ConfigProcessException("Cannot convert null enum constant to a ConfigElement");
+            return ConfigPrimitive.NULL;
         }
 
         return ConfigPrimitive.of(data.toString());

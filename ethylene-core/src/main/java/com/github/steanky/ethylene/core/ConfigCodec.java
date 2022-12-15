@@ -55,7 +55,7 @@ public interface ConfigCodec {
      * used when saving configuration data to a file using this codec. If this codec does not report any preferred
      * extensions, the returned string must be empty. In general, if non-empty, the string reported by this method
      * should be contained in the set of strings returned by {@link ConfigCodec#getPreferredExtensions()}. Conversely,
-     * if {@link ConfigCodec#getPreferredExtensions()} is empty, this string should be non-empty, and vice-versa.
+     * if {@link ConfigCodec#getPreferredExtensions()} is empty, this string should be empty, and vice-versa.
      *
      * @return the preferred extension, without any leading period, or an empty string
      */
@@ -72,7 +72,8 @@ public interface ConfigCodec {
     /**
      * Returns a new {@link Set} describing all the {@link ElementType}s which may be found as a top-level element for
      * this codec. The "top level element" is the element directly returned by a call to
-     * {@link ConfigCodec#decode(InputStream)}.
+     * {@link ConfigCodec#decode(InputStream)}. This is necessary because some codecs support top-level lists and
+     * primitives (like YML), whereas others only support top-level nodes (like JSON).
      *
      * @return the valid top-level types
      */
