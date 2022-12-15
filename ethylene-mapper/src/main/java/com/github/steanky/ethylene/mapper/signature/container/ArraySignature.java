@@ -73,6 +73,6 @@ public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
     @SuppressWarnings("unchecked")
     @Override
     protected @NotNull T @NotNull [] makeBuildingObject(@NotNull ConfigContainer container) {
-        return (T[]) new Object[container.elementCollection().size()];
+        return (T[]) Array.newInstance(containerType.componentType().rawType(), container.elementCollection().size());
     }
 }
