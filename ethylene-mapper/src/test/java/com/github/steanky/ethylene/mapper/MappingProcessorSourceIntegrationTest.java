@@ -63,8 +63,21 @@ class MappingProcessorSourceIntegrationTest {
         }
     }
 
+    @Builder(Builder.BuilderType.CONSTRUCTOR)
+    public static class Hello {
+        public String name;
+
+        public Hello() {
+        }
+
+        public Hello(@Name("name") String name) {
+            this.name = name;
+        }
+
+    }
+
     @Widen
-    @com.github.steanky.ethylene.mapper.annotation.Builder(com.github.steanky.ethylene.mapper.annotation.Builder.BuilderType.FIELD)
+    @Builder(Builder.BuilderType.FIELD)
     @Include
     private static class SelfReferentialObject {
         private final SelfReferentialObject self = null;
@@ -75,9 +88,22 @@ class MappingProcessorSourceIntegrationTest {
     }
 
     @Nested
-    class Builder {
+    class BuilderTests {
         private static MappingProcessorSource standardSource() {
             return MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations().build();
+        }
+
+        @Test
+        void thamid() throws ConfigProcessException {
+            MappingProcessorSource processorSource = MappingProcessorSource.builder().withStandardSignatures()
+                .withStandardTypeImplementations().withStandardSignatures().ignoringLengths().build();
+
+            ConfigProcessor<Hello> helloProcessor = processorSource.processorFor(Token.ofClass(Hello.class));
+            ConfigNode node = ConfigNode.of("name", "first");
+            Hello hello = helloProcessor.dataFromElement(node);
+
+            assertNotNull(hello);
+            assertEquals("first", hello.name);
         }
 
         @Test

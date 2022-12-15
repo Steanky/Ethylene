@@ -98,14 +98,15 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         }
 
         Collection<ConfigElement> elementCollection = providedElement.asContainer().elementCollection();
-        int length = signature.length(providedElement);
-        if (matchLength && elementCollection.size() != length) {
+
+        int signatureLength = signature.length(providedElement);
+        if (matchLength && elementCollection.size() != signatureLength) {
             return null;
         }
 
         boolean matchTypeHints = signature.matchesTypeHints();
         if (!(matchNames || matchTypeHints)) {
-            return new MatchingSignature(signature, elementCollection, null, length);
+            return new MatchingSignature(signature, elementCollection, null, signatureLength);
         }
 
 
@@ -135,18 +136,20 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             Iterator<ConfigElement> elementIterator = targetCollection.iterator();
             Iterator<Map.Entry<String, Token<?>>> signatureTypeIterator = signature.argumentTypes().iterator();
 
-            while (elementIterator.hasNext()) {
+            while (elementIterator.hasNext() && signatureTypeIterator.hasNext()) {
                 if (!typeHinter.assignable(elementIterator.next(), signatureTypeIterator.next().getValue())) {
                     return null;
                 }
             }
         }
 
-        return new MatchingSignature(signature, targetCollection, null, length);
+        return new MatchingSignature(signature, targetCollection, null, signatureLength);
     }
 
     private MatchingSignature signatureForElement(Token<?> typeToken, ConfigElement providedElement,
         Object providedObject) {
+        MatchingSignature bestSignature = null;
+
         for (Signature<?> signature : signatures) {
             if (!signature.returnType().isSubclassOf(typeToken)) {
                 continue;
@@ -159,9 +162,22 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 matching = matchingFromElement(signature, providedElement);
             }
 
-            if (matching != null) {
+            if (!matchLength && matching != null) {
+                if (bestSignature == null) {
+                    bestSignature = matching;
+                }
+                else if (bestSignature.size() < matching.size()) {
+                    bestSignature = matching;
+                }
+            }
+
+            if (matching != null && matchLength) {
                 return matching;
             }
+        }
+
+        if (bestSignature != null) {
+            return bestSignature;
         }
 
         throw new MapperException("Unable to find matching signature for element '" + providedElement + "'");
