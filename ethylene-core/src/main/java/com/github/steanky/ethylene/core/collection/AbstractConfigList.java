@@ -2,7 +2,6 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.toolkit.collection.Containers;
-import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 

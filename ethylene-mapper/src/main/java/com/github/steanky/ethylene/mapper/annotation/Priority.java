@@ -1,7 +1,8 @@
 package com.github.steanky.ethylene.mapper.annotation;
 
-import java.lang.annotation.*;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+
+import java.lang.annotation.*;
 
 /**
  * Specifies the priority of a constructor. This will be the priority of the {@link Signature} created from the

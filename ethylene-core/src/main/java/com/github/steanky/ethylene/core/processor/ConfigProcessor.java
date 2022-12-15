@@ -5,6 +5,9 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -434,9 +437,16 @@ public interface ConfigProcessor<TData> {
      * ConfigProcessor's data type. Works similarly to {@link ConfigProcessor#collectionProcessor(IntFunction)}, but for
      * arrays.
      *
+     * @param arrayType the component type of the array; used to create new array instances using
+     *                  {@link ConfigProcessor#dataFromElement(ConfigElement)}
      * @return a new array-based ConfigProcessor
      */
-    default @NotNull ConfigProcessor<TData[]> arrayProcessor() {
+    default @NotNull ConfigProcessor<TData[]> arrayProcessor(@NotNull Class<TData> arrayType) {
+        Objects.requireNonNull(arrayType);
+
+        Reference<Class<TData>> typeReference = new WeakReference<>(arrayType);
+        String typeName = arrayType.getTypeName();
+
         return new ConfigProcessor<>() {
             @SuppressWarnings("unchecked")
             @Override
@@ -446,7 +456,12 @@ public interface ConfigProcessor<TData> {
                 }
 
                 ConfigList list = CONFIG_LIST.dataFromElement(element);
-                TData[] data = (TData[]) new Object[list.size()];
+                Class<TData> arrayType = typeReference.get();
+                if (arrayType == null) {
+                    throw new TypeNotPresentException(typeName, null);
+                }
+
+                TData[] data = (TData[]) Array.newInstance(arrayType, list.size());
                 int i = 0;
                 for (ConfigElement sample : list) {
                     data[i++] = ConfigProcessor.this.dataFromElement(sample);

@@ -136,25 +136,19 @@ public class BasicScalarSource implements ScalarSource {
             if (upperBounds.isSuperclassOf(scalar.getClass())) {
                 //simple case: we can return the scalar's underlying value
                 return scalar;
-            }
-            else if(scalar instanceof Number number) {
+            } else if (scalar instanceof Number number) {
                 //perform numeric conversions automatically as needed
                 if (upperBounds.isSubclassOf(Double.class)) {
                     return number.doubleValue();
-                }
-                else if(upperBounds.isSubclassOf(Long.class)) {
+                } else if (upperBounds.isSubclassOf(Long.class)) {
                     return number.longValue();
-                }
-                else if(upperBounds.isSubclassOf(Integer.class)) {
+                } else if (upperBounds.isSubclassOf(Integer.class)) {
                     return number.intValue();
-                }
-                else if (upperBounds.isSubclassOf(Float.class)) {
+                } else if (upperBounds.isSubclassOf(Float.class)) {
                     return number.floatValue();
-                }
-                else if(upperBounds.isSubclassOf(Short.class)) {
+                } else if (upperBounds.isSubclassOf(Short.class)) {
                     return number.shortValue();
-                }
-                else if(upperBounds.isSubclassOf(Byte.class)) {
+                } else if (upperBounds.isSubclassOf(Byte.class)) {
                     return number.byteValue();
                 }
             }

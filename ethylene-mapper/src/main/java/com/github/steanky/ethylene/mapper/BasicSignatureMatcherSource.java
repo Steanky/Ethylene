@@ -35,6 +35,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
      * @param signatureSelector the {@link SignatureBuilder.Selector} used to select signature builders for custom
      *                          objects
      * @param customSignatures  a collection of custom signatures
+     * @param matchLength       true if the size of the data provided to create objects need not match the signature
+     *                          length exactly
      */
     public BasicSignatureMatcherSource(@NotNull TypeHinter typeHinter,
         @NotNull SignatureBuilder.Selector signatureSelector,

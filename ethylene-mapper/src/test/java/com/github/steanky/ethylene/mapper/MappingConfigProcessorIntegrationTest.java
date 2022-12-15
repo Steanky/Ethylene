@@ -94,7 +94,8 @@ class MappingConfigProcessorIntegrationTest {
     }
 
     public static class ParameterlessClass {
-        public ParameterlessClass() {}
+        public ParameterlessClass() {
+        }
     }
 
     @Widen

@@ -6,7 +6,6 @@ import com.github.steanky.ethylene.mapper.signature.*;
 import com.github.steanky.ethylene.mapper.signature.field.FieldSignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.toolkit.collection.Containers;
-import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -169,9 +168,9 @@ public interface MappingProcessorSource {
 
         /**
          * Specifies a {@link QuadFunction} which may be used to construct custom implementations of
-         * {@link SignatureMatcher.Source}, given a {@link TypeHinter}, {@link SignatureBuilder.Selector}, collection
-         * of {@link Signature} objects corresponding to all custom signatures, and a boolean indicating whether
-         * signature lengths should be used in matching.
+         * {@link SignatureMatcher.Source}, given a {@link TypeHinter}, {@link SignatureBuilder.Selector}, collection of
+         * {@link Signature} objects corresponding to all custom signatures, and a boolean indicating whether signature
+         * lengths should be used in matching.
          *
          * @param function the function used to construct SignatureMatcher.Source objects
          * @return this builder, for chaining
@@ -304,8 +303,8 @@ public interface MappingProcessorSource {
             TypeHinter hinter = typeHinterFunction.apply(scalarTypes);
             SignatureBuilder.Selector selector =
                 signatureBuilderSelectorFunction.apply(defaultSignatureBuilder, signatureBuilderPreferences);
-            SignatureMatcher.Source source = signatureMatcherSourceFunction.apply(hinter, selector, customSignatures,
-                matchLengths);
+            SignatureMatcher.Source source =
+                signatureMatcherSourceFunction.apply(hinter, selector, customSignatures, matchLengths);
             TypeResolver resolver = typeResolverFunction.apply(hinter, typeImplementations);
             ScalarSource scalarSource = scalarSourceFunction.apply(hinter, scalarSignatures);
 

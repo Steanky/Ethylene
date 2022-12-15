@@ -13,7 +13,10 @@ import com.github.steanky.ethylene.mapper.type.Token;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -122,10 +125,12 @@ class MappingProcessorSourceIntegrationTest {
 
         @Test
         void ambiguousB() throws ConfigProcessException {
-            MappingProcessorSource processorSource = MappingProcessorSource.builder().withStandardSignatures()
-                .withStandardTypeImplementations().withStandardSignatures().ignoringLengths().build();
+            MappingProcessorSource processorSource =
+                MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations()
+                    .withStandardSignatures().ignoringLengths().build();
 
-            ConfigProcessor<AmbiguousB> ambiguousProcessor = processorSource.processorFor(Token.ofClass(AmbiguousB.class));
+            ConfigProcessor<AmbiguousB> ambiguousProcessor =
+                processorSource.processorFor(Token.ofClass(AmbiguousB.class));
             ConfigNode ambiguousData = ConfigNode.of("name", "first", "value", 69);
             AmbiguousB ambiguous = ambiguousProcessor.dataFromElement(ambiguousData);
 
@@ -136,10 +141,12 @@ class MappingProcessorSourceIntegrationTest {
 
         @Test
         void ambiguousA() throws ConfigProcessException {
-            MappingProcessorSource processorSource = MappingProcessorSource.builder().withStandardSignatures()
-                .withStandardTypeImplementations().withStandardSignatures().ignoringLengths().build();
+            MappingProcessorSource processorSource =
+                MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations()
+                    .withStandardSignatures().ignoringLengths().build();
 
-            ConfigProcessor<AmbiguousA> ambiguousProcessor = processorSource.processorFor(Token.ofClass(AmbiguousA.class));
+            ConfigProcessor<AmbiguousA> ambiguousProcessor =
+                processorSource.processorFor(Token.ofClass(AmbiguousA.class));
             ConfigNode ambiguousData = ConfigNode.of("name", "first", "value", 69);
             AmbiguousA ambiguous = ambiguousProcessor.dataFromElement(ambiguousData);
 
@@ -150,8 +157,9 @@ class MappingProcessorSourceIntegrationTest {
 
         @Test
         void thamid() throws ConfigProcessException {
-            MappingProcessorSource processorSource = MappingProcessorSource.builder().withStandardSignatures()
-                .withStandardTypeImplementations().withStandardSignatures().ignoringLengths().build();
+            MappingProcessorSource processorSource =
+                MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations()
+                    .withStandardSignatures().ignoringLengths().build();
 
             ConfigProcessor<Hello> helloProcessor = processorSource.processorFor(Token.ofClass(Hello.class));
             ConfigNode node = ConfigNode.of("name", "first");
@@ -218,15 +226,15 @@ class MappingProcessorSourceIntegrationTest {
         @Test
         void customSignature() throws ConfigProcessException {
             MappingProcessorSource source = MappingProcessorSource.builder().withScalarSignature(
-                ScalarSignature.of(Token.ofClass(UUID.class), element -> UUID.fromString(element.asString()), uuid ->
-                    ConfigPrimitive.of(uuid.toString()))).withStandardSignatures().withStandardTypeImplementations()
-                .build();
+                    ScalarSignature.of(Token.ofClass(UUID.class), element -> UUID.fromString(element.asString()),
+                        uuid -> ConfigPrimitive.of(uuid.toString()))).withStandardSignatures()
+                .withStandardTypeImplementations().build();
 
-            ConfigProcessor<RecordWithCustomObjectInSignature> proc = source.processorFor(
-                Token.ofClass(RecordWithCustomObjectInSignature.class));
+            ConfigProcessor<RecordWithCustomObjectInSignature> proc =
+                source.processorFor(Token.ofClass(RecordWithCustomObjectInSignature.class));
 
-            RecordWithCustomObjectInSignature r = proc.dataFromElement(ConfigNode.of("uuid",
-                ConfigPrimitive.of("59be2a51-f5cb-4ae9-ae26-bfbd6968cf93")));
+            RecordWithCustomObjectInSignature r =
+                proc.dataFromElement(ConfigNode.of("uuid", ConfigPrimitive.of("59be2a51-f5cb-4ae9-ae26-bfbd6968cf93")));
 
             assertNotNull(r);
             assertEquals(UUID.fromString("59be2a51-f5cb-4ae9-ae26-bfbd6968cf93"), r.uuid);
@@ -235,10 +243,10 @@ class MappingProcessorSourceIntegrationTest {
         @Test
         void inheritedScalar() throws ConfigProcessException {
             MappingProcessorSource source = MappingProcessorSource.builder().withScalarSignature(
-                    ScalarSignature.of(Token.ofClass(SimpleScalar.class), element ->
-                        new SimpleScalar(element.asString()), scalar -> ConfigPrimitive.of(scalar.value)))
-                .withStandardSignatures().withStandardTypeImplementations()
-                .build();
+                    ScalarSignature.of(Token.ofClass(SimpleScalar.class),
+                        element -> new SimpleScalar(element.asString()),
+                        scalar -> ConfigPrimitive.of(scalar.value))).withStandardSignatures()
+                .withStandardTypeImplementations().build();
 
             ConfigProcessor<SimpleScalar> simpleScalar = source.processorFor(Token.ofClass(SimpleScalar.class));
             ConfigElement element = simpleScalar.elementFromData(new SubSimpleScalar("test"));
@@ -253,9 +261,9 @@ class MappingProcessorSourceIntegrationTest {
             MappingProcessorSource source = MappingProcessorSource.builder().ignoringLengths().build();
 
             ConfigProcessor<SimpleRecord> proc = source.processorFor(Token.ofClass(SimpleRecord.class));
-            ConfigNode nodeWithTooManyEntries = ConfigNode.of("unused", "this value is unused", "first",
-                "first value", "key in between values", "this is also unused", "second", 69, "third",
-                "another unused value");
+            ConfigNode nodeWithTooManyEntries =
+                ConfigNode.of("unused", "this value is unused", "first", "first value", "key in between values",
+                    "this is also unused", "second", 69, "third", "another unused value");
 
             SimpleRecord rec = proc.dataFromElement(nodeWithTooManyEntries);
 
@@ -264,7 +272,7 @@ class MappingProcessorSourceIntegrationTest {
         }
 
         @Test
-        void doubleToFloatConversion() throws  ConfigProcessException {
+        void doubleToFloatConversion() throws ConfigProcessException {
             MappingProcessorSource source = MappingProcessorSource.builder().build();
 
             ConfigProcessor<TestRecord> test = source.processorFor(Token.ofClass(TestRecord.class));
@@ -295,11 +303,14 @@ class MappingProcessorSourceIntegrationTest {
         private record PrivateRecord(String value) {
         }
 
-        public record RecordWithCustomObjectInSignature(UUID uuid) {}
+        public record RecordWithCustomObjectInSignature(UUID uuid) {
+        }
 
-        public record SimpleRecord(String first, int second) {}
+        public record SimpleRecord(String first, int second) {
+        }
 
-        public record TestRecord(float value) {}
+        public record TestRecord(float value) {
+        }
 
         public class SimpleScalar {
             private final String value;

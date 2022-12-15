@@ -80,8 +80,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                     if (signatureSize == 0) {
                         nodeEntry.reference.setValue(signature.buildObject(buildingObject,
                             ArrayUtils.EMPTY_OBJECT_ARRAY));
-                        return Graph.node(Iterators.iterator(), Graph.output(nodeEntry.reference,
-                            Graph.emptyAccumulator()));
+                        return Graph.node(Iterators.iterator(),
+                            Graph.output(nodeEntry.reference, Graph.emptyAccumulator()));
                     }
 
                     nodeEntry.reference.setValue(buildingObject);

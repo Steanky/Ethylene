@@ -60,21 +60,9 @@ public abstract class Token<T> implements Supplier<Type> {
     };
 
     /**
-     * Common shared token whose underlying type is a primitive long.
-     */
-    public static final Token<?> PRIMITIVE_LONG = new Token<>(long.class) {
-    };
-
-    /**
      * Common shared token whose underlying type is {@link Double}.
      */
     public static final Token<Double> DOUBLE = new Token<>(Double.class) {
-    };
-
-    /**
-     * Common shared token whose underlying type is a primitive double.
-     */
-    public static final Token<?> PRIMITIVE_DOUBLE = new Token<>(double.class) {
     };
 
     /**
@@ -84,21 +72,9 @@ public abstract class Token<T> implements Supplier<Type> {
     };
 
     /**
-     * Common shared token whose underlying type is a primitive int.
-     */
-    public static final Token<?> PRIMITIVE_INT = new Token<>(int.class) {
-    };
-
-    /**
      * Common shared token whose underlying type is {@link Float}.
      */
     public static final Token<Float> FLOAT = new Token<>(Float.class) {
-    };
-
-    /**
-     * Common shared token whose underlying type is a primitive float.
-     */
-    public static final Token<Long> PRIMITIVE_FLOAT = new Token<>(float.class) {
     };
 
     /**
@@ -108,21 +84,9 @@ public abstract class Token<T> implements Supplier<Type> {
     };
 
     /**
-     * Common shared token whose underlying type is a primitive short.
-     */
-    public static final Token<Long> PRIMITIVE_SHORT = new Token<>(short.class) {
-    };
-
-    /**
      * Common shared token whose underlying type is {@link Character}.
      */
     public static final Token<Character> CHARACTER = new Token<>(Character.class) {
-    };
-
-    /**
-     * Common shared token whose underlying type is a primitive char.
-     */
-    public static final Token<Long> PRIMITIVE_CHAR = new Token<>(char.class) {
     };
 
     /**
@@ -132,21 +96,9 @@ public abstract class Token<T> implements Supplier<Type> {
     };
 
     /**
-     * Common shared token whose underlying type is a primitive byte.
-     */
-    public static final Token<Long> PRIMITIVE_BYTE = new Token<>(byte.class) {
-    };
-
-    /**
      * Common shared token whose underlying type is {@link Boolean}.
      */
     public static final Token<Boolean> BOOLEAN = new Token<>(Boolean.class) {
-    };
-
-    /**
-     * Common shared token whose underlying type is a primitive boolean.
-     */
-    public static final Token<Long> PRIMITIVE_BOOLEAN = new Token<>(boolean.class) {
     };
 
     private final Reference<Type> typeReference;

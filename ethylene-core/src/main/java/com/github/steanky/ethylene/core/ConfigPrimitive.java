@@ -52,7 +52,8 @@ public final class ConfigPrimitive implements ConfigElement {
 
     private static Object validateType(Object object) {
         if (!isPrimitive(object)) {
-            throw new IllegalArgumentException("Object of type " + object.getClass() + " not valid for ConfigPrimitive");
+            throw new IllegalArgumentException(
+                "Object of type " + object.getClass() + " not valid for ConfigPrimitive");
         }
 
         return object;

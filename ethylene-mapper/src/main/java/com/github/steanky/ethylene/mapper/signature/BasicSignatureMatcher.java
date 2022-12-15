@@ -21,8 +21,10 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     /**
      * Creates a new instance of this class
      *
-     * @param signatures the signatures array; note that this is copied so it is safe to modify the array later
-     * @param typeHinter the {@link TypeHinter} used to extract type information when matching type hints
+     * @param signatures  the signatures array; note that this is copied so it is safe to modify the array later
+     * @param typeHinter  the {@link TypeHinter} used to extract type information when matching type hints
+     * @param matchLength true if the size of the data provided to create objects need not match the signature length
+     *                    exactly
      */
     public BasicSignatureMatcher(@NotNull Signature<?> @NotNull [] signatures, @NotNull TypeHinter typeHinter,
         boolean matchLength) {
@@ -84,8 +86,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     if (typeHinter.getHint(typedObject.type()) != typeHinter.getHint(signatureType.getValue())) {
                         return null;
                     }
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -146,8 +147,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                     if (!typeHinter.assignable(element, signatureType.getValue())) {
                         return null;
                     }
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -175,8 +175,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             if (!matchLength && matching != null) {
                 if (bestSignature == null) {
                     bestSignature = matching;
-                }
-                else if (bestSignature.size() < matching.size()) {
+                } else if (bestSignature.size() < matching.size()) {
                     bestSignature = matching;
                 }
             }

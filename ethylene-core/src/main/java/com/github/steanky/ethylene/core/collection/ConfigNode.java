@@ -19,6 +19,7 @@ import java.util.Objects;
 public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, ConfigContainer {
     /**
      * Overload of {@link ConfigNode#of(Object...)}. Returns a new, empty {@link LinkedConfigNode}.
+     *
      * @return a new, empty, mutable ConfigNode
      */
     static @NotNull ConfigNode of() {
@@ -26,10 +27,10 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     }
 
     /**
-     * Overload of {@link ConfigNode#of(Object...)}. Returns a new {@link LinkedConfigNode} with an initial capacity
-     * of 1, populated by the single given key and value.
+     * Overload of {@link ConfigNode#of(Object...)}. Returns a new {@link LinkedConfigNode} with an initial capacity of
+     * 1, populated by the single given key and value.
      *
-     * @param key the key to initially populate the map with
+     * @param key   the key to initially populate the map with
      * @param value the value to initially populate the map with
      * @return a new, mutable ConfigNode containing exactly 1 entry
      */
@@ -39,8 +40,7 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
         ConfigNode node = new LinkedConfigNode(1);
         if (value instanceof ConfigElement element) {
             node.put(key, element);
-        }
-        else {
+        } else {
             node.put(key, ConfigPrimitive.of(value));
         }
 

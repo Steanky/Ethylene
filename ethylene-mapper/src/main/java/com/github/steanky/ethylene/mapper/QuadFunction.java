@@ -19,5 +19,5 @@ public interface QuadFunction<T, U, V, W, R> {
      * @param w the fourth argument
      * @return the return object
      */
-    R apply (T t, U u, V v, W w);
+    R apply(T t, U u, V v, W w);
 }
