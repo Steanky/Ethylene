@@ -340,13 +340,13 @@ public interface ConfigProcessor<TData> {
             }
 
             @Override
-            public @NotNull ConfigElement elementFromData(M m) throws ConfigProcessException {
-                if (m == null) {
+            public @NotNull ConfigElement elementFromData(M map) throws ConfigProcessException {
+                if (map == null) {
                     return ConfigPrimitive.NULL;
                 }
 
-                ConfigNode node = new LinkedConfigNode(m.size());
-                for (Map.Entry<String, TData> entry : m.entrySet()) {
+                ConfigNode node = new LinkedConfigNode(map.size());
+                for (Map.Entry<String, TData> entry : map.entrySet()) {
                     node.put(entry.getKey(), ConfigProcessor.this.elementFromData(entry.getValue()));
                 }
 
