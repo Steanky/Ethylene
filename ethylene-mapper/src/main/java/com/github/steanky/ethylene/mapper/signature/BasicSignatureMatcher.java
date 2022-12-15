@@ -76,12 +76,17 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
         if (matchTypeHints) {
             Iterator<Signature.TypedObject> typeCollectionIterator = typeCollection.iterator();
-            Iterator<Map.Entry<String, Token<?>>> signatureIterator = signature.argumentTypes().iterator();
+            Iterable<Map.Entry<String, Token<?>>> signatureIterable = () -> signature.argumentTypes().iterator();
 
-            while (typeCollectionIterator.hasNext()) {
-                if (typeHinter.getHint(typeCollectionIterator.next().type()) !=
-                    typeHinter.getHint(signatureIterator.next().getValue())) {
-                    return null;
+            for (Map.Entry<String, Token<?>> signatureType : signatureIterable) {
+                if (typeCollectionIterator.hasNext()) {
+                    Signature.TypedObject typedObject = typeCollectionIterator.next();
+                    if (typeHinter.getHint(typedObject.type()) != typeHinter.getHint(signatureType.getValue())) {
+                        return null;
+                    }
+                }
+                else {
+                    break;
                 }
             }
         }
@@ -134,11 +139,16 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
         if (matchTypeHints) {
             Iterator<ConfigElement> elementIterator = targetCollection.iterator();
-            Iterator<Map.Entry<String, Token<?>>> signatureTypeIterator = signature.argumentTypes().iterator();
 
-            while (elementIterator.hasNext() && signatureTypeIterator.hasNext()) {
-                if (!typeHinter.assignable(elementIterator.next(), signatureTypeIterator.next().getValue())) {
-                    return null;
+            for (Map.Entry<String, Token<?>> signatureType : signature.argumentTypes()) {
+                if (elementIterator.hasNext()) {
+                    ConfigElement element = elementIterator.next();
+                    if (!typeHinter.assignable(element, signatureType.getValue())) {
+                        return null;
+                    }
+                }
+                else {
+                    break;
                 }
             }
         }

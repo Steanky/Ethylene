@@ -6,10 +6,7 @@ import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
-import com.github.steanky.ethylene.mapper.annotation.Builder;
-import com.github.steanky.ethylene.mapper.annotation.Include;
-import com.github.steanky.ethylene.mapper.annotation.Name;
-import com.github.steanky.ethylene.mapper.annotation.Widen;
+import com.github.steanky.ethylene.mapper.annotation.*;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.type.Token;
@@ -76,6 +73,36 @@ class MappingProcessorSourceIntegrationTest {
 
     }
 
+    @Builder(Builder.BuilderType.CONSTRUCTOR)
+    public static class AmbiguousA {
+        public String name;
+        public int value;
+
+        @Priority(1)
+        public AmbiguousA(@Name("name") String name) {
+            this.name = name;
+        }
+
+        public AmbiguousA(@Name("value") int value) {
+            this.value = value;
+        }
+    }
+
+    @Builder(Builder.BuilderType.CONSTRUCTOR)
+    public static class AmbiguousB {
+        public String name;
+        public int value;
+
+        public AmbiguousB(@Name("name") String name) {
+            this.name = name;
+        }
+
+        @Priority(1)
+        public AmbiguousB(@Name("value") int value) {
+            this.value = value;
+        }
+    }
+
     @Widen
     @Builder(Builder.BuilderType.FIELD)
     @Include
@@ -91,6 +118,34 @@ class MappingProcessorSourceIntegrationTest {
     class BuilderTests {
         private static MappingProcessorSource standardSource() {
             return MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations().build();
+        }
+
+        @Test
+        void ambiguousB() throws ConfigProcessException {
+            MappingProcessorSource processorSource = MappingProcessorSource.builder().withStandardSignatures()
+                .withStandardTypeImplementations().withStandardSignatures().ignoringLengths().build();
+
+            ConfigProcessor<AmbiguousB> ambiguousProcessor = processorSource.processorFor(Token.ofClass(AmbiguousB.class));
+            ConfigNode ambiguousData = ConfigNode.of("name", "first", "value", 69);
+            AmbiguousB ambiguous = ambiguousProcessor.dataFromElement(ambiguousData);
+
+            assertNotNull(ambiguous);
+            assertNull(ambiguous.name);
+            assertEquals(69, ambiguous.value);
+        }
+
+        @Test
+        void ambiguousA() throws ConfigProcessException {
+            MappingProcessorSource processorSource = MappingProcessorSource.builder().withStandardSignatures()
+                .withStandardTypeImplementations().withStandardSignatures().ignoringLengths().build();
+
+            ConfigProcessor<AmbiguousA> ambiguousProcessor = processorSource.processorFor(Token.ofClass(AmbiguousA.class));
+            ConfigNode ambiguousData = ConfigNode.of("name", "first", "value", 69);
+            AmbiguousA ambiguous = ambiguousProcessor.dataFromElement(ambiguousData);
+
+            assertNotNull(ambiguous);
+            assertEquals("first", ambiguous.name);
+            assertEquals(0, ambiguous.value);
         }
 
         @Test
