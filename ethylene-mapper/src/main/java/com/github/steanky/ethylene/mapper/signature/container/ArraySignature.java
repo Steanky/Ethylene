@@ -28,7 +28,8 @@ public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull T @NotNull [] object) {
-        int size = Array.getLength(object);
+        int size = object.length;
+
         return new AbstractCollection<>() {
             @Override
             public Iterator<TypedObject> iterator() {
@@ -42,11 +43,11 @@ public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
 
                     @Override
                     public TypedObject next() {
-                        if (i++ == size) {
+                        if (i >= size) {
                             throw new NoSuchElementException();
                         }
 
-                        return new TypedObject(null, ArraySignature.super.containerType, Array.get(object, i));
+                        return new TypedObject(null, ArraySignature.super.entry.getValue(), object[i++]);
                     }
                 };
             }

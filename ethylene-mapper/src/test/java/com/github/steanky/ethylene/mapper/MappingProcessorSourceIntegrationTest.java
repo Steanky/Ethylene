@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,12 +56,55 @@ class MappingProcessorSourceIntegrationTest {
         assertSame(self, self.self);
     }
 
+    @Test
+    void elementToElement() throws ConfigProcessException {
+        MappingProcessorSource source = MappingProcessorSource.builder().withStandardSignatures().build();
+        ConfigProcessor<ConfigElement> elementProcessor = source.processorFor(Token.ofClass(ConfigElement.class));
+
+        ConfigElement element = ConfigPrimitive.of("test");
+        ConfigElement result = elementProcessor.dataFromElement(element);
+
+        assertEquals(element, result);
+
+        ConfigProcessor<ConfigNode> nodeProcessor = source.processorFor(Token.ofClass(ConfigNode.class));
+
+        ConfigNode testNode = ConfigNode.of("test", 1);
+        ConfigElement resultNode = nodeProcessor.elementFromData(testNode);
+
+        assertEquals(testNode, resultNode);
+    }
+
+    @Test
+    void classContainingConfigElement() throws ConfigProcessException {
+        MappingProcessorSource source = MappingProcessorSource.builder().withStandardSignatures().build();
+
+        ConfigProcessor<ClassWithConfigElement> processor = source.processorFor(Token
+            .ofClass(ClassWithConfigElement.class));
+
+        ConfigNode subSubNode = ConfigNode.of("test", "vegetals");
+        ConfigList subList = ConfigList.of("first", 1, subSubNode);
+
+        ConfigNode node = ConfigNode.of("element", subList, "value", 10);
+
+        ClassWithConfigElement cls = processor.dataFromElement(node);
+        assertEquals(subList, cls.element);
+        assertEquals(10, cls.value);
+    }
+
     private static class ObjectWithCustomSignature {
         private final int value;
 
         public ObjectWithCustomSignature(int value) {
             this.value = value;
         }
+    }
+
+    @Include
+    public static class ClassWithConfigElement {
+        public ConfigElement element;
+        public int value;
+
+        public ClassWithConfigElement() {}
     }
 
     @Builder(Builder.BuilderType.CONSTRUCTOR)
@@ -153,6 +197,40 @@ class MappingProcessorSourceIntegrationTest {
             assertNotNull(ambiguous);
             assertEquals("first", ambiguous.name);
             assertEquals(0, ambiguous.value);
+        }
+
+        @Test
+        void array() throws ConfigProcessException {
+            MappingProcessorSource processorSource =
+                MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations()
+                    .withStandardSignatures().ignoringLengths().build();
+
+            ConfigProcessor<String[]> arrayProcessor = processorSource.processorFor(Token.ofClass(String[].class));
+            ConfigList list = ConfigList.of("first", "second");
+
+            String[] result = arrayProcessor.dataFromElement(list);
+
+            assertArrayEquals(new String[] {"first", "second"}, result);
+
+            ConfigList newList = arrayProcessor.elementFromData(result).asList();
+            assertLinesMatch(Stream.of("first", "second"), newList.stream().map(ConfigElement::asString));
+        }
+
+        @Test
+        void selfReferentialArray() throws ConfigProcessException {
+            MappingProcessorSource processorSource =
+                MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations()
+                    .withStandardSignatures().ignoringLengths().build();
+
+            ConfigProcessor<Object[]> arrayProcessor = processorSource.processorFor(Token.ofClass(Object[].class));
+            ConfigList list = ConfigList.of("first");
+            list.add(list);
+
+            Object[] result = arrayProcessor.dataFromElement(list);
+
+            assertEquals(2, result.length);
+            assertEquals("first", result[0]);
+            assertSame(result, result[1]);
         }
 
         @Test

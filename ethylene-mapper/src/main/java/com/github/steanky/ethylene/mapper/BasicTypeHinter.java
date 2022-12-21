@@ -38,10 +38,13 @@ public class BasicTypeHinter implements TypeHinter {
 
     @Override
     public @NotNull ElementType getHint(@NotNull Token<?> type) {
-        if (type.isSubclassOf(Map.class) || type.isSubclassOf(Collection.class) || type.isArrayType()) {
-            return ElementType.LIST;
-        } else if (type.isPrimitiveOrWrapper() || type.isSubclassOf(String.class) || type.isEnumType()) {
+        if (type.isSubclassOf(ConfigElement.class) || type.isPrimitiveOrWrapper() || type.isSubclassOf(String.class) ||
+            type.isEnumType()) {
+            //we treat ConfigElement as scalar because it need not be deeply processed, just copied over
             return ElementType.SCALAR;
+        }
+        else if (type.isSubclassOf(Map.class) || type.isSubclassOf(Collection.class) || type.isArrayType()) {
+            return ElementType.LIST;
         }
 
         if (scalars.isEmpty()) {
@@ -68,6 +71,10 @@ public class BasicTypeHinter implements TypeHinter {
 
     @Override
     public boolean assignable(@NotNull ConfigElement element, @NotNull Token<?> toType) {
+        if (toType.isSubclassOf(ConfigElement.class)) {
+            return toType.isSuperclassOf(element.getClass());
+        }
+
         return switch (element.type()) {
             //simplest case: if toType is a LIST or SCALAR and the element isn't, we are not assignable
             case NODE -> getHint(toType).isNode();
@@ -88,11 +95,8 @@ public class BasicTypeHinter implements TypeHinter {
                     yield true;
                 }
 
-                //simple assignability check
-                boolean supertype = toType.isSuperclassOf(scalar.getClass());
-
                 //if not assignable, check the hint type
-                if (!supertype) {
+                if (!toType.isSuperclassOf(scalar.getClass())) {
                     yield getHint(toType) == ElementType.SCALAR;
                 }
 
@@ -103,6 +107,10 @@ public class BasicTypeHinter implements TypeHinter {
 
     @Override
     public @NotNull Token<?> getPreferredType(@NotNull ConfigElement element, @NotNull Token<?> upperBounds) {
+        if (upperBounds.isSubclassOf(ConfigElement.class)) {
+            return upperBounds;
+        }
+
         return switch (element.type()) {
             case NODE -> upperBounds; //can't guess type from a node, assume it's assignable
             case LIST -> ARRAY_LIST; //arraylist is preferred, but don't check against the upper bounds (caller should)
@@ -113,8 +121,7 @@ public class BasicTypeHinter implements TypeHinter {
                     yield upperBounds;
                 }
 
-                boolean supertype = upperBounds.isSuperclassOf(scalar.getClass());
-                if (!supertype) {
+                if (!upperBounds.isSuperclassOf(scalar.getClass())) {
                     yield upperBounds;
                 }
 

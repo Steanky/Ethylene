@@ -121,7 +121,8 @@ public interface Signature<TReturn> extends Prioritized {
      * Determines the number of arguments this signature wants, given a {@link ConfigElement}. May return -1 to indicate
      * that no length can be determined given the provided element.
      *
-     * @param element the element from which to determine a length
+     * @param element the element from which to determine a length; will be null if no element is known (as is the case
+     *                when mapping object data to a ConfigElement)
      * @return the length of this signature
      */
     int length(@Nullable ConfigElement element);
@@ -172,24 +173,24 @@ public interface Signature<TReturn> extends Prioritized {
     final class SignatureImpl<T> extends PrioritizedBase implements Signature<T> {
         private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
         private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
-        private final BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction;
+        private final BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction;
         private final Function<? super ConfigElement, ? extends T> buildingObjectInitializer;
         private final BiFunction<? super T, ? super Object[], ? extends T> constructor;
         private final boolean matchNames;
         private final boolean matchTypeHints;
         private final BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement,
-            Integer>
+            ? extends Integer>
             lengthFunction;
         private final ElementType typeHint;
         private final Token<T> returnType;
 
         private SignatureImpl(int priority, Collection<Map.Entry<String, Token<?>>> argumentTypes,
             Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
-            BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction,
+            BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction,
             Function<? super ConfigElement, ? extends T> buildingObjectInitializer,
             BiFunction<? super T, ? super Object[], ? extends T> constructor, boolean matchNames,
             boolean matchTypeHints,
-            BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer> lengthFunction,
+            BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ? extends Integer> lengthFunction,
             ElementType typeHint, Token<T> returnType) {
             super(priority);
             this.argumentTypes = argumentTypes;
@@ -307,10 +308,10 @@ public interface Signature<TReturn> extends Prioritized {
         private boolean matchTypeHints;
         private ElementType typeHint = ElementType.NODE;
         private Function<? super ConfigElement, ? extends T> buildingObjectInitializer;
-        private BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, Integer>
+        private BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ? extends Integer>
             lengthFunction = (types, element) -> types.size();
 
-        private BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction =
+        private BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction =
             (elementType, size) -> {
                 if (elementType == ElementType.LIST) {
                     return new ArrayConfigList(size);
@@ -378,7 +379,7 @@ public interface Signature<TReturn> extends Prioritized {
 
         /**
          * Supplies a building object initializer for this signature. Doing so implies that the signature supports
-         * building objects.
+         * building objects, which will enable resolution of circular references.
          *
          * @param buildingObjectInitializer the object initializer
          * @return this builder, for chaining
@@ -397,7 +398,7 @@ public interface Signature<TReturn> extends Prioritized {
          */
         public @NotNull Builder<T> withLengthFunction(
             @NotNull BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement,
-                Integer> lengthFunction) {
+                ? extends Integer> lengthFunction) {
             this.lengthFunction = Objects.requireNonNull(lengthFunction);
             return this;
         }
@@ -411,7 +412,7 @@ public interface Signature<TReturn> extends Prioritized {
          * @return this builder, for chaining
          */
         public @NotNull Builder<T> withContainerFunction(
-            @NotNull BiFunction<? super ElementType, Integer, ? extends ConfigContainer> containerFunction) {
+            @NotNull BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction) {
             this.containerFunction = Objects.requireNonNull(containerFunction);
             return this;
         }

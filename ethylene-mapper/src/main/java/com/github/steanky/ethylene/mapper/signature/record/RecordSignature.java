@@ -95,11 +95,6 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
         return new LinkedConfigNode(sizeHint);
     }
 
-    @Override
-    public boolean hasBuildingObject() {
-        return false;
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {

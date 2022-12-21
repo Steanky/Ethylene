@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.mapper;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.signature.*;
@@ -89,12 +90,18 @@ public interface MappingProcessorSource {
         }
 
         /**
-         * Adds standard signature(s) to this builder. Currently, this only includes {@link Map.Entry}.
+         * Adds standard signature to this builder. This includes a signature for {@link Map.Entry}, and registers
+         * {@link ScalarSignature}s that allow conversion between {@link ConfigElement} implementations.
          *
          * @return this builder, for chaining
          */
         public @NotNull Builder withStandardSignatures() {
             customSignatures.add(MAP_ENTRY_SIGNATURE);
+            scalarSignatures.add(ConfigElementSignature.CONFIG_ELEMENT);
+            scalarSignatures.add(ConfigElementSignature.CONFIG_CONTAINER);
+            scalarSignatures.add(ConfigElementSignature.CONFIG_NODE);
+            scalarSignatures.add(ConfigElementSignature.CONFIG_LIST);
+            scalarSignatures.add(ConfigElementSignature.CONFIG_PRIMITIVE);
             return this;
         }
 
