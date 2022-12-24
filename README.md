@@ -36,7 +36,7 @@ various sources.
 
 ## Install
 
-[![Latest version of 'ethylene-core' @ Cloudsmith](https://api-prd.cloudsmith.io/v1/badges/version/steank-f1g/ethylene/maven/ethylene-core/latest/a=noarch;xg=com.github.steanky/?render=true&show_latest=true)](https://cloudsmith.io/~steank-f1g/repos/ethylene/packages/detail/maven/ethylene-core/latest/a=noarch;xg=com.github.steanky/)
+[![Latest version of 'ethylene-core' @ Cloudsmith](https://api-prd.cloudsmith.io/v1/badges/version/steank-f1g/ethylene/maven/ethylene-core/latest/a=noarch;xg=com.github.steanky/?render=true&show_latest=true)](https://cloudsmith.io/~steanky/repos/ethylene/packages/detail/maven/ethylene-core/latest/a=noarch;xg=com.github.steanky/)
 
 Pre-built artifacts are hosted on a Cloudsmith Maven repository.
 
@@ -54,7 +54,7 @@ And in your dependencies section:
 
 ```groovy
 dependencies {
-    implementation 'com.github.steanky:ethylene-core:0.12.4'
+    implementation 'com.github.steanky:ethylene-core:0.17.0'
 }
 ```
 
