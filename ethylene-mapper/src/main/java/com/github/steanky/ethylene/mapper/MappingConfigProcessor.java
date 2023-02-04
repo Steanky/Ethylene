@@ -194,7 +194,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     }
 
     private boolean elementToObjectContainerPredicate(ClassEntry entry) {
-        return typeHinter.getHint(entry.type) != ElementType.SCALAR && entry.element.isContainer();
+        //if the signature matcher for this entry is null: we found a scalar
+        return entry.element.isContainer() && entry.signatureMatcher != null;
     }
 
     private boolean objectToElementContainerPredicate(ElementEntry entry) {

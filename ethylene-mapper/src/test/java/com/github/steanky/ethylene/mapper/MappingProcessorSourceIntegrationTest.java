@@ -28,7 +28,7 @@ class MappingProcessorSourceIntegrationTest {
     void simpleCustomSignature() throws ConfigProcessException {
         Signature<ObjectWithCustomSignature> signature = Signature.<ObjectWithCustomSignature>builder(new Token<>() {
                                                                                                       }, (ignored,
-                args) -> new ObjectWithCustomSignature((int) args[0]), object -> List.of(object.value),
+                args) -> new ObjectWithCustomSignature(args.get(0)), object -> List.of(object.value),
             Map.entry("value", Token.INTEGER)).build();
 
         MappingProcessorSource source = MappingProcessorSource.builder().withCustomSignature(signature).build();
@@ -163,14 +163,50 @@ class MappingProcessorSourceIntegrationTest {
 
     @Nested
     class BuilderTests {
+        public record ScalarAndNonScalarRecord(int x, int y, int z) {}
+
         private static MappingProcessorSource standardSource() {
             return MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations().build();
         }
 
         @Test
+        void scalarAndNonScalar() throws ConfigProcessException {
+            Signature<ScalarAndNonScalarRecord> nonScalar =
+                Signature.builder(Token.ofClass(ScalarAndNonScalarRecord.class), (ignored, args) -> {
+                        return new ScalarAndNonScalarRecord(args.get(0), args.get(1), args.get(2));
+                    }, object -> List.of(object.x, object.y, object.z), Map.entry("i", Token.INTEGER),
+                    Map.entry("j", Token.INTEGER), Map.entry("k", Token.INTEGER)).matchingNames().matchingTypeHints().build();
+
+            ScalarSignature<ScalarAndNonScalarRecord> scalar = ScalarSignature.of(Token.ofClass(ScalarAndNonScalarRecord.class),
+                element -> {
+                    String value = element.asString();
+
+                    String[] vals = value.split(",");
+                    int x = Integer.parseInt(vals[0].trim());
+                    int y = Integer.parseInt(vals[1].trim());
+                    int z = Integer.parseInt(vals[2].trim());
+
+                    return new ScalarAndNonScalarRecord(x, y, z);
+                }, object -> ConfigPrimitive.of(String.join(",", Integer.toString(object.x), Integer
+                    .toString(object.y), Integer.toString(object.z))));
+
+            MappingProcessorSource processorSource = MappingProcessorSource.builder().withCustomSignature(nonScalar)
+                .withScalarSignature(scalar).build();
+
+            ConfigProcessor<ScalarAndNonScalarRecord> processor = processorSource.processorFor(Token
+                .ofClass(ScalarAndNonScalarRecord.class));
+
+            ScalarAndNonScalarRecord fromString = processor.dataFromElement(ConfigPrimitive.of("1,2,3"));
+            assertEquals(new ScalarAndNonScalarRecord(1, 2, 3), fromString);
+
+            ScalarAndNonScalarRecord fromNode = processor.dataFromElement(ConfigNode.of("i", 4, "j", 5, "k", 6));
+            assertEquals(new ScalarAndNonScalarRecord(4, 5, 6), fromNode);
+        }
+
+        @Test
         void ambiguousB() throws ConfigProcessException {
             MappingProcessorSource processorSource =
-                MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations()
+                MappingProcessorSource.builder().withStandardTypeImplementations()
                     .withStandardSignatures().ignoringLengths().build();
 
             ConfigProcessor<AmbiguousB> ambiguousProcessor =

@@ -76,8 +76,8 @@ public class BasicTypeHinter implements TypeHinter {
         }
 
         return switch (element.type()) {
-            //simplest case: if toType is a LIST or SCALAR and the element isn't, we are not assignable
-            case NODE -> getHint(toType).isNode();
+            //if we are a node, we *might* be valid regardless of the target type
+            case NODE -> true;
             case LIST -> {
                 ElementType hint = getHint(toType);
                 if (hint.isList()) {

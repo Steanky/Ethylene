@@ -44,7 +44,7 @@ public interface MappingProcessorSource {
      */
     final class Builder {
         @SuppressWarnings("rawtypes") private static final Signature<Map.Entry> MAP_ENTRY_SIGNATURE =
-            Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Entry.of(objects[0], objects[1]),
+            Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Entry.of(objects.get(0), objects.get(1)),
                 (entry) -> List.of(new Signature.TypedObject("key", Token.OBJECT, entry.getKey()),
                     new Signature.TypedObject("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
                 Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
@@ -212,6 +212,17 @@ public interface MappingProcessorSource {
         }
 
         /**
+         * Specifies a number of custom signatures.
+         *
+         * @param signatures a collection of custom signatures to add
+         * @return this builder, for chaining
+         */
+        public @NotNull Builder withCustomSignatures(@NotNull Signature<?> ... signatures) {
+            customSignatures.addAll(Arrays.asList(signatures));
+            return this;
+        }
+
+        /**
          * Specifies a custom scalar signature.
          *
          * @param signature the custom scalar signature
@@ -234,6 +245,21 @@ public interface MappingProcessorSource {
             for (ScalarSignature<?> signature : signatures) {
                 scalarTypes.add(signature.objectType());
             }
+            return this;
+        }
+
+        /**
+         * Specifies a number of custom scalar signatures.
+         *
+         * @param signatures the scalar signatures to add
+         * @return this builder, for chaining
+         */
+        public @NotNull Builder withScalarSignatures(@NotNull ScalarSignature<?> ... signatures) {
+            for (ScalarSignature<?> signature : signatures) {
+                scalarSignatures.add(signature);
+                scalarTypes.add(signature.objectType());
+            }
+
             return this;
         }
 

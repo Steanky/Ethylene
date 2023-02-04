@@ -10,12 +10,9 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * <p>Filesystem-in specialization of ProcessingConfigLoader. The in is considered <i>absent</i> if the given
+ * <p>Filesystem specialization of ProcessingConfigLoader. The in is considered <i>absent</i> if the given
  * {@link Path} does not exist (see {@link ProcessingConfigLoader} for more information on how an absent in changes
  * behavior).</p>
- *
- * <p>This class is only instantiated internally because there is some potential for misuse; i.e. it is possible for a
- * user to provide a {@link ConfigSource} implementation that is not at all related to the given Path.</p>
  *
  * @param <TData> the type of data object
  */
