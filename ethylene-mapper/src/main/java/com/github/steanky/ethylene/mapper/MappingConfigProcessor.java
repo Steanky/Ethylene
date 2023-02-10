@@ -17,6 +17,8 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -89,6 +91,16 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                     Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
                     Iterator<Map.Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
 
+                    //used to resolve correct generic parameters based on the actual type arguments
+                    Map<String, Token<?>> typeVariableOverrides = signature.genericMappings();
+                    Map<TypeVariable<?>, Type> map;
+
+                    if (!typeVariableOverrides.isEmpty()) {
+                        map = nodeEntry.type.supertypeVariables(signature.returnType()).resolve();
+                    } else {
+                        map = null;
+                    }
+
                     //arguments which are needed to create this object
                     Object[] args = new Object[signatureSize];
 
@@ -107,8 +119,25 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             }
 
                             ConfigElement nextElement = elementIterator.next();
-                            Token<?> nextType = typeResolver.resolveType(typeEntryIterator.next().getValue(),
-                                nextElement);
+                            Map.Entry<String, Token<?>> entry = typeEntryIterator.next();
+
+                            Token<?> actualType = null;
+
+                            if (map != null && entry.getKey() != null) {
+                                Token<?> typeVariableToken = typeVariableOverrides.get(entry.getKey());
+                                if (typeVariableToken != null) {
+                                    Type actual = map.get((TypeVariable<?>) typeVariableToken.get());
+                                    if (actual != null) {
+                                        actualType = Token.ofType(actual);
+                                    }
+                                }
+                            }
+
+                            if (actualType == null) {
+                                actualType = entry.getValue();
+                            }
+
+                            Token<?> nextType = typeResolver.resolveType(actualType, nextElement);
                             SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType);
 
                             return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));

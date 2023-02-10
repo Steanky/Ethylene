@@ -16,14 +16,12 @@ import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
@@ -38,26 +36,21 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
 
         return 0;
     });
-
     private final Token<T> genericReturnType;
     private final Reference<Class<?>> rawClassReference;
     private final String rawClassName;
     private final Reference<Class<?>>[] parameterTypes;
     private final String[] parameterTypeNames;
-
     //constructor objects are not retained by the classloader, so they might be garbage collected early
     //use soft reference to reduce the frequency of this occurrence, and resolve the actual constructor at runtime if it
     //is necessary to do so
     private Reference<Constructor<?>> constructorReference;
     private boolean matchesNames;
-
-    private Collection<Map.Entry<String, Token<?>>> types;
-
+    private Info info;
     //similarly to constructors, fields are not tied to the classloader, keep a soft reference and be prepared to
     //re-create as necessary
     private Reference<Map<String, Field>> namedFieldsReference = new SoftReference<>(null);
     private Reference<Field[]> fieldsReference = new SoftReference<>(null);
-
     /**
      * Creates a new instance of this class.
      *
@@ -106,12 +99,17 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
 
     @Override
     public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
-        return resolveTypeCollection();
+        return resolveTypeInfo().typeCollection;
+    }
+
+    @Override
+    public @NotNull @Unmodifiable Map<String, Token<?>> genericMappings() {
+        return resolveTypeInfo().varMappings;
     }
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
-        Collection<Map.Entry<String, Token<?>>> types = resolveTypeCollection();
+        Collection<Map.Entry<String, Token<?>>> types = resolveTypeInfo().typeCollection;
 
         Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
@@ -180,7 +178,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
     @Override
     public boolean matchesArgumentNames() {
         //make sure the type collection is generated
-        resolveTypeCollection();
+        resolveTypeInfo();
         return matchesNames;
     }
 
@@ -232,28 +230,40 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         return fieldMap;
     }
 
-    private Collection<Map.Entry<String, Token<?>>> resolveTypeCollection() {
-        if (types != null) {
-            return types;
+    private Info resolveTypeInfo() {
+        if (info != null) {
+            return info;
         }
 
         Constructor<?> constructor = resolveConstructor();
         if (constructor.getParameterCount() == 0) {
             //use empty list if we can
-            return types = List.of();
+            return info = new Info(List.of(), Map.of());
         }
 
         Parameter[] parameters = constructor.getParameters();
         if (parameters.length == 1) {
             //alternatively use singleton list
             Parameter first = parameters[0];
+
             Map.Entry<String, Token<?>> entry = makeEntry(first, first.isNamePresent());
             matchesNames = entry.getKey() != null;
-            return types = List.of(entry);
+
+            Type type = first.getParameterizedType();
+
+            Map<String, Token<?>> varMapping;
+            if (entry.getKey() != null && type instanceof TypeVariable<?> variable) {
+                varMapping = Map.of(entry.getKey(), Token.ofType(variable));
+            } else {
+                varMapping = Map.of();
+            }
+
+            return info = new Info(List.of(entry), varMapping);
         }
 
         //use a backing ArrayList for n > 1 length
         List<Map.Entry<String, Token<?>>> entryList = new ArrayList<>(parameters.length);
+        Map<String, Token<?>> varMapping = new HashMap<>(parameters.length);
 
         Parameter first = parameters[0];
 
@@ -261,19 +271,31 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         Map.Entry<String, Token<?>> firstEntry = makeEntry(first, parameterHasName);
         matchesNames = firstEntry.getKey() != null;
 
+        Type firstType = first.getParameterizedType();
+        if (firstEntry.getKey() != null && firstType instanceof TypeVariable<?> variable) {
+            varMapping.put(firstEntry.getKey(), Token.ofType(variable));
+        }
+
         entryList.add(firstEntry);
 
         boolean firstNonNullName = firstEntry.getKey() != null;
         for (int i = 1; i < parameters.length; i++) {
-            Map.Entry<String, Token<?>> entry = makeEntry(parameters[i], parameterHasName);
+            Parameter parameter = parameters[i];
+
+            Map.Entry<String, Token<?>> entry = makeEntry(parameter, parameterHasName);
             if (firstNonNullName == (entry.getKey() == null)) {
                 throw new MapperException("Inconsistent parameter naming");
+            }
+
+            Type type = parameter.getParameterizedType();
+            if (entry.getKey() != null && type instanceof TypeVariable<?> variable) {
+                varMapping.put(entry.getKey(), Token.ofType(variable));
             }
 
             entryList.add(entry);
         }
 
-        return types = Collections.unmodifiableList(entryList);
+        return info = new Info(List.copyOf(entryList), Map.copyOf(varMapping));
     }
 
     private Constructor<?> resolveConstructor() {
@@ -305,5 +327,8 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         }
 
         return parameterClasses;
+    }
+
+    private record Info(Collection<Map.Entry<String, Token<?>>> typeCollection, Map<String, Token<?>> varMappings) {
     }
 }

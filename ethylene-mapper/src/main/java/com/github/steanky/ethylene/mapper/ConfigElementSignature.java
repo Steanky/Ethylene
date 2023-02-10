@@ -16,38 +16,39 @@ import java.util.Objects;
 /**
  * A scalar signature capable of converting ConfigElements to ConfigElements. This does not perform any copying. This
  * class is not part of the public API.
+ *
  * @param <T> the type of ConfigElement
  */
 class ConfigElementSignature<T extends ConfigElement> extends PrioritizedBase implements ScalarSignature<T> {
     /**
      * Signature for {@link ConfigElement}.
      */
-    static final ScalarSignature<ConfigElement> CONFIG_ELEMENT = new ConfigElementSignature<>(
-        Token.ofClass(ConfigElement.class));
+    static final ScalarSignature<ConfigElement> CONFIG_ELEMENT =
+        new ConfigElementSignature<>(Token.ofClass(ConfigElement.class));
 
     /**
      * Signature for {@link ConfigContainer}.
      */
-    static final ScalarSignature<ConfigContainer> CONFIG_CONTAINER = new ConfigElementSignature<>(
-        Token.ofClass(ConfigContainer.class));
+    static final ScalarSignature<ConfigContainer> CONFIG_CONTAINER =
+        new ConfigElementSignature<>(Token.ofClass(ConfigContainer.class));
 
     /**
      * Signature for {@link ConfigNode}.
      */
-    static final ScalarSignature<ConfigNode> CONFIG_NODE = new ConfigElementSignature<>(
-        Token.ofClass(ConfigNode.class));
+    static final ScalarSignature<ConfigNode> CONFIG_NODE =
+        new ConfigElementSignature<>(Token.ofClass(ConfigNode.class));
 
     /**
      * Signature for {@link ConfigList}.
      */
-    static final ScalarSignature<ConfigList> CONFIG_LIST = new ConfigElementSignature<>(
-        Token.ofClass(ConfigList.class));
+    static final ScalarSignature<ConfigList> CONFIG_LIST =
+        new ConfigElementSignature<>(Token.ofClass(ConfigList.class));
 
     /**
      * Signature for {@link ConfigPrimitive}.
      */
-    static final ScalarSignature<ConfigPrimitive> CONFIG_PRIMITIVE = new ConfigElementSignature<>(
-        Token.ofClass(ConfigPrimitive.class));
+    static final ScalarSignature<ConfigPrimitive> CONFIG_PRIMITIVE =
+        new ConfigElementSignature<>(Token.ofClass(ConfigPrimitive.class));
 
     private final Token<T> configElementType;
 
@@ -73,8 +74,8 @@ class ConfigElementSignature<T extends ConfigElement> extends PrioritizedBase im
             return configElementType.cast(element);
         }
 
-        throw new MapperException("Unable to convert a ConfigElement of type " + elementClass + " to " +
-            configElementType);
+        throw new MapperException(
+            "Unable to convert a ConfigElement of type " + elementClass + " to " + configElementType);
     }
 
     @Override

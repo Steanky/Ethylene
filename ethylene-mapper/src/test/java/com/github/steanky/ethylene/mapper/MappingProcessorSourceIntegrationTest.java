@@ -78,8 +78,8 @@ class MappingProcessorSourceIntegrationTest {
     void classContainingConfigElement() throws ConfigProcessException {
         MappingProcessorSource source = MappingProcessorSource.builder().withStandardSignatures().build();
 
-        ConfigProcessor<ClassWithConfigElement> processor = source.processorFor(Token
-            .ofClass(ClassWithConfigElement.class));
+        ConfigProcessor<ClassWithConfigElement> processor =
+            source.processorFor(Token.ofClass(ClassWithConfigElement.class));
 
         ConfigNode subSubNode = ConfigNode.of("test", "vegetals");
         ConfigList subList = ConfigList.of("first", 1, subSubNode);
@@ -104,7 +104,8 @@ class MappingProcessorSourceIntegrationTest {
         public ConfigElement element;
         public int value;
 
-        public ClassWithConfigElement() {}
+        public ClassWithConfigElement() {
+        }
     }
 
     @Builder(Builder.BuilderType.CONSTRUCTOR)
@@ -163,8 +164,6 @@ class MappingProcessorSourceIntegrationTest {
 
     @Nested
     class BuilderTests {
-        public record ScalarAndNonScalarRecord(int x, int y, int z) {}
-
         private static MappingProcessorSource standardSource() {
             return MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations().build();
         }
@@ -173,12 +172,13 @@ class MappingProcessorSourceIntegrationTest {
         void scalarAndNonScalar() throws ConfigProcessException {
             Signature<ScalarAndNonScalarRecord> nonScalar =
                 Signature.builder(Token.ofClass(ScalarAndNonScalarRecord.class), (ignored, args) -> {
-                        return new ScalarAndNonScalarRecord(args.get(0), args.get(1), args.get(2));
-                    }, object -> List.of(object.x, object.y, object.z), Map.entry("i", Token.INTEGER),
-                    Map.entry("j", Token.INTEGER), Map.entry("k", Token.INTEGER)).matchingNames().matchingTypeHints().build();
+                            return new ScalarAndNonScalarRecord(args.get(0), args.get(1), args.get(2));
+                        }, object -> List.of(object.x, object.y, object.z), Map.entry("i", Token.INTEGER),
+                        Map.entry("j", Token.INTEGER), Map.entry("k", Token.INTEGER)).matchingNames().matchingTypeHints()
+                    .build();
 
-            ScalarSignature<ScalarAndNonScalarRecord> scalar = ScalarSignature.of(Token.ofClass(ScalarAndNonScalarRecord.class),
-                element -> {
+            ScalarSignature<ScalarAndNonScalarRecord> scalar =
+                ScalarSignature.of(Token.ofClass(ScalarAndNonScalarRecord.class), element -> {
                     String value = element.asString();
 
                     String[] vals = value.split(",");
@@ -187,14 +187,14 @@ class MappingProcessorSourceIntegrationTest {
                     int z = Integer.parseInt(vals[2].trim());
 
                     return new ScalarAndNonScalarRecord(x, y, z);
-                }, object -> ConfigPrimitive.of(String.join(",", Integer.toString(object.x), Integer
-                    .toString(object.y), Integer.toString(object.z))));
+                }, object -> ConfigPrimitive.of(String.join(",", Integer.toString(object.x), Integer.toString(object.y),
+                    Integer.toString(object.z))));
 
-            MappingProcessorSource processorSource = MappingProcessorSource.builder().withCustomSignature(nonScalar)
-                .withScalarSignature(scalar).build();
+            MappingProcessorSource processorSource =
+                MappingProcessorSource.builder().withCustomSignature(nonScalar).withScalarSignature(scalar).build();
 
-            ConfigProcessor<ScalarAndNonScalarRecord> processor = processorSource.processorFor(Token
-                .ofClass(ScalarAndNonScalarRecord.class));
+            ConfigProcessor<ScalarAndNonScalarRecord> processor =
+                processorSource.processorFor(Token.ofClass(ScalarAndNonScalarRecord.class));
 
             ScalarAndNonScalarRecord fromString = processor.dataFromElement(ConfigPrimitive.of("1,2,3"));
             assertEquals(new ScalarAndNonScalarRecord(1, 2, 3), fromString);
@@ -206,8 +206,8 @@ class MappingProcessorSourceIntegrationTest {
         @Test
         void ambiguousB() throws ConfigProcessException {
             MappingProcessorSource processorSource =
-                MappingProcessorSource.builder().withStandardTypeImplementations()
-                    .withStandardSignatures().ignoringLengths().build();
+                MappingProcessorSource.builder().withStandardTypeImplementations().withStandardSignatures()
+                    .ignoringLengths().build();
 
             ConfigProcessor<AmbiguousB> ambiguousProcessor =
                 processorSource.processorFor(Token.ofClass(AmbiguousB.class));
@@ -246,7 +246,7 @@ class MappingProcessorSourceIntegrationTest {
 
             String[] result = arrayProcessor.dataFromElement(list);
 
-            assertArrayEquals(new String[] {"first", "second"}, result);
+            assertArrayEquals(new String[]{"first", "second"}, result);
 
             ConfigList newList = arrayProcessor.elementFromData(result).asList();
             assertLinesMatch(Stream.of("first", "second"), newList.stream().map(ConfigElement::asString));
@@ -409,8 +409,38 @@ class MappingProcessorSourceIntegrationTest {
             assertTrue(element.isNull(), "element is not null");
         }
 
+        @Test
+        void mapWithScalarKey() throws ConfigProcessException {
+            ScalarSignature<UUID> signature = ScalarSignature.of(new Token<>() {
+                                                                 }, element -> element.isNull() ? null :
+                    UUID.fromString(element.asString()),
+                uuid -> uuid == null ? ConfigPrimitive.NULL : ConfigPrimitive.of(uuid.toString()));
+
+            MappingProcessorSource source =
+                MappingProcessorSource.builder().withStandardSignatures().withStandardTypeImplementations()
+                    .withScalarSignature(signature).build();
+
+            ConfigList mapList =
+                ConfigList.of(ConfigNode.of("key", "6458e77a-f565-4374-9de7-c2a20be572f3", "value", "test"));
+
+            ConfigProcessor<Map<UUID, String>> processor = source.processorFor(new Token<>() {
+            });
+
+            Map<UUID, String> uuidStringMap = processor.dataFromElement(mapList);
+            List<Map.Entry<UUID, String>> entryList = uuidStringMap.entrySet().stream().toList();
+            assertEquals(1, entryList.size());
+
+            Map.Entry<UUID, String> first = entryList.get(0);
+
+            assertEquals(UUID.fromString("6458e77a-f565-4374-9de7-c2a20be572f3"), first.getKey());
+            assertEquals("test", first.getValue());
+        }
+
         private enum TestEnum {
             FIRST, SECOND, THIRD
+        }
+
+        public record ScalarAndNonScalarRecord(int x, int y, int z) {
         }
 
         @Widen

@@ -12,7 +12,9 @@ import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.reflect.TypeVariable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -22,36 +24,6 @@ import java.util.function.Function;
  * information necessary to determine what types are required to construct objects.
  */
 public interface Signature<TReturn> extends Prioritized {
-    /**
-     * Arguments used to construct an object.
-     */
-    class Arguments {
-        private final Object[] arguments;
-
-        private Arguments(Object [] arguments) {
-            this.arguments = arguments;
-        }
-
-        /**
-         * Gets the object at the given index, after casting to the specific type.
-         * @param index the index at which to locate an argument
-         * @return the object at the given index
-         * @param <T> the type of the object
-         */
-        @SuppressWarnings("unchecked")
-        public <T> T get(int index) {
-            return (T) arguments[index];
-        }
-
-        /**
-         * The number of arguments present.
-         * @return the number of arguments
-         */
-        public int length() {
-            return arguments.length;
-        }
-    }
-
     /**
      * Creates a new signature builder.
      *
@@ -67,22 +39,55 @@ public interface Signature<TReturn> extends Prioritized {
         @NotNull BiFunction<? super T, ? super Arguments, ? extends T> constructor,
         @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
         @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
-        return new Builder<>(type, constructor, objectSignatureExtractor, arguments);
+        return new Builder<>(type, constructor, objectSignatureExtractor, Map.of(), arguments);
+    }
+
+    /**
+     * Creates a new signature builder.
+     *
+     * @param type                     the object that will be created by the signature
+     * @param constructor              the constructor used by the signature to create objects
+     * @param objectSignatureExtractor the function which extracts information about objects of the signature's type
+     * @param typeVariableMappings     a mapping of argument names to {@link TypeVariable} tokens, which are used to
+     *                                 match generic types during object construction
+     * @param arguments                the types needed for the signature to create objects
+     * @param <T>                      the type of object which will be created by the signature
+     * @return a new {@link Signature.Builder} instance
+     */
+    @SafeVarargs
+    static <T> Builder<T> builder(@NotNull Token<T> type,
+        @NotNull BiFunction<? super T, ? super Arguments, ? extends T> constructor,
+        @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
+        @NotNull Map<String, Token<?>> typeVariableMappings,
+        @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
+        return new Builder<>(type, constructor, objectSignatureExtractor, typeVariableMappings, arguments);
     }
 
     /**
      * The argument types of this signature. These are the types needed to create this signature's object, in the order
-     * that they should be supplied to the signature's constructor.
+     * that they should be supplied to the signature's constructor. The entry key is the name of the type - this might
+     * correspond to a field name or record accessor name. It is pattern-matched against the name of the configuration
+     * used to create objects from this signature. In the case of collections or arrays, the name is null.
      * <p>
      * This iterable may be empty, in the case of objects that need no parameters. It may also be "infinite length" and
      * never terminate if iterated in a loop. This is typically the case for container-like objects, which can contain
      * "any number" of elements of the same type. When this occurs, the iterable is expected to return the same
      * {@link Map.Entry} indefinitely. To determine when to stop iterating, call
      * {@link Signature#length(ConfigElement)}.
+     * <p>
+     * These types represent an "upper bound". For each argument type, it is permissible to instead pass a subtype to
+     * the constructor.
      *
      * @return the argument types iterable
      */
-    @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes();
+    @NotNull @Unmodifiable Iterable<Map.Entry<String, Token<?>>> argumentTypes();
+
+    /**
+     * Returns the map of {@link TypeVariable}-containing {@link Token}s to argument types.
+     *
+     * @return the map of this signature's TypeVariables to the equivalent parameter names
+     */
+    @NotNull @Unmodifiable Map<String, Token<?>> genericMappings();
 
     /**
      * Extracts some data from a particular object. The returned collection is used to map object data to configuration
@@ -91,7 +96,7 @@ public interface Signature<TReturn> extends Prioritized {
      * @param object the object from which to extract data
      * @return a collection of {@link TypedObject} representing this object's data
      */
-    @NotNull Collection<TypedObject> objectData(@NotNull TReturn object);
+    @NotNull @Unmodifiable Collection<TypedObject> objectData(@NotNull TReturn object);
 
     /**
      * Initializes the {@link ConfigContainer} which will later be populated with object data. Calling this method
@@ -165,6 +170,38 @@ public interface Signature<TReturn> extends Prioritized {
     @NotNull Token<TReturn> returnType();
 
     /**
+     * Arguments used to construct an object.
+     */
+    class Arguments {
+        private final Object[] arguments;
+
+        private Arguments(Object[] arguments) {
+            this.arguments = arguments;
+        }
+
+        /**
+         * Gets the object at the given index, after casting to the specific type.
+         *
+         * @param index the index at which to locate an argument
+         * @param <T>   the type of the object
+         * @return the object at the given index
+         */
+        @SuppressWarnings("unchecked")
+        public <T> T get(int index) {
+            return (T) arguments[index];
+        }
+
+        /**
+         * The number of arguments present.
+         *
+         * @return the number of arguments
+         */
+        public int length() {
+            return arguments.length;
+        }
+    }
+
+    /**
      * An object which has generic type information and optionally a name associated with it.
      *
      * @param name  the name of this typed object
@@ -202,28 +239,32 @@ public interface Signature<TReturn> extends Prioritized {
     @ApiStatus.Internal
     final class SignatureImpl<T> extends PrioritizedBase implements Signature<T> {
         private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
+        private final Map<String, Token<?>> typeVariableMappings;
         private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
         private final BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction;
         private final Function<? super ConfigElement, ? extends T> buildingObjectInitializer;
         private final BiFunction<? super T, ? super Arguments, ? extends T> constructor;
         private final boolean matchNames;
         private final boolean matchTypeHints;
-        private final BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement,
-            ? extends Integer>
+        private final BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ?
+            extends Integer>
             lengthFunction;
         private final ElementType typeHint;
         private final Token<T> returnType;
 
         private SignatureImpl(int priority, Collection<Map.Entry<String, Token<?>>> argumentTypes,
+            Map<String, Token<?>> typeVariableMappings,
             Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
             BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction,
             Function<? super ConfigElement, ? extends T> buildingObjectInitializer,
             BiFunction<? super T, ? super Arguments, ? extends T> constructor, boolean matchNames,
             boolean matchTypeHints,
-            BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ? extends Integer> lengthFunction,
+            BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ?
+                extends Integer> lengthFunction,
             ElementType typeHint, Token<T> returnType) {
             super(priority);
             this.argumentTypes = argumentTypes;
+            this.typeVariableMappings = typeVariableMappings;
             this.objectSignatureExtractor = objectSignatureExtractor;
             this.containerFunction = containerFunction;
             this.buildingObjectInitializer = buildingObjectInitializer;
@@ -238,6 +279,11 @@ public interface Signature<TReturn> extends Prioritized {
         @Override
         public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
             return argumentTypes;
+        }
+
+        @Override
+        public @NotNull @Unmodifiable Map<String, Token<?>> genericMappings() {
+            return typeVariableMappings;
         }
 
         @Override
@@ -332,13 +378,15 @@ public interface Signature<TReturn> extends Prioritized {
         private final Token<T> returnType;
         private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
         private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
+        private final Map<String, Token<?>> typeVariableMappings;
 
         private int priority;
         private boolean matchNames;
         private boolean matchTypeHints;
         private ElementType typeHint = ElementType.NODE;
         private Function<? super ConfigElement, ? extends T> buildingObjectInitializer;
-        private BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ? extends Integer>
+        private BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ?
+            extends Integer>
             lengthFunction = (types, element) -> types.size();
 
         private BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction =
@@ -354,10 +402,20 @@ public interface Signature<TReturn> extends Prioritized {
         private Builder(@NotNull Token<T> returnType,
             @NotNull BiFunction<? super T, ? super Arguments, ? extends T> constructor,
             @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
+            @NotNull Map<String, Token<?>> typeVariableMappings,
             @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
             this.returnType = Objects.requireNonNull(returnType);
             this.objectSignatureExtractor = Objects.requireNonNull(objectSignatureExtractor);
+
+            this.typeVariableMappings = Map.copyOf(typeVariableMappings);
+
+            for (Token<?> token : typeVariableMappings.values()) {
+                if (!(token.get() instanceof TypeVariable<?>)) {
+                    throw new IllegalArgumentException(
+                        "TypeVariable mapping tokens may only contain TypeVariable instances");
+                }
+            }
 
             this.argumentTypes = new ArrayList<>(arguments.length);
             for (Map.Entry<String, Token<?>> entry : arguments) {
@@ -427,8 +485,8 @@ public interface Signature<TReturn> extends Prioritized {
          * @return this builder, for chaining
          */
         public @NotNull Builder<T> withLengthFunction(
-            @NotNull BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement,
-                ? extends Integer> lengthFunction) {
+            @NotNull BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ?
+                extends Integer> lengthFunction) {
             this.lengthFunction = Objects.requireNonNull(lengthFunction);
             return this;
         }
@@ -453,9 +511,9 @@ public interface Signature<TReturn> extends Prioritized {
          * @return a new {@link Signature} implementation
          */
         public @NotNull Signature<T> build() {
-            return new SignatureImpl<>(priority, List.copyOf(argumentTypes), objectSignatureExtractor,
-                containerFunction, buildingObjectInitializer, constructor, matchNames, matchTypeHints, lengthFunction,
-                typeHint, returnType);
+            return new SignatureImpl<>(priority, List.copyOf(argumentTypes), typeVariableMappings,
+                objectSignatureExtractor, containerFunction, buildingObjectInitializer, constructor, matchNames,
+                matchTypeHints, lengthFunction, typeHint, returnType);
         }
     }
 }

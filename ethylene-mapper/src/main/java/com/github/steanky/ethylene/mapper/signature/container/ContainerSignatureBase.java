@@ -11,6 +11,7 @@ import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
@@ -99,6 +100,11 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
                 return entry;
             }
         };
+    }
+
+    @Override
+    public @NotNull @Unmodifiable Map<String, Token<?>> genericMappings() {
+        return Map.of();
     }
 
     @Override

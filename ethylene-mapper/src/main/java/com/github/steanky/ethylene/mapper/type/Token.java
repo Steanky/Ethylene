@@ -223,11 +223,13 @@ public abstract class Token<T> implements Supplier<Type> {
         Type[] result = new Type[variables.length];
         int i = 0;
         for (TypeVariable<?> var : variables) {
-            if (!mappings.containsKey(var)) {
+            var = (TypeVariable<?>) GenericInfo.resolveType(var);
+            Type mapping = mappings.get(var);
+            if (mapping == null) {
                 throw new IllegalArgumentException("Missing type mapping for '" + var + "'");
             }
 
-            result[i++] = Objects.requireNonNull(mappings.get(var), "mapping value");
+            result[i++] = mapping;
         }
 
         return result;

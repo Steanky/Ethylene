@@ -42,8 +42,7 @@ public class BasicTypeHinter implements TypeHinter {
             type.isEnumType()) {
             //we treat ConfigElement as scalar because it need not be deeply processed, just copied over
             return ElementType.SCALAR;
-        }
-        else if (type.isSubclassOf(Map.class) || type.isSubclassOf(Collection.class) || type.isArrayType()) {
+        } else if (type.isSubclassOf(Map.class) || type.isSubclassOf(Collection.class) || type.isArrayType()) {
             return ElementType.LIST;
         }
 

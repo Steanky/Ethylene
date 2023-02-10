@@ -37,8 +37,12 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private MatchingSignature matchingFromObject(Signature signature, Object providedObject) {
+    private MatchingSignature matchingFromObject(Token<?> typeToken, Signature signature, Object providedObject) {
         Objects.requireNonNull(providedObject);
+
+        if (!typeToken.isSubclassOf(signature.returnType())) {
+            return null;
+        }
 
         Collection<Signature.TypedObject> objectData = signature.objectData(providedObject);
 
@@ -55,6 +59,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             return new MatchingSignature(signature, null, objectData, length);
         }
 
+        Iterable<Map.Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
         Collection<Signature.TypedObject> typeCollection;
         if (matchNames) {
             typeCollection = new ArrayList<>(objectData.size());
@@ -63,7 +68,6 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 objectDataMap.put(entry.name(), entry);
             }
 
-            Iterable<Map.Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
             for (Map.Entry<String, Token<?>> entry : signatureTypes) {
                 Signature.TypedObject typedObject = objectDataMap.get(entry.getKey());
                 if (typedObject == null) {
@@ -78,9 +82,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
 
         if (matchTypeHints) {
             Iterator<Signature.TypedObject> typeCollectionIterator = typeCollection.iterator();
-            Iterable<Map.Entry<String, Token<?>>> signatureIterable = () -> signature.argumentTypes().iterator();
 
-            for (Map.Entry<String, Token<?>> signatureType : signatureIterable) {
+            for (Map.Entry<String, Token<?>> signatureType : signatureTypes) {
                 if (typeCollectionIterator.hasNext()) {
                     Signature.TypedObject typedObject = typeCollectionIterator.next();
                     if (typeHinter.getHint(typedObject.type()) != typeHinter.getHint(signatureType.getValue())) {
@@ -95,8 +98,13 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         return new MatchingSignature(signature, null, typeCollection, length);
     }
 
-    private MatchingSignature matchingFromElement(Signature<?> signature, ConfigElement providedElement) {
+    private MatchingSignature matchingFromElement(Token<?> typeToken, Signature<?> signature,
+        ConfigElement providedElement) {
         Objects.requireNonNull(providedElement);
+
+        if (!typeToken.isSubclassOf(signature.returnType())) {
+            return null;
+        }
 
         boolean matchNames = signature.matchesArgumentNames();
         if (matchNames && !providedElement.isNode()) {
@@ -115,12 +123,9 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             return new MatchingSignature(signature, elementCollection, null, signatureLength);
         }
 
-
-        Iterable<Map.Entry<String, Token<?>>> signatureTypes;
+        Iterable<Map.Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
         Collection<ConfigElement> targetCollection;
         if (matchNames) {
-            signatureTypes = signature.argumentTypes();
-
             ConfigNode providedNode = providedElement.asNode();
             targetCollection = new ArrayList<>(elementCollection.size());
 
@@ -141,10 +146,11 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         if (matchTypeHints) {
             Iterator<ConfigElement> elementIterator = targetCollection.iterator();
 
-            for (Map.Entry<String, Token<?>> signatureType : signature.argumentTypes()) {
+            for (Map.Entry<String, Token<?>> signatureTypeEntry : signatureTypes) {
                 if (elementIterator.hasNext()) {
                     ConfigElement element = elementIterator.next();
-                    if (!typeHinter.assignable(element, signatureType.getValue())) {
+
+                    if (!typeHinter.assignable(element, signatureTypeEntry.getValue())) {
                         return null;
                     }
                 } else {
@@ -161,18 +167,19 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         MatchingSignature bestSignature = null;
 
         for (Signature<?> signature : signatures) {
-            if (!signature.returnType().isSubclassOf(typeToken)) {
+            MatchingSignature matching;
+            if (providedElement == null) {
+                matching = matchingFromObject(typeToken, signature, providedObject);
+            } else {
+                matching = matchingFromElement(typeToken, signature, providedElement);
+            }
+
+            if (matching == null) {
+                //no match found
                 continue;
             }
 
-            MatchingSignature matching;
-            if (providedElement == null) {
-                matching = matchingFromObject(signature, providedObject);
-            } else {
-                matching = matchingFromElement(signature, providedElement);
-            }
-
-            if (!matchLength && matching != null) {
+            if (!matchLength) {
                 if (bestSignature == null) {
                     bestSignature = matching;
                 } else if (bestSignature.size() < matching.size()) {
@@ -180,7 +187,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 }
             }
 
-            if (matching != null && matchLength) {
+            if (matchLength) {
                 return matching;
             }
         }

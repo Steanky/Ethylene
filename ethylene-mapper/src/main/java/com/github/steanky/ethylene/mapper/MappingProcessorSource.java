@@ -9,6 +9,7 @@ import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.toolkit.collection.Containers;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.TypeVariable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -42,12 +43,22 @@ public interface MappingProcessorSource {
      * All methods, unless otherwise noted, will throw a {@link NullPointerException} if null is passed as an argument,
      * or an entry/collection containing null is given.
      */
+    @SuppressWarnings("rawtypes")
     final class Builder {
-        @SuppressWarnings("rawtypes") private static final Signature<Map.Entry> MAP_ENTRY_SIGNATURE =
-            Signature.builder(Token.ofClass(Map.Entry.class), (entry, objects) -> Entry.of(objects.get(0), objects.get(1)),
-                (entry) -> List.of(new Signature.TypedObject("key", Token.OBJECT, entry.getKey()),
-                    new Signature.TypedObject("value", Token.OBJECT, entry.getValue())), Entry.of("key", Token.OBJECT),
-                Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames().build();
+        private static final Signature<Map.Entry> MAP_ENTRY_SIGNATURE;
+
+        static {
+            TypeVariable<?>[] variables = Map.Entry.class.getTypeParameters();
+            Map<String, Token<?>> variableMappings =
+                Map.of("key", Token.ofType(variables[0]), "value", Token.ofType(variables[1]));
+
+            MAP_ENTRY_SIGNATURE = Signature.builder(new Token<Map.Entry>() {
+                                                    }, (entry, objects) -> Entry.of(objects.get(0), objects.get(1)),
+                    (entry) -> List.of(new Signature.TypedObject("key", Token.OBJECT, entry.getKey()),
+                        new Signature.TypedObject("value", Token.OBJECT, entry.getValue())), variableMappings,
+                    Entry.of("key", Token.OBJECT), Entry.of("value", Token.OBJECT)).matchingTypeHints().matchingNames()
+                .build();
+        }
 
         private final Collection<Signature<?>> customSignatures = new HashSet<>();
         private final Collection<Map.Entry<Class<?>, Class<?>>> typeImplementations = new HashSet<>();
@@ -217,7 +228,7 @@ public interface MappingProcessorSource {
          * @param signatures a collection of custom signatures to add
          * @return this builder, for chaining
          */
-        public @NotNull Builder withCustomSignatures(@NotNull Signature<?> ... signatures) {
+        public @NotNull Builder withCustomSignatures(@NotNull Signature<?>... signatures) {
             customSignatures.addAll(Arrays.asList(signatures));
             return this;
         }
@@ -254,7 +265,7 @@ public interface MappingProcessorSource {
          * @param signatures the scalar signatures to add
          * @return this builder, for chaining
          */
-        public @NotNull Builder withScalarSignatures(@NotNull ScalarSignature<?> ... signatures) {
+        public @NotNull Builder withScalarSignatures(@NotNull ScalarSignature<?>... signatures) {
             for (ScalarSignature<?> signature : signatures) {
                 scalarSignatures.add(signature);
                 scalarTypes.add(signature.objectType());

@@ -15,14 +15,12 @@ import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
@@ -41,7 +39,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     //fields are lazily initialized by initTypes
     private Reference<SignatureData> signatureDataReference = new SoftReference<>(null);
 
-    private Collection<Map.Entry<String, Token<?>>> types;
+    private Info types;
 
     /**
      * Creates a new instance of this class.
@@ -133,7 +131,12 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
     @Override
     public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
-        return resolveTypes();
+        return resolveTypes().types;
+    }
+
+    @Override
+    public @NotNull @Unmodifiable Map<String, Token<?>> genericMappings() {
+        return resolveTypes().varMappings;
     }
 
     @Override
@@ -197,7 +200,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
     @Override
     public int length(@Nullable ConfigElement element) {
-        return resolveTypes().size();
+        return resolveTypes().types.size();
     }
 
     @Override
@@ -205,27 +208,43 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
         return genericReturnType;
     }
 
-    private Collection<Map.Entry<String, Token<?>>> resolveTypes() {
+    private Info resolveTypes() {
         if (types != null) {
             return types;
         }
 
         SignatureData data = resolveData();
         if (data.fields.isEmpty()) {
-            return types = List.of();
+            return types = new Info(List.of(), Map.of());
         }
 
         if (data.fields.size() == 1) {
             Field first = data.fields.get(0);
-            return types = List.of(Entry.of(ReflectionUtils.getFieldName(first), Token.ofType(first.getGenericType())));
+            String fieldName = ReflectionUtils.getFieldName(first);
+            Type firstType = first.getGenericType();
+            Map<String, Token<?>> varMapping;
+            if (firstType instanceof TypeVariable<?> variable) {
+                varMapping = Map.of(fieldName, Token.ofType(variable));
+            } else {
+                varMapping = Map.of();
+            }
+
+            return types = new Info(List.of(Entry.of(fieldName, Token.ofType(first.getGenericType()))), varMapping);
         }
 
         Collection<Map.Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
+        Map<String, Token<?>> varMapping = new HashMap<>(data.fields.size());
         for (Field field : data.fields) {
-            typeCollection.add(Entry.of(ReflectionUtils.getFieldName(field), Token.ofType(field.getGenericType())));
+            Type fieldType = field.getGenericType();
+            String fieldName = ReflectionUtils.getFieldName(field);
+            if (fieldType instanceof TypeVariable<?> variable) {
+                varMapping.put(fieldName, Token.ofType(variable));
+            }
+
+            typeCollection.add(Entry.of(fieldName, Token.ofType(field.getGenericType())));
         }
 
-        return types = Collections.unmodifiableCollection(typeCollection);
+        return types = new Info(List.copyOf(typeCollection), Map.copyOf(varMapping));
     }
 
     private SignatureData resolveData() {
@@ -260,6 +279,9 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
         for (int i = 0; i < args.length; i++) {
             data.fields.get(i).set(buildingObject, args[i]);
         }
+    }
+
+    private record Info(Collection<Map.Entry<String, Token<?>>> types, Map<String, Token<?>> varMappings) {
     }
 
     private record SignatureData(Constructor<?> constructor, List<Field> fields) {

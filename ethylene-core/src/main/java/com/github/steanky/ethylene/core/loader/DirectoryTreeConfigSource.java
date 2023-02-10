@@ -131,7 +131,7 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                 return ConfigPrimitive.NULL;
             }
 
-            try(ExceptionHandler<IOException> exceptionHandler = new ExceptionHandler<>(IOException.class)) {
+            try (ExceptionHandler<IOException> exceptionHandler = new ExceptionHandler<>(IOException.class)) {
                 return Graph.process(rootPath, directoryEntry -> {
                         //gets all files that are directories, not the current path, or a file with an extension we can
                         //understand
@@ -161,7 +161,8 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                     }, Files::isDirectory, entry -> {
                         String extension = pathNameInspector.getExtension(entry);
                         if (codecResolver.hasCodec(extension)) {
-                            return exceptionHandler.get(() -> Configuration.read(entry, codecResolver.resolve(extension)),
+                            return exceptionHandler.get(() -> Configuration.read(entry,
+                                    codecResolver.resolve(extension)),
                                 () -> ConfigPrimitive.NULL);
                         }
 
@@ -220,14 +221,13 @@ public class DirectoryTreeConfigSource implements ConfigSource {
                             //path already exists, is either an extensionless file or directory
                             //if it's a directory, we'll iterate into it later
                             //if it's a file, we'll write to it as a scalar
-                            paths.add(
-                                Entry.of(null, new OutputInfo(targetPath, entryElement, Files.isDirectory(targetPath))));
+                            paths.add(Entry.of(null,
+                                new OutputInfo(targetPath, entryElement, Files.isDirectory(targetPath))));
                         } else {
                             //path doesn't exist, but that could be because of an extension
                             //filter the existing paths to those whose name matches
-                            List<Path> targets =
-                                existingPaths.stream().filter(path -> pathNameInspector.getName(path).equals(elementName))
-                                    .toList();
+                            List<Path> targets = existingPaths.stream()
+                                .filter(path -> pathNameInspector.getName(path).equals(elementName)).toList();
 
                             if (targets.isEmpty()) {
                                 //no file found at all - we'll write a new one using our preferred extension
