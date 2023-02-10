@@ -99,17 +99,17 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
 
     @Override
     public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
-        return resolveTypeInfo().typeCollection;
+        return resolveInfo().typeCollection;
     }
 
     @Override
     public @NotNull @Unmodifiable Map<String, Token<?>> genericMappings() {
-        return resolveTypeInfo().varMappings;
+        return resolveInfo().varMappings;
     }
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
-        Collection<Map.Entry<String, Token<?>>> types = resolveTypeInfo().typeCollection;
+        Collection<Map.Entry<String, Token<?>>> types = resolveInfo().typeCollection;
 
         Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
@@ -178,7 +178,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
     @Override
     public boolean matchesArgumentNames() {
         //make sure the type collection is generated
-        resolveTypeInfo();
+        resolveInfo();
         return matchesNames;
     }
 
@@ -230,7 +230,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         return fieldMap;
     }
 
-    private Info resolveTypeInfo() {
+    private Info resolveInfo() {
         if (info != null) {
             return info;
         }

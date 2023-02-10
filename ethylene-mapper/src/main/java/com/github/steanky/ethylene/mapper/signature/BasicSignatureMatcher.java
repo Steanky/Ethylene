@@ -37,12 +37,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private MatchingSignature matchingFromObject(Token<?> typeToken, Signature signature, Object providedObject) {
+    private MatchingSignature matchingFromObject(Signature signature, Object providedObject) {
         Objects.requireNonNull(providedObject);
-
-        if (!typeToken.isSubclassOf(signature.returnType())) {
-            return null;
-        }
 
         Collection<Signature.TypedObject> objectData = signature.objectData(providedObject);
 
@@ -98,13 +94,8 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         return new MatchingSignature(signature, null, typeCollection, length);
     }
 
-    private MatchingSignature matchingFromElement(Token<?> typeToken, Signature<?> signature,
-        ConfigElement providedElement) {
+    private MatchingSignature matchingFromElement(Signature<?> signature, ConfigElement providedElement) {
         Objects.requireNonNull(providedElement);
-
-        if (!typeToken.isSubclassOf(signature.returnType())) {
-            return null;
-        }
 
         boolean matchNames = signature.matchesArgumentNames();
         if (matchNames && !providedElement.isNode()) {
@@ -169,9 +160,9 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         for (Signature<?> signature : signatures) {
             MatchingSignature matching;
             if (providedElement == null) {
-                matching = matchingFromObject(typeToken, signature, providedObject);
+                matching = matchingFromObject(signature, providedObject);
             } else {
-                matching = matchingFromElement(typeToken, signature, providedElement);
+                matching = matchingFromElement(signature, providedElement);
             }
 
             if (matching == null) {

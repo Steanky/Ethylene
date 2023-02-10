@@ -33,7 +33,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
     private Reference<Constructor<?>> constructorReference = new SoftReference<>(null);
     private Reference<RecordComponent[]> recordComponentsReference = new SoftReference<>(null);
     //safe, does not actually retain strong references to Type objects
-    private Info argumentTypes;
+    private Info info;
 
     /**
      * Creates a new instance of this class.
@@ -55,12 +55,12 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
 
     @Override
     public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
-        return resolveArgumentTypes().types;
+        return resolveInfo().types;
     }
 
     @Override
     public @NotNull @Unmodifiable Map<String, Token<?>> genericMappings() {
-        return resolveArgumentTypes().varMappings;
+        return resolveInfo().varMappings;
     }
 
     @Override
@@ -121,7 +121,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
 
     @Override
     public int length(@Nullable ConfigElement element) {
-        return resolveArgumentTypes().types.size();
+        return resolveInfo().types.size();
     }
 
     @Override
@@ -169,14 +169,14 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
         return types;
     }
 
-    private Info resolveArgumentTypes() {
-        if (argumentTypes != null) {
-            return argumentTypes;
+    private Info resolveInfo() {
+        if (info != null) {
+            return info;
         }
 
         RecordComponent[] recordComponents = resolveComponents();
         if (recordComponents.length == 0) {
-            return argumentTypes = new Info(List.of(), Map.of());
+            return info = new Info(List.of(), Map.of());
         }
 
         if (recordComponents.length == 1) {
@@ -191,7 +191,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
                 varMappings = Map.of();
             }
 
-            return argumentTypes = new Info(List.of(Map.entry(name, Token.ofType(type))), varMappings);
+            return info = new Info(List.of(Map.entry(name, Token.ofType(type))), varMappings);
         }
 
         List<Map.Entry<String, Token<?>>> underlyingList = new ArrayList<>(recordComponents.length);
@@ -204,10 +204,10 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
                 varMappings.put(name, Token.ofType(variable));
             }
 
-            underlyingList.add(Map.entry(component.getName(), Token.ofType(component.getGenericType())));
+            underlyingList.add(Map.entry(component.getName(), Token.ofType(type)));
         }
 
-        return argumentTypes = new Info(List.copyOf(underlyingList), Map.copyOf(varMappings));
+        return info = new Info(List.copyOf(underlyingList), Map.copyOf(varMappings));
     }
 
     private RecordComponent[] resolveComponents() {

@@ -131,12 +131,12 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
     @Override
     public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
-        return resolveTypes().types;
+        return resolveInfo().types;
     }
 
     @Override
     public @NotNull @Unmodifiable Map<String, Token<?>> genericMappings() {
-        return resolveTypes().varMappings;
+        return resolveInfo().varMappings;
     }
 
     @Override
@@ -200,7 +200,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
     @Override
     public int length(@Nullable ConfigElement element) {
-        return resolveTypes().types.size();
+        return resolveInfo().types.size();
     }
 
     @Override
@@ -208,7 +208,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
         return genericReturnType;
     }
 
-    private Info resolveTypes() {
+    private Info resolveInfo() {
         if (types != null) {
             return types;
         }
@@ -229,7 +229,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
                 varMapping = Map.of();
             }
 
-            return types = new Info(List.of(Entry.of(fieldName, Token.ofType(first.getGenericType()))), varMapping);
+            return types = new Info(List.of(Entry.of(fieldName, Token.ofType(firstType))), varMapping);
         }
 
         Collection<Map.Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
@@ -241,7 +241,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
                 varMapping.put(fieldName, Token.ofType(variable));
             }
 
-            typeCollection.add(Entry.of(fieldName, Token.ofType(field.getGenericType())));
+            typeCollection.add(Entry.of(fieldName, Token.ofType(fieldType)));
         }
 
         return types = new Info(List.copyOf(typeCollection), Map.copyOf(varMapping));
