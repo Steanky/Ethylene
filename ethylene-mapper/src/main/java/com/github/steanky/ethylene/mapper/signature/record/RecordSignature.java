@@ -51,6 +51,8 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
 
         this.rawClassReference = new WeakReference<>(rawClass);
         this.rawClassName = rawClass.getName();
+
+        ReflectionUtils.validateNotAbstract(genericReturnType);
     }
 
     @Override

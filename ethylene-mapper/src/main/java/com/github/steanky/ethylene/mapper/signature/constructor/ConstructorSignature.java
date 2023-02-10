@@ -76,6 +76,8 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
             parameterTypes[i] = new WeakReference<>(referent);
             parameterTypeNames[i] = referent.getTypeName();
         }
+
+        ReflectionUtils.validateNotAbstract(genericReturnType);
     }
 
     private static int computePriority(Constructor<?> constructor) {

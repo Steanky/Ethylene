@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.PrioritizedBase;
+import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -53,6 +55,8 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
         super(0);
         this.entry = Entry.of(null, componentType);
         this.containerType = containerType;
+
+        ReflectionUtils.validateNotAbstract(containerType);
     }
 
     /**

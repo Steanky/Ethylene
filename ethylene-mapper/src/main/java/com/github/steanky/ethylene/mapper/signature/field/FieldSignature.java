@@ -53,6 +53,8 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
         Class<?> rawType = genericReturnType.rawType();
         this.rawTypeReference = new WeakReference<>(rawType);
         this.rawTypeName = rawType.getName();
+
+        ReflectionUtils.validateNotAbstract(genericReturnType);
     }
 
     private static Constructor<?> getConstructor(Class<?> rawClass, boolean widenAccess) {

@@ -1,8 +1,10 @@
 package com.github.steanky.ethylene.mapper.internal;
 
+import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -172,5 +174,18 @@ public class ReflectionUtils {
 
         throw new IllegalArgumentException(
             "Unexpected subclass of GenericDeclaration '" + genericDeclaration.getClass().getName() + "'");
+    }
+
+    /**
+     * Simple check to ensure that the provided token is not abstract; if it is, an error is thrown.
+     * @param token the token to check
+     */
+    public static void validateNotAbstract(Token<?> token) {
+        Class<?> rawType = token.rawType();
+        int modifiers = rawType.getModifiers();
+        if (!rawType.isArray() && Modifier.isAbstract(modifiers)) {
+            throw new MapperException("Type " + rawType + " is abstract and cannot be instantiated; a concrete type " +
+                "implementation must be registered");
+        }
     }
 }
