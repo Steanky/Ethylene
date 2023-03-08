@@ -127,7 +127,8 @@ public final class Configuration {
         Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
 
-        return fromStreamsInternal(() -> Files.newInputStream(path), () -> Files.newOutputStream(path), codec, null);
+        return fromStreamsInternal(() -> new BufferedInputStream(Files.newInputStream(path)),
+            () -> new BufferedOutputStream(Files.newOutputStream(path)), codec, null);
     }
 
     /**
@@ -146,8 +147,8 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(executor);
 
-        return fromStreamsInternal(() -> Files.newInputStream(path), () -> Files.newOutputStream(path), codec,
-            executor);
+        return fromStreamsInternal(() -> new BufferedInputStream(Files.newInputStream(path)),
+            () -> new BufferedOutputStream(Files.newOutputStream(path)), codec, executor);
     }
 
     /**
@@ -163,8 +164,8 @@ public final class Configuration {
         Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
 
-        return fromStreamsInternal(() -> Files.newInputStream(path), () -> Files.newOutputStream(path), codec,
-            ForkJoinPool.commonPool());
+        return fromStreamsInternal(() -> new BufferedInputStream(Files.newInputStream(path)),
+            () -> new BufferedOutputStream(Files.newOutputStream(path)), codec, ForkJoinPool.commonPool());
     }
 
     /**
@@ -679,7 +680,7 @@ public final class Configuration {
         Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
 
-        return readInternal(Files.newInputStream(path), codec);
+        return readInternal(new BufferedInputStream(Files.newInputStream(path)), codec);
     }
 
     /**
@@ -697,7 +698,7 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(executor);
 
-        return readAsyncInternal(() -> Files.newInputStream(path), codec, executor);
+        return readAsyncInternal(() -> new BufferedInputStream(Files.newInputStream(path)), codec, executor);
     }
 
     private static CompletableFuture<ConfigElement> readAsyncInternal(Callable<? extends InputStream> inputStream,
@@ -717,7 +718,8 @@ public final class Configuration {
         Objects.requireNonNull(path);
         Objects.requireNonNull(codec);
 
-        return readAsyncInternal(() -> Files.newInputStream(path), codec, ForkJoinPool.commonPool());
+        return readAsyncInternal(() -> new BufferedInputStream(Files.newInputStream(path)), codec,
+            ForkJoinPool.commonPool());
     }
 
     /**
@@ -737,7 +739,7 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(processor);
 
-        return processor.dataFromElement(readInternal(Files.newInputStream(path), codec));
+        return processor.dataFromElement(readInternal(new BufferedInputStream(Files.newInputStream(path)), codec));
     }
 
     /**
@@ -758,7 +760,7 @@ public final class Configuration {
         Objects.requireNonNull(processor);
         Objects.requireNonNull(executor);
 
-        return readAsyncInternal(() -> Files.newInputStream(path), codec, processor, executor);
+        return readAsyncInternal(() -> new BufferedInputStream(Files.newInputStream(path)), codec, processor, executor);
     }
 
     private static <TData> CompletableFuture<TData> readAsyncInternal(Callable<? extends InputStream> inputStream,
@@ -783,7 +785,8 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(processor);
 
-        return readAsyncInternal(() -> Files.newInputStream(path), codec, processor, ForkJoinPool.commonPool());
+        return readAsyncInternal(() -> new BufferedInputStream(Files.newInputStream(path)), codec, processor,
+            ForkJoinPool.commonPool());
     }
 
     /**
@@ -800,7 +803,7 @@ public final class Configuration {
         Objects.requireNonNull(element);
         Objects.requireNonNull(codec);
 
-        writeInternal(Files.newOutputStream(path), element, codec);
+        writeInternal(new BufferedOutputStream(Files.newOutputStream(path)), element, codec);
     }
 
     /**
@@ -820,7 +823,7 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(executor);
 
-        return writeAsyncInternal(() -> Files.newOutputStream(path), element, codec, executor);
+        return writeAsyncInternal(() -> new BufferedOutputStream(Files.newOutputStream(path)), element, codec, executor);
     }
 
     private static CompletableFuture<Void> writeAsyncInternal(Callable<? extends OutputStream> outputStream,
@@ -846,7 +849,8 @@ public final class Configuration {
         Objects.requireNonNull(element);
         Objects.requireNonNull(codec);
 
-        return writeAsyncInternal(() -> Files.newOutputStream(path), element, codec, ForkJoinPool.commonPool());
+        return writeAsyncInternal(() -> new BufferedOutputStream(Files.newOutputStream(path)), element, codec,
+            ForkJoinPool.commonPool());
     }
 
     /**
@@ -866,7 +870,7 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(processor);
 
-        writeInternal(Files.newOutputStream(path), processor.elementFromData(data), codec);
+        writeInternal(new BufferedOutputStream(Files.newOutputStream(path)), processor.elementFromData(data), codec);
     }
 
     /**
@@ -888,7 +892,8 @@ public final class Configuration {
         Objects.requireNonNull(processor);
         Objects.requireNonNull(executor);
 
-        return writeAsyncInternal(() -> Files.newOutputStream(path), data, codec, processor, executor);
+        return writeAsyncInternal(() -> new BufferedOutputStream(Files.newOutputStream(path)), data, codec, processor,
+            executor);
     }
 
     private static <TData> CompletableFuture<Void> writeAsyncInternal(Callable<? extends OutputStream> outputStream,
@@ -916,6 +921,7 @@ public final class Configuration {
         Objects.requireNonNull(codec);
         Objects.requireNonNull(processor);
 
-        return writeAsyncInternal(() -> Files.newOutputStream(path), data, codec, processor, ForkJoinPool.commonPool());
+        return writeAsyncInternal(() -> new BufferedOutputStream(Files.newOutputStream(path)), data, codec, processor,
+            ForkJoinPool.commonPool());
     }
 }
