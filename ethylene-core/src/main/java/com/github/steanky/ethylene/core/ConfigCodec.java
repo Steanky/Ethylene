@@ -20,6 +20,8 @@ public interface ConfigCodec {
     /**
      * <i>Encodes</i> a provided {@link ConfigElement} (writes it to an {@link OutputStream}). The format it is written
      * in is dependent on the implementation.
+     * <p>
+     * This method must always close the given {@link OutputStream}, regardless of if an exception is thrown.
      *
      * @param element the element to write
      * @param output  the OutputStream to write to
@@ -31,6 +33,8 @@ public interface ConfigCodec {
     /**
      * <i>Decodes</i> a {@link ConfigElement} object (reads it from an {@link InputStream}). The format used to
      * interpret the data is implementation dependent.
+     * <p>
+     * This method must always close the given {@link InputStream}, regardless of if an exception is thrown.
      *
      * @param input the InputStream to read from
      * @return a ConfigNode object containing the data
@@ -74,6 +78,8 @@ public interface ConfigCodec {
      * this codec. The "top level element" is the element directly returned by a call to
      * {@link ConfigCodec#decode(InputStream)}. This is necessary because some codecs support top-level lists and
      * primitives (like YML), whereas others only support top-level nodes (like JSON).
+     * <p>
+     * The default behavior is to return a set containing only {@link ElementType#NODE}.
      *
      * @return the valid top-level types
      */

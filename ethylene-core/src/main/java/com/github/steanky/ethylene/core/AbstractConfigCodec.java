@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,10 +38,10 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     @Override
     public void encode(@NotNull ConfigElement element, @NotNull OutputStream output) throws IOException {
-        Objects.requireNonNull(element);
-        Objects.requireNonNull(output);
-
         try (output) {
+            Objects.requireNonNull(element);
+            Objects.requireNonNull(output);
+
             ElementType type = element.type();
             if (!supportedTopLevelTypes().contains(type)) {
                 throw new IOException(
@@ -54,9 +55,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     @Override
     public @NotNull ConfigElement decode(@NotNull InputStream input) throws IOException {
-        Objects.requireNonNull(input);
-
         try (input) {
+            Objects.requireNonNull(input);
+
             return Graph.process(readObject(input), this::makeDecodeNode, this::isContainer, this::deserializeObject,
                 graphDecodeOptions);
         }
@@ -65,6 +66,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
      * Reads an object from the given {@link InputStream}, which should contain configuration data in a particular
      * format.
+     * <p>
+     * This method must not close the InputStream.
      *
      * @param input the InputStream to read from
      * @return an object
@@ -169,6 +172,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     /**
      * Writes an object to the given {@link OutputStream}, which will then contain configuration data in some particular
      * format.
+     * <p>
+     * This method must not close the OutputStream.
      *
      * @param object the object to write
      * @param output the OutputStream to write to
