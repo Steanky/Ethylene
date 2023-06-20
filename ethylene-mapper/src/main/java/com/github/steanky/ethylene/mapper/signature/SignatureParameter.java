@@ -17,10 +17,11 @@ public interface SignatureParameter {
     @NotNull Token<?> type();
 
     /**
-     * Gets the default object.
-     * @return the default object; {@code null} if there is no default
+     * Gets the default {@link ConfigElement}. This is only used when necessary; i.e. when the provided config does not
+     * contain an existing value for this parameter.
+     * @return the default configuration; {@code null} if there is no default
      */
-    @Nullable ConfigElement get();
+    @Nullable ConfigElement defaultOption();
 
     /**
      * Creates a new implementation of {@link SignatureParameter} that has the specified type and does not supply a
@@ -36,7 +37,7 @@ public interface SignatureParameter {
             }
 
             @Override
-            public @Nullable ConfigElement get() {
+            public @Nullable ConfigElement defaultOption() {
                 return null;
             }
         };
@@ -57,7 +58,7 @@ public interface SignatureParameter {
             }
 
             @Override
-            public @Nullable ConfigElement get() {
+            public @Nullable ConfigElement defaultOption() {
                 return element;
             }
         };

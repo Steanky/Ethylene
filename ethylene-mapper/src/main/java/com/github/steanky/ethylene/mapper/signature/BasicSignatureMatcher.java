@@ -125,7 +125,13 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 String name = entry.getKey();
                 ConfigElement element = providedNode.get(name);
                 if (element == null) {
-                    return null;
+                    ConfigElement defaultElement = entry.getValue().defaultOption();
+                    if (defaultElement == null) {
+                        return null;
+                    }
+
+                    targetCollection.add(defaultElement);
+                    continue;
                 }
 
                 targetCollection.add(element);

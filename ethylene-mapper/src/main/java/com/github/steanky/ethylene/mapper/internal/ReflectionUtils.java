@@ -1,15 +1,20 @@
 package com.github.steanky.ethylene.mapper.internal;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.mapper.MapperException;
+import com.github.steanky.ethylene.mapper.annotation.Default;
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -187,5 +192,47 @@ public class ReflectionUtils {
             throw new MapperException("Type " + rawType + " is abstract and cannot be instantiated; a concrete type " +
                 "implementation must be registered");
         }
+    }
+
+    /**
+     * Constructs a map of parameter names to {@link Method}s belonging to the object class. The methods will be:
+     * <ul>
+     *     <li>public</li>
+     *     <li>static</li>
+     *     <li>parameterless</li>
+     *     <li>have a return value that is assignable to {@link ConfigElement}</li>
+     *     <li>declared on the given class</li>
+     * </ul>
+     * @param objectClass the class to search in
+     * @return an unmodifiable map of strings to methods
+     */
+    public static @NotNull @Unmodifiable Map<String, Method> constructDefaultMethodMap(@NotNull Class<?> objectClass) {
+        Map<String, Method> methodMap = new HashMap<>(4);
+        for (Method method : objectClass.getDeclaredMethods()) {
+            Default defaultAnnotation = method.getAnnotation(Default.class);
+            if (defaultAnnotation == null) {
+                continue;
+            }
+
+            int modifiers = method.getModifiers();
+            if (!Modifier.isPublic(modifiers) || !Modifier.isStatic(modifiers)) {
+                throw new MapperException("Default value supplier method must be declared public static");
+            }
+
+            if (!ConfigElement.class.isAssignableFrom(method.getReturnType())) {
+                throw new MapperException("Default value supplier method must be declared public static");
+            }
+
+            if (method.getParameterCount() != 0) {
+                throw new MapperException("Default value supplier methods must be parameterless");
+            }
+
+            String value = defaultAnnotation.value();
+            if (methodMap.put(value, method) != null) {
+                throw new MapperException("Duplicate default value suppliers for parameter named " + value);
+            }
+        }
+
+        return Map.copyOf(methodMap);
     }
 }

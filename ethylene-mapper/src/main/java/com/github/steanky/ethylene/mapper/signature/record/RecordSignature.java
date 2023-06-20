@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.PrioritizedBase;
+import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
@@ -83,7 +84,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
                 }
 
                 typedObjects.add(
-                    new TypedObject(recordComponent.getName(), Token.ofType(recordComponent.getGenericType()),
+                    new TypedObject(resolveName(recordComponent), Token.ofType(recordComponent.getGenericType()),
                         accessor.invoke(object)));
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new MapperException(e);
@@ -182,10 +183,12 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
             return info = new Info(List.of(), Map.of());
         }
 
+        Class<?> self = ReflectionUtils.resolve(rawClassReference, rawClassName);
+        Map<String, Method> map = ReflectionUtils.constructDefaultMethodMap(self);
         if (recordComponents.length == 1) {
             RecordComponent component = recordComponents[0];
             Type type = component.getGenericType();
-            String name = component.getName();
+            String name = resolveName(component);
 
             Map<String, Token<?>> varMappings;
             if (type instanceof TypeVariable<?> variable) {
@@ -194,23 +197,49 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
                 varMappings = Map.of();
             }
 
-            return info = new Info(List.of(Map.entry(name, SignatureParameter.parameter(Token.ofType(type)))), varMappings);
+            return info = new Info(List.of(makeEntry(component, map)), varMappings);
         }
 
         List<Map.Entry<String, SignatureParameter>> underlyingList = new ArrayList<>(recordComponents.length);
         Map<String, Token<?>> varMappings = new HashMap<>(recordComponents.length);
         for (RecordComponent component : recordComponents) {
             Type type = component.getGenericType();
-            String name = component.getName();
+            String name = resolveName(component);
 
             if (type instanceof TypeVariable<?> variable) {
                 varMappings.put(name, Token.ofType(variable));
             }
 
-            underlyingList.add(Map.entry(component.getName(), SignatureParameter.parameter(Token.ofType(type))));
+            underlyingList.add(makeEntry(component, map));
         }
 
         return info = new Info(List.copyOf(underlyingList), Map.copyOf(varMappings));
+    }
+
+    private String resolveName(RecordComponent component) {
+        Name nameAnnotation = component.getAnnotation(Name.class);
+        if (nameAnnotation != null) {
+            return nameAnnotation.value();
+        }
+
+        return component.getName();
+    }
+
+    private Map.Entry<String, SignatureParameter> makeEntry(RecordComponent component, Map<String, Method> defaultMap) {
+        String name = resolveName(component);
+
+        ConfigElement defaultValue = null;
+        Method defaultValueMethod = defaultMap.get(name);
+        if (defaultValueMethod != null) {
+            try {
+                defaultValue = (ConfigElement)defaultValueMethod.invoke(null);
+            }
+            catch (InvocationTargetException | IllegalAccessException e) {
+                throw new MapperException("Error invoking default value accessor method", e);
+            }
+        }
+
+        return Map.entry(name, SignatureParameter.parameter(Token.ofType(component.getGenericType()), defaultValue));
     }
 
     private RecordComponent[] resolveComponents() {
