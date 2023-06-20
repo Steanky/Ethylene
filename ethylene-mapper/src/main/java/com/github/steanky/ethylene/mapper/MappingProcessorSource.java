@@ -337,12 +337,11 @@ public interface MappingProcessorSource {
         }
 
         /**
-         * If true, causes processors created by this builder to write default values to the output node, even when the
-         * object's value is the same as the default. This is {@code false} by default.
-         * @param writeDefaults whether or write defaults
+         * Causes processors created by this builder to write default values to the output node, even when the
+         * object's value is the same as the default.
          */
-        public @NotNull Builder writingDefaults(boolean writeDefaults) {
-            this.writeDefaults = writeDefaults;
+        public @NotNull Builder writingDefaults() {
+            this.writeDefaults = true;
             return this;
         }
 

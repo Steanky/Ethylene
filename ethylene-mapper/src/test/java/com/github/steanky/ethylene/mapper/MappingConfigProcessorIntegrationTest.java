@@ -362,7 +362,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void writesDefaultsWhenForced() throws ConfigProcessException {
             MappingProcessorSource source = MappingProcessorSource.builder().ignoringLengths()
-                .writingDefaults(true).build();
+                .writingDefaults().build();
 
             ConfigProcessor<Data> processor = source.processorFor(new Token<>() {});
             ConfigElement element = processor.elementFromData(new Data("some key", -1));
