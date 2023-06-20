@@ -511,6 +511,15 @@ public abstract class Token<T> implements Supplier<Type> {
     }
 
     /**
+     * Determines if this token does (or can) have type parameters.
+     * @return true if the token has type parameters, or if it could have type parameters
+     */
+    public final boolean canHaveTypeParameters() {
+        Type type = get();
+        return type instanceof ParameterizedType || type instanceof Class<?> cls && cls.getTypeParameters().length != 0;
+    }
+
+    /**
      * Extracts a map containing all of the {@link TypeVariable} instances between this (parameterized) token and the
      * given subtype.
      *

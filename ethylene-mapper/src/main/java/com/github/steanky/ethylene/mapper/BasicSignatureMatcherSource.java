@@ -11,10 +11,12 @@ import com.github.steanky.ethylene.mapper.signature.container.ArraySignature;
 import com.github.steanky.ethylene.mapper.signature.container.CollectionSignature;
 import com.github.steanky.ethylene.mapper.signature.container.MapSignature;
 import com.github.steanky.ethylene.mapper.type.Token;
+import com.github.steanky.ethylene.mapper.type.TypeVariableMap;
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.*;
 
 /**
@@ -78,17 +80,34 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
                         yield new BasicSignatureMatcher(arraySignature, typeHinter, matchLength);
                     } else {
                         if (token.isSubclassOf(Collection.class)) {
-                            Token<?> parameterized = token.parameterize(token.supertypeVariables(Collection.class));
-                            Token<?>[] args = parameterized.actualTypeParameters();
+                            TypeVariableMap mappings = token.supertypeVariables(Collection.class);
+
+                            Token<?> key = Token.ofType(Collection.class.getTypeParameters()[0]);
+                            TypeVariable<?> variable = (TypeVariable<?>)key.get();
+
+                            Token<?> componentType = mappings.get(variable);
+                            if (componentType == null) {
+                                throw new MapperException("Unexpected type variable " + variable);
+                            }
+
                             Signature<?>[] collectionSignature =
-                                new Signature[]{new CollectionSignature<>(args[0], token)};
+                                new Signature[]{new CollectionSignature<>(componentType, token)};
 
                             yield new BasicSignatureMatcher(collectionSignature, typeHinter, matchLength);
                         } else if (token.isSubclassOf(Map.class)) {
-                            Token<?> parameterized = token.parameterize(token.supertypeVariables(Map.class));
-                            Token<?>[] args = parameterized.actualTypeParameters();
+                            TypeVariableMap mappings = token.supertypeVariables(Map.class);
 
-                            Signature<?>[] mapSignature = new Signature[]{new MapSignature<>(args[0], args[1], token)};
+                            TypeVariable<?>[] typeVariables = Map.class.getTypeParameters();
+                            Token<?> keyKey = Token.ofType(typeVariables[0]);
+                            Token<?> valueKey = Token.ofType(typeVariables[1]);
+
+                            Token<?> keyType = mappings.get((TypeVariable<?>)keyKey.get());
+                            Token<?> valueType = mappings.get((TypeVariable<?>)valueKey.get());
+                            if (keyType == null || valueType == null) {
+                                throw new MapperException("Unexpected type variables " + Arrays.toString(typeVariables));
+                            }
+
+                            Signature<?>[] mapSignature = new Signature[]{new MapSignature<>(keyType, valueType, token)};
                             yield new BasicSignatureMatcher(mapSignature, typeHinter, matchLength);
                         }
                     }

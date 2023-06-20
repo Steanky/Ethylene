@@ -90,16 +90,19 @@ public class BasicTypeResolver implements TypeResolver {
             if (referent != null) {
                 Token<?> referentType = Token.ofType(referent);
 
-                //exact cache had a hit, we can avoid walking the class hierarchy
-                if (type.isParameterized()) {
-                    return referentType.parameterize(type.subtypeVariables(referent));
+                if (referentType.isSubclassOf(type)) {
+                    //exact cache had a hit, we can avoid walking the class hierarchy
+                    if (type.isParameterized() && referentType.canHaveTypeParameters()) {
+                        return referentType.parameterize(type.subtypeVariables(referent));
+                    }
+
+                    return referentType;
                 }
-
-                return referentType;
             }
-
-            //this should not happen, if the entry has no reference to the class, the cache shouldn't either
-            exactCache.invalidate(raw);
+            else {
+                //this should not happen, if the entry has no reference to the class, the cache shouldn't either
+                exactCache.invalidate(raw);
+            }
         }
 
         if (hierarchyWalkFailures.getIfPresent(raw) == null) {

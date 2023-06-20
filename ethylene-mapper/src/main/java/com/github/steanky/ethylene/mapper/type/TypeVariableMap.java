@@ -51,7 +51,7 @@ public final class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>
     @Override
     public boolean containsKey(Object key) {
         if (key instanceof TypeVariable<?> typeVariable) {
-            return tokenMap.containsKey(typeVariable);
+            return tokenMap.containsKey(Token.ofType(typeVariable));
         }
 
         return false;
@@ -59,7 +59,11 @@ public final class TypeVariableMap extends AbstractMap<TypeVariable<?>, Token<?>
 
     @Override
     public Token<?> get(Object key) {
-        return tokenMap.get(key);
+        if (!(key instanceof TypeVariable<?> variable)) {
+            return null;
+        }
+
+        return tokenMap.get(Token.ofType(variable));
     }
 
     @Override

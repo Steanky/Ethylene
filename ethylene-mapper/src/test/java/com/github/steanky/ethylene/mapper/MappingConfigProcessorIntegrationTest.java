@@ -318,4 +318,48 @@ class MappingConfigProcessorIntegrationTest {
             assertEquals(Set.of(1, 2, 3), custom.intSet);
         }
     }
+
+    @Nested
+    class Sets {
+        public static class SetImpl extends AbstractSet<Integer> {
+            private final Set<Integer> integers;
+
+            public SetImpl(int size) {
+                this.integers = new HashSet<>(size);
+            }
+
+            @Override
+            public Iterator<Integer> iterator() {
+                return integers.iterator();
+            }
+
+            @Override
+            public int size() {
+                return integers.size();
+            }
+
+            @Override
+            public boolean add(Integer integer) {
+                return integers.add(integer);
+            }
+
+            @Override
+            public boolean remove(Object o) {
+                return integers.remove(o);
+            }
+        }
+
+        @Test
+        void setImpl() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder()
+                .withStandardSignatures()
+                .withTypeImplementation(SetImpl.class, Set.class).ignoringLengths().build();
+
+            ConfigProcessor<Set<Integer>> processor = source.processorFor(new Token<>() {});
+            Set<Integer> set = processor.dataFromElement(ConfigList.of(0, 1, 2, 3));
+
+            assertEquals(SetImpl.class, set.getClass());
+            assertEquals(set, Set.of(0, 1, 2, 3));
+        }
+    }
 }
