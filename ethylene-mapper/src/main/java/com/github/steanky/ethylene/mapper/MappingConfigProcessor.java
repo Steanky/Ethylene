@@ -201,6 +201,14 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         outputIterator = null;
                     }
 
+                    Map<String, Token<?>> typeVariableOverrides = signature.genericMappings();
+                    Map<TypeVariable<?>, Type> map;
+                    if (!typeVariableOverrides.isEmpty()) {
+                        map = nodeEntry.type.supertypeVariables(signature.returnType()).resolve();
+                    } else {
+                        map = null;
+                    }
+
                     return Graph.node(new Iterator<>() {
                         private int i;
 
@@ -216,7 +224,24 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             }
 
                             Signature.TypedObject typedObject = typedObjectIterator.next();
-                            Token<?> objectType = typeResolver.resolveType(typedObject.type(), null);
+
+                            Token<?> type = null;
+                            if (map != null && typedObject.name() != null) {
+                                Token<?> token = typeVariableOverrides.get(typedObject.name());
+                                if (token != null) {
+                                    Type actualType = token.get();
+                                    Type nullableType = map.get((TypeVariable<?>) actualType);
+                                    if (nullableType != null) {
+                                        type = Token.ofType(nullableType);
+                                    }
+                                }
+                            }
+
+                            if (type == null) {
+                                type = typedObject.type();
+                            }
+
+                            Token<?> objectType = typeResolver.resolveType(type, null);
                             SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
 
                             return Entry.of(typedObject.name(),

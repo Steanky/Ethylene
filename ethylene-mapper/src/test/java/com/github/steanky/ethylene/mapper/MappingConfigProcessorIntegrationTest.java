@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -317,6 +319,41 @@ class MappingConfigProcessorIntegrationTest {
             assertEquals(List.of("a", "b", "c"), custom.strings);
             assertEquals(69, custom.value);
             assertEquals(Set.of(1, 2, 3), custom.intSet);
+        }
+    }
+
+    @Nested
+    class Maps {
+        @Test
+        void mapOfType() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder()
+                .withStandardTypeImplementations()
+                .withStandardSignatures()
+                .ignoringLengths().build();
+
+
+            ConfigProcessor<ConcurrentHashMap<String, CopyOnWriteArraySet<String>>> proc =
+                source.processorFor(new Token<>() {});
+
+            ConcurrentHashMap<String, CopyOnWriteArraySet<String>> empty = new ConcurrentHashMap<>();
+            ConcurrentHashMap<String, CopyOnWriteArraySet<String>> severalItems = new ConcurrentHashMap<>();
+            severalItems.computeIfAbsent("item", ignored -> new CopyOnWriteArraySet<>()).add("test");
+
+            assertEquals(ConfigList.of(), proc.elementFromData(empty));
+
+            assertEquals(ConfigList.of(ConfigNode.of("key", "item",
+                "value", ConfigList.of("test"))), proc.elementFromData(severalItems));
+        }
+
+        @Test
+        void string() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder()
+                .withStandardTypeImplementations()
+                .withStandardSignatures()
+                .ignoringLengths().build();
+
+            ConfigProcessor<String> stringProcessor = source.processorFor(Token.ofClass(String.class));
+            assertEquals(ConfigPrimitive.of("test"), stringProcessor.elementFromData("test"));
         }
     }
 

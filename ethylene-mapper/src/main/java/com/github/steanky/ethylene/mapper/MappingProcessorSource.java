@@ -54,8 +54,7 @@ public interface MappingProcessorSource {
 
             MAP_ENTRY_SIGNATURE = Signature.builder(new Token<Map.Entry>() {
                                                     }, (entry, objects) -> Entry.of(objects.get(0), objects.get(1)),
-                    (entry) -> List.of(new Signature.TypedObject("key", Token.OBJECT, entry.getKey()),
-                        new Signature.TypedObject("value", Token.OBJECT, entry.getValue())), variableMappings,
+                    (entry) -> List.of(entry.getKey(), entry.getValue()), variableMappings,
                     Entry.of("key", SignatureParameter.parameter(Token.OBJECT)),
                     Entry.of("value", SignatureParameter.parameter(Token.OBJECT))).matchingTypeHints().matchingNames().build();
         }
