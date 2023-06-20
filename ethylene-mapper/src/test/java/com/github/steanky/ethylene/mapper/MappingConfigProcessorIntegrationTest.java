@@ -321,6 +321,36 @@ class MappingConfigProcessorIntegrationTest {
     }
 
     @Nested
+    class Defaulting {
+        public record Data(String key, int value) {
+            @Default("value")
+            public static ConfigElement valueDefault() {
+                return ConfigPrimitive.of(-1);
+            }
+        }
+
+        @Test
+        void defaults() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().ignoringLengths().build();
+
+            ConfigProcessor<Data> processor = source.processorFor(new Token<>() {});
+            Data data = processor.dataFromElement(ConfigNode.of("key", "KEY"));
+
+            assertEquals(new Data("KEY", -1), data);
+        }
+
+        @Test
+        void defaultOverrides() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().ignoringLengths().build();
+
+            ConfigProcessor<Data> processor = source.processorFor(new Token<>() {});
+            Data data = processor.dataFromElement(ConfigNode.of("key", "KEY", "value", 69));
+
+            assertEquals(new Data("KEY", 69), data);
+        }
+    }
+
+    @Nested
     class Sets {
         public static class SetImpl extends AbstractSet<Integer> {
             private final Set<Integer> integers;
