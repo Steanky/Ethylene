@@ -227,19 +227,8 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
 
     private Map.Entry<String, SignatureParameter> makeEntry(RecordComponent component, Map<String, Method> defaultMap) {
         String name = resolveName(component);
-
-        ConfigElement defaultValue = null;
-        Method defaultValueMethod = defaultMap.get(name);
-        if (defaultValueMethod != null) {
-            try {
-                defaultValue = (ConfigElement)defaultValueMethod.invoke(null);
-            }
-            catch (InvocationTargetException | IllegalAccessException e) {
-                throw new MapperException("Error invoking default value accessor method", e);
-            }
-        }
-
-        return Map.entry(name, SignatureParameter.parameter(Token.ofType(component.getGenericType()), defaultValue));
+        return Map.entry(name, SignatureParameter.parameter(Token.ofType(component.getGenericType()),
+            ReflectionUtils.invokeDefaultAccessorIfPresent(defaultMap, name)));
     }
 
     private RecordComponent[] resolveComponents() {

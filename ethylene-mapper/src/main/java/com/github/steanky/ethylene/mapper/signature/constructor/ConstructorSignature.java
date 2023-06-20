@@ -90,14 +90,19 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         return priority.value();
     }
 
-    private static Map.Entry<String, SignatureParameter> makeEntry(Parameter parameter, boolean parameterHasName) {
+    private static Map.Entry<String, SignatureParameter> makeEntry(Parameter parameter, boolean parameterHasName,
+        Map<String, Method> defaultMethodMap) {
         Name parameterName = parameter.getAnnotation(Name.class);
         Token<?> parameterType = Token.ofType(parameter.getParameterizedType());
         if (parameterName != null) {
-            return Entry.of(parameterName.value(), SignatureParameter.parameter(parameterType));
+            String name = parameterName.value();
+            return Entry.of(name, SignatureParameter.parameter(parameterType,
+                ReflectionUtils.invokeDefaultAccessorIfPresent(defaultMethodMap, name)));
         }
 
-        return Entry.of(parameterHasName ? parameter.getName() : null, SignatureParameter.parameter(parameterType));
+        String name = parameterHasName ? parameter.getName() : null;
+        return Entry.of(name, SignatureParameter.parameter(parameterType, name == null ? null :
+            ReflectionUtils.invokeDefaultAccessorIfPresent(defaultMethodMap, name)));
     }
 
     @Override
@@ -244,12 +249,13 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
             return info = new Info(List.of(), Map.of());
         }
 
+        Map<String, Method> map = ReflectionUtils.constructDefaultMethodMap(constructor.getDeclaringClass());
         Parameter[] parameters = constructor.getParameters();
         if (parameters.length == 1) {
             //alternatively use singleton list
             Parameter first = parameters[0];
 
-            Map.Entry<String, SignatureParameter> entry = makeEntry(first, first.isNamePresent());
+            Map.Entry<String, SignatureParameter> entry = makeEntry(first, first.isNamePresent(), map);
             matchesNames = entry.getKey() != null;
 
             Type type = first.getParameterizedType();
@@ -271,7 +277,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         Parameter first = parameters[0];
 
         boolean parameterHasName = first.isNamePresent();
-        Map.Entry<String, SignatureParameter> firstEntry = makeEntry(first, parameterHasName);
+        Map.Entry<String, SignatureParameter> firstEntry = makeEntry(first, parameterHasName, map);
         matchesNames = firstEntry.getKey() != null;
 
         Type firstType = first.getParameterizedType();
@@ -285,7 +291,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         for (int i = 1; i < parameters.length; i++) {
             Parameter parameter = parameters[i];
 
-            Map.Entry<String, SignatureParameter> entry = makeEntry(parameter, parameterHasName);
+            Map.Entry<String, SignatureParameter> entry = makeEntry(parameter, parameterHasName, map);
             if (firstNonNullName == (entry.getKey() == null)) {
                 throw new MapperException("Inconsistent parameter naming");
             }

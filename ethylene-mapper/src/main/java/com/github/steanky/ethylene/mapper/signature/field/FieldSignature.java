@@ -221,6 +221,8 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
             return types = new Info(List.of(), Map.of());
         }
 
+        Class<?> rawClass = ReflectionUtils.resolve(rawTypeReference, rawTypeName);
+        Map<String, Method> map = ReflectionUtils.constructDefaultMethodMap(rawClass);
         if (data.fields.size() == 1) {
             Field first = data.fields.get(0);
             String fieldName = ReflectionUtils.getFieldName(first);
@@ -232,8 +234,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
                 varMapping = Map.of();
             }
 
-            return types = new Info(List.of(Entry.of(fieldName, SignatureParameter.parameter(Token.ofType(firstType)))),
-                varMapping);
+            return types = new Info(List.of(makeEntry(fieldName, firstType, map)), varMapping);
         }
 
         Collection<Map.Entry<String, SignatureParameter>> typeCollection = new ArrayList<>(data.fields.size());
@@ -245,10 +246,15 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
                 varMapping.put(fieldName, Token.ofType(variable));
             }
 
-            typeCollection.add(Entry.of(fieldName, SignatureParameter.parameter(Token.ofType(fieldType))));
+            typeCollection.add(makeEntry(fieldName, fieldType, map));
         }
 
         return types = new Info(List.copyOf(typeCollection), Map.copyOf(varMapping));
+    }
+
+    private Map.Entry<String, SignatureParameter> makeEntry(String name, Type type, Map<String, Method> defaultMethodMap) {
+        return Entry.of(name, SignatureParameter.parameter(Token.ofType(type),
+            ReflectionUtils.invokeDefaultAccessorIfPresent(defaultMethodMap, name)));
     }
 
     private SignatureData resolveData() {
