@@ -122,11 +122,15 @@ public class BasicTypeResolver implements TypeResolver {
                     exactCache.put(raw, superclassReference);
 
                     Token<?> referentToken = Token.ofType(referent);
-                    if (type.isParameterized()) {
-                        return referentToken.parameterize(type.subtypeVariables(referent));
-                    }
 
-                    return referentToken;
+                    if (referentToken.isSubclassOf(type)) {
+                        //exact cache had a hit, we can avoid walking the class hierarchy
+                        if (type.isParameterized() && referentToken.canHaveTypeParameters()) {
+                            return referentToken.parameterize(type.subtypeVariables(referent));
+                        }
+
+                        return referentToken;
+                    }
                 }
             }
 

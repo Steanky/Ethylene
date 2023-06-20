@@ -361,5 +361,15 @@ class MappingConfigProcessorIntegrationTest {
             assertEquals(SetImpl.class, set.getClass());
             assertEquals(set, Set.of(0, 1, 2, 3));
         }
+
+        @Test
+        void wrongSetImpl() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder()
+                .withStandardSignatures()
+                .withTypeImplementation(SetImpl.class, Set.class).ignoringLengths().build();
+
+            ConfigProcessor<Set<String>> processor = source.processorFor(new Token<>() {});
+            assertThrows(ConfigProcessException.class, () -> processor.dataFromElement(ConfigList.of("a", "b", "c")));
+        }
     }
 }
