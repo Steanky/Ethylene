@@ -54,19 +54,19 @@ class MappingConfigProcessorIntegrationTest {
         scalarSource = new BasicScalarSource(typeHinter, Set.of());
 
         this.stringListProcessor = new MappingConfigProcessor<>(new Token<>() {
-        }, source, typeHinter, typeResolver, scalarSource);
+        }, source, typeHinter, typeResolver, scalarSource, false);
         this.objectListProcessor = new MappingConfigProcessor<>(new Token<>() {
-        }, source, typeHinter, typeResolver, scalarSource);
+        }, source, typeHinter, typeResolver, scalarSource, false);
         this.listListStringProcessor = new MappingConfigProcessor<>(new Token<>() {
-        }, source, typeHinter, typeResolver, scalarSource);
+        }, source, typeHinter, typeResolver, scalarSource, false);
         this.reallyStupidProcessor = new MappingConfigProcessor<>(new Token<>() {
-        }, source, typeHinter, typeResolver, scalarSource);
+        }, source, typeHinter, typeResolver, scalarSource, false);
         this.customClassProcessor = new MappingConfigProcessor<>(new Token<>() {
-        }, source, typeHinter, typeResolver, scalarSource);
+        }, source, typeHinter, typeResolver, scalarSource, false);
         this.customNamedClassProcessor = new MappingConfigProcessor<>(new Token<>() {
-        }, source, typeHinter, typeResolver, scalarSource);
+        }, source, typeHinter, typeResolver, scalarSource, false);
         this.objectProcessor = new MappingConfigProcessor<>(new Token<>() {
-        }, source, typeHinter, typeResolver, scalarSource);
+        }, source, typeHinter, typeResolver, scalarSource, false);
     }
 
     public static class CustomClass {
@@ -216,7 +216,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void parameterlessClass() throws ConfigProcessException {
             ConfigProcessor<ParameterlessClass> processor = new MappingConfigProcessor<>(new Token<>() {
-            }, source, typeHinter, typeResolver, scalarSource);
+            }, source, typeHinter, typeResolver, scalarSource, false);
 
             ParameterlessClass parameterlessClass = processor.dataFromElement(ConfigNode.of());
             assertNotNull(parameterlessClass);
@@ -230,7 +230,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void map() throws ConfigProcessException {
             ConfigProcessor<Map<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {
-            }, source, typeHinter, typeResolver, scalarSource);
+            }, source, typeHinter, typeResolver, scalarSource, false);
 
             ConfigList map =
                 ConfigList.of(ConfigNode.of("key", 0, "value", "first"), ConfigNode.of("key", 1, "value", "second"));
@@ -243,7 +243,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void customSignature() throws ConfigProcessException {
             ConfigProcessor<Map.Entry<Integer, String>> processor = new MappingConfigProcessor<>(new Token<>() {
-            }, source, typeHinter, typeResolver, scalarSource);
+            }, source, typeHinter, typeResolver, scalarSource, false);
 
             ConfigNode node = ConfigNode.of("key", 10, "value", "string_value");
             Map.Entry<Integer, String> entry = processor.dataFromElement(node);
@@ -261,7 +261,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void recordBuilder() throws ConfigProcessException {
             ConfigProcessor<SimpleRecord> processor = new MappingConfigProcessor<>(new Token<>() {
-            }, source, typeHinter, typeResolver, scalarSource);
+            }, source, typeHinter, typeResolver, scalarSource, false);
 
             ConfigNode dataNode = ConfigNode.of("stringList", ConfigList.of("a", "b", "c"), "value", true);
 
@@ -272,7 +272,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void accessWidenedFieldConstructor() throws ConfigProcessException {
             ConfigProcessor<AccessWidenedFieldClass> processor = new MappingConfigProcessor<>(new Token<>() {
-            }, source, typeHinter, typeResolver, scalarSource);
+            }, source, typeHinter, typeResolver, scalarSource, false);
 
             ConfigNode dataNode = ConfigNode.of("string", "value", "bool", true, "selfReference", null);
             AccessWidenedFieldClass obj = processor.dataFromElement(dataNode);
@@ -285,7 +285,7 @@ class MappingConfigProcessorIntegrationTest {
         @Test
         void selfReferentialAccessWidenedFieldConstructor() throws ConfigProcessException {
             ConfigProcessor<AccessWidenedFieldClass> processor = new MappingConfigProcessor<>(new Token<>() {
-            }, source, typeHinter, typeResolver, scalarSource);
+            }, source, typeHinter, typeResolver, scalarSource, false);
 
             ConfigNode dataNode = ConfigNode.of("string", "value", "bool", true);
             dataNode.put("selfReference", dataNode);

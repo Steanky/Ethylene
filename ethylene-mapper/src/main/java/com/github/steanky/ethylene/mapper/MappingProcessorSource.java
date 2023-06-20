@@ -82,6 +82,7 @@ public interface MappingProcessorSource {
         private BiFunction<? super TypeHinter, ? super Collection<? extends Map.Entry<Class<?>, Class<?>>>, ?
             extends TypeResolver>
             typeResolverFunction = BasicTypeResolver::new;
+        private boolean writeDefaults = false;
 
         private Builder() {
             this.matchLengths = true;
@@ -336,6 +337,15 @@ public interface MappingProcessorSource {
         }
 
         /**
+         * If true, causes processors created by this builder to write default values to the output node, even when the
+         * object's value is the same as the default. This is {@code false} by default.
+         * @param writeDefaults whether or write defaults
+         */
+        public void writingDefaults(boolean writeDefaults) {
+            this.writeDefaults = writeDefaults;
+        }
+
+        /**
          * Builds a new {@link MappingProcessorSource} given the builder's current parameters. This method can be called
          * multiple times in order to create multiple unique instances. If the builder's parameters change between
          * invocations of this method, MappingProcessorSources created prior to the changes will <i>not</i> reflect
@@ -355,7 +365,7 @@ public interface MappingProcessorSource {
             return new MappingProcessorSource() {
                 @Override
                 public @NotNull <T> ConfigProcessor<T> processorFor(@NotNull Token<T> token) {
-                    return new MappingConfigProcessor<>(token, source, hinter, resolver, scalarSource);
+                    return new MappingConfigProcessor<>(token, source, hinter, resolver, scalarSource, writeDefaults);
                 }
             };
         }

@@ -51,15 +51,18 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
      * @param typeResolver           the {@link TypeResolver} used to resolve types into concrete implementations
      * @param scalarSource           the {@link ScalarSource} used to produce scalar types from {@link ConfigElement}s,
      *                               and vice versa
+     * @param writeDefaults          whether this mapper should write configuration data when it is equal to a supplied
+     *                               default value
      */
     public MappingConfigProcessor(@NotNull Token<T> token, @NotNull SignatureMatcher.Source signatureMatcherSource,
-        @NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver, @NotNull ScalarSource scalarSource) {
+        @NotNull TypeHinter typeHinter, @NotNull TypeResolver typeResolver, @NotNull ScalarSource scalarSource,
+        boolean writeDefaults) {
         this.token = Objects.requireNonNull(token);
         this.signatureMatcherSource = Objects.requireNonNull(signatureMatcherSource);
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.typeResolver = Objects.requireNonNull(typeResolver);
         this.scalarSource = Objects.requireNonNull(scalarSource);
-        this.writeDefaults = false;
+        this.writeDefaults = writeDefaults;
     }
 
     @SuppressWarnings("unchecked")
@@ -179,8 +182,10 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
             return Graph.process(rootEntry, nodeEntry -> {
                     Object nodeObject = nodeEntry.object;
+
                     MatchingSignature typeSignature =
                         nodeEntry.signatureMatcher.signatureForObject(nodeEntry.type, nodeObject);
+
                     Signature<?> signature = typeSignature.signature();
                     int size = typeSignature.size();
 
@@ -188,6 +193,13 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                     nodeEntry.element = target;
 
                     Iterator<Signature.TypedObject> typedObjectIterator = typeSignature.objects().iterator();
+
+                    Iterator<Signature.TypedObject> outputIterator;
+                    if (!writeDefaults) {
+                        outputIterator = typeSignature.objects().iterator();
+                    } else {
+                        outputIterator = null;
+                    }
 
                     return Graph.node(new Iterator<>() {
                         private int i;
@@ -210,13 +222,23 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             return Entry.of(typedObject.name(),
                                 new ElementEntry(objectType, typedObject.value(), thisMatcher));
                         }
-                    }, Graph.output(nodeEntry.element, (String key, ConfigElement value, boolean circular) -> {
-                        if (target.isList()) {
-                            target.asList().add(value);
-                        } else {
-                            target.asNode().put(key, value);
-                        }
-                    }));
+                    }, Graph.output(nodeEntry.element,
+                        (Graph.Accumulator<String, ConfigElement>) (key, element, visited) -> {
+                            if (!writeDefaults) {
+                                Signature.TypedObject object = outputIterator.next();
+                                ConfigElement defaultValue = object.defaultValue();
+
+                                if (element.equals(defaultValue)) {
+                                    return;
+                                }
+                            }
+
+                            if (target.isList()) {
+                                target.asList().add(element);
+                            } else {
+                                target.asNode().put(key, element);
+                            }
+                        }));
                 }, this::objectToElementContainerPredicate, scalar -> scalarSource.makeElement(scalar.object,
                     scalar.type),
                 entry -> entry.object, GRAPH_OPTIONS);
