@@ -341,8 +341,9 @@ public interface MappingProcessorSource {
          * object's value is the same as the default. This is {@code false} by default.
          * @param writeDefaults whether or write defaults
          */
-        public void writingDefaults(boolean writeDefaults) {
+        public @NotNull Builder writingDefaults(boolean writeDefaults) {
             this.writeDefaults = writeDefaults;
+            return this;
         }
 
         /**

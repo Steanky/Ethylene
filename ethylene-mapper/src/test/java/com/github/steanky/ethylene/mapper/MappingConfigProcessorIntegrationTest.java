@@ -348,6 +348,27 @@ class MappingConfigProcessorIntegrationTest {
 
             assertEquals(new Data("KEY", 69), data);
         }
+
+        @Test
+        void avoidsWritingDefaults() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().ignoringLengths().build();
+
+            ConfigProcessor<Data> processor = source.processorFor(new Token<>() {});
+            ConfigElement element = processor.elementFromData(new Data("some key", -1));
+
+            assertEquals(ConfigNode.of("key", "some key"), element);
+        }
+
+        @Test
+        void writesDefaultsWhenForced() throws ConfigProcessException {
+            MappingProcessorSource source = MappingProcessorSource.builder().ignoringLengths()
+                .writingDefaults(true).build();
+
+            ConfigProcessor<Data> processor = source.processorFor(new Token<>() {});
+            ConfigElement element = processor.elementFromData(new Data("some key", -1));
+
+            assertEquals(ConfigNode.of("key", "some key", "value", -1), element);
+        }
     }
 
     @Nested
