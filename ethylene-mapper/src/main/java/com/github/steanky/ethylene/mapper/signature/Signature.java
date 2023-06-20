@@ -217,6 +217,7 @@ public interface Signature<TReturn> extends Prioritized {
          * @param name  the name of this TypedObject; can be null to indicate no name
          * @param type  the type associated with the value object
          * @param value the value object itself
+         * @param defaultValue the default value; can be null
          */
         public TypedObject(@Nullable String name, @NotNull Token<?> type, @Nullable Object value,
             @Nullable ConfigElement defaultValue) {

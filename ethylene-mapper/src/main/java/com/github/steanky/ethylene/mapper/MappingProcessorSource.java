@@ -339,6 +339,7 @@ public interface MappingProcessorSource {
         /**
          * Causes processors created by this builder to write default values to the output node, even when the
          * object's value is the same as the default.
+         * @return this builder, for chaining
          */
         public @NotNull Builder writingDefaults() {
             this.writeDefaults = true;
