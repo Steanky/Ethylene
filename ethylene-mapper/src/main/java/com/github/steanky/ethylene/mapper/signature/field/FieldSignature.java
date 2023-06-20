@@ -218,11 +218,12 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
         SignatureData data = resolveData();
         if (data.fields.isEmpty()) {
-            return types = new Info(List.of(), Map.of());
+            return types = new Info(List.of(), Map.of(), Map.of());
         }
 
         Class<?> rawClass = ReflectionUtils.resolve(rawTypeReference, rawTypeName);
-        Map<String, Method> map = ReflectionUtils.constructDefaultMethodMap(rawClass);
+        Map<String, ConfigElement> map = ReflectionUtils.constructDefaultValueMap(rawClass);
+
         if (data.fields.size() == 1) {
             Field first = data.fields.get(0);
             String fieldName = ReflectionUtils.getFieldName(first);
@@ -234,7 +235,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
                 varMapping = Map.of();
             }
 
-            return types = new Info(List.of(makeEntry(fieldName, firstType, map)), varMapping);
+            return types = new Info(List.of(makeEntry(fieldName, firstType, map)), varMapping, map);
         }
 
         Collection<Map.Entry<String, SignatureParameter>> typeCollection = new ArrayList<>(data.fields.size());
@@ -249,12 +250,11 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
             typeCollection.add(makeEntry(fieldName, fieldType, map));
         }
 
-        return types = new Info(List.copyOf(typeCollection), Map.copyOf(varMapping));
+        return types = new Info(List.copyOf(typeCollection), Map.copyOf(varMapping), map);
     }
 
-    private Map.Entry<String, SignatureParameter> makeEntry(String name, Type type, Map<String, Method> defaultMethodMap) {
-        return Entry.of(name, SignatureParameter.parameter(Token.ofType(type),
-            ReflectionUtils.invokeDefaultAccessorIfPresent(defaultMethodMap, name)));
+    private Map.Entry<String, SignatureParameter> makeEntry(String name, Type type, Map<String, ConfigElement> defaultMethodMap) {
+        return Entry.of(name, SignatureParameter.parameter(Token.ofType(type), defaultMethodMap.get(name)));
     }
 
     private SignatureData resolveData() {
@@ -291,7 +291,8 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
         }
     }
 
-    private record Info(Collection<Map.Entry<String, SignatureParameter>> types, Map<String, Token<?>> varMappings) {
+    private record Info(Collection<Map.Entry<String, SignatureParameter>> types, Map<String, Token<?>> varMappings,
+                        Map<String, ConfigElement> defaultValues) {
     }
 
     private record SignatureData(Constructor<?> constructor, List<Field> fields) {

@@ -91,18 +91,17 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
     }
 
     private static Map.Entry<String, SignatureParameter> makeEntry(Parameter parameter, boolean parameterHasName,
-        Map<String, Method> defaultMethodMap) {
+        Map<String, ConfigElement> defaultMethodMap) {
         Name parameterName = parameter.getAnnotation(Name.class);
         Token<?> parameterType = Token.ofType(parameter.getParameterizedType());
         if (parameterName != null) {
             String name = parameterName.value();
             return Entry.of(name, SignatureParameter.parameter(parameterType,
-                ReflectionUtils.invokeDefaultAccessorIfPresent(defaultMethodMap, name)));
+                defaultMethodMap.get(name)));
         }
 
         String name = parameterHasName ? parameter.getName() : null;
-        return Entry.of(name, SignatureParameter.parameter(parameterType, name == null ? null :
-            ReflectionUtils.invokeDefaultAccessorIfPresent(defaultMethodMap, name)));
+        return Entry.of(name, SignatureParameter.parameter(parameterType, name == null ? null : defaultMethodMap.get(name)));
     }
 
     @Override
@@ -246,10 +245,10 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         Constructor<?> constructor = resolveConstructor();
         if (constructor.getParameterCount() == 0) {
             //use empty list if we can
-            return info = new Info(List.of(), Map.of());
+            return info = new Info(List.of(), Map.of(), Map.of());
         }
 
-        Map<String, Method> map = ReflectionUtils.constructDefaultMethodMap(constructor.getDeclaringClass());
+        Map<String, ConfigElement> map = ReflectionUtils.constructDefaultValueMap(constructor.getDeclaringClass());
         Parameter[] parameters = constructor.getParameters();
         if (parameters.length == 1) {
             //alternatively use singleton list
@@ -267,7 +266,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
                 varMapping = Map.of();
             }
 
-            return info = new Info(List.of(entry), varMapping);
+            return info = new Info(List.of(entry), varMapping, map);
         }
 
         //use a backing ArrayList for n > 1 length
@@ -304,7 +303,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
             entryList.add(entry);
         }
 
-        return info = new Info(List.copyOf(entryList), Map.copyOf(varMapping));
+        return info = new Info(List.copyOf(entryList), Map.copyOf(varMapping), map);
     }
 
     private Constructor<?> resolveConstructor() {
@@ -338,6 +337,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         return parameterClasses;
     }
 
-    private record Info(Collection<Map.Entry<String, SignatureParameter>> typeCollection, Map<String, Token<?>> varMappings) {
+    private record Info(Collection<Map.Entry<String, SignatureParameter>> typeCollection, Map<String, Token<?>> varMappings,
+                        Map<String, ConfigElement> defaultValueMap) {
     }
 }

@@ -40,6 +40,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private final TypeHinter typeHinter;
     private final TypeResolver typeResolver;
     private final ScalarSource scalarSource;
+    private final boolean writeDefaults;
 
     /**
      * Creates a new instance of this class.
@@ -58,6 +59,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
         this.typeHinter = Objects.requireNonNull(typeHinter);
         this.typeResolver = Objects.requireNonNull(typeResolver);
         this.scalarSource = Objects.requireNonNull(scalarSource);
+        this.writeDefaults = false;
     }
 
     @SuppressWarnings("unchecked")

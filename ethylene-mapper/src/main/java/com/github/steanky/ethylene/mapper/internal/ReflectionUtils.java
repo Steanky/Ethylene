@@ -206,8 +206,8 @@ public class ReflectionUtils {
      * @param objectClass the class to search in
      * @return an unmodifiable map of strings to methods
      */
-    public static @NotNull @Unmodifiable Map<String, Method> constructDefaultMethodMap(@NotNull Class<?> objectClass) {
-        Map<String, Method> methodMap = new HashMap<>(4);
+    public static @NotNull @Unmodifiable Map<String, ConfigElement> constructDefaultValueMap(@NotNull Class<?> objectClass) {
+        Map<String, ConfigElement> methodMap = new HashMap<>(4);
         for (Method method : objectClass.getDeclaredMethods()) {
             Default defaultAnnotation = method.getAnnotation(Default.class);
             if (defaultAnnotation == null) {
@@ -228,37 +228,20 @@ public class ReflectionUtils {
             }
 
             String value = defaultAnnotation.value();
-            if (methodMap.put(value, method) != null) {
+
+            ConfigElement defaultValue;
+            try {
+                defaultValue = (ConfigElement) method.invoke(null);
+            }
+            catch (InvocationTargetException | IllegalAccessException e) {
+                throw new MapperException("Error invoking default value accessor method", e);
+            }
+
+            if (methodMap.put(value, defaultValue) != null) {
                 throw new MapperException("Duplicate default value suppliers for parameter named " + value);
             }
         }
 
         return Map.copyOf(methodMap);
-    }
-
-    /**
-     * If present in the map under the key {@code name}, tries to invoke the default accessor method and return a
-     * {@link ConfigElement}. If the method could be found but there was a reflection-related exception raised when
-     * invoking it, throws a {@link MapperException}. Otherwise, if the method does not exist, returns null. If the
-     * method exists and is called successfully, the return value is the return value of the method (can be null).
-     * @param defaultMap the default accessor map
-     * @param name the name of the parameter this method provides a default for
-     * @return the default ConfigElement, or null if no such element exists
-     */
-    public static @Nullable ConfigElement invokeDefaultAccessorIfPresent(@NotNull Map<String, Method> defaultMap,
-        @NotNull String name) {
-
-        ConfigElement defaultValue = null;
-        Method defaultValueMethod = defaultMap.get(name);
-        if (defaultValueMethod != null) {
-            try {
-                defaultValue = (ConfigElement)defaultValueMethod.invoke(null);
-            }
-            catch (InvocationTargetException | IllegalAccessException e) {
-                throw new MapperException("Error invoking default value accessor method", e);
-            }
-        }
-
-        return defaultValue;
     }
 }

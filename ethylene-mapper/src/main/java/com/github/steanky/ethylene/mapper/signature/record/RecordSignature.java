@@ -180,11 +180,12 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
 
         RecordComponent[] recordComponents = resolveComponents();
         if (recordComponents.length == 0) {
-            return info = new Info(List.of(), Map.of());
+            return info = new Info(List.of(), Map.of(), Map.of());
         }
 
         Class<?> self = ReflectionUtils.resolve(rawClassReference, rawClassName);
-        Map<String, Method> map = ReflectionUtils.constructDefaultMethodMap(self);
+        Map<String, ConfigElement> map = ReflectionUtils.constructDefaultValueMap(self);
+
         if (recordComponents.length == 1) {
             RecordComponent component = recordComponents[0];
             Type type = component.getGenericType();
@@ -197,7 +198,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
                 varMappings = Map.of();
             }
 
-            return info = new Info(List.of(makeEntry(component, map)), varMappings);
+            return info = new Info(List.of(makeEntry(component, map)), varMappings, map);
         }
 
         List<Map.Entry<String, SignatureParameter>> underlyingList = new ArrayList<>(recordComponents.length);
@@ -213,7 +214,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
             underlyingList.add(makeEntry(component, map));
         }
 
-        return info = new Info(List.copyOf(underlyingList), Map.copyOf(varMappings));
+        return info = new Info(List.copyOf(underlyingList), Map.copyOf(varMappings), map);
     }
 
     private String resolveName(RecordComponent component) {
@@ -225,10 +226,10 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
         return component.getName();
     }
 
-    private Map.Entry<String, SignatureParameter> makeEntry(RecordComponent component, Map<String, Method> defaultMap) {
+    private Map.Entry<String, SignatureParameter> makeEntry(RecordComponent component, Map<String, ConfigElement> defaultMap) {
         String name = resolveName(component);
         return Map.entry(name, SignatureParameter.parameter(Token.ofType(component.getGenericType()),
-            ReflectionUtils.invokeDefaultAccessorIfPresent(defaultMap, name)));
+            defaultMap.get(name)));
     }
 
     private RecordComponent[] resolveComponents() {
@@ -243,6 +244,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
         return recordComponents;
     }
 
-    private record Info(Collection<Map.Entry<String, SignatureParameter>> types, Map<String, Token<?>> varMappings) {
+    private record Info(Collection<Map.Entry<String, SignatureParameter>> types, Map<String, Token<?>> varMappings,
+                        Map<String, ConfigElement> defaultValueMap) {
     }
 }

@@ -202,13 +202,15 @@ public interface Signature<TReturn> extends Prioritized {
     }
 
     /**
-     * An object which has generic type information and optionally a name associated with it.
+     * An object which has generic type information and optionally a name and/or default value associated with it.
      *
      * @param name  the name of this typed object
      * @param type  the generic type information associated with the object
      * @param value the object itself
+     * @param defaultValue the default value for this object
      */
-    record TypedObject(@Nullable String name, @NotNull Token<?> type, @NotNull Object value) {
+    record TypedObject(@Nullable String name, @NotNull Token<?> type, @Nullable Object value,
+                       @Nullable ConfigElement defaultValue) {
         /**
          * Creates a new instance of this record.
          *
@@ -216,20 +218,33 @@ public interface Signature<TReturn> extends Prioritized {
          * @param type  the type associated with the value object
          * @param value the value object itself
          */
-        public TypedObject(@Nullable String name, @NotNull Token<?> type, Object value) {
+        public TypedObject(@Nullable String name, @NotNull Token<?> type, @Nullable Object value,
+            @Nullable ConfigElement defaultValue) {
             this.name = name;
             this.type = Objects.requireNonNull(type);
             this.value = value;
+            this.defaultValue = defaultValue;
         }
 
         /**
-         * Creates a new instance of this record with a null name.
+         * Creates a new instance of this record with a null default value.
+         *
+         * @param name  the name of this TypedObject; can be null to indicate no name
+         * @param type  the type associated with the value object
+         * @param value the value object itself
+         */
+        public TypedObject(@Nullable String name, @NotNull Token<?> type, Object value) {
+            this(name, type, value, null);
+        }
+
+        /**
+         * Creates a new instance of this record with a null name and default value.
          *
          * @param type  the type associated with the value object
          * @param value the value object itself
          */
         public TypedObject(@NotNull Token<?> type, Object value) {
-            this(null, type, value);
+            this(null, type, value, null);
         }
     }
 
