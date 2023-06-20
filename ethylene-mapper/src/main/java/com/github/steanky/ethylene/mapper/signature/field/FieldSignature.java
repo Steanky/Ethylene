@@ -144,6 +144,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
+        Info info = resolveInfo();
         SignatureData data = resolveData();
 
         Collection<TypedObject> typedObjects = new ArrayList<>(data.fields.size());
@@ -152,7 +153,8 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
 
             try {
                 typedObjects.add(
-                    new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object)));
+                    new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object),
+                        info.defaultValueMap.get(name)));
             } catch (IllegalAccessException ignored) {
             }
         }
@@ -292,7 +294,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     }
 
     private record Info(Collection<Map.Entry<String, SignatureParameter>> types, Map<String, Token<?>> varMappings,
-                        Map<String, ConfigElement> defaultValues) {
+                        Map<String, ConfigElement> defaultValueMap) {
     }
 
     private record SignatureData(Constructor<?> constructor, List<Field> fields) {

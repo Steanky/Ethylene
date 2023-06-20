@@ -69,6 +69,8 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
+        Info info = resolveInfo();
+
         RecordComponent[] components = resolveComponents();
         Class<?> rawClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = rawClass.isAnnotationPresent(Widen.class);
@@ -83,9 +85,11 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
                     }
                 }
 
+                String name = resolveName(recordComponent);
+
                 typedObjects.add(
-                    new TypedObject(resolveName(recordComponent), Token.ofType(recordComponent.getGenericType()),
-                        accessor.invoke(object)));
+                    new TypedObject(name, Token.ofType(recordComponent.getGenericType()),
+                        accessor.invoke(object), info.defaultValueMap.get(name)));
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new MapperException(e);
             }

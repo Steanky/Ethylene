@@ -325,7 +325,8 @@ public interface Signature<TReturn> extends Prioritized {
                         public TypedObject next() {
                             Object object = objectIterator.next();
                             Map.Entry<String, SignatureParameter> entry = entryIterator.next();
-                            return new TypedObject(entry.getKey(), entry.getValue().type(), object);
+                            return new TypedObject(entry.getKey(), entry.getValue().type(), object,
+                                entry.getValue().defaultOption());
                         }
                     };
                 }

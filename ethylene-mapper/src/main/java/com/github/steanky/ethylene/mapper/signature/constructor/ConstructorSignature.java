@@ -116,7 +116,8 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
-        Collection<Map.Entry<String, SignatureParameter>> types = resolveInfo().typeCollection;
+        Info info = resolveInfo();
+        Collection<Map.Entry<String, SignatureParameter>> types = info.typeCollection;
 
         Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
@@ -153,7 +154,8 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
 
             try {
                 typedObjects.add(
-                    new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object)));
+                    new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object),
+                        info.defaultValueMap.get(name)));
             } catch (IllegalAccessException ignored) {
                 break;
             }
