@@ -10,6 +10,7 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.signature.MatchingSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureMatcher;
+import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.toolkit.collection.Iterators;
 import org.apache.commons.lang3.ArrayUtils;
@@ -89,7 +90,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                     nodeEntry.reference.setValue(buildingObject);
 
                     Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
-                    Iterator<Map.Entry<String, Token<?>>> typeEntryIterator = signature.argumentTypes().iterator();
+                    Iterator<Map.Entry<String, SignatureParameter>> typeEntryIterator = signature.argumentTypes().iterator();
 
                     //used to resolve correct generic parameters based on the actual type arguments
                     Map<String, Token<?>> typeVariableOverrides = signature.genericMappings();
@@ -119,7 +120,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             }
 
                             ConfigElement nextElement = elementIterator.next();
-                            Map.Entry<String, Token<?>> entry = typeEntryIterator.next();
+                            Map.Entry<String, SignatureParameter> entry = typeEntryIterator.next();
 
                             Token<?> actualType = null;
 
@@ -134,7 +135,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             }
 
                             if (actualType == null) {
-                                actualType = entry.getValue();
+                                actualType = entry.getValue().type();
                             }
 
                             Token<?> nextType = typeResolver.resolveType(actualType, nextElement);

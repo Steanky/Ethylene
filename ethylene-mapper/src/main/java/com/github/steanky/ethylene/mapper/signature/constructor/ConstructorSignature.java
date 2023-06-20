@@ -12,6 +12,7 @@ import com.github.steanky.ethylene.mapper.annotation.Priority;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
@@ -89,18 +90,18 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         return priority.value();
     }
 
-    private static Map.Entry<String, Token<?>> makeEntry(Parameter parameter, boolean parameterHasName) {
+    private static Map.Entry<String, SignatureParameter> makeEntry(Parameter parameter, boolean parameterHasName) {
         Name parameterName = parameter.getAnnotation(Name.class);
         Token<?> parameterType = Token.ofType(parameter.getParameterizedType());
         if (parameterName != null) {
-            return Entry.of(parameterName.value(), parameterType);
+            return Entry.of(parameterName.value(), SignatureParameter.parameter(parameterType));
         }
 
-        return Entry.of(parameterHasName ? parameter.getName() : null, parameterType);
+        return Entry.of(parameterHasName ? parameter.getName() : null, SignatureParameter.parameter(parameterType));
     }
 
     @Override
-    public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
+    public @NotNull Iterable<Map.Entry<String, SignatureParameter>> argumentTypes() {
         return resolveInfo().typeCollection;
     }
 
@@ -111,7 +112,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
 
     @Override
     public @NotNull Collection<TypedObject> objectData(@NotNull T object) {
-        Collection<Map.Entry<String, Token<?>>> types = resolveInfo().typeCollection;
+        Collection<Map.Entry<String, SignatureParameter>> types = resolveInfo().typeCollection;
 
         Class<?> declaringClass = ReflectionUtils.resolve(rawClassReference, rawClassName);
         boolean widenAccess = declaringClass.isAnnotationPresent(Widen.class);
@@ -121,7 +122,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         int i = 0;
         Collection<TypedObject> typedObjects = new ArrayList<>(types.size());
         Map<String, Field> fieldMap = null;
-        for (Map.Entry<String, Token<?>> typeEntry : types) {
+        for (Map.Entry<String, SignatureParameter> typeEntry : types) {
             Field field;
             String name;
             if (matchesNames) {
@@ -248,7 +249,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
             //alternatively use singleton list
             Parameter first = parameters[0];
 
-            Map.Entry<String, Token<?>> entry = makeEntry(first, first.isNamePresent());
+            Map.Entry<String, SignatureParameter> entry = makeEntry(first, first.isNamePresent());
             matchesNames = entry.getKey() != null;
 
             Type type = first.getParameterizedType();
@@ -264,13 +265,13 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         }
 
         //use a backing ArrayList for n > 1 length
-        List<Map.Entry<String, Token<?>>> entryList = new ArrayList<>(parameters.length);
+        List<Map.Entry<String, SignatureParameter>> entryList = new ArrayList<>(parameters.length);
         Map<String, Token<?>> varMapping = new HashMap<>(parameters.length);
 
         Parameter first = parameters[0];
 
         boolean parameterHasName = first.isNamePresent();
-        Map.Entry<String, Token<?>> firstEntry = makeEntry(first, parameterHasName);
+        Map.Entry<String, SignatureParameter> firstEntry = makeEntry(first, parameterHasName);
         matchesNames = firstEntry.getKey() != null;
 
         Type firstType = first.getParameterizedType();
@@ -284,7 +285,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         for (int i = 1; i < parameters.length; i++) {
             Parameter parameter = parameters[i];
 
-            Map.Entry<String, Token<?>> entry = makeEntry(parameter, parameterHasName);
+            Map.Entry<String, SignatureParameter> entry = makeEntry(parameter, parameterHasName);
             if (firstNonNullName == (entry.getKey() == null)) {
                 throw new MapperException("Inconsistent parameter naming");
             }
@@ -331,6 +332,6 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
         return parameterClasses;
     }
 
-    private record Info(Collection<Map.Entry<String, Token<?>>> typeCollection, Map<String, Token<?>> varMappings) {
+    private record Info(Collection<Map.Entry<String, SignatureParameter>> typeCollection, Map<String, Token<?>> varMappings) {
     }
 }

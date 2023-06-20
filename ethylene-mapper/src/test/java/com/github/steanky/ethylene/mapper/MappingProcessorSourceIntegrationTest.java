@@ -9,6 +9,7 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.annotation.*;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ class MappingProcessorSourceIntegrationTest {
         Signature<ObjectWithCustomSignature> signature = Signature.<ObjectWithCustomSignature>builder(new Token<>() {
                                                                                                       }, (ignored,
                 args) -> new ObjectWithCustomSignature(args.get(0)), object -> List.of(object.value),
-            Map.entry("value", Token.INTEGER)).build();
+            Map.entry("value", SignatureParameter.parameter(Token.INTEGER))).build();
 
         MappingProcessorSource source = MappingProcessorSource.builder().withCustomSignature(signature).build();
         ConfigProcessor<ObjectWithCustomSignature> processor =
@@ -173,8 +174,8 @@ class MappingProcessorSourceIntegrationTest {
             Signature<ScalarAndNonScalarRecord> nonScalar =
                 Signature.builder(Token.ofClass(ScalarAndNonScalarRecord.class), (ignored, args) -> {
                             return new ScalarAndNonScalarRecord(args.get(0), args.get(1), args.get(2));
-                        }, object -> List.of(object.x, object.y, object.z), Map.entry("i", Token.INTEGER),
-                        Map.entry("j", Token.INTEGER), Map.entry("k", Token.INTEGER)).matchingNames().matchingTypeHints()
+                        }, object -> List.of(object.x, object.y, object.z), Map.entry("i", SignatureParameter.parameter(Token.INTEGER)),
+                        Map.entry("j", SignatureParameter.parameter(Token.INTEGER)), Map.entry("k", SignatureParameter.parameter(Token.INTEGER))).matchingNames().matchingTypeHints()
                     .build();
 
             ScalarSignature<ScalarAndNonScalarRecord> scalar =

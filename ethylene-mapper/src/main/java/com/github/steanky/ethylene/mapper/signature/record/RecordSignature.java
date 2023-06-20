@@ -8,6 +8,7 @@ import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +57,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
     }
 
     @Override
-    public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
+    public @NotNull Iterable<Map.Entry<String, SignatureParameter>> argumentTypes() {
         return resolveInfo().types;
     }
 
@@ -193,10 +194,10 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
                 varMappings = Map.of();
             }
 
-            return info = new Info(List.of(Map.entry(name, Token.ofType(type))), varMappings);
+            return info = new Info(List.of(Map.entry(name, SignatureParameter.parameter(Token.ofType(type)))), varMappings);
         }
 
-        List<Map.Entry<String, Token<?>>> underlyingList = new ArrayList<>(recordComponents.length);
+        List<Map.Entry<String, SignatureParameter>> underlyingList = new ArrayList<>(recordComponents.length);
         Map<String, Token<?>> varMappings = new HashMap<>(recordComponents.length);
         for (RecordComponent component : recordComponents) {
             Type type = component.getGenericType();
@@ -206,7 +207,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
                 varMappings.put(name, Token.ofType(variable));
             }
 
-            underlyingList.add(Map.entry(component.getName(), Token.ofType(type)));
+            underlyingList.add(Map.entry(component.getName(), SignatureParameter.parameter(Token.ofType(type))));
         }
 
         return info = new Info(List.copyOf(underlyingList), Map.copyOf(varMappings));
@@ -224,6 +225,6 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
         return recordComponents;
     }
 
-    private record Info(Collection<Map.Entry<String, Token<?>>> types, Map<String, Token<?>> varMappings) {
+    private record Info(Collection<Map.Entry<String, SignatureParameter>> types, Map<String, Token<?>> varMappings) {
     }
 }

@@ -10,6 +10,7 @@ import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.annotation.*;
 import com.github.steanky.ethylene.mapper.signature.BasicSignatureBuilderSelector;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.signature.constructor.ConstructorSignatureBuilder;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.jetbrains.annotations.NotNull;
@@ -40,9 +41,9 @@ class MappingConfigProcessorIntegrationTest {
         Signature<Map.Entry<?, ?>> mapEntry = Signature.builder(new Token<Map.Entry<?, ?>>() {
                                                                 }, (entry, objects) -> Map.entry(objects.get(0),
                 objects.get(1)),
-            (entry) -> List.of(entry.getKey(), entry.getValue()), Entry.of("key", new Token<>() {
-            }), Entry.of("value", new Token<>() {
-            })).matchingTypeHints().matchingNames().build();
+            (entry) -> List.of(entry.getKey(), entry.getValue()), Entry.of("key", SignatureParameter.parameter(new Token<>() {
+            })), Entry.of("value", SignatureParameter.parameter(new Token<>() {
+            }))).matchingTypeHints().matchingNames().build();
 
         typeHinter = new BasicTypeHinter(Set.of());
         typeResolver = new BasicTypeResolver(typeHinter,

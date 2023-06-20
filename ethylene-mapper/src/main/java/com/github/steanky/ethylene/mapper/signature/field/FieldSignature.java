@@ -11,6 +11,7 @@ import com.github.steanky.ethylene.mapper.annotation.Include;
 import com.github.steanky.ethylene.mapper.annotation.Widen;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
@@ -132,7 +133,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     }
 
     @Override
-    public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
+    public @NotNull Iterable<Map.Entry<String, SignatureParameter>> argumentTypes() {
         return resolveInfo().types;
     }
 
@@ -231,10 +232,11 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
                 varMapping = Map.of();
             }
 
-            return types = new Info(List.of(Entry.of(fieldName, Token.ofType(firstType))), varMapping);
+            return types = new Info(List.of(Entry.of(fieldName, SignatureParameter.parameter(Token.ofType(firstType)))),
+                varMapping);
         }
 
-        Collection<Map.Entry<String, Token<?>>> typeCollection = new ArrayList<>(data.fields.size());
+        Collection<Map.Entry<String, SignatureParameter>> typeCollection = new ArrayList<>(data.fields.size());
         Map<String, Token<?>> varMapping = new HashMap<>(data.fields.size());
         for (Field field : data.fields) {
             Type fieldType = field.getGenericType();
@@ -243,7 +245,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
                 varMapping.put(fieldName, Token.ofType(variable));
             }
 
-            typeCollection.add(Entry.of(fieldName, Token.ofType(fieldType)));
+            typeCollection.add(Entry.of(fieldName, SignatureParameter.parameter(Token.ofType(fieldType))));
         }
 
         return types = new Info(List.copyOf(typeCollection), Map.copyOf(varMapping));
@@ -283,7 +285,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
         }
     }
 
-    private record Info(Collection<Map.Entry<String, Token<?>>> types, Map<String, Token<?>> varMappings) {
+    private record Info(Collection<Map.Entry<String, SignatureParameter>> types, Map<String, Token<?>> varMappings) {
     }
 
     private record SignatureData(Constructor<?> constructor, List<Field> fields) {

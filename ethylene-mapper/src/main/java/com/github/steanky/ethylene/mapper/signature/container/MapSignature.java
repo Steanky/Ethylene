@@ -50,7 +50,7 @@ public class MapSignature<T> extends ContainerSignatureBase<T> {
 
                     @Override
                     public TypedObject next() {
-                        return new TypedObject(null, MapSignature.this.entry.getValue(), entryIterator.next());
+                        return new TypedObject(null, MapSignature.this.entry.getValue().type(), entryIterator.next());
                     }
                 };
             }

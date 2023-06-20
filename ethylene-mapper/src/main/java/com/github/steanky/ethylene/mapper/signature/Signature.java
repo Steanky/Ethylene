@@ -38,7 +38,7 @@ public interface Signature<TReturn> extends Prioritized {
     static <T> Builder<T> builder(@NotNull Token<T> type,
         @NotNull BiFunction<? super T, ? super Arguments, ? extends T> constructor,
         @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
-        @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
+        @NotNull Map.Entry<String, SignatureParameter> @NotNull ... arguments) {
         return new Builder<>(type, constructor, objectSignatureExtractor, Map.of(), arguments);
     }
 
@@ -59,7 +59,7 @@ public interface Signature<TReturn> extends Prioritized {
         @NotNull BiFunction<? super T, ? super Arguments, ? extends T> constructor,
         @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
         @NotNull Map<String, Token<?>> typeVariableMappings,
-        @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
+        @NotNull Map.Entry<String, SignatureParameter> @NotNull ... arguments) {
         return new Builder<>(type, constructor, objectSignatureExtractor, typeVariableMappings, arguments);
     }
 
@@ -80,7 +80,7 @@ public interface Signature<TReturn> extends Prioritized {
      *
      * @return the argument types iterable
      */
-    @NotNull @Unmodifiable Iterable<Map.Entry<String, Token<?>>> argumentTypes();
+    @NotNull @Unmodifiable Iterable<Map.Entry<String, SignatureParameter>> argumentTypes();
 
     /**
      * Returns the map of {@link TypeVariable}-containing {@link Token}s to argument types.
@@ -238,7 +238,7 @@ public interface Signature<TReturn> extends Prioritized {
      */
     @ApiStatus.Internal
     final class SignatureImpl<T> extends PrioritizedBase implements Signature<T> {
-        private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
+        private final Collection<Map.Entry<String, SignatureParameter>> argumentTypes;
         private final Map<String, Token<?>> typeVariableMappings;
         private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
         private final BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction;
@@ -246,20 +246,20 @@ public interface Signature<TReturn> extends Prioritized {
         private final BiFunction<? super T, ? super Arguments, ? extends T> constructor;
         private final boolean matchNames;
         private final boolean matchTypeHints;
-        private final BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ?
+        private final BiFunction<? super Collection<? extends Map.Entry<String, SignatureParameter>>, ? super ConfigElement, ?
             extends Integer>
             lengthFunction;
         private final ElementType typeHint;
         private final Token<T> returnType;
 
-        private SignatureImpl(int priority, Collection<Map.Entry<String, Token<?>>> argumentTypes,
+        private SignatureImpl(int priority, Collection<Map.Entry<String, SignatureParameter>> argumentTypes,
             Map<String, Token<?>> typeVariableMappings,
             Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
             BiFunction<? super ElementType, ? super Integer, ? extends ConfigContainer> containerFunction,
             Function<? super ConfigElement, ? extends T> buildingObjectInitializer,
             BiFunction<? super T, ? super Arguments, ? extends T> constructor, boolean matchNames,
             boolean matchTypeHints,
-            BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ?
+            BiFunction<? super Collection<? extends Map.Entry<String, SignatureParameter>>, ? super ConfigElement, ?
                 extends Integer> lengthFunction,
             ElementType typeHint, Token<T> returnType) {
             super(priority);
@@ -277,7 +277,7 @@ public interface Signature<TReturn> extends Prioritized {
         }
 
         @Override
-        public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
+        public @NotNull Iterable<Map.Entry<String, SignatureParameter>> argumentTypes() {
             return argumentTypes;
         }
 
@@ -299,7 +299,7 @@ public interface Signature<TReturn> extends Prioritized {
                 public Iterator<TypedObject> iterator() {
                     return new Iterator<>() {
                         private final Iterator<Object> objectIterator = args.iterator();
-                        private final Iterator<Map.Entry<String, Token<?>>> entryIterator = argumentTypes.iterator();
+                        private final Iterator<Map.Entry<String, SignatureParameter>> entryIterator = argumentTypes.iterator();
 
                         @Override
                         public boolean hasNext() {
@@ -309,8 +309,8 @@ public interface Signature<TReturn> extends Prioritized {
                         @Override
                         public TypedObject next() {
                             Object object = objectIterator.next();
-                            Map.Entry<String, Token<?>> entry = entryIterator.next();
-                            return new TypedObject(entry.getKey(), entry.getValue(), object);
+                            Map.Entry<String, SignatureParameter> entry = entryIterator.next();
+                            return new TypedObject(entry.getKey(), entry.getValue().type(), object);
                         }
                     };
                 }
@@ -377,7 +377,7 @@ public interface Signature<TReturn> extends Prioritized {
         private final BiFunction<? super T, ? super Arguments, ? extends T> constructor;
         private final Token<T> returnType;
         private final Function<? super T, ? extends Collection<Object>> objectSignatureExtractor;
-        private final Collection<Map.Entry<String, Token<?>>> argumentTypes;
+        private final Collection<Map.Entry<String, SignatureParameter>> argumentTypes;
         private final Map<String, Token<?>> typeVariableMappings;
 
         private int priority;
@@ -385,7 +385,7 @@ public interface Signature<TReturn> extends Prioritized {
         private boolean matchTypeHints;
         private ElementType typeHint = ElementType.NODE;
         private Function<? super ConfigElement, ? extends T> buildingObjectInitializer;
-        private BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ?
+        private BiFunction<? super Collection<? extends Map.Entry<String, SignatureParameter>>, ? super ConfigElement, ?
             extends Integer>
             lengthFunction = (types, element) -> types.size();
 
@@ -403,7 +403,7 @@ public interface Signature<TReturn> extends Prioritized {
             @NotNull BiFunction<? super T, ? super Arguments, ? extends T> constructor,
             @NotNull Function<? super T, ? extends Collection<Object>> objectSignatureExtractor,
             @NotNull Map<String, Token<?>> typeVariableMappings,
-            @NotNull Map.Entry<String, Token<?>> @NotNull ... arguments) {
+            @NotNull Map.Entry<String, SignatureParameter> @NotNull ... arguments) {
             this.constructor = Objects.requireNonNull(constructor);
             this.returnType = Objects.requireNonNull(returnType);
             this.objectSignatureExtractor = Objects.requireNonNull(objectSignatureExtractor);
@@ -418,7 +418,7 @@ public interface Signature<TReturn> extends Prioritized {
             }
 
             this.argumentTypes = new ArrayList<>(arguments.length);
-            for (Map.Entry<String, Token<?>> entry : arguments) {
+            for (Map.Entry<String, SignatureParameter> entry : arguments) {
                 argumentTypes.add(Map.entry(entry.getKey(), entry.getValue()));
             }
         }
@@ -485,7 +485,7 @@ public interface Signature<TReturn> extends Prioritized {
          * @return this builder, for chaining
          */
         public @NotNull Builder<T> withLengthFunction(
-            @NotNull BiFunction<? super Collection<? extends Map.Entry<String, Token<?>>>, ? super ConfigElement, ?
+            @NotNull BiFunction<? super Collection<? extends Map.Entry<String, SignatureParameter>>, ? super ConfigElement, ?
                 extends Integer> lengthFunction) {
             this.lengthFunction = Objects.requireNonNull(lengthFunction);
             return this;

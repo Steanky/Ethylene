@@ -8,6 +8,7 @@ import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.PrioritizedBase;
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
+import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +18,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -35,7 +35,7 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
     /**
      * The immutable {@link Map.Entry} returned by the {@link Signature#argumentTypes()} iterator for this class.
      */
-    protected final Map.Entry<String, Token<?>> entry;
+    protected final Map.Entry<String, SignatureParameter> entry;
 
     /**
      * The container type token, for use by subclasses.
@@ -53,7 +53,7 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
      */
     public ContainerSignatureBase(@NotNull Token<?> componentType, @NotNull Token<T> containerType) {
         super(0);
-        this.entry = Entry.of(null, componentType);
+        this.entry = Entry.of(null, SignatureParameter.parameter(componentType));
         this.containerType = containerType;
 
         ReflectionUtils.validateNotAbstract(containerType);
@@ -92,7 +92,7 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
     }
 
     @Override
-    public @NotNull Iterable<Map.Entry<String, Token<?>>> argumentTypes() {
+    public @NotNull Iterable<Map.Entry<String, SignatureParameter>> argumentTypes() {
         return () -> new Iterator<>() {
             @Override
             public boolean hasNext() {
@@ -100,7 +100,7 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
             }
 
             @Override
-            public Map.Entry<String, Token<?>> next() {
+            public Map.Entry<String, SignatureParameter> next() {
                 return entry;
             }
         };

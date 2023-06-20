@@ -48,7 +48,7 @@ public class CollectionSignature<T> extends ContainerSignatureBase<T> {
 
                     @Override
                     public TypedObject next() {
-                        return new TypedObject(null, CollectionSignature.this.entry.getValue(),
+                        return new TypedObject(null, CollectionSignature.this.entry.getValue().type(),
                             collectionIterator.next());
                     }
                 };

@@ -47,7 +47,7 @@ public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
                             throw new NoSuchElementException();
                         }
 
-                        return new TypedObject(null, ArraySignature.super.entry.getValue(), object[i++]);
+                        return new TypedObject(null, ArraySignature.super.entry.getValue().type(), object[i++]);
                     }
                 };
             }

@@ -55,7 +55,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             return new MatchingSignature(signature, null, objectData, length);
         }
 
-        Iterable<Map.Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
+        Iterable<Map.Entry<String, SignatureParameter>> signatureTypes = signature.argumentTypes();
         Collection<Signature.TypedObject> typeCollection;
         if (matchNames) {
             typeCollection = new ArrayList<>(objectData.size());
@@ -64,7 +64,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
                 objectDataMap.put(entry.name(), entry);
             }
 
-            for (Map.Entry<String, Token<?>> entry : signatureTypes) {
+            for (Map.Entry<String, SignatureParameter> entry : signatureTypes) {
                 Signature.TypedObject typedObject = objectDataMap.get(entry.getKey());
                 if (typedObject == null) {
                     return null;
@@ -79,10 +79,10 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         if (matchTypeHints) {
             Iterator<Signature.TypedObject> typeCollectionIterator = typeCollection.iterator();
 
-            for (Map.Entry<String, Token<?>> signatureType : signatureTypes) {
+            for (Map.Entry<String, SignatureParameter> signatureType : signatureTypes) {
                 if (typeCollectionIterator.hasNext()) {
                     Signature.TypedObject typedObject = typeCollectionIterator.next();
-                    if (typeHinter.getHint(typedObject.type()) != typeHinter.getHint(signatureType.getValue())) {
+                    if (typeHinter.getHint(typedObject.type()) != typeHinter.getHint(signatureType.getValue().type())) {
                         return null;
                     }
                 } else {
@@ -114,14 +114,14 @@ public class BasicSignatureMatcher implements SignatureMatcher {
             return new MatchingSignature(signature, elementCollection, null, signatureLength);
         }
 
-        Iterable<Map.Entry<String, Token<?>>> signatureTypes = signature.argumentTypes();
+        Iterable<Map.Entry<String, SignatureParameter>> signatureTypes = signature.argumentTypes();
         Collection<ConfigElement> targetCollection;
         if (matchNames) {
             ConfigNode providedNode = providedElement.asNode();
             targetCollection = new ArrayList<>(elementCollection.size());
 
             //this ensures that the order is respected when matching names
-            for (Map.Entry<String, Token<?>> entry : signatureTypes) {
+            for (Map.Entry<String, SignatureParameter> entry : signatureTypes) {
                 String name = entry.getKey();
                 ConfigElement element = providedNode.get(name);
                 if (element == null) {
@@ -137,11 +137,11 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         if (matchTypeHints) {
             Iterator<ConfigElement> elementIterator = targetCollection.iterator();
 
-            for (Map.Entry<String, Token<?>> signatureTypeEntry : signatureTypes) {
+            for (Map.Entry<String, SignatureParameter> signatureTypeEntry : signatureTypes) {
                 if (elementIterator.hasNext()) {
                     ConfigElement element = elementIterator.next();
 
-                    if (!typeHinter.assignable(element, signatureTypeEntry.getValue())) {
+                    if (!typeHinter.assignable(element, signatureTypeEntry.getValue().type())) {
                         return null;
                     }
                 } else {
@@ -153,7 +153,7 @@ public class BasicSignatureMatcher implements SignatureMatcher {
         return new MatchingSignature(signature, targetCollection, null, signatureLength);
     }
 
-    private MatchingSignature signatureForElement(Token<?> typeToken, ConfigElement providedElement,
+    private MatchingSignature signatureForElement(ConfigElement providedElement,
         Object providedObject) {
         MatchingSignature bestSignature = null;
 
@@ -193,11 +193,11 @@ public class BasicSignatureMatcher implements SignatureMatcher {
     @Override
     public @NotNull MatchingSignature signatureForElement(@NotNull Token<?> desiredType,
         @NotNull ConfigElement providedElement) {
-        return signatureForElement(desiredType, providedElement, null);
+        return signatureForElement(providedElement, null);
     }
 
     @Override
     public @NotNull MatchingSignature signatureForObject(@NotNull Token<?> desiredType, @NotNull Object object) {
-        return signatureForElement(desiredType, null, object);
+        return signatureForElement(null, object);
     }
 }
