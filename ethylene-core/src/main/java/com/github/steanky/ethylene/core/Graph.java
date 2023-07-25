@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core;
 
 import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
@@ -91,7 +92,7 @@ public final class Graph {
         @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
         @NotNull Predicate<? super TIn> containerPredicate, @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
         Function<? super TIn, ? extends TVisit> visitKeyMapper,
-        Supplier<? extends Map<? super TVisit, TOut>> visitedSupplier,
+        Supplier<? extends Map<Object, TOut>> visitedSupplier,
         @NotNull Supplier<? extends Deque<Node<TIn, TOut, TKey>>> stackSupplier, int flags) {
         if (!containerPredicate.test(rootInput)) {
             //if rootInput is a scalar, just return whatever the scalar mapper produces
@@ -113,10 +114,13 @@ public final class Graph {
 
         //don't initialize the visitation map if there is no support for circular references
         //make sure usages of this map check circularRefSupport to avoid NPE
-        Map<? super TVisit, TOut> visited = null;
         if (circularRefSupport) {
-            visited = visitedSupplier.get();
-            visited.put(visitKeyMapper.apply(rootInput), rootNode.output.data);
+            rootNode.identity = visitKeyMapper.apply(rootInput);
+        }
+
+        Map<Object, TOut> scalarMap = null;
+        if (trackScalarReference) {
+            scalarMap = visitedSupplier.get();
         }
 
         Deque<Node<TIn, TOut, TKey>> stack = stackSupplier.get();
@@ -137,24 +141,25 @@ public final class Graph {
                     //nodes that aren't containers have no children, so we can immediately add them to the accumulator
                     if (hasOutput) {
                         TOut out;
-                        boolean circular;
+                        boolean visited;
 
-                        //keep track of scalar references in the same way as nodes, if enabled
-                        if (circularRefSupport && trackScalarReference) {
+                        if (trackScalarReference) {
                             TVisit visit = visitKeyMapper.apply(entryInput);
-                            if (visited.containsKey(visit)) {
-                                out = visited.get(visit);
-                                circular = true;
-                            } else {
-                                out = scalarMapper.apply(entryInput);
-                                circular = false;
+                            if (scalarMap.containsKey(visit)) {
+                                out = scalarMap.get(visit);
+                                visited = true;
                             }
-                        } else {
+                            else {
+                                scalarMap.put(visit, out = scalarMapper.apply(entryInput));
+                                visited = false;
+                            }
+                        }
+                        else {
                             out = scalarMapper.apply(entryInput);
-                            circular = false;
+                            visited = false;
                         }
 
-                        node.output.accumulator.accept(entryKey, out, circular);
+                        node.output.accumulator.accept(entryKey, out, visited);
                     }
 
                     continue;
@@ -166,7 +171,7 @@ public final class Graph {
                     visit = visitKeyMapper.apply(entryInput);
 
                     //check containsKey, null values are allowed in the map
-                    if (visited.containsKey(visit)) {
+                    if (node.hasParent(visit)) {
                         /*
                         already-visited references are immediately added to the accumulator. if these references are
                         nodes, their output might not have been fully constructed yet. it might not even be possible to
@@ -174,7 +179,7 @@ public final class Graph {
                         them to the accumulator, and let it know the reference is circular
                          */
                         if (hasOutput) {
-                            node.output.accumulator.accept(entryKey, visited.get(visit), true);
+                            node.output.accumulator.accept(entryKey, node.getParent(visit), true);
                         }
 
                         continue;
@@ -183,7 +188,8 @@ public final class Graph {
 
                 Node<TIn, TOut, TKey> newNode = nodeFunction.apply(entryInput);
                 if (circularRefSupport) {
-                    visited.put(visit, newNode.output.data);
+                    newNode.parent = node;
+                    newNode.identity = visit;
                 }
 
                 if (isEmpty(newNode)) {
@@ -369,9 +375,9 @@ public final class Graph {
          *
          * @param key     the key component of the value
          * @param out     the value component
-         * @param visited whether this input has been visited before
+         * @param circular whether this input is a circular reference
          */
-        void accept(TKey key, TOut out, boolean visited);
+        void accept(TKey key, TOut out, boolean circular);
     }
 
     /**
@@ -444,10 +450,39 @@ public final class Graph {
 
         private NodeResult<TKey, TOut> result;
 
+        private Node<TIn, TOut, TKey> parent;
+        private Object identity;
+
         private Node(@NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator,
             @NotNull Output<TOut, ? super TKey> output) {
             this.inputIterator = inputIterator;
             this.output = output;
+        }
+
+        private TOut getParent(@Nullable Object identity) {
+            Node<TIn, TOut, TKey> current = this;
+            while (current != null) {
+                if (current.identity == identity) {
+                    return current.output.data;
+                }
+
+                current = current.parent;
+            }
+
+            return null;
+        }
+
+        private boolean hasParent(@Nullable Object identity) {
+            Node<TIn, TOut, TKey> current = this;
+            while (current != null) {
+                if (current.identity == identity) {
+                    return true;
+                }
+
+                current = current.parent;
+            }
+
+            return false;
         }
 
         private boolean hasResult() {

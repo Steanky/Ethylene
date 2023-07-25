@@ -89,7 +89,7 @@ final class ConfigContainers {
                     private int i;
 
                     @Override
-                    public void accept(String s, ConfigElement element, boolean visited) {
+                    public void accept(String s, ConfigElement element, boolean circular) {
                         underlyingArray[i++] = element;
                     }
                 });
