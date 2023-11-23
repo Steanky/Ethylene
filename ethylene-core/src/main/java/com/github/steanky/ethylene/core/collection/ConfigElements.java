@@ -134,7 +134,13 @@ final class ConfigElements {
                 ConfigElement entryElement = entry.getValue();
 
                 if (entryElement.isScalar()) {
-                    hashEntry.hash(entryElement.hashCode());
+                    if (hashEntry.list) {
+                        hashEntry.hash(entryElement.hashCode());
+                    }
+                    else {
+                        hashEntry.hash(entry.getKey().hashCode() ^ entryElement.hashCode());
+                    }
+
                     continue;
                 }
 
@@ -407,8 +413,13 @@ final class ConfigElements {
             return first.equals(second);
         }
 
+        ConfigContainer secondContainer = containerWrapper(second);
+        if (first.asContainer().entryCollection().isEmpty()) {
+            return secondContainer.entryCollection().isEmpty();
+        }
+
         Deque<StackEntry> stack = new ArrayDeque<>();
-        stack.push(new StackEntry(first.asContainer(), containerWrapper(second)));
+        stack.push(new StackEntry(first.asContainer(), secondContainer));
 
         //visited containers
         Set<ConfigContainer> visited = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -483,13 +494,14 @@ final class ConfigElements {
                     continue;
                 }
 
+                ConfigContainer firstContainer = firstValue.asContainer();
+
                 //cycle detected!
                 //we already visited this container, meaning we already compared it, so do nothing
-                if (visited.contains(first.asContainer())) {
+                if (visited.contains(firstContainer)) {
                     continue;
                 }
 
-                ConfigContainer firstContainer = firstValue.asContainer();
                 stack.push(new StackEntry(firstContainer, secondValue.asContainer()));
                 visited.add(firstContainer);
             }

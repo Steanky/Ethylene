@@ -74,4 +74,48 @@ class ConfigPrimitiveTest {
         assertThrows(IllegalStateException.class, string::asList);
         assertThrows(IllegalStateException.class, string::asNode);
     }
+
+    @Test
+    void caching() {
+        ConfigPrimitive cacheEmpty = ConfigPrimitive.of("");
+        ConfigPrimitive other = ConfigPrimitive.of("");
+        assertSame(cacheEmpty, other);
+
+        for (int i = -128; i <= 127; i++) {
+            ConfigPrimitive firstLong = ConfigPrimitive.of((long)i);
+            ConfigPrimitive secondLong = ConfigPrimitive.of((long)i);
+
+            assertSame(firstLong, secondLong);
+            assertEquals(firstLong.asNumber(), (long)i);
+
+            ConfigPrimitive firstInteger = ConfigPrimitive.of(i);
+            ConfigPrimitive secondInteger = ConfigPrimitive.of(i);
+
+            assertSame(firstInteger, secondInteger);
+            assertEquals(firstInteger.asNumber(), i);
+
+            assertSame(firstInteger, secondInteger);
+            assertEquals(firstInteger.asNumber(), i);
+
+            ConfigPrimitive firstShort = ConfigPrimitive.of((short)i);
+            ConfigPrimitive secondShort = ConfigPrimitive.of((short)i);
+
+            assertSame(firstShort, secondShort);
+            assertEquals(firstShort.asNumber(), (short)i);
+
+            ConfigPrimitive firstByte = ConfigPrimitive.of((byte) i);
+            ConfigPrimitive secondByte = ConfigPrimitive.of((byte) i);
+
+            assertSame(firstByte, secondByte);
+            assertEquals(firstByte.asNumber(), (byte)i);
+        }
+
+        for (int i = 0; i <= 127; i++) {
+            ConfigPrimitive firstChar = ConfigPrimitive.of((char) i);
+            ConfigPrimitive secondChar = ConfigPrimitive.of((char)i);
+
+            assertSame(firstChar, secondChar);
+            assertEquals(firstChar.asString(), Character.toString((char)i));
+        }
+    }
 }

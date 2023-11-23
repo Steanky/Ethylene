@@ -194,7 +194,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class ConfigListView extends AbstractConfigList implements Immutable {
+    private static final class ConfigListView extends AbstractConfigList implements Immutable, RandomAccess {
         private final ConfigList underlying;
 
         private ConfigListView(ConfigList underlying) {
@@ -232,7 +232,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class EmptyImmutableConfigList extends AbstractConfigList implements Immutable {
+    private static final class EmptyImmutableConfigList extends AbstractConfigList implements Immutable, RandomAccess {
         private static final ConfigList INSTANCE = new EmptyImmutableConfigList();
 
         private EmptyImmutableConfigList() {
@@ -241,12 +241,12 @@ final class ConfigContainers {
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return Collections.emptyList();
+            return List.of();
         }
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-            return Collections.emptyList();
+            return List.of();
         }
 
         @Override
@@ -278,12 +278,12 @@ final class ConfigContainers {
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return Collections.emptyList();
+            return List.of();
         }
 
         @Override
         public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-            return Collections.emptyList();
+            return List.of();
         }
 
         @Override
@@ -314,19 +314,19 @@ final class ConfigContainers {
         @NotNull
         @Override
         public Set<String> keySet() {
-            return Collections.emptySet();
+            return Set.of();
         }
 
         @NotNull
         @Override
         public Collection<ConfigElement> values() {
-            return Collections.emptyList();
+            return List.of();
         }
 
         @NotNull
         @Override
         public Set<Entry<String, ConfigElement>> entrySet() {
-            return Collections.emptySet();
+            return Set.of();
         }
     }
 
@@ -380,7 +380,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class ImmutableConfigList extends AbstractConfigList implements Immutable {
+    private static final class ImmutableConfigList extends AbstractConfigList implements Immutable, RandomAccess {
         private final ConfigElement[] elements;
 
         private ImmutableConfigList(ConfigElement[] elements) {
@@ -406,7 +406,5 @@ final class ConfigContainers {
         public int size() {
             return elements.length;
         }
-
-
     }
 }

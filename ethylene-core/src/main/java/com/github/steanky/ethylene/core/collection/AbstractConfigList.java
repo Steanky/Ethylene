@@ -5,6 +5,10 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import java.util.AbstractList;
 import java.util.List;
 
+/**
+ * Common base class for all {@link ConfigList}. Extends {@link AbstractList}; implements {@link Object#hashCode()},
+ * {@link Object#equals(Object)}, and {@link Object#toString()}.
+ */
 public abstract class AbstractConfigList extends AbstractList<ConfigElement> implements ConfigList {
     @Override
     public boolean equals(Object o) {

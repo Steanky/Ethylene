@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.core;
 
-import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
