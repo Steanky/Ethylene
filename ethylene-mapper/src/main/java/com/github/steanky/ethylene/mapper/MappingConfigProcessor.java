@@ -4,7 +4,6 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
 import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.collection.ConfigContainer;
-import com.github.steanky.ethylene.core.collection.Entry;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.signature.MatchingSignature;
@@ -119,7 +118,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         }
 
                         @Override
-                        public Map.Entry<Object, ClassEntry> next() {
+                        public Graph.InputEntry<String, ClassEntry, Mutable<Object>> next() {
                             if (i++ == signatureSize) {
                                 throw new NoSuchElementException();
                             }
@@ -146,7 +145,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             Token<?> nextType = typeResolver.resolveType(actualType, nextElement);
                             SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType);
 
-                            return Entry.of(null, new ClassEntry(nextType, nextElement, nextMatcher));
+                            return Graph.entry(null, new ClassEntry(nextType, nextElement, nextMatcher));
                         }
                     }, Graph.output(nodeEntry.reference, new Graph.Accumulator<>() {
                         private int i;
@@ -218,7 +217,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         }
 
                         @Override
-                        public Map.Entry<String, ElementEntry> next() {
+                        public Graph.InputEntry<String, ElementEntry, ConfigElement> next() {
                             if (i++ == size) {
                                 throw new NoSuchElementException();
                             }
@@ -244,7 +243,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             Token<?> objectType = typeResolver.resolveType(type, null);
                             SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
 
-                            return Entry.of(typedObject.name(),
+                            return Graph.entry(typedObject.name(),
                                 new ElementEntry(objectType, typedObject.value(), thisMatcher));
                         }
                     }, Graph.output(nodeEntry.element,

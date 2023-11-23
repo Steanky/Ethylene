@@ -77,9 +77,9 @@ public class TomlCodec extends AbstractConfigCodec {
                 }
 
                 @Override
-                public Map.Entry<String, Object> next() {
+                public Graph.InputEntry<String, Object, ConfigElement> next() {
                     UnmodifiableConfig.Entry next = backing.next();
-                    return Entry.of(next.getKey(), next.getValue());
+                    return Graph.entry(next.getKey(), next.getValue());
                 }
             }, makeDecodeMap(config.size()));
         }

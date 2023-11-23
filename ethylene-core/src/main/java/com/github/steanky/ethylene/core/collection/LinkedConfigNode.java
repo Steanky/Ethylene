@@ -11,7 +11,7 @@ import java.util.Map;
  *
  * @see LinkedHashMap
  */
-public class LinkedConfigNode extends AbstractConfigNode {
+public class LinkedConfigNode extends BackedConfigNode {
     /**
      * Constructs a new LinkedConfigNode backed by an empty {@link LinkedHashMap}.
      */

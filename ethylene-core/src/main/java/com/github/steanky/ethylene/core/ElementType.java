@@ -5,12 +5,14 @@ package com.github.steanky.ethylene.core;
  */
 public enum ElementType {
     /**
-     * A map-like {@link ConfigElement}, with String keys and ConfigElement values.
+     * A map-like {@link ConfigElement}, with String keys and ConfigElement values. Order is not considered significant
+     * when determining equality between node types.
      */
     NODE,
 
     /**
-     * A list-like {@link ConfigElement}, a (possibly indexed) arrangement of {@link ConfigElement} values.
+     * A list-like {@link ConfigElement}, with an indexed arrangement of {@link ConfigElement} values whose order is
+     * considered significant.
      */
     LIST,
 

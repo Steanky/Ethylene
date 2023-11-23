@@ -112,7 +112,7 @@ public final class Graph {
         boolean depthFirst = Options.hasOption(flags, Options.DEPTH_FIRST);
         boolean lazyAccumulation = depthFirst && Options.hasOption(flags, Options.LAZY_ACCUMULATION);
 
-        //don't initialize the visitation map if there is no support for circular references
+        //don't track node identity if we are not supporting circular references
         //make sure usages of this map check circularRefSupport to avoid NPE
         if (circularRefSupport) {
             rootNode.identity = visitKeyMapper.apply(rootInput);
@@ -132,7 +132,13 @@ public final class Graph {
             boolean hasOutput = hasOutput(node);
             boolean finished = true;
             while (node.inputIterator.hasNext()) {
-                Map.Entry<? extends TKey, ? extends TIn> entry = node.inputIterator.next();
+                InputEntry<? extends TKey, ? extends TIn, ? extends TOut> entry = node.inputIterator.next();
+
+                //input indicated we should fast-exit, do so with the provided value
+                if (entry.control == Control.FAST_EXIT) {
+                    return entry.fastExitValue;
+                }
+
                 TKey entryKey = entry.getKey();
                 TIn entryInput = entry.getValue();
 
@@ -292,7 +298,7 @@ public final class Graph {
      * @return a new node
      */
     public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
-        @NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator,
+        @NotNull Iterator<? extends InputEntry<? extends TKey, ? extends TIn, TOut>> inputIterator,
         @NotNull Output<TOut, TKey> output) {
         return new Node<>(inputIterator, output);
     }
@@ -307,9 +313,10 @@ public final class Graph {
      * @return a new node with an empty output
      */
     public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> node(
-        @NotNull Iterator<? extends Map.Entry<TKey, TIn>> inputIterator) {
+        @NotNull Iterator<? extends InputEntry<? extends TKey, ? extends TIn, TOut>> inputIterator) {
         return new Node<>(inputIterator, emptyOutput());
     }
+
 
     /**
      * Returns the shared, empty {@link Output} instance.
@@ -429,6 +436,65 @@ public final class Graph {
         }
     }
 
+    private enum Control {
+        CONTINUE,
+        FAST_EXIT
+    }
+
+    public static <TKey, TIn, TOut> @NotNull Iterator<InputEntry<TKey, TIn, TOut>> iterator(
+        @NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> iterator) {
+        Objects.requireNonNull(iterator);
+        return new Iterator<>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public InputEntry<TKey, TIn, TOut> next() {
+                Map.Entry<? extends TKey, ? extends TIn> entry = iterator.next();
+                return new InputEntry<>(entry.getKey(), entry.getValue(), null, Control.CONTINUE);
+            }
+        };
+    }
+
+    public static <TKey, TIn, TOut> @NotNull InputEntry<TKey, TIn, TOut> entry(TKey key, TIn input) {
+        return new InputEntry<>(key, input, null, Control.CONTINUE);
+    }
+
+    public static <TKey, TIn, TOut> @NotNull InputEntry<TKey, TIn, TOut> fastExit(TOut result)  {
+        return new InputEntry<>(null, null, result, Control.FAST_EXIT);
+    }
+
+    public static class InputEntry<TKey, TIn, TOut> implements Map.Entry<TKey, TIn> {
+        private final TKey key;
+        private final TIn in;
+        private final TOut fastExitValue;
+        private final Control control;
+
+        private InputEntry(TKey key, TIn in, TOut fastExitValue, Control control) {
+            this.key = key;
+            this.in = in;
+            this.fastExitValue = fastExitValue;
+            this.control = control;
+        }
+
+        @Override
+        public TKey getKey() {
+            return key;
+        }
+
+        @Override
+        public TIn getValue() {
+            return in;
+        }
+
+        @Override
+        public TIn setValue(TIn value) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
     //used internally for lazy accumulation of results
     //only relevant when doing depth-first transforms
     private static final class NodeResult<TKey, TOut> {
@@ -445,7 +511,7 @@ public final class Graph {
      * @param <TKey> the key type
      */
     public static final class Node<TIn, TOut, TKey> {
-        private final Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator;
+        private final Iterator<? extends InputEntry<? extends TKey, ? extends TIn, TOut>> inputIterator;
         private final Output<TOut, ? super TKey> output;
 
         private NodeResult<TKey, TOut> result;
@@ -453,7 +519,7 @@ public final class Graph {
         private Node<TIn, TOut, TKey> parent;
         private Object identity;
 
-        private Node(@NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator,
+        private Node(@NotNull Iterator<? extends InputEntry<? extends TKey, ? extends TIn, TOut>> inputIterator,
             @NotNull Output<TOut, ? super TKey> output) {
             this.inputIterator = inputIterator;
             this.output = output;
@@ -501,7 +567,7 @@ public final class Graph {
          *
          * @return the input iterator
          */
-        public @NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> inputIterator() {
+        public @NotNull Iterator<? extends InputEntry<? extends TKey, ? extends TIn, TOut>> inputIterator() {
             return inputIterator;
         }
 

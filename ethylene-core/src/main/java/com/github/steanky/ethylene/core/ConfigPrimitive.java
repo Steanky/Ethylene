@@ -9,6 +9,9 @@ import java.util.Objects;
  * This class represents a "primitive" type. A type is considered "primitive" if and only if it subclasses
  * {@link String}, {@link Number}, {@link Boolean}, {@link Character}, or is a null value. Therefore, all Java
  * primitives as well as String are compatible.
+ * <p>
+ * ConfigPrimitive instances are immutable. They may be obtained through calling {@link ConfigPrimitive#of(Object)} with
+ * one of the above types as an argument.
  */
 public final class ConfigPrimitive implements ConfigElement {
     /**
@@ -16,10 +19,93 @@ public final class ConfigPrimitive implements ConfigElement {
      */
     public static final ConfigPrimitive NULL = new ConfigPrimitive(null);
 
+    /**
+     * The shared {@link ConfigPrimitive} containing a boolean 'true'.
+     */
+    public static final ConfigPrimitive TRUE = new ConfigPrimitive(true);
+
+    /**
+     * The shared {@link ConfigPrimitive} containing a boolean 'false'.
+     */
+    public static final ConfigPrimitive FALSE = new ConfigPrimitive(false);
+
+    /**
+     * The shared {@link ConfigPrimitive} containing an empty string.
+     */
+    public static final ConfigPrimitive EMPTY_STRING = new ConfigPrimitive("");
+
+    private static final class LongCache {
+        private static final long LOW = -128;
+        private static final long HIGH = 127;
+
+        private static final ConfigPrimitive[] CACHE;
+
+        static {
+            CACHE = new ConfigPrimitive[(int)(HIGH - LOW + 1)];
+            int j = 0;
+            for (long i = LOW; i <= HIGH; i++, j++) {
+                CACHE[j] = new ConfigPrimitive(i);
+            }
+        }
+    }
+
+    private static final class IntegerCache {
+        private static final int LOW = -128;
+        private static final int HIGH = 127;
+
+        private static final ConfigPrimitive[] CACHE;
+
+        static {
+            CACHE = new ConfigPrimitive[HIGH - LOW + 1];
+            for (int i = LOW, j = 0; i <= HIGH; i++, j++) {
+                CACHE[j] = new ConfigPrimitive(i);
+            }
+        }
+    }
+
+    private static final class CharacterCache {
+        private static final int HIGH = 127;
+
+        private static final ConfigPrimitive[] CACHE;
+
+        static {
+            CACHE = new ConfigPrimitive[HIGH + 1];
+            for (int i = 0; i <= HIGH; i++) {
+                CACHE[i] = new ConfigPrimitive((char)i);
+            }
+        }
+    }
+
+    private static final class ShortCache {
+        private static final short LOW = -128;
+        private static final short HIGH = 127;
+
+        private static final ConfigPrimitive[] CACHE;
+
+        static {
+            CACHE = new ConfigPrimitive[HIGH - LOW + 1];
+            for (short i = LOW, j = 0; i <= HIGH; i++, j++) {
+                CACHE[j] = new ConfigPrimitive(i);
+            }
+        }
+    }
+
+    private static final class ByteCache {
+        private static final ConfigPrimitive[] CACHE;
+
+        static {
+            CACHE = new ConfigPrimitive[256];
+            int j = 0;
+            for (byte i = Byte.MIN_VALUE; j < 256; i++, j++) {
+                CACHE[j] = new ConfigPrimitive(i);
+            }
+        }
+    }
+
     private final Object object;
 
     private ConfigPrimitive(@Nullable Object object) {
-        this.object = validateType(object);
+        this.object = object;
     }
 
     /**
@@ -36,7 +122,112 @@ public final class ConfigPrimitive implements ConfigElement {
             return NULL;
         }
 
-        return new ConfigPrimitive(object);
+        if (object instanceof Boolean b) {
+            return b ? TRUE : FALSE;
+        }
+
+        if (object instanceof Number) {
+            if (object instanceof Long l) {
+                return of((long)l);
+            }
+            else if(object instanceof Integer i) {
+                return of((int)i);
+            }
+            else if(object instanceof Short s) {
+                return of((short)s);
+            }
+            else if(object instanceof Byte b) {
+                return of((byte)b);
+            }
+
+            //Double, Float, BigInteger?
+            return new ConfigPrimitive(object);
+        }
+
+        if (object instanceof String string) {
+            if (string.isEmpty()) {
+                return EMPTY_STRING;
+            }
+
+            return new ConfigPrimitive(string);
+        }
+
+        if (object instanceof Character c) {
+            return of((char)c);
+        }
+
+        throw new IllegalArgumentException(
+            "Object of type " + object.getClass() + " not valid for ConfigPrimitive");
+    }
+
+    /**
+     * Primitive boolean specialization of {@link ConfigPrimitive#of(Object)}. Avoids boxing.
+     * @param value the value from which to create a {@link ConfigPrimitive}
+     * @return a ConfigPrimitive instance
+     */
+    public static @NotNull ConfigPrimitive of(boolean value) {
+        return value ? TRUE : FALSE;
+    }
+
+    /**
+     * Primitive long specialization of {@link ConfigPrimitive#of(Object)}. May avoid boxing for cached values.
+     * @param value the value from which to create a {@link ConfigPrimitive}
+     * @return a ConfigPrimitive instance
+     */
+    public static @NotNull ConfigPrimitive of(long value) {
+        if (value >= LongCache.LOW && value <= LongCache.HIGH) {
+            return LongCache.CACHE[(int)(value + (-LongCache.LOW))];
+        }
+
+        return new ConfigPrimitive(value);
+    }
+
+    /**
+     * Primitive integer specialization of {@link ConfigPrimitive#of(Object)}. May avoid boxing for cached values.
+     * @param value the value from which to create a {@link ConfigPrimitive}
+     * @return a ConfigPrimitive instance
+     */
+    public static @NotNull ConfigPrimitive of(int value) {
+        if (value >= IntegerCache.LOW && value <= IntegerCache.HIGH) {
+            return IntegerCache.CACHE[value + (-IntegerCache.LOW)];
+        }
+
+        return new ConfigPrimitive(value);
+    }
+
+    /**
+     * Primitive character specialization of {@link ConfigPrimitive#of(Object)}. May avoid boxing for cached values.
+     * @param value the value from which to create a {@link ConfigPrimitive}
+     * @return a ConfigPrimitive instance
+     */
+    public static @NotNull ConfigPrimitive of(char value) {
+        if (value <= CharacterCache.HIGH) {
+            return CharacterCache.CACHE[value];
+        }
+
+        return new ConfigPrimitive(value);
+    }
+
+    /**
+     * Primitive short specialization of {@link ConfigPrimitive#of(Object)}. May avoid boxing for cached values.
+     * @param value the value from which to create a {@link ConfigPrimitive}
+     * @return a ConfigPrimitive instance
+     */
+    public static @NotNull ConfigPrimitive of(short value) {
+        if (value >= ShortCache.LOW && value <= ShortCache.HIGH) {
+            return ShortCache.CACHE[value + (-ShortCache.LOW)];
+        }
+
+        return new ConfigPrimitive(value);
+    }
+
+    /**
+     * Primitive byte specialization of {@link ConfigPrimitive#of(Object)}. Avoids boxing.
+     * @param value the value from which to create a {@link ConfigPrimitive}
+     * @return a ConfigPrimitive instance
+     */
+    public static @NotNull ConfigPrimitive of(byte value) {
+        return ByteCache.CACHE[((int)value) + (-((int)Byte.MIN_VALUE))];
     }
 
     /**
@@ -50,21 +241,12 @@ public final class ConfigPrimitive implements ConfigElement {
             object instanceof Character;
     }
 
-    private static Object validateType(Object object) {
-        if (!isPrimitive(object)) {
-            throw new IllegalArgumentException(
-                "Object of type " + object.getClass() + " not valid for ConfigPrimitive");
+    private static @NotNull Object validateNonNull(Object object) {
+        if (object == null) {
+            throw new IllegalStateException("Cannot convert null primitive to type");
         }
 
         return object;
-    }
-
-    private static <TReturn> TReturn convert(Object object, Class<TReturn> classType) {
-        if (classType.isInstance(object)) {
-            return classType.cast(object);
-        }
-
-        throw new IllegalStateException("Element may not be converted to " + classType.getSimpleName());
     }
 
     @Override
@@ -84,7 +266,7 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean asBoolean() {
-        return convert(object, Boolean.class);
+        return (boolean) validateNonNull(object);
     }
 
     @Override
@@ -94,7 +276,7 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public @NotNull Number asNumber() {
-        return convert(object, Number.class);
+        return (Number) validateNonNull(object);
     }
 
     @Override
@@ -109,7 +291,7 @@ public final class ConfigPrimitive implements ConfigElement {
             return character.toString();
         }
 
-        return convert(object, String.class);
+        return (String) validateNonNull(object);
     }
 
     @Override
@@ -129,7 +311,7 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
+        if (obj == this) {
             return true;
         }
 

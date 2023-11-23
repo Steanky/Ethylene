@@ -68,9 +68,9 @@ public class HjsonCodec extends AbstractConfigCodec {
                 }
 
                 @Override
-                public Map.Entry<String, Object> next() {
+                public Graph.InputEntry<String, Object, ConfigElement> next() {
                     JsonObject.Member next = iterator.next();
-                    return Entry.of(next.getName(), next.getValue());
+                    return Graph.entry(next.getName(), next.getValue());
                 }
             }, makeDecodeMap(object.size()));
         } else if (target instanceof JsonArray array) {
@@ -83,8 +83,8 @@ public class HjsonCodec extends AbstractConfigCodec {
                 }
 
                 @Override
-                public Map.Entry<String, Object> next() {
-                    return Entry.of(null, backing.next());
+                public Graph.InputEntry<String, Object, ConfigElement> next() {
+                    return Graph.entry(null, backing.next());
                 }
             }, makeDecodeCollection(array.size()));
         }

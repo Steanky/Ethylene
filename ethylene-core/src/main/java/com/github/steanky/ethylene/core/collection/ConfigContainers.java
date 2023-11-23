@@ -30,7 +30,7 @@ final class ConfigContainers {
             Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
             if (configContainer instanceof Immutable) {
                 //don't write anything to this accumulator
-                return Graph.node(entryCollection.iterator(), Graph.output(configContainer, Graph.emptyAccumulator()));
+                return Graph.node(Graph.iterator(entryCollection.iterator()), Graph.output(configContainer, Graph.emptyAccumulator()));
             }
 
             ConfigContainer result;
@@ -44,7 +44,7 @@ final class ConfigContainers {
             }
 
             ConfigContainer out = result;
-            return Graph.node(entryCollection.iterator(), Graph.output(out, (key, element, circular) -> {
+            return Graph.node(Graph.iterator(entryCollection.iterator()), Graph.output(out, (key, element, circular) -> {
                 if (out.isNode()) {
                     out.asNode().put(key, element);
                 } else {
@@ -77,26 +77,32 @@ final class ConfigContainers {
             }
 
             int size = entryCollection.size();
-            Graph.Output<ConfigElement, String> output;
-            if (configContainer.isNode()) {
-                Map<String, ConfigElement> underlyingMap = new LinkedHashMap<>(size, 1F);
-                ConfigNode immutableNode = new ImmutableConfigNode(underlyingMap);
-                output = Graph.output(immutableNode, (k, v, b) -> underlyingMap.put(k, v));
-            } else {
-                ConfigElement[] underlyingArray = new ConfigElement[size];
-                ConfigList immutableList = new ImmutableConfigList(underlyingArray);
-                output = Graph.output(immutableList, new Graph.Accumulator<>() {
-                    private int i;
+            Graph.Output<ConfigElement, String> output = constructOutput(configContainer, size);
 
-                    @Override
-                    public void accept(String s, ConfigElement element, boolean circular) {
-                        underlyingArray[i++] = element;
-                    }
-                });
-            }
-
-            return Graph.node(entryCollection.iterator(), output);
+            return Graph.node(Graph.iterator(entryCollection.iterator()), output);
         }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES).asContainer();
+    }
+
+    private static Graph.Output<ConfigElement, String> constructOutput(ConfigContainer configContainer, int size) {
+        Graph.Output<ConfigElement, String> output;
+        if (configContainer.isNode()) {
+            Map<String, ConfigElement> underlyingMap = new LinkedHashMap<>(size, 1F);
+            ConfigNode immutableNode = new ImmutableConfigNode(underlyingMap);
+            output = Graph.output(immutableNode, (k, v, b) -> underlyingMap.put(k, v));
+        } else {
+            ConfigElement[] underlyingArray = new ConfigElement[size];
+            ConfigList immutableList = new ImmutableConfigList(underlyingArray);
+            output = Graph.output(immutableList, new Graph.Accumulator<>() {
+                private int i;
+
+                @Override
+                public void accept(String s, ConfigElement element, boolean circular) {
+                    underlyingArray[i++] = element;
+                }
+            });
+        }
+
+        return output;
     }
 
     /**
@@ -123,11 +129,11 @@ final class ConfigContainers {
                 view = new ConfigListView(configContainer.asList());
             }
 
-            return Graph.node(entryCollection.iterator(), Graph.output(view, Graph.emptyAccumulator()));
+            return Graph.node(Graph.iterator(entryCollection.iterator()), Graph.output(view, Graph.emptyAccumulator()));
         }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES).asContainer();
     }
 
-    private static class ConfigNodeView extends AbstractMap<String, ConfigElement> implements ConfigNode, Immutable {
+    private static class ConfigNodeView extends AbstractConfigNode implements Immutable {
         private final ConfigNode underlying;
 
         private ConfigNodeView(ConfigNode underlying) {
@@ -188,7 +194,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class ConfigListView extends AbstractList<ConfigElement> implements ConfigList, Immutable {
+    private static final class ConfigListView extends AbstractConfigList implements Immutable {
         private final ConfigList underlying;
 
         private ConfigListView(ConfigList underlying) {
@@ -226,8 +232,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class EmptyImmutableConfigList extends AbstractList<ConfigElement> implements ConfigList,
-        Immutable {
+    private static final class EmptyImmutableConfigList extends AbstractConfigList implements Immutable {
         private static final ConfigList INSTANCE = new EmptyImmutableConfigList();
 
         private EmptyImmutableConfigList() {
@@ -265,8 +270,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class EmptyImmutableConfigNode extends AbstractMap<String, ConfigElement> implements
-        ConfigNode, Immutable {
+    private static final class EmptyImmutableConfigNode extends AbstractConfigNode implements Immutable {
         private static final ConfigNode INSTANCE = new EmptyImmutableConfigNode();
 
         private EmptyImmutableConfigNode() {
@@ -326,8 +330,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class ImmutableConfigNode extends AbstractMap<String, ConfigElement> implements ConfigNode,
-        Immutable {
+    private static final class ImmutableConfigNode extends AbstractConfigNode implements Immutable {
         private final Map<String, ConfigElement> map;
 
         private ImmutableConfigNode(Map<String, ConfigElement> trusted) {
@@ -377,8 +380,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class ImmutableConfigList extends AbstractList<ConfigElement> implements ConfigList,
-        Immutable {
+    private static final class ImmutableConfigList extends AbstractConfigList implements Immutable {
         private final ConfigElement[] elements;
 
         private ImmutableConfigList(ConfigElement[] elements) {
@@ -404,5 +406,7 @@ final class ConfigContainers {
         public int size() {
             return elements.length;
         }
+
+
     }
 }

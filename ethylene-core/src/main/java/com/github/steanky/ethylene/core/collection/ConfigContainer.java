@@ -97,4 +97,13 @@ public interface ConfigContainer extends ConfigElement {
     default @NotNull ConfigContainer immutableView() {
         return ConfigContainers.immutableView(this);
     }
+
+    /**
+     * The size of this container. This is the number of entries in the map if this container is a node, or the number
+     * of elements in the list if this container is a list.
+     * @return the size of this container
+     */
+    default int size() {
+        return elementCollection().size();
+    }
 }

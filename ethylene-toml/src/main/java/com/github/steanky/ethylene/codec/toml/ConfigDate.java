@@ -62,4 +62,31 @@ public class ConfigDate implements ConfigElement {
     public @NotNull Temporal getTemporal() {
         return temporal;
     }
+
+    @Override
+    public int hashCode() {
+        return temporal.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof ConfigDate date) {
+            return temporal.equals(date.temporal);
+        }
+
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return temporal.toString();
+    }
 }

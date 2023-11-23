@@ -17,7 +17,7 @@ class AbstractConfigNodeTest {
         innerList = new ArrayConfigList();
         ConfigNode innerNode = new LinkedConfigNode();
 
-        populatedNode = new AbstractConfigNode(new HashMap<>()) {
+        populatedNode = new BackedConfigNode(new HashMap<>()) {
         };
         populatedNode.put("int", ConfigPrimitive.of(10));
         populatedNode.put("string", ConfigPrimitive.of("string"));
@@ -47,10 +47,10 @@ class AbstractConfigNodeTest {
 
     @Test
     void toStringTest() {
-        assertEquals("$0{}", new AbstractConfigNode(new HashMap<>()) {
+        assertEquals("$0{}", new BackedConfigNode(new HashMap<>()) {
         }.toString());
 
-        AbstractConfigNode node = new AbstractConfigNode(new LinkedHashMap<>()) {
+        BackedConfigNode node = new BackedConfigNode(new LinkedHashMap<>()) {
         };
         node.put("self", node);
 

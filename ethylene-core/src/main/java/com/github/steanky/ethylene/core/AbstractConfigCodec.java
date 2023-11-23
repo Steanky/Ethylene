@@ -94,9 +94,9 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
 
                 @Override
-                public Map.Entry<String, Object> next() {
+                public Graph.InputEntry<String, Object, ConfigElement> next() {
                     Map.Entry<?, ?> next = iterator.next();
-                    return Entry.of(next.getKey().toString(), next.getValue());
+                    return Graph.entry(next.getKey().toString(), next.getValue());
                 }
             }, makeDecodeMap(map.size()));
         } else if (target instanceof Collection<?> collection) {
@@ -109,8 +109,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
 
                 @Override
-                public Map.Entry<String, Object> next() {
-                    return Entry.of(null, backing.next());
+                public Graph.InputEntry<String, Object, ConfigElement> next() {
+                    return Graph.entry(null, backing.next());
                 }
             }, makeDecodeCollection(collection.size()));
         } else if (target.getClass().isArray()) {
@@ -125,8 +125,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 }
 
                 @Override
-                public Map.Entry<String, Object> next() {
-                    return Entry.of(null, array[i++]);
+                public Graph.InputEntry<String, Object, ConfigElement> next() {
+                    return Graph.entry(null, array[i++]);
                 }
             }, makeDecodeCollection(array.length));
         }
@@ -191,10 +191,10 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
     protected @NotNull Graph.Node<ConfigElement, Object, String> makeEncodeNode(@NotNull ConfigElement target) {
         if (target.isNode()) {
             ConfigNode elementNode = target.asNode();
-            return Graph.node(elementNode.entryCollection().iterator(), makeEncodeMap(elementNode.size()));
+            return Graph.node(Graph.iterator(elementNode.entryCollection().iterator()), makeEncodeMap(elementNode.size()));
         } else if (target.isList()) {
             ConfigList elementList = target.asList();
-            return Graph.node(elementList.entryCollection().iterator(), makeEncodeCollection(elementList.size()));
+            return Graph.node(Graph.iterator(elementList.entryCollection().iterator()), makeEncodeCollection(elementList.size()));
         }
 
         throw new IllegalArgumentException("Invalid input node type " + target.getClass().getTypeName());
