@@ -95,11 +95,6 @@ public abstract class BackedConfigNode extends AbstractConfigNode {
     }
 
     @Override
-    public String toString() {
-        return ConfigElements.toString(this);
-    }
-
-    @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
         return Containers.mappedView(entry -> ConfigEntry.of(entry.getKey(), entry.getValue()), mappings.entrySet());
     }

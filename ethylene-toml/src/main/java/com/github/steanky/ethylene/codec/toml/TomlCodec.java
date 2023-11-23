@@ -10,7 +10,6 @@ import com.electronwill.nightconfig.toml.TomlWriter;
 import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.Graph;
-import com.github.steanky.ethylene.core.collection.Entry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;

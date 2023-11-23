@@ -4,7 +4,6 @@ import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.Graph;
-import com.github.steanky.ethylene.core.collection.Entry;
 import org.hjson.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 

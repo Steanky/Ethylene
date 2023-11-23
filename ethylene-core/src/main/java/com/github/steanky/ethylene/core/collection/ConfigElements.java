@@ -2,7 +2,6 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
-import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -80,12 +79,7 @@ final class ConfigElements {
         }
 
         private void hash(int code) {
-            if (list) {
-                hash = hash * 31 + code;
-            }
-            else {
-                hash += code;
-            }
+            hash = list ? (hash * 31 + code) : hash + code;
         }
     }
 
