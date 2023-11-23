@@ -60,6 +60,7 @@ final class ConfigElements {
     }
 
     private static final class HashEntry {
+        private final ConfigContainer entry;
         private final boolean list;
         private final Iterator<ConfigEntry> entryIterator;
 
@@ -69,6 +70,7 @@ final class ConfigElements {
         private int hash;
 
         private HashEntry(ConfigContainer entry, HashEntry parent, String parentKey) {
+            this.entry = entry;
             this.list = entry.isList();
             this.entryIterator = entry.entryCollection().iterator();
 
@@ -141,7 +143,7 @@ final class ConfigElements {
                 }
 
                 stack.push(new HashEntry(entryElement.asContainer(), hashEntry,
-                    container.isNode() ? entry.getKey() : null));
+                    hashEntry.entry.isNode() ? entry.getKey() : null));
                 break;
             }
         }

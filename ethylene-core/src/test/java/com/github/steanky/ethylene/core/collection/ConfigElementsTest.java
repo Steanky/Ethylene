@@ -129,6 +129,15 @@ class ConfigElementsTest {
     }
 
     @Test
+    void simpleHash2() {
+        Map<String, Object> map = Map.of("first", List.of(ConfigPrimitive.of("test")));
+
+        ConfigNode node = ConfigNode.of("first", ConfigList.of(ConfigPrimitive.of("test")));
+
+        assertEquals(map.hashCode(), ConfigElements.hashCode(node));
+    }
+
+    @Test
     void aaaaaaaaaaaaaaaaaaaaaaaaa() {
         Map<String, Object> compositeFuckery = Map.of("let the pain",
             ConfigPrimitive.of("begin"), "why", List.of(ConfigPrimitive.of("test"),
