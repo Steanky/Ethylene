@@ -523,8 +523,8 @@ final class ConfigElements {
             return first.equals(second) ? EquateResult.EQUALS : EquateResult.NOT_EQUALS;
         }
 
-        return first.asContainer().entryCollection().size() == second.asContainer().size() ? EquateResult.UNSURE :
-            EquateResult.NOT_EQUALS;
+        return first.asContainer().entryCollection().size() == second.asContainer().entryCollection().size() ?
+            EquateResult.UNSURE : EquateResult.NOT_EQUALS;
     }
 
     /**

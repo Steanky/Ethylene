@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core;
 
+import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -266,7 +267,11 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public boolean asBoolean() {
-        return (boolean) validateNonNull(object);
+        if (validateNonNull(object) instanceof Boolean b) {
+            return b;
+        }
+
+        throw new IllegalStateException("Element may not be converted to boolean");
     }
 
     @Override
@@ -276,7 +281,11 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public @NotNull Number asNumber() {
-        return (Number) validateNonNull(object);
+        if (validateNonNull(object) instanceof Number number) {
+            return number;
+        }
+
+        throw new IllegalStateException("Element may not be converted to Number");
     }
 
     @Override
@@ -286,12 +295,16 @@ public final class ConfigPrimitive implements ConfigElement {
 
     @Override
     public @NotNull String asString() {
-        if (object instanceof Character character) {
+        if (validateNonNull(object) instanceof Character character) {
             //don't distinguish between char and string
             return character.toString();
         }
 
-        return (String) validateNonNull(object);
+        if (object instanceof String string) {
+            return string;
+        }
+
+        throw new IllegalStateException("Element may not be converted to String");
     }
 
     @Override

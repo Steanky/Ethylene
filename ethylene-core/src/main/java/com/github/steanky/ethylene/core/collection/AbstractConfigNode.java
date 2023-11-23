@@ -19,4 +19,9 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
     public int hashCode() {
         return ConfigElements.hashCode(this);
     }
+
+    @Override
+    public String toString() {
+        return ConfigElements.toString(this);
+    }
 }

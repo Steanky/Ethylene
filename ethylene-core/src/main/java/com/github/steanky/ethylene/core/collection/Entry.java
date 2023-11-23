@@ -115,7 +115,10 @@ public interface Entry<TKey, TValue> extends Map.Entry<TKey, TValue> {
     abstract class AbstractEntry<TKey, TValue> implements Entry<TKey, TValue> {
         @Override
         public final int hashCode() {
-            return Objects.hash(getKey(), getValue());
+            TKey key = getKey();
+            TValue value = getValue();
+
+            return (key == null ? 0 : key.hashCode()) ^ (value == null ? 0 : value.hashCode());
         }
 
         @Override

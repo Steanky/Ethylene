@@ -88,11 +88,6 @@ public abstract class BackedConfigList extends AbstractConfigList {
     }
 
     @Override
-    public String toString() {
-        return ConfigElements.toString(this);
-    }
-
-    @Override
     public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
         return Containers.mappedView(ConfigEntry::of, list);
     }
