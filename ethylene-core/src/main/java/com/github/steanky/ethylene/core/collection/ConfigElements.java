@@ -118,12 +118,8 @@ final class ConfigElements {
 
                 HashEntry parent = hashEntry.parent;
                 if (parent != null) {
-                    if (hashEntry.parentKey == null) {
-                        parent.hash(hashEntry.hash);
-                    }
-                    else {
-                        parent.hash(hashEntry.parentKey.hashCode() ^ hashEntry.hash);
-                    }
+                    parent.hash(hashEntry.parentKey == null ? hashEntry.hash :
+                        (hashEntry.parentKey.hashCode() ^ hashEntry.hash));
                 }
 
                 continue;
@@ -134,13 +130,8 @@ final class ConfigElements {
                 ConfigElement entryElement = entry.getValue();
 
                 if (entryElement.isScalar()) {
-                    if (hashEntry.list) {
-                        hashEntry.hash(entryElement.hashCode());
-                    }
-                    else {
-                        hashEntry.hash(entry.getKey().hashCode() ^ entryElement.hashCode());
-                    }
-
+                    hashEntry.hash(hashEntry.list ? entryElement.hashCode() :
+                        (entry.getKey().hashCode() ^ entryElement.hashCode()));
                     continue;
                 }
 

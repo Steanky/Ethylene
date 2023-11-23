@@ -112,4 +112,19 @@ class ConfigElementsTest {
 
         assertEquals(list.hashCode(), ConfigElements.hashCode(first));
     }
+
+    @Test
+    void whatIsThis() {
+        Map<String, Object> compositeFuckery = Map.of("let the pain",
+            ConfigPrimitive.of("begin"), "why", List.of(ConfigPrimitive.of("test"),
+                ConfigList.of("a", "b", "c")));
+        List immutableList = (List)compositeFuckery.get("why");
+        ((ConfigList)immutableList.get(1)).add((ConfigElement) immutableList.get(1));
+
+        ConfigNode node = ConfigNode.of("let the pain", "begin", "why",
+            ConfigList.of("test", ConfigList.of("a", "b", "c")));
+        node.get("why").asList().get(1).asList().add(node.get("why").asList().get(1));
+
+        assertTrue(ConfigElements.equals(node, compositeFuckery));
+    }
 }
