@@ -16,42 +16,189 @@ final class ConfigElements {
         throw new AssertionError("Why?");
     }
 
-    private static String toStringInternal(ConfigElement input, IdentityHashMap<Object, Integer> identities) {
-        if (input.isContainer()) {
-            ConfigContainer configContainer = input.asContainer();
-            Iterator<ConfigEntry> entryIterator = configContainer.entryCollection().iterator();
+    private static class LazyListContainer extends AbstractList<ConfigElement> implements ConfigList {
+        private final List<?> list;
+        private final Collection<ConfigEntry> entryCollection;
+        private final Collection<ConfigElement> elementCollection;
 
-            if (!entryIterator.hasNext()) {
-                return "$" + identities.size() + "{}";
-            }
+        private LazyListContainer(List<?> list) {
+            this.list = list;
+            this.entryCollection = new AbstractCollection<>() {
+                @Override
+                public Iterator<ConfigEntry> iterator() {
+                    Iterator<?> backing = list.iterator();
 
-            StringBuilder builder = new StringBuilder().append('$').append(identities.size()).append('{');
-            identities.put(configContainer, identities.size());
+                    return new Iterator<>() {
+                        @Override
+                        public boolean hasNext() {
+                            return backing.hasNext();
+                        }
 
-            while (true) {
-                ConfigEntry entry = entryIterator.next();
+                        @Override
+                        public ConfigEntry next() {
+                            ConfigElement element = maybeWrap(backing.next());
+                            if (element == null) {
+                                return null;
+                            }
 
-                String key = entry.getKey();
-                ConfigElement value = entry.getValue();
-
-                if (key != null) {
-                    builder.append(key).append('=');
+                            return ConfigEntry.of(element);
+                        }
+                    };
                 }
 
-                if (value.isContainer() && identities.containsKey(value)) {
-                    builder.append('$').append(identities.get(value));
-                } else {
-                    builder.append(toStringInternal(value, identities));
+                @Override
+                public int size() {
+                    return list.size();
+                }
+            };
+            this.elementCollection = new AbstractCollection<>() {
+                @Override
+                public Iterator<ConfigElement> iterator() {
+                    Iterator<?> backing = list.iterator();
+
+                    return new Iterator<>() {
+                        @Override
+                        public boolean hasNext() {
+                            return backing.hasNext();
+                        }
+
+                        @Override
+                        public ConfigElement next() {
+                            return maybeWrap(backing.next());
+                        }
+                    };
                 }
 
-                if (!entryIterator.hasNext()) {
-                    return builder.append('}').toString();
+                @Override
+                public int size() {
+                    return list.size();
+                }
+            };
+        }
+
+        @Override
+        public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
+            return entryCollection;
+        }
+
+        @Override
+        public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
+            return elementCollection;
+        }
+
+        @Override
+        public ConfigElement get(int index) {
+            return maybeWrap(list.get(index));
+        }
+
+        @Override
+        public int size() {
+            return list.size();
+        }
+    }
+
+    private static class LazyMapContainer extends AbstractMap<String, ConfigElement> implements ConfigNode {
+        private final Map<?, ?> map;
+        private final Collection<ConfigEntry> entryCollection;
+        private final Collection<ConfigElement> elementCollection;
+
+        private LazyMapContainer(Map<?, ?> map) {
+            this.map = map;
+            this.entryCollection = new AbstractCollection<>() {
+                @Override
+                public Iterator<ConfigEntry> iterator() {
+                    Iterator<? extends Map.Entry<?, ?>> backing = map.entrySet().iterator();
+
+                    return new Iterator<>() {
+                        @Override
+                        public boolean hasNext() {
+                            return backing.hasNext();
+                        }
+
+                        @Override
+                        public ConfigEntry next() {
+                            return convertEntry(backing.next());
+                        }
+                    };
                 }
 
-                builder.append(',').append(' ');
-            }
-        } else {
-            return "[" + input + "]";
+                @Override
+                public int size() {
+                    return map.size();
+                }
+            };
+            this.elementCollection = new AbstractCollection<>() {
+                @Override
+                public Iterator<ConfigElement> iterator() {
+                    Iterator<? extends Map.Entry<?, ?>> backing = map.entrySet().iterator();
+                    return new Iterator<>() {
+                        @Override
+                        public boolean hasNext() {
+                            return backing.hasNext();
+                        }
+
+                        @Override
+                        public ConfigElement next() {
+                            Map.Entry<?, ?> next = backing.next();
+                            Object key = next.getKey();
+                            Object value = next.getValue();
+
+                            if (!(key instanceof String)) {
+                                return null;
+                            }
+
+                            return maybeWrap(value);
+                        }
+                    };
+                }
+
+                @Override
+                public int size() {
+                    return map.size();
+                }
+            };
+        }
+
+        @Override
+        public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
+            return entryCollection;
+        }
+
+        @Override
+        public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
+            return elementCollection;
+        }
+
+        @Override
+        public ConfigElement get(Object key) {
+            return maybeWrap(map.get(key));
+        }
+
+        @NotNull
+        @Override
+        public Set<Entry<String, ConfigElement>> entrySet() {
+            return new AbstractSet<>() {
+                @Override
+                public Iterator<Entry<String, ConfigElement>> iterator() {
+                    Iterator<? extends Map.Entry<?, ?>> backing = map.entrySet().iterator();
+                    return new Iterator<>() {
+                        @Override
+                        public boolean hasNext() {
+                            return backing.hasNext();
+                        }
+
+                        @Override
+                        public Entry<String, ConfigElement> next() {
+                            return convertEntry(backing.next());
+                        }
+                    };
+                }
+
+                @Override
+                public int size() {
+                    return map.size();
+                }
+            };
         }
     }
 
@@ -165,184 +312,6 @@ final class ConfigElements {
         }
 
         return null;
-    }
-
-    private static class LazyListContainer extends AbstractList<ConfigElement> implements ConfigList {
-        private final List<?> list;
-
-        private LazyListContainer(List<?> list) {
-            this.list = list;
-        }
-
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return new AbstractCollection<>() {
-                @Override
-                public Iterator<ConfigEntry> iterator() {
-                    Iterator<?> backing = list.iterator();
-
-                    return new Iterator<>() {
-                        @Override
-                        public boolean hasNext() {
-                            return backing.hasNext();
-                        }
-
-                        @Override
-                        public ConfigEntry next() {
-                            ConfigElement element = maybeWrap(backing.next());
-                            if (element == null) {
-                                return null;
-                            }
-
-                            return ConfigEntry.of(element);
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return list.size();
-                }
-            };
-        }
-
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-            return new AbstractCollection<>() {
-                @Override
-                public Iterator<ConfigElement> iterator() {
-                    Iterator<?> backing = list.iterator();
-
-                    return new Iterator<>() {
-                        @Override
-                        public boolean hasNext() {
-                            return backing.hasNext();
-                        }
-
-                        @Override
-                        public ConfigElement next() {
-                            return maybeWrap(backing.next());
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return list.size();
-                }
-            };
-        }
-
-        @Override
-        public ConfigElement get(int index) {
-            return maybeWrap(list.get(index));
-        }
-
-        @Override
-        public int size() {
-            return list.size();
-        }
-    }
-
-    private static class LazyMapContainer extends AbstractMap<String, ConfigElement> implements ConfigNode {
-        private final Map<?, ?> map;
-
-        private LazyMapContainer(Map<?, ?> map) {
-            this.map = map;
-        }
-
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return new AbstractCollection<>() {
-                @Override
-                public Iterator<ConfigEntry> iterator() {
-                    Iterator<? extends Map.Entry<?, ?>> backing = map.entrySet().iterator();
-
-                    return new Iterator<>() {
-                        @Override
-                        public boolean hasNext() {
-                            return backing.hasNext();
-                        }
-
-                        @Override
-                        public ConfigEntry next() {
-                            return convertEntry(backing.next());
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return map.size();
-                }
-            };
-        }
-
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-            return new AbstractCollection<>() {
-                @Override
-                public Iterator<ConfigElement> iterator() {
-                    Iterator<? extends Map.Entry<?, ?>> backing = map.entrySet().iterator();
-                    return new Iterator<>() {
-                        @Override
-                        public boolean hasNext() {
-                            return backing.hasNext();
-                        }
-
-                        @Override
-                        public ConfigElement next() {
-                            Map.Entry<?, ?> next = backing.next();
-                            Object key = next.getKey();
-                            Object value = next.getValue();
-
-                            if (!(key instanceof String)) {
-                                return null;
-                            }
-
-                            return maybeWrap(value);
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return map.size();
-                }
-            };
-        }
-
-        @Override
-        public ConfigElement get(Object key) {
-            return maybeWrap(map.get(key));
-        }
-
-        @NotNull
-        @Override
-        public Set<Entry<String, ConfigElement>> entrySet() {
-            return new AbstractSet<>() {
-                @Override
-                public Iterator<Entry<String, ConfigElement>> iterator() {
-                    Iterator<? extends Map.Entry<?, ?>> backing = map.entrySet().iterator();
-                    return new Iterator<>() {
-                        @Override
-                        public boolean hasNext() {
-                            return backing.hasNext();
-                        }
-
-                        @Override
-                        public Entry<String, ConfigElement> next() {
-                            return convertEntry(backing.next());
-                        }
-                    };
-                }
-
-                @Override
-                public int size() {
-                    return map.size();
-                }
-            };
-        }
     }
 
     private static ConfigEntry convertEntry(Map.Entry<?, ?> entry) {
@@ -526,6 +495,63 @@ final class ConfigElements {
             EquateResult.UNSURE : EquateResult.NOT_EQUALS;
     }
 
+    private static class ToStringEntry {
+        private final StringBuilder builder;
+        private final ToStringEntry parent;
+        private final ConfigContainer container;
+        private final Iterator<ConfigEntry> containerIterator;
+        private final boolean list;
+        private final String parentKey;
+        private final int absoluteStartIndex;
+        private int count;
+        private int reference;
+        private boolean added;
+
+        private ToStringEntry(ToStringEntry parent, ConfigContainer container, String parentKey, int absoluteStartIndex) {
+            this.builder = new StringBuilder(initBuilder(container));
+            this.parent = parent;
+            this.container = container;
+            this.containerIterator = container.entryCollection().iterator();
+            this.list = container.isList();
+            this.parentKey = parentKey;
+            this.absoluteStartIndex = absoluteStartIndex;
+            reference = -1;
+        }
+
+        private static String initBuilder(ConfigContainer container) {
+            boolean list = container.isList();
+
+            Collection<ConfigEntry> entries = container.entryCollection();
+            if (entries.isEmpty()) {
+                return list ? "[]" : "{}";
+            }
+
+            return list ? "[" : "{";
+        }
+
+        private void append(String key, String string) {
+            String formatted = format(key, string);
+
+            if (count == 0) {
+                builder.append(formatted);
+            }
+            else if (count < container.entryCollection().size()) {
+                builder.append(", ");
+                builder.append(formatted);
+            }
+
+            if (count == container.entryCollection().size() - 1) {
+                builder.append(list ? "]" : "}");
+            }
+
+            count++;
+        }
+
+        private static String format(String key, String value) {
+            return key == null ? value : key + "=" + value;
+        }
+    }
+
     /**
      * <p>Specialized helper method used by {@link ConfigContainer} implementations that need to override
      * {@link Object#toString()}. Supports circular and self-referential ConfigElement constructions by use of a "tag"
@@ -535,8 +561,85 @@ final class ConfigElements {
      * @param input the input {@link ConfigElement} to show
      * @return the ConfigElement, represented as a string
      */
-    static String toString(@NotNull ConfigElement input) {
-        Objects.requireNonNull(input);
-        return toStringInternal(input, new IdentityHashMap<>());
+    static @NotNull String toString(ConfigElement input) {
+        if (input == null) {
+            return "null";
+        }
+
+        if (!input.isContainer()) {
+            return input.toString();
+        }
+
+        ConfigContainer rootContainer = input.asContainer();
+        if (rootContainer.entryCollection().isEmpty()) {
+            return rootContainer.isList() ? "[]" : "{}";
+        }
+
+        Deque<ToStringEntry> stack = new ArrayDeque<>();
+        ToStringEntry root = new ToStringEntry(null, rootContainer, null, 0);
+        stack.push(root);
+
+        Map<ConfigContainer, ToStringEntry> visited = new IdentityHashMap<>();
+        visited.put(rootContainer, root);
+
+        int referenced = 0;
+        int offset = 0;
+        while (!stack.isEmpty()) {
+            ToStringEntry current = stack.peek();
+            if (!current.containerIterator.hasNext()) {
+                stack.pop();
+
+                ToStringEntry parent = current.parent;
+                if (parent != null) {
+                    parent.append(current.parentKey, current.builder.toString());
+                    current.added = true;
+                }
+                continue;
+            }
+
+            while (current.containerIterator.hasNext()) {
+                ConfigEntry next = current.containerIterator.next();
+                ConfigElement nextElement = next.getValue();
+
+                if (!nextElement.isContainer()) {
+                    current.append(next.getKey(), nextElement.toString());
+                    continue;
+                }
+
+                ConfigContainer nextContainer = nextElement.asContainer();
+                ToStringEntry entry = visited.get(nextContainer);
+                if (entry != null) {
+                    if (entry.reference == -1) {
+                        entry.reference = referenced++;
+                        String tag = "$" + entry.reference;
+
+                        if (entry.added) {
+                            root.builder.insert(entry.absoluteStartIndex + offset, tag);
+                        }
+                        else {
+                            entry.builder.insert(0, tag);
+                        }
+
+                        current.append(next.getKey(), tag);
+                        offset += tag.length();
+                    }
+                    else {
+                        current.append(next.getKey(), "$" + entry.reference);
+                    }
+
+                    continue;
+                }
+
+                String nextKey = next.getKey();
+                int rootLength = root.builder.length();
+                entry = new ToStringEntry(current, nextContainer, current.list ? null : nextKey,
+                    nextKey == null ? rootLength : rootLength + nextKey.length() + 1);
+                visited.put(nextContainer, entry);
+                stack.push(entry);
+                break;
+            }
+        }
+
+        return root.builder.toString();
     }
 }

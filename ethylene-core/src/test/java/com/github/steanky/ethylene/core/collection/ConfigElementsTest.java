@@ -149,4 +149,119 @@ class ConfigElementsTest {
         assertTrue(ConfigElements.equals(node, compositeFuckery));
         assertEquals(ConfigElements.hashCode(node), compositeFuckery.hashCode());
     }
+
+    @Test
+    void simpleToString() {
+        ConfigNode emptyNode = ConfigNode.of();
+        assertEquals("{}", ConfigElements.toString(emptyNode));
+
+        ConfigList emptyList = ConfigList.of();
+        assertEquals("[]", ConfigElements.toString(emptyList));
+
+        ConfigPrimitive primitive = ConfigPrimitive.of(0);
+        assertEquals("0", ConfigElements.toString(primitive));
+    }
+
+    @Test
+    void primitiveListToString() {
+        ConfigList list = ConfigList.of(0, 1, 2, 3);
+        assertEquals("[0, 1, 2, 3]", ConfigElements.toString(list));
+    }
+
+    @Test
+    void primitiveNodeToString() {
+        ConfigNode node = ConfigNode.of("first", 0, "second", 1);
+        assertEquals("{first=0, second=1}", ConfigElements.toString(node));
+    }
+
+    @Test
+    void nodeContainingListToString() {
+        ConfigNode node = ConfigNode.of("first", 0, "second", ConfigList.of("a", "b", "c"));
+        assertEquals("{first=0, second=[a, b, c]}", ConfigElements.toString(node));
+    }
+
+    @Test
+    void duplicateReferenceToString() {
+        ConfigList list = ConfigList.of("a");
+        ConfigNode node = ConfigNode.of("first", list, "second", list, "third", list);
+
+        assertEquals("{first=$0[a], second=$0, third=$0}", ConfigElements.toString(node));
+    }
+
+    @Test
+    void selfReferentialToString() {
+        ConfigList list = ConfigList.of();
+        list.add(list);
+
+        assertEquals("$0[$0]", ConfigElements.toString(list));
+    }
+
+    @Test
+    void selfReferentialToString2() {
+        ConfigList list = ConfigList.of();
+        list.add(list);
+        list.add(list);
+
+        assertEquals("$0[$0, $0]", ConfigElements.toString(list));
+    }
+
+    @Test
+    void selfReferentialContainingOthers() {
+        ConfigList list = ConfigList.of(0, 1, 2);
+        list.add(list);
+
+        assertEquals("$0[0, 1, 2, $0]", ConfigElements.toString(list));
+    }
+
+    @Test
+    void wtf() {
+        ConfigNode node = ConfigNode.of("pain", ConfigList.of());
+        node.getElement("pain").asList().add(node);
+        node.put("self", node);
+        node.putNumber("value", 100);
+        ConfigList selfReferential = ConfigList.of();
+
+        selfReferential.add(selfReferential);
+        selfReferential.addString("no");
+        node.put("suffering", selfReferential);
+        node.put("suffering2", selfReferential);
+
+        assertEquals("$0{pain=[$0], self=$0, value=100, suffering=$1[$1, no], suffering2=$1}", ConfigElements.toString(node));
+    }
+
+    @Test
+    void repeatingSeveral() {
+        ConfigList list = ConfigList.of();
+
+        ConfigList repeating = ConfigList.of("a");
+        ConfigList otherRepeating = ConfigList.of("b");
+
+        list.add(repeating);
+        list.add(repeating);
+
+        list.add(otherRepeating);
+        list.add(otherRepeating);
+        list.add(otherRepeating);
+
+        assertEquals("[$0[a], $0, $1[b], $1, $1]", ConfigElements.toString(list));
+    }
+
+    @Test
+    void repeatingSeveralAndSelfReference() {
+        ConfigList list = ConfigList.of();
+
+        ConfigList repeating = ConfigList.of("a");
+        ConfigList otherRepeating = ConfigList.of("b");
+
+        list.add(repeating);
+        list.add(repeating);
+
+        list.add(otherRepeating);
+        list.add(otherRepeating);
+        list.add(otherRepeating);
+
+        list.add(list);
+
+        assertEquals("$2[$0[a], $0, $1[b], $1, $1, $2]", ConfigElements.toString(list));
+    }
 }
