@@ -615,13 +615,13 @@ final class ConfigElements {
 
                         if (entry.added) {
                             root.builder.insert(entry.absoluteStartIndex + offset, tag);
+                            offset += tag.length();
                         }
                         else {
                             entry.builder.insert(0, tag);
                         }
 
                         current.append(next.getKey(), tag);
-                        offset += tag.length();
                     }
                     else {
                         current.append(next.getKey(), "$" + entry.reference);
