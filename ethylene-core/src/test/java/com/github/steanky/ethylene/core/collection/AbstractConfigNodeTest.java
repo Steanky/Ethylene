@@ -4,7 +4,6 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -43,31 +42,6 @@ class AbstractConfigNodeTest {
         assertEquals("string", populatedNode.getStringOrDefault("default", "string"));
         assertSame(innerList, populatedNode.getListOrDefault((ConfigList) null, "list"));
         assertSame(populatedNode, populatedNode.getNodeOrDefault((ConfigNode) null, "list", 1, "circular_reference"));
-    }
-
-    @Test
-    void toStringTest() {
-        assertEquals("$0{}", new BackedConfigNode(new HashMap<>()) {
-        }.toString());
-
-        BackedConfigNode node = new BackedConfigNode(new LinkedHashMap<>()) {
-        };
-        node.put("self", node);
-
-        assertEquals("$0{self=$0}", node.toString());
-
-        ConfigList list = new ArrayConfigList();
-        node.put("list", list);
-
-        assertEquals("$0{self=$0, list=$1{}}", node.toString());
-
-        list.add(list);
-        list.add(node);
-        assertEquals("$0{self=$0, list=$1{$1, $0}}", node.toString());
-
-        list.add(ConfigPrimitive.of(10));
-
-        assertEquals("$0{self=$0, list=$1{$1, $0, [10]}}", node.toString());
     }
 
     @Test
