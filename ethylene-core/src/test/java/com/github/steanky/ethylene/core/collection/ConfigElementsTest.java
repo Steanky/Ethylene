@@ -177,7 +177,7 @@ class ConfigElementsTest {
     @Test
     void nodeContainingListToString() {
         ConfigNode node = ConfigNode.of("first", 0, "second", ConfigList.of("a", "b", "c"));
-        assertEquals("{first=0, second=[a, b, c]}", ConfigElements.toString(node));
+        assertEquals("{first=0, second=['a', 'b', 'c']}", ConfigElements.toString(node));
     }
 
     @Test
@@ -185,7 +185,7 @@ class ConfigElementsTest {
         ConfigList list = ConfigList.of("a");
         ConfigNode node = ConfigNode.of("first", list, "second", list, "third", list);
 
-        assertEquals("{first=$0[a], second=$0, third=$0}", ConfigElements.toString(node));
+        assertEquals("{first=$0['a'], second=$0, third=$0}", ConfigElements.toString(node));
     }
 
     @Test
@@ -226,7 +226,7 @@ class ConfigElementsTest {
         node.put("suffering", selfReferential);
         node.put("suffering2", selfReferential);
 
-        assertEquals("$0{pain=[$0], self=$0, value=100, suffering=$1[$1, no], suffering2=$1}", ConfigElements.toString(node));
+        assertEquals("$0{pain=[$0], self=$0, value=100, suffering=$1[$1, 'no'], suffering2=$1}", ConfigElements.toString(node));
     }
 
     @Test
@@ -243,7 +243,7 @@ class ConfigElementsTest {
         list.add(otherRepeating);
         list.add(otherRepeating);
 
-        assertEquals("[$0[a], $0, $1[b], $1, $1]", ConfigElements.toString(list));
+        assertEquals("[$0['a'], $0, $1['b'], $1, $1]", ConfigElements.toString(list));
     }
 
     @Test
@@ -262,6 +262,6 @@ class ConfigElementsTest {
 
         list.add(list);
 
-        assertEquals("$2[$0[a], $0, $1[b], $1, $1, $2]", ConfigElements.toString(list));
+        assertEquals("$2[$0['a'], $0, $1['b'], $1, $1, $2]", ConfigElements.toString(list));
     }
 }
