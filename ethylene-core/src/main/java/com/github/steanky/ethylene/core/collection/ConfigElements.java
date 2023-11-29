@@ -202,8 +202,19 @@ final class ConfigElements {
         }
     }
 
-    private record StackEntry(ConfigContainer first, ConfigContainer second) {
+    private record EqualsEntry(ConfigContainer first, ConfigContainer second, EqualsEntry parent) {
+        private EqualsEntry findParent(ConfigContainer container) {
+            EqualsEntry entry = this;
+            while (entry != null) {
+                if (entry.first == container) {
+                    return entry;
+                }
 
+                entry = entry.parent;
+            }
+
+            return null;
+        }
     }
 
     private static final class HashEntry {
@@ -212,23 +223,41 @@ final class ConfigElements {
         private final Iterator<ConfigEntry> entryIterator;
 
         private final HashEntry parent;
-        private final String parentKey;
+        private final ConfigEntry parentEntry;
 
         private int hash;
 
-        private HashEntry(ConfigContainer entry, HashEntry parent, String parentKey) {
+        private HashEntry(ConfigContainer entry, HashEntry parent, ConfigEntry parentEntry) {
             this.entry = entry;
             this.list = entry.isList();
             this.entryIterator = entry.entryCollection().iterator();
 
             this.parent = parent;
-            this.parentKey = parentKey;
+            this.parentEntry = parentEntry;
 
             this.hash = list ? 1 : 0;
         }
 
-        private void hash(int code) {
-            hash = list ? (hash * 31 + code) : hash + code;
+        private void hash(ConfigEntry entry) {
+            if (list) {
+                hash = hash * 31 + entry.getValue().hashCode();
+                return;
+            }
+
+            hash = hash + (entry.getKey().hashCode() ^ entry.getValue().hashCode());
+        }
+
+        private HashEntry findParent(ConfigContainer parentContainer) {
+            HashEntry current = this;
+            while (current != null) {
+                if (current.entry == parentContainer) {
+                    return current;
+                }
+
+                current = current.parent;
+            }
+
+            return null;
         }
     }
 
@@ -245,52 +274,52 @@ final class ConfigElements {
             return 0;
         }
 
-        if (element.isScalar()) {
+        if (!element.isContainer()) {
             return element.hashCode();
         }
 
-        ConfigContainer first = element.asContainer();
+        ConfigContainer rootContainer = element.asContainer();
+        if (rootContainer.entryCollection().isEmpty()) {
+            return rootContainer.isList() ? 1 : 0;
+        }
+
         Deque<HashEntry> stack = new ArrayDeque<>();
 
-        HashEntry root = new HashEntry(first, null, null);
+        HashEntry root = new HashEntry(rootContainer, null, null);
         stack.push(root);
-
-        Set<ConfigContainer> visited = Collections.newSetFromMap(new IdentityHashMap<>());
-        visited.add(first);
 
         //depth-first traversal
         while (!stack.isEmpty()) {
-            HashEntry hashEntry = stack.peek();
+            HashEntry current = stack.peek();
 
-            if (!hashEntry.entryIterator.hasNext()) {
+            if (!current.entryIterator.hasNext()) {
                 stack.pop();
 
-                HashEntry parent = hashEntry.parent;
+                HashEntry parent = current.parent;
                 if (parent != null) {
-                    parent.hash(hashEntry.parentKey == null ? hashEntry.hash :
-                        (hashEntry.parentKey.hashCode() ^ hashEntry.hash));
+                    parent.hash(current.parentEntry);
                 }
 
                 continue;
             }
 
-            while (hashEntry.entryIterator.hasNext()) {
-                ConfigEntry entry = hashEntry.entryIterator.next();
+            while (current.entryIterator.hasNext()) {
+                ConfigEntry entry = current.entryIterator.next();
                 ConfigElement entryElement = entry.getValue();
 
                 if (entryElement.isScalar()) {
-                    hashEntry.hash(hashEntry.list ? entryElement.hashCode() :
-                        (entry.getKey().hashCode() ^ entryElement.hashCode()));
+                    current.hash(entry);
                     continue;
                 }
 
                 ConfigContainer container = entryElement.asContainer();
-                if (!visited.add(container)) {
+
+                HashEntry parent = current.findParent(container);
+                if (parent != null) {
                     continue;
                 }
 
-                stack.push(new HashEntry(entryElement.asContainer(), hashEntry,
-                    hashEntry.entry.isNode() ? entry.getKey() : null));
+                stack.push(new HashEntry(entryElement.asContainer(), current, entry));
                 break;
             }
         }
@@ -298,7 +327,7 @@ final class ConfigElements {
         return root.hash;
     }
 
-    static ElementType type(Object object) {
+    static ElementType typeFromObject(Object object) {
         if(object instanceof ConfigElement element) {
             return element.type();
         }
@@ -366,7 +395,7 @@ final class ConfigElements {
             return false;
         }
 
-        if (first.type() != type(second)) {
+        if (first.type() != typeFromObject(second)) {
             return false;
         }
 
@@ -380,15 +409,11 @@ final class ConfigElements {
             return secondContainer.entryCollection().isEmpty();
         }
 
-        Deque<StackEntry> stack = new ArrayDeque<>();
-        stack.push(new StackEntry(first.asContainer(), secondContainer));
-
-        //visited containers
-        Set<ConfigContainer> visited = Collections.newSetFromMap(new IdentityHashMap<>());
-        visited.add(first.asContainer());
+        Deque<EqualsEntry> stack = new ArrayDeque<>();
+        stack.push(new EqualsEntry(first.asContainer(), secondContainer, null));
 
         while (!stack.isEmpty()) {
-            StackEntry current = stack.pop();
+            EqualsEntry current = stack.pop();
             Collection<ConfigEntry> firstEntries = current.first.entryCollection();
             Collection<ConfigEntry> secondEntries = current.second.entryCollection();
 
@@ -458,14 +483,16 @@ final class ConfigElements {
 
                 ConfigContainer firstContainer = firstValue.asContainer();
 
-                //cycle detected!
-                //we already visited this container, meaning we already compared it, so do nothing
-                if (visited.contains(firstContainer)) {
+                EqualsEntry parent = current.findParent(firstContainer);
+                if (parent != null) {
+                    if (parent.second != secondValue) {
+                        return false;
+                    }
+
                     continue;
                 }
 
-                stack.push(new StackEntry(firstContainer, secondValue.asContainer()));
-                visited.add(firstContainer);
+                stack.push(new EqualsEntry(firstContainer, secondValue.asContainer(), current));
             }
         }
 
@@ -491,8 +518,13 @@ final class ConfigElements {
             return first.equals(second) ? EquateResult.EQUALS : EquateResult.NOT_EQUALS;
         }
 
-        return first.asContainer().entryCollection().size() == second.asContainer().entryCollection().size() ?
-            EquateResult.UNSURE : EquateResult.NOT_EQUALS;
+        Collection<ConfigEntry> firstCollection = first.asContainer().entryCollection();
+        Collection<ConfigEntry> secondCollection = second.asContainer().entryCollection();
+        if (firstCollection.isEmpty() && secondCollection.isEmpty()) {
+            return EquateResult.EQUALS;
+        }
+
+        return firstCollection.size() == secondCollection.size() ? EquateResult.UNSURE : EquateResult.NOT_EQUALS;
     }
 
     private static class ToStringEntry {
@@ -531,16 +563,12 @@ final class ConfigElements {
 
         private void append(String key, String string) {
             String formatted = format(key, string);
+            builder.append(formatted);
 
-            if (count == 0) {
-                builder.append(formatted);
-            }
-            else if (count < container.entryCollection().size()) {
+            if (count < container.entryCollection().size() - 1) {
                 builder.append(", ");
-                builder.append(formatted);
             }
-
-            if (count == container.entryCollection().size() - 1) {
+            else {
                 builder.append(list ? "]" : "}");
             }
 
@@ -583,7 +611,6 @@ final class ConfigElements {
         visited.put(rootContainer, root);
 
         int referenced = 0;
-        int offset = 0;
         while (!stack.isEmpty()) {
             ToStringEntry current = stack.peek();
             if (!current.containerIterator.hasNext()) {
@@ -602,7 +629,8 @@ final class ConfigElements {
                 ConfigElement nextElement = next.getValue();
 
                 if (!nextElement.isContainer()) {
-                    current.append(next.getKey(), nextElement.isString() ? "'" + nextElement.asString() + "'" :
+                    boolean isString = nextElement.isString();
+                    current.append(next.getKey(), isString ? "'" + nextElement.asString() + "'" :
                         nextElement.toString());
                     continue;
                 }
@@ -615,8 +643,7 @@ final class ConfigElements {
                         String tag = "$" + entry.reference;
 
                         if (entry.added) {
-                            root.builder.insert(entry.absoluteStartIndex + offset, tag);
-                            offset += tag.length();
+                            root.builder.insert(entry.absoluteStartIndex, tag);
                         }
                         else {
                             entry.builder.insert(0, tag);

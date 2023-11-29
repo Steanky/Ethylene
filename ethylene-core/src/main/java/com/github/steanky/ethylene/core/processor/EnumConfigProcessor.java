@@ -4,12 +4,8 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * General ConfigProcessor implementation for serializing and deserializing enums.
@@ -19,9 +15,7 @@ import java.util.function.Function;
 class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnum> {
     private final String className;
     private final boolean caseSensitive;
-    private final Reference<Class<? extends TEnum>> enumClassReference;
-
-    private Function<String, TEnum> lookupFunction;
+    private final Map<String, TEnum> map;
 
     /**
      * Creates a new EnumConfigProcessor, which will be able to process instances of the provided enum class. The
@@ -41,9 +35,18 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
      * @param caseSensitive whether this processor should be case-sensitive
      */
     EnumConfigProcessor(@NotNull Class<? extends TEnum> enumClass, boolean caseSensitive) {
-        this.enumClassReference = new WeakReference<>(enumClass);
         this.className = enumClass.getName();
         this.caseSensitive = caseSensitive;
+
+        TEnum[] constants = enumClass.getEnumConstants();
+        @SuppressWarnings("unchecked") Map.Entry<String, TEnum>[] entries = new Map.Entry[constants.length];
+        for (int i = 0; i < entries.length; i++) {
+            TEnum constant = constants[i];
+            String string = caseSensitive ? constant.name() : constant.name().toLowerCase(Locale.ROOT);
+            entries[i] = Map.entry(string, constant);
+        }
+
+        map = Map.ofEntries(entries);
     }
 
     @Override
@@ -59,9 +62,8 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
         String elementString = element.asString();
         TEnum result = lookup(elementString);
         if (result == null) {
-            Class<? extends TEnum> enumClass = getEnumClass();
             throw new ConfigProcessException(
-                "No enum constant named '" + elementString + "' in " + enumClass.getTypeName());
+                "No enum constant named '" + elementString + "' in " + className);
         }
 
         return result;
@@ -77,40 +79,6 @@ class EnumConfigProcessor<TEnum extends Enum<?>> implements ConfigProcessor<TEnu
     }
 
     private TEnum lookup(String name) {
-        if (lookupFunction == null) {
-            TEnum[] constants = getEnumClass().getEnumConstants();
-
-            //for tiny enums, we can save a bit of memory by not using a hashmap
-            if (constants.length > 10) {
-                Map<String, TEnum> lookupMap = new HashMap<>(constants.length);
-                for (TEnum constant : constants) {
-                    lookupMap.put(caseSensitive ? constant.name() : constant.name().toLowerCase(Locale.ROOT), constant);
-                }
-
-                lookupFunction = caseSensitive ? lookupMap::get : s -> lookupMap.get(s.toLowerCase(Locale.ROOT));
-            } else {
-                lookupFunction = constantName -> {
-                    for (TEnum constant : constants) {
-                        if (caseSensitive ? constant.name().equals(constantName) :
-                            constant.name().toLowerCase(Locale.ROOT).equals(constantName.toLowerCase(Locale.ROOT))) {
-                            return constant;
-                        }
-                    }
-
-                    return null;
-                };
-            }
-        }
-
-        return lookupFunction.apply(name);
-    }
-
-    private Class<? extends TEnum> getEnumClass() {
-        Class<? extends TEnum> cls = enumClassReference.get();
-        if (cls == null) {
-            throw new TypeNotPresentException(className, null);
-        }
-
-        return cls;
+        return map.get(caseSensitive ? name : name.toLowerCase(Locale.ROOT));
     }
 }

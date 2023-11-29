@@ -45,8 +45,8 @@ class ConfigElementsTest {
         assertEquals(nonConfigList, emptyList);
 
         ConfigList simpleList = ConfigList.of("a", "b", "c");
-        List<ConfigElement> simpleNonConfigList = List.of(ConfigPrimitive.of("a"),
-            ConfigPrimitive.of("b"), ConfigPrimitive.of("c"));
+        List<ConfigElement> simpleNonConfigList =
+            List.of(ConfigPrimitive.of("a"), ConfigPrimitive.of("b"), ConfigPrimitive.of("c"));
 
         assertTrue(ConfigElements.equals(simpleList, simpleNonConfigList));
         assertEquals(simpleNonConfigList, simpleList);
@@ -78,6 +78,16 @@ class ConfigElementsTest {
     }
 
     @Test
+    void cycleWithDifferentElement() {
+        ConfigList cycle = ConfigList.of("first");
+        cycle.add(cycle);
+
+        ConfigList otherList = ConfigList.of("first", ConfigList.of(0));
+
+        assertFalse(ConfigElements.equals(cycle, otherList));
+    }
+
+    @Test
     void hashCodeContract() {
         List<ConfigPrimitive> list = List.of(ConfigPrimitive.of("this is a test"), ConfigPrimitive.of(0));
 
@@ -86,6 +96,21 @@ class ConfigElementsTest {
         assertEquals(list, configList);
 
         assertEquals(list.hashCode(), ConfigElements.hashCode(configList));
+    }
+
+    @Test
+    void repeatedHash() {
+        List<ConfigElement> simpleHash = List.of(ConfigPrimitive.of("a"), ConfigPrimitive.of("b"));
+        List<List<ConfigElement>> nested = List.of(simpleHash, simpleHash);
+        ConfigList nestedList = ConfigList.of("a", "b");
+
+        assertEquals(nested.hashCode(), ConfigElements.hashCode(ConfigList.of(nestedList, nestedList)));
+    }
+
+    @Test
+    void emptyHash() {
+        assertEquals(Map.of().hashCode(), ConfigElements.hashCode(ConfigNode.of()));
+        assertEquals(List.of().hashCode(), ConfigElements.hashCode(ConfigList.of()));
     }
 
     @Test
@@ -99,6 +124,20 @@ class ConfigElementsTest {
 
         assertTrue(ConfigElements.equals(first, list));
         assertEquals(list, first);
+    }
+
+    @Test
+    void repeatingListEquals() {
+        ConfigList first = ConfigList.of("first");
+        ConfigList sublist = ConfigList.of("a");
+
+        first.add(sublist);
+        first.add(sublist);
+        first.addNumber(0);
+
+        ConfigList second = ConfigList.of("first", ConfigList.of("a"), ConfigList.of("b"), 0);
+
+        assertFalse(ConfigElements.equals(first, second));
     }
 
     @Test
@@ -135,6 +174,35 @@ class ConfigElementsTest {
         ConfigNode node = ConfigNode.of("first", ConfigList.of(ConfigPrimitive.of("test")));
 
         assertEquals(map.hashCode(), ConfigElements.hashCode(node));
+    }
+
+    @Test
+    void referentialEquals() {
+        ConfigList list = ConfigList.of("a");
+        list.add(list);
+        list.addString("b");
+
+        System.out.println(list);
+
+        ConfigList otherList = ConfigList.of("a", ConfigList.of(0, 2, 3), "b");
+
+        assertFalse(ConfigElements.equals(list, otherList));
+    }
+
+    //naming these tests is getting really hard...
+    @Test
+    void referentialEqualsWithEquivalentTopology() {
+        ConfigList list = ConfigList.of("a");
+        list.add(list);
+        list.addString("b");
+
+        System.out.println(list);
+
+        ConfigList otherList = ConfigList.of("a");
+        otherList.add(otherList);
+        otherList.addString("b");
+
+        assertTrue(ConfigElements.equals(list, otherList));
     }
 
     @Test
@@ -263,5 +331,16 @@ class ConfigElementsTest {
         list.add(list);
 
         assertEquals("$2[$0['a'], $0, $1['b'], $1, $1, $2]", ConfigElements.toString(list));
+    }
+
+    @Test
+    void repeatingList() {
+        ConfigList first = ConfigList.of("first");
+        ConfigList sublist = ConfigList.of("a");
+
+        first.add(sublist);
+        first.add(sublist);
+
+        assertEquals("['first', $0['a'], $0]", ConfigElements.toString(first));
     }
 }

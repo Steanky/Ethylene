@@ -126,30 +126,12 @@ public final class ConfigPrimitive implements ConfigElement {
             return b ? TRUE : FALSE;
         }
 
-        if (object instanceof Number) {
-            if (object instanceof Long l) {
-                return of((long)l);
-            }
-            else if(object instanceof Integer i) {
-                return of((int)i);
-            }
-            else if(object instanceof Short s) {
-                return of((short)s);
-            }
-            else if(object instanceof Byte b) {
-                return of((byte)b);
-            }
-
-            //Double, Float, BigInteger?
-            return new ConfigPrimitive(object);
+        if (object instanceof Number number) {
+            return ofNonNull(number);
         }
 
         if (object instanceof String string) {
-            if (string.isEmpty()) {
-                return EMPTY_STRING;
-            }
-
-            return new ConfigPrimitive(string);
+            return ofNonNull(string);
         }
 
         if (object instanceof Character c) {
@@ -158,6 +140,54 @@ public final class ConfigPrimitive implements ConfigElement {
 
         throw new IllegalArgumentException(
             "Object of type " + object.getClass() + " not valid for ConfigPrimitive");
+    }
+
+    private static ConfigPrimitive ofNonNull(Number value) {
+        if (value instanceof Long l) {
+            return of((long)l);
+        }
+        else if(value instanceof Integer i) {
+            return of((int)i);
+        }
+        else if(value instanceof Short s) {
+            return of((short)s);
+        }
+        else if(value instanceof Byte b) {
+            return of((byte)b);
+        }
+
+        //Double, Float, BigInteger?
+        return new ConfigPrimitive(value);
+    }
+
+    private static ConfigPrimitive ofNonNull(String value) {
+        return value.isEmpty() ? EMPTY_STRING : new ConfigPrimitive(value);
+    }
+
+    /**
+     * Number specialization of {@link ConfigPrimitive#of(Object)}.
+     * @param value the value from which to create a ConfigPrimitive
+     * @return a ConfigPrimitive containing the given number
+     */
+    public static @NotNull ConfigPrimitive of(@Nullable Number value) {
+        if (value == null) {
+            return NULL;
+        }
+
+        return ofNonNull(value);
+    }
+
+    /**
+     * String specialization of {@link ConfigPrimitive#of(Object)}.
+     * @param value the value from which to create a ConfigPrimitive
+     * @return a ConfigPrimitive containing the given string
+     */
+    public static @NotNull ConfigPrimitive of(@Nullable String value) {
+        if (value == null) {
+            return NULL;
+        }
+
+        return ofNonNull(value);
     }
 
     /**
