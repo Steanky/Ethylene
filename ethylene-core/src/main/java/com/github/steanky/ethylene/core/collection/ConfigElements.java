@@ -629,8 +629,7 @@ final class ConfigElements {
                 ConfigElement nextElement = next.getValue();
 
                 if (!nextElement.isContainer()) {
-                    boolean isString = nextElement.isString();
-                    current.append(next.getKey(), isString ? "'" + nextElement.asString() + "'" :
+                    current.append(next.getKey(), nextElement.isString() ? "'" + nextElement.asString() + "'" :
                         nextElement.toString());
                     continue;
                 }
