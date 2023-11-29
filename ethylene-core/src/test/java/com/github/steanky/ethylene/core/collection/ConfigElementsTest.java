@@ -253,7 +253,7 @@ class ConfigElementsTest {
         ConfigList list = ConfigList.of("a");
         ConfigNode node = ConfigNode.of("first", list, "second", list, "third", list);
 
-        assertEquals("{first=$0['a'], second=$0, third=$0}", ConfigElements.toString(node));
+        assertEquals("{first=['a'], second=['a'], third=['a']}", ConfigElements.toString(node));
     }
 
     @Test
@@ -261,7 +261,7 @@ class ConfigElementsTest {
         ConfigList list = ConfigList.of();
         list.add(list);
 
-        assertEquals("$0[$0]", ConfigElements.toString(list));
+        assertEquals("&0[&0]", ConfigElements.toString(list));
     }
 
     @Test
@@ -270,7 +270,7 @@ class ConfigElementsTest {
         list.add(list);
         list.add(list);
 
-        assertEquals("$0[$0, $0]", ConfigElements.toString(list));
+        assertEquals("&0[&0, &0]", ConfigElements.toString(list));
     }
 
     @Test
@@ -278,7 +278,7 @@ class ConfigElementsTest {
         ConfigList list = ConfigList.of(0, 1, 2);
         list.add(list);
 
-        assertEquals("$0[0, 1, 2, $0]", ConfigElements.toString(list));
+        assertEquals("&0[0, 1, 2, &0]", ConfigElements.toString(list));
     }
 
     @Test
@@ -294,7 +294,7 @@ class ConfigElementsTest {
         node.put("suffering", selfReferential);
         node.put("suffering2", selfReferential);
 
-        assertEquals("$0{pain=[$0], self=$0, value=100, suffering=$1[$1, 'no'], suffering2=$1}", ConfigElements.toString(node));
+        assertEquals("&0{pain=[&0], self=&0, value=100, suffering=&1[&1, 'no'], suffering2=&2[&2, 'no']}", ConfigElements.toString(node));
     }
 
     @Test
@@ -311,7 +311,7 @@ class ConfigElementsTest {
         list.add(otherRepeating);
         list.add(otherRepeating);
 
-        assertEquals("[$0['a'], $0, $1['b'], $1, $1]", ConfigElements.toString(list));
+        assertEquals("[['a'], ['a'], ['b'], ['b'], ['b']]", ConfigElements.toString(list));
     }
 
     @Test
@@ -330,7 +330,7 @@ class ConfigElementsTest {
 
         list.add(list);
 
-        assertEquals("$2[$0['a'], $0, $1['b'], $1, $1, $2]", ConfigElements.toString(list));
+        assertEquals("&0[['a'], ['a'], ['b'], ['b'], ['b'], &0]", ConfigElements.toString(list));
     }
 
     @Test
@@ -341,6 +341,27 @@ class ConfigElementsTest {
         first.add(sublist);
         first.add(sublist);
 
-        assertEquals("['first', $0['a'], $0]", ConfigElements.toString(first));
+        assertEquals("['first', ['a'], ['a']]", ConfigElements.toString(first));
+    }
+
+    @Test
+    void numericPostfixes() {
+        ConfigPrimitive l = ConfigPrimitive.of(0L);
+        assertEquals("0L", ConfigElements.toString(l));
+
+        ConfigPrimitive i = ConfigPrimitive.of(15465);
+        assertEquals("15465", ConfigElements.toString(i));
+
+        ConfigPrimitive d = ConfigPrimitive.of(100.25);
+        assertEquals("100.25", ConfigElements.toString(d));
+
+        ConfigPrimitive f = ConfigPrimitive.of((float)10);
+        assertEquals("10.0F", ConfigElements.toString(f));
+
+        ConfigPrimitive s = ConfigPrimitive.of((short) 10);
+        assertEquals("10S", ConfigElements.toString(s));
+
+        ConfigPrimitive b = ConfigPrimitive.of((byte)100);
+        assertEquals("100B", ConfigElements.toString(b));
     }
 }

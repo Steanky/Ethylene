@@ -368,8 +368,28 @@ public final class ConfigPrimitive implements ConfigElement {
         return false;
     }
 
+    private static final String LONG_POSTFIX = "L";
+    private static final String FLOAT_POSTFIX = "F";
+    private static final String SHORT_POSTFIX = "S";
+    private static final String BYTE_POSTFIX = "B";
+
     @Override
     public String toString() {
+        if (object instanceof Number) {
+            if (object instanceof Long l) {
+                return l + LONG_POSTFIX;
+            }
+            else if (object instanceof Float f) {
+                return f + FLOAT_POSTFIX;
+            }
+            else if (object instanceof Short s) {
+                return s + SHORT_POSTFIX;
+            }
+            else if (object instanceof Byte b) {
+                return b + BYTE_POSTFIX;
+            }
+        }
+
         return Objects.toString(object);
     }
 }

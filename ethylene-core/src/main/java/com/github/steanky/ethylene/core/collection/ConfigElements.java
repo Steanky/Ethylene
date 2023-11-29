@@ -550,6 +550,19 @@ final class ConfigElements {
             reference = -1;
         }
 
+        private ToStringEntry findParent(ConfigContainer container) {
+            ToStringEntry entry = this;
+            while (entry != null) {
+                if (entry.container == container) {
+                    return entry;
+                }
+
+                entry = entry.parent;
+            }
+
+            return null;
+        }
+
         private static String initBuilder(ConfigContainer container) {
             boolean list = container.isList();
 
@@ -580,11 +593,13 @@ final class ConfigElements {
         }
     }
 
+    private static final String TAG_PREFIX = "&";
+
     /**
      * <p>Specialized helper method used by {@link ConfigContainer} implementations that need to override
      * {@link Object#toString()}. Supports circular and self-referential ConfigElement constructions by use of a "tag"
-     * syntax: containers are associated with a <i>name</i>, and if a container occurs twice, it will be referred to by
-     * the name the second time rather than showing its entire contents again.</p>
+     * syntax: containers are associated with a <i>name</i>, and if a reference cycle occurs, the reference will be
+     * shown by use of the tag.</p>
      *
      * @param input the input {@link ConfigElement} to show
      * @return the ConfigElement, represented as a string
@@ -606,9 +621,6 @@ final class ConfigElements {
         Deque<ToStringEntry> stack = new ArrayDeque<>();
         ToStringEntry root = new ToStringEntry(null, rootContainer, null, 0);
         stack.push(root);
-
-        Map<ConfigContainer, ToStringEntry> visited = new IdentityHashMap<>();
-        visited.put(rootContainer, root);
 
         int referenced = 0;
         while (!stack.isEmpty()) {
@@ -635,11 +647,11 @@ final class ConfigElements {
                 }
 
                 ConfigContainer nextContainer = nextElement.asContainer();
-                ToStringEntry entry = visited.get(nextContainer);
+                ToStringEntry entry = current.findParent(nextContainer);
                 if (entry != null) {
                     if (entry.reference == -1) {
                         entry.reference = referenced++;
-                        String tag = "$" + entry.reference;
+                        String tag = TAG_PREFIX + entry.reference;
 
                         if (entry.added) {
                             root.builder.insert(entry.absoluteStartIndex, tag);
@@ -651,7 +663,7 @@ final class ConfigElements {
                         current.append(next.getKey(), tag);
                     }
                     else {
-                        current.append(next.getKey(), "$" + entry.reference);
+                        current.append(next.getKey(), TAG_PREFIX + entry.reference);
                     }
 
                     continue;
@@ -661,7 +673,6 @@ final class ConfigElements {
                 int rootLength = root.builder.length();
                 entry = new ToStringEntry(current, nextContainer, current.list ? null : nextKey,
                     nextKey == null ? rootLength : rootLength + nextKey.length() + 1);
-                visited.put(nextContainer, entry);
                 stack.push(entry);
                 break;
             }
