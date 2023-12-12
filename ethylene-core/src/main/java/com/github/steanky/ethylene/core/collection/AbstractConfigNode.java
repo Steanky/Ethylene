@@ -2,12 +2,11 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 
-import java.util.AbstractList;
 import java.util.AbstractMap;
 import java.util.Map;
 
 /**
- * Common base class for all {@link ConfigNode}. Extends {@link AbstractList}; implements {@link Object#hashCode()},
+ * Common base class for all {@link ConfigNode}. Extends {@link AbstractMap}; implements {@link Object#hashCode()},
  * {@link Object#equals(Object)}, and {@link Object#toString()}.
  */
 public abstract class AbstractConfigNode extends AbstractMap<String, ConfigElement> implements ConfigNode {

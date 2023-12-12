@@ -364,4 +364,12 @@ class ConfigElementsTest {
         ConfigPrimitive b = ConfigPrimitive.of((byte)100);
         assertEquals("100B", ConfigElements.toString(b));
     }
+
+    @Test
+    void stringLiterals() {
+        ConfigPrimitive p = ConfigPrimitive.of("test");
+        assertEquals("'test'", ConfigElements.toString(p));
+        assertEquals("'test\\''", ConfigElements.toString(ConfigPrimitive.of("test'")));
+        assertEquals("'test\\\\'", ConfigElements.toString(ConfigPrimitive.of("test\\")));
+    }
 }

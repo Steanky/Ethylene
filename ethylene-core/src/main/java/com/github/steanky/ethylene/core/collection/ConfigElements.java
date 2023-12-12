@@ -610,7 +610,7 @@ final class ConfigElements {
         }
 
         if (!input.isContainer()) {
-            return input.isString() ? "'" + input.asString() + "'" : input.toString();
+            return input.toString();
         }
 
         ConfigContainer rootContainer = input.asContainer();
@@ -641,8 +641,7 @@ final class ConfigElements {
                 ConfigElement nextElement = next.getValue();
 
                 if (!nextElement.isContainer()) {
-                    current.append(next.getKey(), nextElement.isString() ? "'" + nextElement.asString() + "'" :
-                        nextElement.toString());
+                    current.append(next.getKey(), nextElement.toString());
                     continue;
                 }
 

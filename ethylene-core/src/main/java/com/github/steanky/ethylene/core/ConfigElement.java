@@ -4,8 +4,10 @@ import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
+import com.github.steanky.ethylene.core.propylene.Parser;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -14,8 +16,36 @@ import java.util.function.Supplier;
  * Represents a particular value from a configuration file. Specialized sub-interfaces include {@link ConfigNode} and
  * {@link ConfigList}. A direct implementation is {@link ConfigPrimitive}. This interface specifies methods to easily
  * convert to implementations as needed, which will all throw {@link IllegalStateException} by default.
+ * <p>
+ * Instances can be directly obtained using {@link ConfigElement#of(String)}. Specialized subclasses will often have
+ * their own constructors or static methods for creating instances.
  */
 public interface ConfigElement {
+    /**
+     * Constructs a new {@link ConfigElement} using the Propylene format. This method is intended for conveniently
+     * creating simple to moderately complex ConfigElement instances directly in code. A few examples:
+     * <ul>
+     *     <li>{@code ConfigElement.of("['test', 0, 10L]") // a ConfigList containing the string "test", the integer 0, and the long 10}</li>
+     *     <li>{@code ConfigElement.of("&0[&0]") // a ConfigList containing itself}</li>
+     *     <li>{@code ConfigElement.of("0") // a ConfigPrimitive for the integer 0}</li>
+     *     <li>{@code ConfigElement.of("null") // a ConfigPrimitive representing the null value}</li>
+     *     <li>{@code ConfigElement.of("TRUE") // a ConfigPrimitive representing true}</li>
+     *     <li>{@code ConfigElement.of("{a='b', c='d'}") // a ConfigNode where 'a' is mapped to the string "b", and 'c' is mapped to string "d"}</li>
+     * </ul>
+     * Although Propylene is lightweight and parses fairly quickly, creating ConfigElement instances this way will never
+     * be as fast as directly instantiating them.
+     * @param input the Propylene-formatted string to convert into a ConfigElement
+     * @return a ConfigElement representing the string
+     * @throws RuntimeException wrapping an {@link IOException} containing details of the syntax error
+     */
+    static @NotNull ConfigElement of(@NotNull String input) {
+        try {
+            return Parser.fromString(input);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Converts this ConfigElement into a {@link ConfigContainer}.
      *

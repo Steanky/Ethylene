@@ -94,7 +94,7 @@ public class HjsonCodec extends AbstractConfigCodec {
     protected @NotNull ConfigElement deserializeObject(@Nullable Object object) {
         if (object instanceof JsonValue value) {
             if (value.isNull()) {
-                return ConfigPrimitive.of(null);
+                return ConfigPrimitive.NULL;
             } else if (value.isBoolean()) {
                 return ConfigPrimitive.of(value.asBoolean());
             } else if (value.isNumber()) {

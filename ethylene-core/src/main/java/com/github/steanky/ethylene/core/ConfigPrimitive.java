@@ -373,6 +373,22 @@ public final class ConfigPrimitive implements ConfigElement {
     private static final String SHORT_POSTFIX = "S";
     private static final String BYTE_POSTFIX = "B";
 
+    private static String escapeAndQuote(String input) {
+        StringBuilder builder = new StringBuilder(input.length() + 4);
+        builder.append('\'');
+
+        for (int i = 0; i < input.length(); i++) {
+            char character = input.charAt(i);
+            if (character == '\\' || character == '\'') {
+                builder.append('\\');
+            }
+
+            builder.append(character);
+        }
+        builder.append('\'');
+        return builder.toString();
+    }
+
     @Override
     public String toString() {
         if (object instanceof Number) {
@@ -388,6 +404,13 @@ public final class ConfigPrimitive implements ConfigElement {
             else if (object instanceof Byte b) {
                 return b + BYTE_POSTFIX;
             }
+        }
+
+        if (object instanceof String s) {
+            return escapeAndQuote(s);
+        }
+        else if(object instanceof Character character) {
+            return escapeAndQuote(Character.toString(character));
         }
 
         return Objects.toString(object);
