@@ -2,16 +2,21 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.*;
 
 /**
- * Simple utilities for ConfigElements.
+ * Internal utilities for ConfigElements. Not part of the public API, but is public to enable cross-package access.
  */
-final class ConfigElements {
+@ApiStatus.Internal
+public final class ConfigElements {
     private ConfigElements() {
         throw new AssertionError("Why?");
     }
@@ -269,7 +274,7 @@ final class ConfigElements {
      * @param element the element to compute the hashcode of
      * @return the hashcode
      */
-    static int hashCode(@Nullable ConfigElement element) {
+    public static int hashCode(@Nullable ConfigElement element) {
         if (element == null) {
             return 0;
         }
@@ -386,7 +391,16 @@ final class ConfigElements {
         throw new IllegalStateException("unexpected object type");
     }
 
-    static boolean equals(@Nullable ConfigElement first, @Nullable Object second) {
+    /**
+     * Determines if a given ConfigElement is equal to another object. As per the respective specifications of
+     * {@link Map#equals(Object)} and {@link List#equals(Object)}, {@link ConfigNode} and {@link ConfigList} objects can
+     * be equal to other implementations of Map and List.
+     *
+     * @param first the ConfigElement
+     * @param second object to be compared to
+     * @return true iff the objects are equal; false otherwise
+     */
+    public static boolean equals(@Nullable ConfigElement first, @Nullable Object second) {
         if (first == second) {
             return true;
         }
@@ -574,9 +588,15 @@ final class ConfigElements {
             return list ? "[" : "{";
         }
 
-        private void append(String key, String string) {
-            String formatted = format(key, string);
-            builder.append(formatted);
+        private void append(String key, CharSequence sequence) {
+            if (key == null) {
+                builder.append(sequence);
+            }
+            else {
+                builder.append(key);
+                builder.append("=");
+                builder.append(sequence);
+            }
 
             if (count < container.entryCollection().size() - 1) {
                 builder.append(", ");
@@ -587,35 +607,31 @@ final class ConfigElements {
 
             count++;
         }
-
-        private static String format(String key, String value) {
-            return key == null ? value : key + "=" + value;
-        }
     }
 
     private static final String TAG_PREFIX = "&";
 
     /**
-     * <p>Specialized helper method used by {@link ConfigContainer} implementations that need to override
-     * {@link Object#toString()}. Supports circular and self-referential ConfigElement constructions by use of a "tag"
-     * syntax: containers are associated with a <i>name</i>, and if a reference cycle occurs, the reference will be
-     * shown by use of the tag.</p>
-     *
-     * @param input the input {@link ConfigElement} to show
-     * @return the ConfigElement, represented as a string
+     * Alternative to {@link ConfigElements#toString(ConfigElement)} designed for outputting to a generic {@link Writer}.
+     * @param input the input ConfigElement
+     * @param output the output writer
+     * @throws IOException if an IOException occurs when writing to the writer
      */
-    static @NotNull String toString(ConfigElement input) {
-        if (input == null) {
-            return "null";
+    public static void toString(@NotNull ConfigElement input, @NotNull Writer output) throws IOException {
+        if (input.isNull()) {
+            output.write("null");
+            return;
         }
 
         if (!input.isContainer()) {
-            return input.toString();
+            output.write(input.toString());
+            return;
         }
 
         ConfigContainer rootContainer = input.asContainer();
         if (rootContainer.entryCollection().isEmpty()) {
-            return rootContainer.isList() ? "[]" : "{}";
+            output.write(rootContainer.isList() ? "[]" : "{}");
+            return;
         }
 
         Deque<ToStringEntry> stack = new ArrayDeque<>();
@@ -623,6 +639,9 @@ final class ConfigElements {
         stack.push(root);
 
         int referenced = 0;
+        StringBuilder tagBuffer = new StringBuilder(2);
+        tagBuffer.append(TAG_PREFIX);
+
         while (!stack.isEmpty()) {
             ToStringEntry current = stack.peek();
             if (!current.containerIterator.hasNext()) {
@@ -630,7 +649,7 @@ final class ConfigElements {
 
                 ToStringEntry parent = current.parent;
                 if (parent != null) {
-                    parent.append(current.parentKey, current.builder.toString());
+                    parent.append(current.parentKey, current.builder);
                     current.added = true;
                 }
                 continue;
@@ -650,21 +669,24 @@ final class ConfigElements {
                 if (entry != null) {
                     if (entry.reference == -1) {
                         entry.reference = referenced++;
-                        String tag = TAG_PREFIX + entry.reference;
+
+                        tagBuffer.append(entry.reference);
 
                         if (entry.added) {
-                            root.builder.insert(entry.absoluteStartIndex, tag);
+                            root.builder.insert(entry.absoluteStartIndex, tagBuffer);
                         }
                         else {
-                            entry.builder.insert(0, tag);
+                            entry.builder.insert(0, tagBuffer);
                         }
 
-                        current.append(next.getKey(), tag);
+                        current.append(next.getKey(), tagBuffer);
                     }
                     else {
-                        current.append(next.getKey(), TAG_PREFIX + entry.reference);
+                        tagBuffer.append(entry.reference);
+                        current.append(next.getKey(), tagBuffer);
                     }
 
+                    tagBuffer.setLength(1);
                     continue;
                 }
 
@@ -677,6 +699,28 @@ final class ConfigElements {
             }
         }
 
-        return root.builder.toString();
+        output.append(root.builder);
+    }
+
+    /**
+     * <p>Specialized helper method used by {@link ConfigContainer} implementations that need to override
+     * {@link Object#toString()}. Supports circular and self-referential ConfigElement constructions by use of a "tag"
+     * syntax: containers are associated with a <i>name</i>, and if a reference cycle occurs, the reference will be
+     * shown by use of the tag.</p>
+     * <p>
+     * Strings returned by this method are also valid Propylene configuration, which can be passed to
+     * {@link ConfigElement#of(String)} in order to reconstruct the object graph from its string representation.
+     *
+     * @param input the input {@link ConfigElement} to show
+     * @return the ConfigElement, represented as a string
+     */
+    public static @NotNull String toString(@NotNull ConfigElement input) {
+        try (StringWriter writer = new StringWriter()) {
+            toString(input, writer);
+            return writer.toString();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

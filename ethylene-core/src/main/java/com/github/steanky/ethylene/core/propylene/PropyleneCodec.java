@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.core.propylene;
 import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
+import com.github.steanky.ethylene.core.collection.ConfigElements;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -33,8 +34,8 @@ public class PropyleneCodec implements ConfigCodec {
 
     @Override
     public void encode(@NotNull ConfigElement element, @NotNull OutputStream output) throws IOException {
-        try (Writer writer = new OutputStreamWriter(output)) {
-            writer.write(element.toString());
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(output))) {
+            ConfigElements.toString(element, writer);
         }
     }
 

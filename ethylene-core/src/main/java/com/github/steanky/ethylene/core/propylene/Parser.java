@@ -245,6 +245,8 @@ public final class Parser {
     private static final Scalar DUPLICATE_REFERENCE_TAG = new Scalar(TokenType.ERROR, TerminalType.NONE, "Duplicate reference tag");
     private static final Scalar REFERENCE_AS_ROOT = new Scalar(TokenType.ERROR, TerminalType.NONE, "Reference as root");
 
+    private static final Scalar EOF = new Scalar(TokenType.EOF, TerminalType.NONE, null);
+
     private static final class Tokenizer implements AutoCloseable {
         private final Reader reader;
         private final StringBuilder sharedBuffer;
@@ -481,7 +483,7 @@ public final class Parser {
 
             int read = reader.read();
             if (read == -1) {
-                return eof();
+                return EOF;
             }
 
             char character = (char) read;
@@ -525,10 +527,6 @@ public final class Parser {
                     yield simpleLiteral();
                 }
             };
-        }
-
-        private Scalar eof() {
-            return new Scalar(TokenType.EOF, TerminalType.NONE, null);
         }
 
         private Scalar number() throws IOException {
@@ -653,6 +651,11 @@ public final class Parser {
                     yield null;
                 }
                 default -> {
+                    if (escape) {
+                        append(ESCAPE);
+                        escape = false;
+                    }
+
                     append(character);
                     yield null;
                 }
@@ -665,10 +668,22 @@ public final class Parser {
         }
     }
 
+    /**
+     * Convenience overload of {@link Parser#fromReader(Reader)} that reads from the provided string.
+     * @param string the string from which to read from
+     * @return a ConfigElement created from parsing the string, which must contain valid Propylene configuration data
+     * @throws IOException if there is a syntax error
+     */
     public static @NotNull ConfigElement fromString(@NotNull String string) throws IOException {
         return fromReader(new StringReader(string));
     }
 
+    /**
+     * Extracts a single {@link ConfigElement} from the reader and closes it.
+     * @param reader the reader from which to read Propylene configuration data
+     * @return a ConfigElement
+     * @throws IOException if an IOException was thrown by the underlying reader while reading, or there is a syntax error
+     */
     public static @NotNull ConfigElement fromReader(@NotNull Reader reader) throws IOException {
         try (Tokenizer tokenizer = new Tokenizer(reader)) {
             Scalar token;
