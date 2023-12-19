@@ -1,7 +1,6 @@
 package com.github.steanky.ethylene.mapper.type;
 
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,6 +14,8 @@ import java.lang.reflect.Type;
  * objects used in constructing it. Not part of the public API.
  */
 final class WeakParameterizedType extends WeakTypeBase implements ParameterizedType, WeakType {
+    private static final String EMPTY = "";
+
     private final Reference<Class<?>> rawClassReference;
     private final String rawClassName;
 
@@ -41,7 +42,7 @@ final class WeakParameterizedType extends WeakTypeBase implements ParameterizedT
 
         ClassLoader classLoader = rawClass.getClassLoader();
         this.ownerTypeReference = owner == null ? null : GenericInfo.ref(owner, this, classLoader);
-        this.ownerTypeName = owner == null ? StringUtils.EMPTY : owner.getTypeName();
+        this.ownerTypeName = owner == null ? EMPTY : owner.getTypeName();
 
         this.typeArgumentReferences = new Reference[typeArguments.length];
         this.typeArgumentNames = new String[typeArguments.length];

@@ -1,8 +1,7 @@
 package com.github.steanky.ethylene.mapper.type;
 
 import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
+import com.github.steanky.toolkit.collection.Wrapper;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
@@ -72,11 +71,11 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
                 parameterTypeNames[i] = parameterType.getTypeName();
             }
 
-            Mutable<Reference<TDec>> executableReference = new MutableObject<>(new SoftReference<>(genericDeclaration));
+            Wrapper<Reference<TDec>> executableReference = Wrapper.of(new SoftReference<>(genericDeclaration));
             boolean isMethod = genericDeclaration instanceof Method;
             GenericInfo.populate(bounds, boundReferences, boundReferenceNames, this, declaringClass.getClassLoader());
             this.genericDeclarationSupplier = () -> {
-                TDec cachedDeclaration = executableReference.getValue().get();
+                TDec cachedDeclaration = executableReference.get().get();
                 if (cachedDeclaration != null) {
                     return cachedDeclaration;
                 }
@@ -100,7 +99,7 @@ final class WeakTypeVariable<TDec extends GenericDeclaration> extends WeakTypeBa
                 TDec newGenericDeclaration = (TDec) newExecutable;
 
                 //re-set the cached value
-                executableReference.setValue(new SoftReference<>(newGenericDeclaration));
+                executableReference.set(new SoftReference<>(newGenericDeclaration));
                 return newGenericDeclaration;
             };
         } else {

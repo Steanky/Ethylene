@@ -12,9 +12,7 @@ import com.github.steanky.ethylene.mapper.signature.SignatureMatcher;
 import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
 import com.github.steanky.toolkit.collection.Iterators;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
+import com.github.steanky.toolkit.collection.Wrapper;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -33,6 +31,8 @@ import java.util.Objects;
 public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     private static final int GRAPH_OPTIONS =
         Graph.Options.DEPTH_FIRST | Graph.Options.TRACK_REFERENCES | Graph.Options.LAZY_ACCUMULATION;
+
+    private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
     private final Token<T> token;
     private final SignatureMatcher.Source signatureMatcherSource;
@@ -85,13 +85,12 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                     //immediately create parameterless objects as they wouldn't be constructed otherwise
                     if (signatureSize == 0) {
-                        nodeEntry.reference.setValue(signature.buildObject(buildingObject,
-                            ArrayUtils.EMPTY_OBJECT_ARRAY));
+                        nodeEntry.reference.set(signature.buildObject(buildingObject, EMPTY_OBJECT_ARRAY));
                         return Graph.node(Iterators.iterator(),
                             Graph.output(nodeEntry.reference, Graph.emptyAccumulator()));
                     }
 
-                    nodeEntry.reference.setValue(buildingObject);
+                    nodeEntry.reference.set(buildingObject);
 
                     Iterator<ConfigElement> elementIterator = matchingSignature.elements().iterator();
                     Iterator<Map.Entry<String, SignatureParameter>> typeEntryIterator = signature.argumentTypes().iterator();
@@ -118,7 +117,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         }
 
                         @Override
-                        public Graph.InputEntry<String, ClassEntry, Mutable<Object>> next() {
+                        public Graph.InputEntry<String, ClassEntry, Wrapper<Object>> next() {
                             if (i++ == signatureSize) {
                                 throw new NoSuchElementException();
                             }
@@ -151,22 +150,22 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                         private int i;
 
                         @Override
-                        public void accept(Object key, Mutable<Object> value, boolean circular) {
+                        public void accept(Object key, Wrapper<Object> value, boolean circular) {
                             if (circular && !signature.hasBuildingObject()) {
                                 throw new MapperException("Signatures which do not supply building objects may " +
                                     "not be used to construct circular references");
                             }
 
-                            args[i++] = value.getValue();
+                            args[i++] = value.get();
 
                             if (i == args.length) {
-                                nodeEntry.reference.setValue(signature.buildObject(buildingObject, args));
+                                nodeEntry.reference.set(signature.buildObject(buildingObject, args));
                             }
                         }
                     }));
                 }, this::elementToObjectContainerPredicate,
-                scalar -> new MutableObject<>(scalarSource.makeObject(scalar.element, scalar.type)),
-                entry -> entry.element, GRAPH_OPTIONS).getValue();
+                scalar -> Wrapper.of(scalarSource.makeObject(scalar.element, scalar.type)),
+                entry -> entry.element, GRAPH_OPTIONS).get();
         } catch (Exception e) {
             throw new ConfigProcessException(e);
         }
@@ -298,9 +297,9 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
     }
 
     private record ClassEntry(Token<?> type, ConfigElement element, SignatureMatcher signatureMatcher,
-                              Mutable<Object> reference) {
+                              Wrapper<Object> reference) {
         private ClassEntry(Token<?> type, ConfigElement element, SignatureMatcher signatureMatcher) {
-            this(type, element, signatureMatcher, new MutableObject<>(null));
+            this(type, element, signatureMatcher, Wrapper.ofNull());
         }
     }
 }

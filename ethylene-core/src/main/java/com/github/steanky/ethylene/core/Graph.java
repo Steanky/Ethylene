@@ -108,7 +108,6 @@ public final class Graph {
         }
 
         boolean circularRefSupport = Options.hasOption(flags, Options.TRACK_REFERENCES);
-        boolean trackScalarReference = Options.hasOption(flags, Options.TRACK_SCALAR_REFERENCES);
         boolean depthFirst = Options.hasOption(flags, Options.DEPTH_FIRST);
         boolean lazyAccumulation = depthFirst && Options.hasOption(flags, Options.LAZY_ACCUMULATION);
 
@@ -116,11 +115,6 @@ public final class Graph {
         //make sure usages of this map check circularRefSupport to avoid NPE
         if (circularRefSupport) {
             rootNode.identity = visitKeyMapper.apply(rootInput);
-        }
-
-        Map<Object, TOut> scalarMap = null;
-        if (trackScalarReference) {
-            scalarMap = visitedSupplier.get();
         }
 
         Deque<Node<TIn, TOut, TKey>> stack = stackSupplier.get();
@@ -146,26 +140,7 @@ public final class Graph {
                 if (!containerPredicate.test(entryInput)) {
                     //nodes that aren't containers have no children, so we can immediately add them to the accumulator
                     if (hasOutput) {
-                        TOut out;
-                        boolean visited;
-
-                        if (trackScalarReference) {
-                            TVisit visit = visitKeyMapper.apply(entryInput);
-                            if (scalarMap.containsKey(visit)) {
-                                out = scalarMap.get(visit);
-                                visited = true;
-                            }
-                            else {
-                                scalarMap.put(visit, out = scalarMapper.apply(entryInput));
-                                visited = false;
-                            }
-                        }
-                        else {
-                            out = scalarMapper.apply(entryInput);
-                            visited = false;
-                        }
-
-                        node.output.accumulator.accept(entryKey, out, visited);
+                        node.output.accumulator.accept(entryKey, scalarMapper.apply(entryInput), false);
                     }
 
                     continue;
@@ -398,38 +373,23 @@ public final class Graph {
         public static final int NONE = 0;
 
         /**
-         * Enables support for reference tracking. If this is enabled, all node references will be tracked, whereas
-         * scalar references <i>can</i> be tracked only if their corresponding option flag is set. Warning: when this
-         * option is not present, any circular references in the input data structure will cause an infinite loop and
-         * eventually an OOM. However, if there is some guarantee that such a condition is not possible, leaving this
-         * setting disabled can improve performance.
+         * Enables support for reference tracking. If this is enabled, all node references will be tracked. Warning:
+         * when this option is not present, any circular references in the input data structure will cause an infinite
+         * loop and eventually an OOM. However, if there is some guarantee that such a condition is not possible,
+         * leaving this setting disabled can improve performance.
          */
         public static final int TRACK_REFERENCES = 1;
 
         /**
-         * Enables support for tracking scalar references. This option will do nothing if the REFERENCE_TRACKING flag is
-         * not also set. Since scalars cannot have children, not having this option will not cause a possibility of
-         * infinite loops. However, enabling it may be desirable in order to "de-duplicate" equivalent instances of
-         * scalars in the output data structure, at the cost of additional memory being used to store the scalar objects
-         * during graph transformation.
-         */
-        public static final int TRACK_SCALAR_REFERENCES = 2;
-
-        /**
-         * Equivalent to combining TRACK_REFERENCES and TRACK_SCALAR_REFERENCES.
-         */
-        public static final int TRACK_ALL_REFERENCES = TRACK_REFERENCES | TRACK_SCALAR_REFERENCES;
-
-        /**
          * Causes graphs to be processed in a depth-first manner.
          */
-        public static final int DEPTH_FIRST = 4;
+        public static final int DEPTH_FIRST = 2;
 
         /**
          * Enables lazy accumulation of nodes. Child nodes will only be added to their parent accumulator when all the
          * child's child nodes have been added. This option has no effect unless depth-first processing is enabled.
          */
-        public static final int LAZY_ACCUMULATION = 8;
+        public static final int LAZY_ACCUMULATION = 4;
 
         private static boolean hasOption(int options, int option) {
             return (options & option) != 0;

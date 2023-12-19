@@ -7,6 +7,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -247,7 +248,7 @@ public final class Parser {
 
     private static final Scalar EOF = new Scalar(TokenType.EOF, TerminalType.NONE, null);
 
-    private static final class Tokenizer implements AutoCloseable {
+    private static final class Tokenizer {
         private final Reader reader;
         private final StringBuilder sharedBuffer;
 
@@ -661,11 +662,6 @@ public final class Parser {
                 }
             };
         }
-
-        @Override
-        public void close() throws IOException {
-            reader.close();
-        }
     }
 
     /**
@@ -679,29 +675,28 @@ public final class Parser {
     }
 
     /**
-     * Extracts a single {@link ConfigElement} from the reader and closes it.
+     * Extracts a single {@link ConfigElement} from the reader. Does not close it.
      * @param reader the reader from which to read Propylene configuration data
      * @return a ConfigElement
      * @throws IOException if an IOException was thrown by the underlying reader while reading, or there is a syntax error
      */
     public static @NotNull ConfigElement fromReader(@NotNull Reader reader) throws IOException {
-        try (Tokenizer tokenizer = new Tokenizer(reader)) {
-            Scalar token;
-            do {
-                token = parseScalar(tokenizer.next(), tokenizer);
-            }
-            while (token.type != TokenType.ERROR && token.type != TokenType.EOF);
-
-            if (token.type == TokenType.ERROR) {
-                throw new IOException(token.raw);
-            }
-
-            if (tokenizer.root == null) {
-                throw new IOException("Input contained no valid tokens");
-            }
-
-            return tokenizer.finish();
+        Tokenizer tokenizer = new Tokenizer(reader);
+        Scalar token;
+        do {
+            token = parseScalar(tokenizer.next(), tokenizer);
         }
+        while (token.type != TokenType.ERROR && token.type != TokenType.EOF);
+
+        if (token.type == TokenType.ERROR) {
+            throw new IOException(token.raw);
+        }
+
+        if (tokenizer.root == null) {
+            throw new IOException("Input contained no valid tokens");
+        }
+
+        return tokenizer.finish();
     }
 
     private static Scalar parseScalar(Scalar scalar, Tokenizer tokenizer) {
@@ -780,6 +775,8 @@ public final class Parser {
 
             int offset = raw.charAt(0) == MINUS_SIGN ? 1 : 0;
             int radix = determineRadix(raw, offset);
+            int r = radix * 10;
+            double d = Math.sqrt(r) * 1e6;
 
             scalar.element = function.parse(processString(raw, radix, end, offset), radix);
             return scalar;

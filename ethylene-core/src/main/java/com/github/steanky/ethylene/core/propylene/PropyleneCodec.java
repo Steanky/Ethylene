@@ -41,7 +41,9 @@ public class PropyleneCodec implements ConfigCodec {
 
     @Override
     public @NotNull ConfigElement decode(@NotNull InputStream input) throws IOException {
-        return Parser.fromReader(new BufferedReader(new InputStreamReader(input)));
+        try (Reader reader = new BufferedReader(new InputStreamReader(input))) {
+            return Parser.fromReader(reader);
+        }
     }
 
     @Override

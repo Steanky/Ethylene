@@ -613,6 +613,7 @@ public final class ConfigElements {
 
     /**
      * Alternative to {@link ConfigElements#toString(ConfigElement)} designed for outputting to a generic {@link Writer}.
+     * Does not close {@code output}.
      * @param input the input ConfigElement
      * @param output the output writer
      * @throws IOException if an IOException occurs when writing to the writer
@@ -710,6 +711,8 @@ public final class ConfigElements {
      * <p>
      * Strings returned by this method are also valid Propylene configuration, which can be passed to
      * {@link ConfigElement#of(String)} in order to reconstruct the object graph from its string representation.
+     * <p>
+     * {@code input} will not be closed by this method.
      *
      * @param input the input {@link ConfigElement} to show
      * @return the ConfigElement, represented as a string
