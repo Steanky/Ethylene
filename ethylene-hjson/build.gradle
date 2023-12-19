@@ -1,8 +1,12 @@
 plugins {
     id 'ethylene.library-conventions'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 dependencies {
-    api project(':ethylene-core')
-    api 'org.hjson:hjson:3.0.0'
+    compileOnly project(':ethylene-core')
+    compileOnly 'org.hjson:hjson:3.0.0'
+
+    testImplementation project(':ethylene-core')
+    testImplementation 'org.hjson:hjson:3.0.0'
 }

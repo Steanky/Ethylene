@@ -1,8 +1,12 @@
 plugins {
     id 'ethylene.library-conventions'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 dependencies {
-    api project(':ethylene-core')
-    api 'org.snakeyaml:snakeyaml-engine:2.3'
+    compileOnly project(':ethylene-core')
+    compileOnly 'org.snakeyaml:snakeyaml-engine:2.3'
+
+    testImplementation project(':ethylene-core')
+    testImplementation 'org.snakeyaml:snakeyaml-engine:2.3'
 }

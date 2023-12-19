@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'ethylene.java-conventions'
+    id 'com.github.johnrengelman.shadow'
 }
 
 group 'com.github.steanky'
@@ -9,8 +10,8 @@ version '0.22.1'
 
 publishing {
     publications {
-        maven(MavenPublication) {
-            from components.java
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
         }
     }
 
@@ -27,4 +28,8 @@ publishing {
             }
         }
     }
+}
+
+shadowJar {
+    minimize()
 }
