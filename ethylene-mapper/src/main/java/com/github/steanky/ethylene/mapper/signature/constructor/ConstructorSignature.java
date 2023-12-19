@@ -14,7 +14,6 @@ import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -153,9 +152,8 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
             }
 
             try {
-                typedObjects.add(
-                    new TypedObject(name, Token.ofType(field.getGenericType()), FieldUtils.readField(field, object),
-                        info.defaultValueMap.get(name)));
+                typedObjects.add(new TypedObject(name, Token.ofType(field.getGenericType()), field.get(object),
+                    info.defaultValueMap.get(name)));
             } catch (IllegalAccessException ignored) {
                 break;
             }

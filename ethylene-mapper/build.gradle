@@ -7,8 +7,7 @@ dependencies {
     //user must provide their own ethylene-core
     compileOnly project(':ethylene-core')
 
-    //to be removed
-    api 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
 
     testImplementation project(':ethylene-core')
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
@@ -19,13 +18,14 @@ dependencies {
 }
 
 shadowJar {
-    minimize()
-
     //caffeine is another fairly small dependency so we bundle it
     relocate 'com.github.benmanes.caffeine', 'com.github.benmanes.relocated.caffeine'
 
     //relocate our toolkit dependency so we use the same one as provided by ethylene-core
     relocate 'com.github.steanky.toolkit', 'com.github.steanky.relocated.toolkit'
+
+    //relocate apache commons, to prevent conflicts when importing
+    relocate 'org.apache.commons', 'org.apache.commons.relocated'
 
     //don't actually jar core
     exclude '**/ethylene-core-*.jar'

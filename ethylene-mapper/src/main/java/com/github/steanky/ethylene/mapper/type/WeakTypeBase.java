@@ -1,6 +1,5 @@
 package com.github.steanky.ethylene.mapper.type;
 
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -51,11 +50,6 @@ abstract non-sealed class WeakTypeBase implements WeakType {
         }
 
         return false;
-    }
-
-    @Override
-    public final String toString() {
-        return TypeUtils.toString(this);
     }
 
     @Override

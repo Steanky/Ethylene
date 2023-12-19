@@ -10,7 +10,6 @@ import com.github.steanky.ethylene.mapper.internal.ReflectionUtils;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.signature.SignatureParameter;
 import com.github.steanky.ethylene.mapper.type.Token;
-import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -71,13 +70,19 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
         }
 
         Class<?> rawClass = containerType.rawType();
-        Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass, int.class);
+        Constructor<?> constructor;
+        try {
+            constructor = rawClass.getConstructor(int.class);
+        } catch (NoSuchMethodException e) {
+            constructor = null;
+        }
 
         boolean parameterless;
         if (constructor == null) {
-            constructor = ConstructorUtils.getMatchingAccessibleConstructor(rawClass);
-
-            if (constructor == null) {
+            try {
+                constructor = rawClass.getConstructor();
+            }
+            catch (NoSuchMethodException ignored) {
                 throw new MapperException("No suitable collection constructor found for '" + rawClass + "'");
             }
 
