@@ -41,7 +41,7 @@ public final class Graph {
 
     /**
      * Convenience overload for
-     * {@link Graph#process(Object, Function, Predicate, Function, Function, Supplier, Supplier, int)} that uses the
+     * {@link Graph#process(Object, Function, Predicate, Function, Function, Supplier, int)} that uses the
      * identity function for visit key mapping, the parameterless {@link IdentityHashMap} constructor for constructing
      * references, and the parameterless {@link ArrayDeque} constructor for the node stack.
      *
@@ -61,8 +61,8 @@ public final class Graph {
         @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
         @NotNull Predicate<? super TIn> containerPredicate, @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
         int flags) {
-        return process(rootInput, nodeFunction, containerPredicate, scalarMapper, Function.identity(),
-            IdentityHashMap::new, ArrayDeque::new, flags);
+        return process(rootInput, nodeFunction, containerPredicate, scalarMapper, Function.identity(), ArrayDeque::new,
+            flags);
     }
 
     /**
@@ -76,8 +76,6 @@ public final class Graph {
      * @param scalarMapper       the function used to map scalar input to scalar output
      * @param visitKeyMapper     the function used to map input objects to keys used to track reference identity; can be
      *                           null if references aren't being tracked
-     * @param visitedSupplier    the supplier used to create the visitation map; can be null if references aren't being
-     *                           tracked
      * @param stackSupplier      the supplier used to create the node stack; can be null if the input object is a
      *                           scalar, or if
      * @param flags              the flags which determine traversal and translation behavior; see
@@ -92,7 +90,6 @@ public final class Graph {
         @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
         @NotNull Predicate<? super TIn> containerPredicate, @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
         Function<? super TIn, ? extends TVisit> visitKeyMapper,
-        Supplier<? extends Map<Object, TOut>> visitedSupplier,
         @NotNull Supplier<? extends Deque<Node<TIn, TOut, TKey>>> stackSupplier, int flags) {
         if (!containerPredicate.test(rootInput)) {
             //if rootInput is a scalar, just return whatever the scalar mapper produces
@@ -235,7 +232,7 @@ public final class Graph {
 
     /**
      * Convenience overload for
-     * {@link Graph#process(Object, Function, Predicate, Function, Function, Supplier, Supplier, int)} that uses the
+     * {@link Graph#process(Object, Function, Predicate, Function, Function, Supplier, int)} that uses the
      * {@link IdentityHashMap} constructor as its visitation map supplier and the {@link ArrayDeque} constructor as its
      * node stack supplier.
      *
@@ -258,7 +255,7 @@ public final class Graph {
         @NotNull Function<? super TIn, ? extends Node<TIn, TOut, TKey>> nodeFunction,
         @NotNull Predicate<? super TIn> containerPredicate, @NotNull Function<? super TIn, ? extends TOut> scalarMapper,
         @NotNull Function<? super TIn, ? extends TVisit> visitKeyMapper, int flags) {
-        return process(rootInput, nodeFunction, containerPredicate, scalarMapper, visitKeyMapper, IdentityHashMap::new,
+        return process(rootInput, nodeFunction, containerPredicate, scalarMapper, visitKeyMapper,
             ArrayDeque::new, flags);
     }
 
@@ -401,10 +398,22 @@ public final class Graph {
         FAST_EXIT
     }
 
+    /**
+     * Creates an {@link Iterator} over {@link InputEntry} given an iterator over {@link Map.Entry}.
+     *
+     * @param iterator the iterator over {@link Map.Entry}
+     * @return an iterator over {@link Map.Entry}
+     * @param <TKey> the key type
+     * @param <TIn> the input object type
+     * @param <TOut> the output object type
+     */
     public static <TKey, TIn, TOut> @NotNull Iterator<InputEntry<TKey, TIn, TOut>> iterator(
         @NotNull Iterator<? extends Map.Entry<? extends TKey, ? extends TIn>> iterator) {
         Objects.requireNonNull(iterator);
         return new Iterator<>() {
+            private final InputEntry<TKey, TIn, TOut> entry = new InputEntry<>(null, null, null,
+                Control.CONTINUE);
+
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
@@ -413,24 +422,63 @@ public final class Graph {
             @Override
             public InputEntry<TKey, TIn, TOut> next() {
                 Map.Entry<? extends TKey, ? extends TIn> entry = iterator.next();
-                return new InputEntry<>(entry.getKey(), entry.getValue(), null, Control.CONTINUE);
+                this.entry.setKey(entry.getKey());
+                this.entry.setValue(entry.getValue());
+
+                return this.entry;
             }
         };
     }
 
-    public static <TKey, TIn, TOut> @NotNull InputEntry<TKey, TIn, TOut> entry(TKey key, TIn input) {
+    /**
+     * Creates a new {@link InputEntry} given a key and value. This class is mutable, so if possible it is encouraged
+     * to avoid calling this method more than is necessary in favor of using mutator methods on InputEntry.
+     * @param key the key
+     * @param input the value
+     * @return a new InputEntry
+     * @param <TKey> the key type
+     * @param <TIn> the value type
+     * @param <TOut> the output type
+     */
+    public static <TKey, TIn, TOut> @NotNull InputEntry<TKey, TIn, TOut> entry(@Nullable TKey key, @Nullable TIn input) {
         return new InputEntry<>(key, input, null, Control.CONTINUE);
     }
 
-    public static <TKey, TIn, TOut> @NotNull InputEntry<TKey, TIn, TOut> fastExit(TOut result)  {
+    /**
+     * Creates a new entry with both key and value set to {@code null}.
+     * @return a new {@link InputEntry} with a null key and value
+     * @param <TKey> the key type
+     * @param <TIn> the value type
+     * @param <TOut> the output type
+     */
+    public static <TKey, TIn, TOut> @NotNull InputEntry<TKey, TIn, TOut> nullEntry() {
+        return new InputEntry<>(null, null, null, Control.CONTINUE);
+    }
+
+    /**
+     * Creates a new InputEntry that will cause graph traversal to fast-exit.
+     * @param result the fast exit result
+     * @return a new InputEntry
+     * @param <TKey> the key type
+     * @param <TIn> the value type
+     * @param <TOut> the output type
+     */
+    public static <TKey, TIn, TOut> @NotNull InputEntry<TKey, TIn, TOut> fastExit(@Nullable TOut result)  {
         return new InputEntry<>(null, null, result, Control.FAST_EXIT);
     }
 
+    /**
+     * An object representing an entry in the input graph. This class is fully mutable, and therefore it is not
+     * necessary to create fresh instances to represent every value.
+     * @param <TKey> the key type
+     * @param <TIn> the value type
+     * @param <TOut> the output type
+     */
     public static class InputEntry<TKey, TIn, TOut> implements Map.Entry<TKey, TIn> {
-        private final TKey key;
-        private final TIn in;
-        private final TOut fastExitValue;
-        private final Control control;
+        private TKey key;
+        private TIn in;
+        private TOut fastExitValue;
+        private Control control;
 
         private InputEntry(TKey key, TIn in, TOut fastExitValue, Control control) {
             this.key = key;
@@ -451,7 +499,27 @@ public final class Graph {
 
         @Override
         public TIn setValue(TIn value) {
-            throw new UnsupportedOperationException();
+            TIn old = in;
+            this.in = value;
+            return old;
+        }
+
+        /**
+         * Sets the key for this entry.
+         * @param key the key for this entry
+         */
+        public void setKey(TKey key) {
+            this.key = key;
+        }
+
+        /**
+         * Sets the fast exit value for this entry. This will cause graph traversal to stop, returning the provided
+         * value immediately.
+         * @param out the terminal value
+         */
+        public void setFastExit(TOut out) {
+            this.fastExitValue = out;
+            this.control = Control.FAST_EXIT;
         }
     }
 

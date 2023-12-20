@@ -69,6 +69,7 @@ public class TomlCodec extends AbstractConfigCodec {
         if (target instanceof UnmodifiableConfig config) {
             return Graph.node(new Iterator<>() {
                 private final Iterator<? extends UnmodifiableConfig.Entry> backing = config.entrySet().iterator();
+                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {
@@ -78,7 +79,9 @@ public class TomlCodec extends AbstractConfigCodec {
                 @Override
                 public Graph.InputEntry<String, Object, ConfigElement> next() {
                     UnmodifiableConfig.Entry next = backing.next();
-                    return Graph.entry(next.getKey(), next.getValue());
+                    inputEntry.setKey(next.getKey());
+                    inputEntry.setValue(next.getValue());
+                    return inputEntry;
                 }
             }, makeDecodeMap(config.size()));
         }

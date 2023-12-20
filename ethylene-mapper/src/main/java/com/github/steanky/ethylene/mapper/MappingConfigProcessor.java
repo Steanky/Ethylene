@@ -110,6 +110,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                     return Graph.node(new Iterator<>() {
                         private int i;
+                        private final Graph.InputEntry<String, ClassEntry, Wrapper<Object>> inputEntry = Graph.nullEntry();
 
                         @Override
                         public boolean hasNext() {
@@ -144,7 +145,8 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             Token<?> nextType = typeResolver.resolveType(actualType, nextElement);
                             SignatureMatcher nextMatcher = signatureMatcherSource.matcherFor(nextType);
 
-                            return Graph.entry(null, new ClassEntry(nextType, nextElement, nextMatcher));
+                            inputEntry.setValue(new ClassEntry(nextType, nextElement, nextMatcher));
+                            return inputEntry;
                         }
                     }, Graph.output(nodeEntry.reference, new Graph.Accumulator<>() {
                         private int i;
@@ -209,6 +211,7 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
 
                     return Graph.node(new Iterator<>() {
                         private int i;
+                        private final Graph.InputEntry<String, ElementEntry, ConfigElement> inputEntry = Graph.nullEntry();
 
                         @Override
                         public boolean hasNext() {
@@ -242,8 +245,10 @@ public class MappingConfigProcessor<T> implements ConfigProcessor<T> {
                             Token<?> objectType = typeResolver.resolveType(type, null);
                             SignatureMatcher thisMatcher = signatureMatcherSource.matcherFor(objectType);
 
-                            return Graph.entry(typedObject.name(),
-                                new ElementEntry(objectType, typedObject.value(), thisMatcher));
+                            inputEntry.setKey(typedObject.name());
+                            inputEntry.setValue(new ElementEntry(objectType, typedObject.value(), thisMatcher));
+
+                            return inputEntry;
                         }
                     }, Graph.output(nodeEntry.element,
                         (Graph.Accumulator<String, ConfigElement>) (key, element, visited) -> {

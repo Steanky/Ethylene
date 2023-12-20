@@ -86,6 +86,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
         if (target instanceof Map<?, ?> map) {
             return Graph.node(new Iterator<>() {
                 private final Iterator<? extends Map.Entry<?, ?>> iterator = map.entrySet().iterator();
+                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {
@@ -95,12 +96,16 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 @Override
                 public Graph.InputEntry<String, Object, ConfigElement> next() {
                     Map.Entry<?, ?> next = iterator.next();
-                    return Graph.entry(next.getKey().toString(), next.getValue());
+                    inputEntry.setKey(next.getKey().toString());
+                    inputEntry.setValue(next.getValue());
+
+                    return inputEntry;
                 }
             }, makeDecodeMap(map.size()));
         } else if (target instanceof Collection<?> collection) {
             return Graph.node(new Iterator<>() {
                 private final Iterator<?> backing = collection.iterator();
+                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {
@@ -109,7 +114,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
                 @Override
                 public Graph.InputEntry<String, Object, ConfigElement> next() {
-                    return Graph.entry(null, backing.next());
+                    inputEntry.setValue(backing.next());
+                    return inputEntry;
                 }
             }, makeDecodeCollection(collection.size()));
         } else if (target.getClass().isArray()) {
@@ -117,6 +123,7 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
             return Graph.node(new Iterator<>() {
                 private int i = 0;
+                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {
@@ -125,7 +132,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
                 @Override
                 public Graph.InputEntry<String, Object, ConfigElement> next() {
-                    return Graph.entry(null, array[i++]);
+                    inputEntry.setValue(array[i++]);
+                    return inputEntry;
                 }
             }, makeDecodeCollection(array.length));
         }

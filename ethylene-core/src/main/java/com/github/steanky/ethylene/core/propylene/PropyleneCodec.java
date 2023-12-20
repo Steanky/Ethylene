@@ -23,6 +23,9 @@ import com.github.steanky.ethylene.core.AbstractConfigCodec;
  * @see ConfigElement#of(String)
  */
 public class PropyleneCodec implements ConfigCodec {
+    /**
+     * The singleton instance for {@link PropyleneCodec}.
+     */
     public static final PropyleneCodec INSTANCE = new PropyleneCodec();
 
     private static final String PREFERRED_EXTENSION = "propylene";

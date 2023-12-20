@@ -140,7 +140,7 @@ public interface ConfigHandler {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof ConfigKey key) {
+            if (obj instanceof ConfigKey<?> key) {
                 return keyString.equals(key.keyString);
             }
 
