@@ -19,13 +19,15 @@ dependencies {
 
 shadowJar {
     //caffeine is another fairly small dependency so we bundle it
-    relocate 'com.github.benmanes.caffeine', 'com.github.benmanes.relocated.caffeine'
+    relocate 'com.github.benmanes.caffeine', 'relocated.com.github.benmanes.caffeine'
 
     //relocate our toolkit dependency so we use the same one as provided by ethylene-core
-    relocate 'com.github.steanky.toolkit', 'com.github.steanky.relocated.toolkit'
+    relocate 'com.github.steanky.toolkit', 'relocated.com.github.steanky.toolkit'
 
-    //relocate apache commons, to prevent conflicts when importing
-    relocate 'org.apache.commons', 'org.apache.commons.relocated'
+    //relocate other dependencies
+    relocate 'org.apache.commons', 'relocated.org.apache.commons'
+    relocate 'org.checkerframework', 'relocated.org.checkerframework'
+    relocate 'com.google.errorprone', 'relocated.com.google.errorprone'
 
     //don't actually jar core
     exclude '**/ethylene-core-*.jar'
