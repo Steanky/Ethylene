@@ -13,7 +13,7 @@ import java.util.concurrent.Future;
  */
 public interface ConfigLoader<TData> {
     /**
-     * Writes the default data to the in, and returns a {@link CompletableFuture} object that may be used to wait on the
+     * Writes default data to the source, and returns a {@link CompletableFuture} object that may be used to wait on the
      * operation. If an exception occurs during this operation, it will be thrown when {@link Future#get()} is called on
      * the returned object.
      *

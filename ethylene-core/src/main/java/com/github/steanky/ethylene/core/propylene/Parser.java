@@ -7,7 +7,6 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -451,16 +450,18 @@ public final class Parser {
                 for (Container container : deferred) {
                     for (int i = 0; i < container.children.size(); i++) {
                         Token token = container.children.get(i);
-                        if (token.type() == TokenType.REFERENCE) {
-                            int identifier = ((Scalar)token).reference;
-
-                            Container referred;
-                            if (referenceMap == null || (referred = referenceMap.get(identifier)) == null) {
-                                throw new IOException("Missing reference " + identifier);
-                            }
-
-                            container.children.set(i, referred);
+                        if (token.type() != TokenType.REFERENCE) {
+                            continue;
                         }
+
+                        int identifier = ((Scalar)token).reference;
+
+                        Container referred;
+                        if (referenceMap == null || (referred = referenceMap.get(identifier)) == null) {
+                            throw new IOException("Missing reference " + identifier);
+                        }
+
+                        container.children.set(i, referred);
                     }
                 }
 
@@ -775,8 +776,6 @@ public final class Parser {
 
             int offset = raw.charAt(0) == MINUS_SIGN ? 1 : 0;
             int radix = determineRadix(raw, offset);
-            int r = radix * 10;
-            double d = Math.sqrt(r) * 1e6;
 
             scalar.element = function.parse(processString(raw, radix, end, offset), radix);
             return scalar;
