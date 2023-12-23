@@ -5,8 +5,8 @@ plugins {
 
 dependencies {
     compileOnly project(':ethylene-core')
-    compileOnly 'org.hjson:hjson:3.0.0'
+    compileOnly 'org.hjson:hjson:3.0.1'
 
     testImplementation project(':ethylene-core')
-    testImplementation 'org.hjson:hjson:3.0.0'
+    testImplementation 'org.hjson:hjson:3.0.1'
 }

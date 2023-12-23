@@ -12,7 +12,7 @@ dependencies {
 
 shadowJar {
     //these dependencies are tiny - fatjar and relocate them so they can't cause downstream conflict
-    relocate 'com.github.steanky.toolkit', 'com.github.steanky.relocated.toolkit'
+    relocate 'com.github.steanky.toolkit', 'relocated.com.github.steanky.toolkit'
 
     minimize {
         //don't minimize toolkit-function or toolkit-collection
