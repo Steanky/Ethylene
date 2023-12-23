@@ -13,4 +13,11 @@ dependencies {
 shadowJar {
     //these dependencies are tiny - fatjar and relocate them so they can't cause downstream conflict
     relocate 'com.github.steanky.toolkit', 'com.github.steanky.relocated.toolkit'
+
+    minimize {
+        //don't minimize toolkit-function or toolkit-collection
+        //we may depend on some of its classes from ethylene-mapper
+        exclude(dependency('com.github.steanky:toolkit-function:.*'))
+        exclude(dependency('com.github.steanky:toolkit-collection:.*'))
+    }
 }
