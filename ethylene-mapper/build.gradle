@@ -34,4 +34,9 @@ shadowJar {
 
     //don't jar toolkit either, user should have core on the classpath, which has toolkit already
     exclude '**/toolkit-*.jar'
+
+    minimize {
+        //don't minimize caffeine because it loads a bunch of classes through reflection
+        exclude(dependency('com.github.ben-manes.caffeine:caffeine:.*'))
+    }
 }
