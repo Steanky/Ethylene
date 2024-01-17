@@ -5,13 +5,10 @@ import com.github.steanky.ethylene.core.Graph;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
-import java.lang.reflect.Type;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -27,8 +24,6 @@ public class JsonCodec extends AbstractConfigCodec {
     private static final String NAME = "JSON";
     private static final String PREFERRED_EXTENSION = "json";
     private static final Set<String> EXTENSIONS = Set.of(PREFERRED_EXTENSION);
-    private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>() {
-    }.getType();
     private static final int ENCODE_OPTIONS = Graph.Options.TRACK_REFERENCES;
     private static final int DECODE_OPTIONS = Graph.Options.NONE;
     private final Gson gson;
@@ -53,9 +48,9 @@ public class JsonCodec extends AbstractConfigCodec {
     }
 
     @Override
-    protected @NotNull Map<String, Object> readObject(@NotNull InputStream input) throws IOException {
+    protected @NotNull Object readObject(@NotNull InputStream input) throws IOException {
         try (InputStreamReader reader = new InputStreamReader(input)) {
-            return gson.fromJson(reader, MAP_TYPE);
+            return gson.fromJson(reader, Object.class);
         } catch (JsonIOException | JsonSyntaxException exception) {
             throw new IOException(exception);
         }

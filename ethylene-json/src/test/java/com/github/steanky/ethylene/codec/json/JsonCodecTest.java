@@ -31,6 +31,15 @@ class JsonCodecTest {
         }
         """;
 
+    private static final String GOOD_JSON_LIST = """
+        [
+            {
+                "test": "vegetals",
+                "test2": "vegetals2"
+            }
+        ]
+        """;
+
     private final JsonCodec codec = new JsonCodec();
 
     @Test
@@ -53,5 +62,12 @@ class JsonCodecTest {
         assertEquals("string", element.getElement("child", "child_array", 1).asString());
         assertEquals("another_string", element.getElement("child", "child_array", 2).asString());
         assertEquals(0.69, element.getElement("child", "child_array", 3).asNumber().doubleValue());
+    }
+
+    @Test
+    void parsesListCorrectly() throws IOException {
+        ConfigElement element = codec.decode(new ByteArrayInputStream(GOOD_JSON_LIST.getBytes(StandardCharsets.UTF_8)));
+        assertEquals("vegetals", element.getElement(0, "test").asString());
+        assertEquals("vegetals2", element.getElement(0, "test2").asString());
     }
 }
