@@ -1,16 +1,20 @@
 package com.github.steanky.ethylene.mapper.internal;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.ConfigEntry;
+import com.github.steanky.ethylene.core.propylene.Parser;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Default;
 import com.github.steanky.ethylene.mapper.annotation.Name;
 import com.github.steanky.ethylene.mapper.signature.ScalarSignature;
 import com.github.steanky.ethylene.mapper.signature.Signature;
 import com.github.steanky.ethylene.mapper.type.Token;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.reflect.*;
 import java.util.HashMap;
@@ -24,6 +28,7 @@ import java.util.Objects;
  * This class and all of its methods are public to enable cross-package access, but must not be considered part of the
  * public API.
  */
+@ApiStatus.Internal
 public class ReflectionUtils {
     /**
      * The shared empty type array.
@@ -195,19 +200,62 @@ public class ReflectionUtils {
     }
 
     /**
-     * Constructs a map of parameter names to {@link Method}s belonging to the object class. The methods will be:
-     * <ul>
-     *     <li>public</li>
-     *     <li>static</li>
-     *     <li>parameterless</li>
-     *     <li>have a return value that is assignable to {@link ConfigElement}</li>
-     *     <li>declared on the given class</li>
-     * </ul>
+     * Constructs a map of parameter names to {@link ConfigElement}s representing the default values for the class.
+     *
      * @param objectClass the class to search in
      * @return an unmodifiable map of strings to methods
      */
     public static @NotNull @Unmodifiable Map<String, ConfigElement> constructDefaultValueMap(@NotNull Class<?> objectClass) {
         Map<String, ConfigElement> methodMap = new HashMap<>(4);
+        Default classDefault = objectClass.getAnnotation(Default.class);
+        if (classDefault != null) {
+            ConfigElement defaultSpec;
+            try {
+                defaultSpec = Parser.fromString(classDefault.value());
+            }
+            catch (IOException e) {
+                throw new MapperException("Invalid Propylene in class @Default annotation", e);
+            }
+
+            if (!defaultSpec.isNode()) {
+                throw new MapperException("Wrong top-level type for configuration produced by @Default");
+            }
+
+            for (ConfigEntry entry : defaultSpec.asNode().entryCollection()) {
+                String name = entry.getKey();
+                putThrowIfDuplicate(methodMap, name, entry.getValue());
+            }
+
+            return Map.copyOf(methodMap);
+        }
+
+        if (objectClass.isRecord()) {
+            boolean usesAnyComponentDefaults = false;
+            for (RecordComponent recordComponent : objectClass.getRecordComponents()) {
+                Default defaultAnnotation = recordComponent.getAnnotation(Default.class);
+                if (defaultAnnotation == null) {
+                    continue;
+                }
+
+                String name = recordComponent.getName();
+
+                ConfigElement defaultValue;
+                try {
+                    defaultValue = Parser.fromString(defaultAnnotation.value());
+                }
+                catch (IOException e) {
+                    throw new MapperException("Invalid Propylene in @Default annotation", e);
+                }
+
+                putThrowIfDuplicate(methodMap, name, defaultValue);
+                usesAnyComponentDefaults = true;
+            }
+
+            if (usesAnyComponentDefaults) {
+                return Map.copyOf(methodMap);
+            }
+        }
+
         for (Method method : objectClass.getDeclaredMethods()) {
             Default defaultAnnotation = method.getAnnotation(Default.class);
             if (defaultAnnotation == null) {
@@ -220,14 +268,14 @@ public class ReflectionUtils {
             }
 
             if (!ConfigElement.class.isAssignableFrom(method.getReturnType())) {
-                throw new MapperException("Default value supplier method must be declared public static");
+                throw new MapperException("Default value supplier method must return a type assignable to ConfigElement");
             }
 
             if (method.getParameterCount() != 0) {
                 throw new MapperException("Default value supplier methods must be parameterless");
             }
 
-            String value = defaultAnnotation.value();
+            String name = defaultAnnotation.value();
 
             ConfigElement defaultValue;
             try {
@@ -237,11 +285,19 @@ public class ReflectionUtils {
                 throw new MapperException("Error invoking default value accessor method", e);
             }
 
-            if (methodMap.put(value, defaultValue) != null) {
-                throw new MapperException("Duplicate default value suppliers for parameter named " + value);
+            if (defaultValue == null) {
+                throw new MapperException("Default value accessor method returned null");
             }
+
+            putThrowIfDuplicate(methodMap, name, defaultValue);
         }
 
         return Map.copyOf(methodMap);
+    }
+
+    private static void putThrowIfDuplicate(Map<String, ConfigElement> methodMap, String key, ConfigElement value) {
+        if (methodMap.put(key, value) != null) {
+            throw new MapperException("Duplicate default value suppliers for parameter named " + key);
+        }
     }
 }

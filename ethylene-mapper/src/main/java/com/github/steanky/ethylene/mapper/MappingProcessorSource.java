@@ -37,6 +37,16 @@ public interface MappingProcessorSource {
     <TData> @NotNull ConfigProcessor<TData> processorFor(@NotNull Token<TData> token);
 
     /**
+     * Convenience overload of {@link MappingProcessorSource#processorFor(Token)} that accepts a plain {@link Class}.
+     * @param cls the type of data to process
+     * @return a ConfigProcessor which may process the given data type
+     * @param <TData> the type of data which can be processed
+     */
+    default <TData> @NotNull ConfigProcessor<TData> processorFor(@NotNull Class<TData> cls) {
+        return processorFor(Token.ofClass(cls));
+    }
+
+    /**
      * The built-in builder used to create {@link MappingProcessorSource} instances. Includes methods to allow the
      * creation of custom implementations of various components.
      * <p>

@@ -366,6 +366,19 @@ class MappingConfigProcessorIntegrationTest {
             }
         }
 
+        @Default("""
+            {
+                key='default_key',
+                value=69,
+                value2=420F
+            }
+            """)
+        public record Data2(String key, int value, float value2) {}
+
+        public record Data3(@Default("'default_key'") String key, @Default("0") int value) {
+
+        }
+
         @Test
         void defaults() throws ConfigProcessException {
             MappingProcessorSource source = MappingProcessorSource.builder().ignoringLengths().build();
@@ -374,6 +387,15 @@ class MappingConfigProcessorIntegrationTest {
             Data data = processor.dataFromElement(ConfigNode.of("key", "KEY"));
 
             assertEquals(new Data("KEY", -1), data);
+
+            ConfigProcessor<Data2> processor2 = source.processorFor(Token.ofClass(Data2.class));
+            Data2 data2 = processor2.dataFromElement(ConfigNode.of());
+
+            assertEquals(new Data2("default_key", 69, 420F), data2);
+
+            Data3 data3 = source.processorFor(Token.ofClass(Data3.class)).dataFromElement(ConfigNode.of());
+
+            assertEquals(new Data3("default_key", 0), data3);
         }
 
         @Test
@@ -418,7 +440,7 @@ class MappingConfigProcessorIntegrationTest {
             }
 
             @Override
-            public Iterator<Integer> iterator() {
+            public @NotNull Iterator<Integer> iterator() {
                 return integers.iterator();
             }
 
