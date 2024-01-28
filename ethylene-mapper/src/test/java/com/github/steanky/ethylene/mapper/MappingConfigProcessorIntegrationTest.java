@@ -215,6 +215,20 @@ class MappingConfigProcessorIntegrationTest {
 
     @Nested
     class Objects {
+
+        public record Child(double data) {}
+
+        public record Data(int x, Child child) {}
+
+        @Test
+        void upcastFloat() throws ConfigProcessException {
+            ConfigProcessor<Data> processor = new MappingConfigProcessor<>(new Token<>() {
+            }, source, typeHinter, typeResolver, scalarSource, false);
+
+            Data d = processor.dataFromElement(ConfigElement.of("{x=10, child={data=10F}}"));
+            assertEquals(10.0D, d.child.data);
+        }
+
         @Test
         void parameterlessClass() throws ConfigProcessException {
             ConfigProcessor<ParameterlessClass> processor = new MappingConfigProcessor<>(new Token<>() {

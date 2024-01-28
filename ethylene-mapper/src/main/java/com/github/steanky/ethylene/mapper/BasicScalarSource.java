@@ -107,6 +107,18 @@ public class BasicScalarSource implements ScalarSource {
             "Could not locate signature with upper bounds '" + upperBounds.getTypeName() + "', no matching signature");
     }
 
+    private static boolean checkPrimitiveAssignability(Object data, Token<?> upperBounds) {
+        Class<?> dataClass = data.getClass();
+        if (!upperBounds.isPrimitiveOrWrapper() || !ClassUtils.isPrimitiveOrWrapper(dataClass)) {
+            return false;
+        }
+
+        Class<?> upperBoundsPrimitive = ClassUtils.wrapperToPrimitive(upperBounds.rawType());
+        Class<?> dataPrimitive = ClassUtils.wrapperToPrimitive(data.getClass());
+
+        return ClassUtils.isAssignable(dataPrimitive, upperBoundsPrimitive);
+    }
+
     @Override
     public @NotNull ConfigElement makeElement(@Nullable Object data, @NotNull Token<?> upperBounds) {
         if (data == null) {
@@ -115,7 +127,8 @@ public class BasicScalarSource implements ScalarSource {
         }
 
         Class<?> dataClass = data.getClass();
-        if (ConfigPrimitive.isPrimitive(data) && upperBounds.isSuperclassOf(dataClass)) {
+        if (ConfigPrimitive.isPrimitive(data) && (upperBounds.isSuperclassOf(dataClass) ||
+            checkPrimitiveAssignability(data, upperBounds))) {
             //simplest case, covers all standard primitives
             return ConfigPrimitive.of(data);
         }
