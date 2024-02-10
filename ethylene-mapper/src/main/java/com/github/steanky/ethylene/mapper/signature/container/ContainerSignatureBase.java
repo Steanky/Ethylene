@@ -127,7 +127,7 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
     }
 
     @Override
-    public @NotNull T initBuildingObject(@NotNull ConfigElement element) {
+    public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
         if (!element.isContainer()) {
             throw new MapperException("Expected container, got '" + element.type() + "'");
         }
@@ -165,7 +165,7 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
      * @param container the {@link ConfigContainer} used to create the building object
      * @return the new building object
      */
-    protected abstract @NotNull T makeBuildingObject(@NotNull ConfigContainer container);
+    protected abstract @NotNull Object makeBuildingObject(@NotNull ConfigContainer container);
 
     /**
      * Information about a constructor. Container constructors may be parameterless (in which case they take no

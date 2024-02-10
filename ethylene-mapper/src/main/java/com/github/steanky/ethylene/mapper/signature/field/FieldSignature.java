@@ -177,7 +177,7 @@ public class FieldSignature<T> extends PrioritizedBase implements Signature<T> {
     }
 
     @Override
-    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
+    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         try {
             if (buildingObject != null) {
                 finishObject(buildingObject, args);

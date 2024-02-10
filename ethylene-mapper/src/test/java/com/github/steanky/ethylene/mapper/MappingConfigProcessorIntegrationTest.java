@@ -220,6 +220,19 @@ class MappingConfigProcessorIntegrationTest {
 
         public record Data(int x, Child child) {}
 
+        public record IntArrayContaining(int[] values) {
+
+        }
+
+        @Test
+        void intArray() throws ConfigProcessException {
+            ConfigProcessor<IntArrayContaining> processor = new MappingConfigProcessor<>(new Token<>() {
+            }, source, typeHinter, typeResolver, scalarSource, false);
+
+            IntArrayContaining containing = processor.dataFromElement(ConfigElement.of("{values=[0, 1, 2, 3, 4]}"));
+            assertArrayEquals(new int[] {0, 1, 2, 3, 4}, containing.values);
+        }
+
         @Test
         void upcastFloat() throws ConfigProcessException {
             ConfigProcessor<Data> processor = new MappingConfigProcessor<>(new Token<>() {

@@ -169,7 +169,7 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
 
     @SuppressWarnings("unchecked")
     @Override
-    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
+    public @NotNull T buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             throw new MapperException("ConstructorSignature does not support pre-initialized building objects");
         }

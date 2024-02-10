@@ -105,7 +105,7 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
 
     @SuppressWarnings("unchecked")
     @Override
-    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
+    public @NotNull T buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             throw new MapperException("Pre-initialized building objects are not supported by this signature");
         }

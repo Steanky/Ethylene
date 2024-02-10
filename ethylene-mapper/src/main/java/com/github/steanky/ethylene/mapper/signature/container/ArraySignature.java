@@ -32,7 +32,7 @@ public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
 
         return new AbstractCollection<>() {
             @Override
-            public Iterator<TypedObject> iterator() {
+            public @NotNull Iterator<TypedObject> iterator() {
                 return new Iterator<>() {
                     private int i = 0;
 
@@ -59,21 +59,29 @@ public class ArraySignature<T> extends ContainerSignatureBase<T[]> {
         };
     }
 
-
-    @SuppressWarnings({"SuspiciousSystemArraycopy", "unchecked"})
+    @SuppressWarnings("SuspiciousSystemArraycopy")
     @Override
-    public T @NotNull [] buildObject(@NotNull T @Nullable [] buildingObject, Object @NotNull [] args) {
+    public @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         if (buildingObject == null) {
-            return (T[]) args;
+            buildingObject = Array.newInstance(containerType.componentType().rawType(), args.length);
         }
 
+        if (containerType.componentType().rawType().isPrimitive()) {
+            //manual arraycopy when component type is primitive, we must unbox as args will be boxed
+            for (int i = 0; i < args.length; i++) {
+                Array.set(buildingObject, i, args[i]);
+            }
+
+            return buildingObject;
+        }
+
+        //in other cases, we can do a likely-faster arraycopy
         System.arraycopy(args, 0, buildingObject, 0, args.length);
         return buildingObject;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected @NotNull T @NotNull [] makeBuildingObject(@NotNull ConfigContainer container) {
-        return (T[]) Array.newInstance(containerType.componentType().rawType(), container.elementCollection().size());
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return Array.newInstance(containerType.componentType().rawType(), container.elementCollection().size());
     }
 }

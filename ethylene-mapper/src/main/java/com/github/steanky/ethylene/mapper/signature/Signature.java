@@ -124,7 +124,7 @@ public interface Signature<TReturn> extends Prioritized {
      * @param element the element from which to initialize the building object
      * @return the initialized building object which will later be populated with data
      */
-    default @NotNull TReturn initBuildingObject(@NotNull ConfigElement element) {
+    default @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
         throw new UnsupportedOperationException("This signature does not support pre-initialized building objects");
     }
 
@@ -136,7 +136,7 @@ public interface Signature<TReturn> extends Prioritized {
      * @return a new object if this signature does not have a building object; otherwise, if a building object is
      * provided, populates it
      */
-    @NotNull TReturn buildObject(@Nullable TReturn buildingObject, Object @NotNull [] args);
+    @NotNull Object buildObject(@Nullable Object buildingObject, Object @NotNull [] args);
 
     /**
      * Whether this signature should respect argument names when being matched.
@@ -312,7 +312,7 @@ public interface Signature<TReturn> extends Prioritized {
 
             return new AbstractCollection<>() {
                 @Override
-                public Iterator<TypedObject> iterator() {
+                public @NotNull Iterator<TypedObject> iterator() {
                     return new Iterator<>() {
                         private final Iterator<Object> objectIterator = args.iterator();
                         private final Iterator<Map.Entry<String, SignatureParameter>> entryIterator = argumentTypes.iterator();
@@ -351,7 +351,7 @@ public interface Signature<TReturn> extends Prioritized {
         }
 
         @Override
-        public @NotNull T initBuildingObject(@NotNull ConfigElement element) {
+        public @NotNull Object initBuildingObject(@NotNull ConfigElement element) {
             if (buildingObjectInitializer == null) {
                 //throws an exception
                 return Signature.super.initBuildingObject(element);
@@ -360,9 +360,10 @@ public interface Signature<TReturn> extends Prioritized {
             return buildingObjectInitializer.apply(element);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
-        public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
-            return constructor.apply(buildingObject, new Arguments(args));
+        public @NotNull T buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
+            return constructor.apply((T) buildingObject, new Arguments(args));
         }
 
         @Override

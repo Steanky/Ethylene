@@ -9,10 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.AbstractCollection;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -39,7 +36,7 @@ public class MapSignature<T> extends ContainerSignatureBase<T> {
 
         return new AbstractCollection<>() {
             @Override
-            public Iterator<TypedObject> iterator() {
+            public @NotNull Iterator<TypedObject> iterator() {
                 return new Iterator<>() {
                     private final Iterator<Map.Entry<Object, Object>> entryIterator = map.entrySet().iterator();
 
@@ -64,7 +61,7 @@ public class MapSignature<T> extends ContainerSignatureBase<T> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public @NotNull T buildObject(@Nullable T buildingObject, Object @NotNull [] args) {
+    public @NotNull T buildObject(@Nullable Object buildingObject, Object @NotNull [] args) {
         if (buildingObject != null) {
             Map<Object, Object> buildingMap = (Map<Object, Object>) buildingObject;
             finishMap(buildingMap, args);
@@ -98,9 +95,8 @@ public class MapSignature<T> extends ContainerSignatureBase<T> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected @NotNull T makeBuildingObject(@NotNull ConfigContainer container) {
-        return (T) getMap(container.entryCollection().size());
+    protected @NotNull Object makeBuildingObject(@NotNull ConfigContainer container) {
+        return getMap(container.entryCollection().size());
     }
 }
