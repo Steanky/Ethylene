@@ -23,6 +23,23 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     ConfigNode EMPTY = ConfigContainers.EmptyImmutableConfigNode.INSTANCE;
 
     /**
+     * Returns a new "defaulting" ConfigNode. If a value is not found in {@code base}, {@code defaults} will be queried
+     * instead.
+     * <p>
+     * The returned node is immutable, but read-through to both {@code base} and {@code defaults}.
+     *
+     * @param base the base node
+     * @param defaults the default node
+     * @return a new ConfigNode
+     */
+    static @NotNull ConfigNode defaulting(@NotNull ConfigNode base, @NotNull ConfigNode defaults) {
+        Objects.requireNonNull(base);
+        Objects.requireNonNull(defaults);
+
+        return new DefaultingConfigNode(base, defaults);
+    }
+
+    /**
      * Overload of {@link ConfigNode#of(Object...)}. Returns a new, empty {@link LinkedConfigNode}.
      *
      * @return a new, empty, mutable ConfigNode

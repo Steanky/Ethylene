@@ -18,6 +18,23 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
     ConfigList EMPTY = ConfigContainers.EmptyImmutableConfigList.INSTANCE;
 
     /**
+     * Returns a new "defaulting" ConfigList. If a value at a certain index is not present in {@code base},
+     * {@code defaults} will be used instead.
+     * <p>
+     * The returned node is immutable, but read-through to both {@code base} and {@code defaults}.
+     *
+     * @param base the base list
+     * @param defaults the default list
+     * @return a new ConfigList
+     */
+    static @NotNull ConfigList defaulting(@NotNull ConfigList base, @NotNull ConfigList defaults) {
+        Objects.requireNonNull(base);
+        Objects.requireNonNull(defaults);
+
+        return new DefaultingConfigList(base, defaults);
+    }
+
+    /**
      * Similarly to {@link ConfigNode#of(Object...)}, builds a new {@link ArrayConfigList} from the given object array.
      * Objects that are instances of {@link ConfigElement} will be added to the resulting list directly, whereas objects
      * that are not will be used in an attempt to create a new {@link ConfigPrimitive}.
