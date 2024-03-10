@@ -18,6 +18,11 @@ import java.util.Objects;
  */
 public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, ConfigContainer {
     /**
+     * The shared, immutable empty ConfigNode.
+     */
+    ConfigNode EMPTY = ConfigContainers.EmptyImmutableConfigNode.INSTANCE;
+
+    /**
      * Overload of {@link ConfigNode#of(Object...)}. Returns a new, empty {@link LinkedConfigNode}.
      *
      * @return a new, empty, mutable ConfigNode

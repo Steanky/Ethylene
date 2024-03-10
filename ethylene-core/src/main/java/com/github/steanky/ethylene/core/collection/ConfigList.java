@@ -13,6 +13,11 @@ import java.util.Objects;
  */
 public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigContainer {
     /**
+     * The shared, immutable empty ConfigList.
+     */
+    ConfigList EMPTY = ConfigContainers.EmptyImmutableConfigList.INSTANCE;
+
+    /**
      * Similarly to {@link ConfigNode#of(Object...)}, builds a new {@link ArrayConfigList} from the given object array.
      * Objects that are instances of {@link ConfigElement} will be added to the resulting list directly, whereas objects
      * that are not will be used in an attempt to create a new {@link ConfigPrimitive}.

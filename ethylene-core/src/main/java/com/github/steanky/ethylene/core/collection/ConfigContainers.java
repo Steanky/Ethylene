@@ -194,7 +194,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class ConfigListView extends AbstractConfigList implements Immutable, RandomAccess {
+    static final class ConfigListView extends AbstractConfigList implements Immutable, RandomAccess {
         private final ConfigList underlying;
 
         private ConfigListView(ConfigList underlying) {
@@ -232,8 +232,8 @@ final class ConfigContainers {
         }
     }
 
-    private static final class EmptyImmutableConfigList extends AbstractConfigList implements Immutable, RandomAccess {
-        private static final ConfigList INSTANCE = new EmptyImmutableConfigList();
+    static final class EmptyImmutableConfigList extends AbstractConfigList implements Immutable, RandomAccess {
+        static final ConfigList INSTANCE = new EmptyImmutableConfigList();
 
         private EmptyImmutableConfigList() {
 
@@ -270,8 +270,8 @@ final class ConfigContainers {
         }
     }
 
-    private static final class EmptyImmutableConfigNode extends AbstractConfigNode implements Immutable {
-        private static final ConfigNode INSTANCE = new EmptyImmutableConfigNode();
+    static final class EmptyImmutableConfigNode extends AbstractConfigNode implements Immutable {
+        static final ConfigNode INSTANCE = new EmptyImmutableConfigNode();
 
         private EmptyImmutableConfigNode() {
         }
@@ -330,7 +330,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class ImmutableConfigNode extends AbstractConfigNode implements Immutable {
+    static final class ImmutableConfigNode extends AbstractConfigNode implements Immutable {
         private final Map<String, ConfigElement> map;
 
         private ImmutableConfigNode(Map<String, ConfigElement> trusted) {
@@ -380,7 +380,7 @@ final class ConfigContainers {
         }
     }
 
-    private static final class ImmutableConfigList extends AbstractConfigList implements Immutable, RandomAccess {
+    static final class ImmutableConfigList extends AbstractConfigList implements Immutable, RandomAccess {
         private final ConfigElement[] elements;
 
         private ImmutableConfigList(ConfigElement[] elements) {
