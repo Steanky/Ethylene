@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.github.steanky.ethylene.core.path.ConfigPath;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -32,9 +33,9 @@ class HjsonCodecTest {
     void parsesHjson() throws IOException {
         ConfigElement element = codec.decode(new ByteArrayInputStream(TEST_HJSON.getBytes(StandardCharsets.UTF_8)));
         assertTrue(element.isNode());
-        assertEquals("this is a value", element.getElement("test_value").asString());
-        assertEquals("test", element.getElement("sub", "sub_string").asString());
-        assertSame(69, element.getElement("another_value").asNumber().intValue());
+        assertEquals("this is a value", element.get(ConfigPath.of("test_value")).asString());
+        assertEquals("test", element.get(ConfigPath.of("sub/sub_string")).asString());
+        assertSame(69, element.get(ConfigPath.of("another_value")).asNumber().intValue());
     }
 
     @Test

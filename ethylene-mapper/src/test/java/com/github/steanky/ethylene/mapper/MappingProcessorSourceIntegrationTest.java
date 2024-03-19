@@ -4,6 +4,7 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.path.ConfigPath;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.annotation.*;
@@ -323,7 +324,7 @@ class MappingProcessorSourceIntegrationTest {
             assertEquals("test", record.value);
 
             ConfigNode newNode = processor.elementFromData(record).asNode();
-            assertEquals("test", newNode.getStringOrThrow("value"));
+            assertEquals("test", newNode.getOrThrow(ConfigPath.of("value")).asStringOrThrow());
         }
 
         @Test

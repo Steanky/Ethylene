@@ -155,6 +155,11 @@ public abstract class ContainerSignatureBase<T> extends PrioritizedBase implemen
     }
 
     @Override
+    public int uniqueLength() {
+        return 1;
+    }
+
+    @Override
     public @NotNull Token<T> returnType() {
         return containerType;
     }

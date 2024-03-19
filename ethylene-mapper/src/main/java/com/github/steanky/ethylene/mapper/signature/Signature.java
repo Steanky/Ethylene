@@ -163,6 +163,14 @@ public interface Signature<TReturn> extends Prioritized {
     int length(@Nullable ConfigElement element);
 
     /**
+     * Returns the unique length of this signature. This is the length of the longest non-repeating sequence of
+     * {@link Map.Entry} values that will be iterated by the iterator returned by {@link Signature#argumentTypes()}.
+     *
+     * @return the unique length of this signature
+     */
+    int uniqueLength();
+
+    /**
      * Gets the return type of this signature. This is the type of the object it produces.
      *
      * @return the type of the object this signature produces
@@ -379,6 +387,11 @@ public interface Signature<TReturn> extends Prioritized {
         @Override
         public int length(@Nullable ConfigElement element) {
             return lengthFunction.apply(argumentTypes, element);
+        }
+
+        @Override
+        public int uniqueLength() {
+            return argumentTypes.size();
         }
 
         @Override

@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
+import com.github.steanky.ethylene.core.path.ConfigPath;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.junit.jupiter.api.Test;
@@ -104,16 +105,16 @@ class AbstractConfigCodecTest {
 
     @Test
     void validTopLevelPrimitives() {
-        assertEquals(INTEGER_VALUE, resultingElement.getElement(INTEGER_KEY).asNumber().intValue());
-        assertEquals(FLOAT_VALUE, resultingElement.getElement(FLOAT_KEY).asNumber().floatValue());
-        assertEquals(DOUBLE_VALUE, resultingElement.getElement(DOUBLE_KEY).asNumber().doubleValue());
-        assertEquals(BOOLEAN_VALUE, resultingElement.getElement(BOOLEAN_KEY).asBoolean());
-        assertEquals(STRING_VALUE, resultingElement.getElement(STRING_KEY).asString());
+        assertEquals(INTEGER_VALUE, resultingElement.get(ConfigPath.of(INTEGER_KEY)).asNumber().intValue());
+        assertEquals(FLOAT_VALUE, resultingElement.get(ConfigPath.of(FLOAT_KEY)).asNumber().floatValue());
+        assertEquals(DOUBLE_VALUE, resultingElement.get(ConfigPath.of(DOUBLE_KEY)).asNumber().doubleValue());
+        assertEquals(BOOLEAN_VALUE, resultingElement.get(ConfigPath.of(BOOLEAN_KEY)).asBoolean());
+        assertEquals(STRING_VALUE, resultingElement.get(ConfigPath.of(STRING_KEY)).asString());
     }
 
     @Test
     void validTopLevelFlatStringList() {
-        ConfigList array = resultingElement.getElement(LIST_KEY).asList();
+        ConfigList array = resultingElement.get(ConfigPath.of(LIST_KEY)).asList();
         List<String> equivalent = new ArrayList<>();
         for (ConfigElement element : array) {
             equivalent.add(element.asString());
@@ -124,7 +125,7 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedFlatStringList() {
-        ConfigList array = resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_KEY).asList();
+        ConfigList array = resultingElement.get(ConfigPath.of(SUB_ROOT_KEY)).asNode().get(ConfigPath.of(SUB_LIST_KEY)).asList();
         List<String> equivalent = new ArrayList<>();
         for (ConfigElement element : array) {
             equivalent.add(element.asString());
@@ -136,36 +137,28 @@ class AbstractConfigCodecTest {
     @Test
     void validNestedPrimitives() {
         assertEquals(SUB_STRING_VALUE,
-            resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_STRING_KEY).asString());
+            resultingElement.get(ConfigPath.of(SUB_ROOT_KEY)).asNode().get(ConfigPath.of(SUB_STRING_KEY)).asString());
     }
 
     @Test
     void validNestedArrayNodes() {
         ConfigList subNodes =
-            resultingElement.getElement(SUB_ROOT_KEY).asNode().getElement(SUB_LIST_NODES_KEY).asList();
+            resultingElement.get(ConfigPath.of(SUB_ROOT_KEY)).asNode().get(ConfigPath.of(SUB_LIST_NODES_KEY)).asList();
 
         for (int i = 0; i < SUB_NODE_COUNT; i++) {
             ConfigNode element = subNodes.get(i).asNode();
-            assertEquals(i, element.getElement(SUB_NODE_KEY_PREFIX + i).asNumber().intValue());
+            assertEquals(i, element.get(ConfigPath.of(SUB_NODE_KEY_PREFIX + i)).asNumber().intValue());
         }
     }
 
     @Test
     void pathNestedAccess() {
-        assertEquals(SUB_STRING_VALUE, resultingElement.getElement(SUB_ROOT_KEY, SUB_STRING_KEY).asString());
+        assertEquals(SUB_STRING_VALUE, resultingElement.get(ConfigPath.of("sub_root/sub_string")).asString());
     }
 
     @Test
     void sameWhenEmpty() {
-        assertSame(resultingElement, resultingElement.getElement());
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    void pathThrowsWhenNullKey() {
-        assertThrows(NullPointerException.class, () -> resultingElement.getElement(SUB_ROOT_KEY, null));
-        assertThrows(NullPointerException.class, () -> resultingElement.getElement(null, SUB_STRING_KEY));
-        assertThrows(NullPointerException.class, () -> resultingElement.getElement((String) null));
+        assertSame(resultingElement, resultingElement.get(ConfigPath.EMPTY));
     }
 
     @Test
@@ -195,15 +188,14 @@ class AbstractConfigCodecTest {
     @Test
     void missingTopLevelNode() {
         assertNull(resultingElement.get("not found"));
-        assertNull(resultingElement.getElement("not found"));
+        assertNull(resultingElement.get(ConfigPath.of("not found")));
     }
 
     @Test
     void missingNestedNode() {
-        assertNull(resultingElement.getElement(SUB_ROOT_KEY, "not found"));
+        assertNull(resultingElement.get(ConfigPath.of("sub_root/not found")));
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     void decodeClosesStream() throws IOException {
         InputStream stream = InputStream.nullInputStream();
@@ -225,11 +217,12 @@ class AbstractConfigCodecTest {
         ConfigElement element = testCodec.decode(InputStream.nullInputStream());
         ConfigNode root = element.asNode();
 
-        assertSame(root, element.getElementOrThrow(SUB_ROOT_KEY, PARENT_REF));
+
+        assertSame(root, element.get(ConfigPath.of("sub_root/parent_ref")));
     }
 
     @Test
     void pathAccess() {
-        assertSame(SUB_LIST_VALUE.get(2), resultingElement.getElement(SUB_ROOT_KEY, SUB_LIST_KEY, 2).asString());
+        assertSame(SUB_LIST_VALUE.get(2), resultingElement.get(ConfigPath.of("sub_root/sub_list/2")).asString());
     }
 }

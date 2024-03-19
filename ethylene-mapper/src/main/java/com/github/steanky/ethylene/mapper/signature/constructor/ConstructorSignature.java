@@ -200,6 +200,11 @@ public class ConstructorSignature<T> extends PrioritizedBase implements Signatur
     }
 
     @Override
+    public int uniqueLength() {
+        return parameterTypes.length;
+    }
+
+    @Override
     public @NotNull Token<T> returnType() {
         return genericReturnType;
     }

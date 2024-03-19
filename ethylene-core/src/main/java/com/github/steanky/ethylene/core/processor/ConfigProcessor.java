@@ -3,6 +3,7 @@ package com.github.steanky.ethylene.core.processor;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.*;
+import com.github.steanky.ethylene.core.path.ConfigPath;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.Reference;
@@ -30,11 +31,7 @@ public interface ConfigProcessor<TData> {
                 return null;
             }
 
-            if (!element.isNode()) {
-                throw new ConfigProcessException("Element must be a node");
-            }
-
-            return element.asNode();
+            return element.asNodeOrThrow();
         }
 
         @Override
@@ -53,11 +50,7 @@ public interface ConfigProcessor<TData> {
                 return null;
             }
 
-            if (!element.isList()) {
-                throw new ConfigProcessException("Element must be a list");
-            }
-
-            return element.asList();
+            return element.asListOrThrow();
         }
 
         @Override
@@ -76,11 +69,7 @@ public interface ConfigProcessor<TData> {
                 return null;
             }
 
-            if (!element.isContainer()) {
-                throw new ConfigProcessException("Element must be a container");
-            }
-
-            return element.asContainer();
+            return element.asContainerOrThrow();
         }
 
         @Override
@@ -100,11 +89,7 @@ public interface ConfigProcessor<TData> {
                 return null;
             }
 
-            if (!element.isString()) {
-                throw new ConfigProcessException("Element must be a string");
-            }
-
-            return element.asString();
+            return element.asStringOrThrow();
         }
 
         @Override
@@ -158,11 +143,7 @@ public interface ConfigProcessor<TData> {
                 return null;
             }
 
-            if (!element.isBoolean()) {
-                throw new ConfigProcessException("Element is not a boolean");
-            }
-
-            return element.asBoolean();
+            return element.asBooleanOrThrow();
         }
 
         @Override
@@ -247,6 +228,9 @@ public interface ConfigProcessor<TData> {
         Objects.requireNonNull(mapFunction);
 
         return new ConfigProcessor<>() {
+            private static final ConfigPath KEY = ConfigPath.of("key");
+            private static final ConfigPath VALUE = ConfigPath.of("value");
+
             @Override
             public TMap dataFromElement(@NotNull ConfigElement element) throws ConfigProcessException {
                 if (element.isNull()) {
@@ -261,8 +245,8 @@ public interface ConfigProcessor<TData> {
                     }
 
                     ConfigNode entryNode = entry.asNode();
-                    map.put(keyProcessor.dataFromElement(entryNode.getElementOrThrow("key")),
-                        valueProcessor.dataFromElement(entryNode.getElementOrThrow("value")));
+                    map.put(keyProcessor.dataFromElement(entryNode.getOrThrow(KEY)),
+                        valueProcessor.dataFromElement(entryNode.getOrThrow(VALUE)));
                 }
 
                 return map;

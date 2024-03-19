@@ -1,5 +1,6 @@
 package com.github.steanky.ethylene.core.util;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,6 +11,7 @@ import java.util.function.Function;
 /**
  * Contains utility methods for working with {@link CompletableFuture} objects.
  */
+@ApiStatus.Internal
 public final class FutureUtils {
     private FutureUtils() {
         throw new AssertionError("No.");

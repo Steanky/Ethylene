@@ -1,9 +1,13 @@
 package com.github.steanky.ethylene.mapper;
 
+import com.github.steanky.ethylene.core.path.ConfigPath;
+
 /**
  * A general exception thrown to indicate any invalid condition during object mapping.
  */
 public class MapperException extends RuntimeException {
+    private ConfigPath configPath;
+
     /**
      * Creates a new MapperException with no detail message.
      */
@@ -37,5 +41,29 @@ public class MapperException extends RuntimeException {
      */
     public MapperException(Throwable cause) {
         super(cause);
+    }
+
+    /**
+     * Sets the {@link ConfigPath} associated with this exception.
+     *
+     * @param configPath the ConfigPath associated with this exception
+     */
+    public void setConfigPath(ConfigPath configPath) {
+        if (this.configPath == null) {
+            this.configPath = configPath;
+        }
+    }
+
+    @Override
+    public String getMessage() {
+        String baseMessage = super.getMessage();
+        StringBuilder builder = new StringBuilder(baseMessage);
+
+        ConfigPath configPath = this.configPath;
+        if (configPath != null) {
+            builder.append(System.lineSeparator()).append("Error path: ").append(configPath);
+        }
+
+        return builder.toString();
     }
 }

@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.codec.toml;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.collection.ConfigList;
+import com.github.steanky.ethylene.core.path.ConfigPath;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -47,14 +48,14 @@ class TomlCodecTest {
     @Test
     void readsSimpleToml() throws IOException {
         ConfigElement element = codec.decode(new ByteArrayInputStream(SIMPLE_TOML.getBytes(Charset.defaultCharset())));
-        assertEquals("this is a string", element.getStringOrThrow("value"));
+        assertEquals("this is a string", element.getOrThrow(ConfigPath.of("value")).asStringOrThrow());
     }
 
     @Test
     void readsComplexToml() throws IOException {
         ConfigElement element = codec.decode(new ByteArrayInputStream(COMPLEX_TOML.getBytes(Charset.defaultCharset())));
-        ConfigList list = element.getListOrThrow("object_array");
-        assertEquals("topLevel", element.getStringOrThrow("topLevelString"));
+        ConfigList list = element.getOrThrow(ConfigPath.of("object_array")).asListOrThrow();
+        assertEquals("topLevel", element.getOrThrow(ConfigPath.of("topLevelString")).asStringOrThrow());
         assertEquals(3, list.size());
     }
 }

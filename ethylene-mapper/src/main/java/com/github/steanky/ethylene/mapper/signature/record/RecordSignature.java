@@ -133,6 +133,11 @@ public class RecordSignature<T> extends PrioritizedBase implements Signature<T> 
     }
 
     @Override
+    public int uniqueLength() {
+        return resolveInfo().types.size();
+    }
+
+    @Override
     public @NotNull Token<T> returnType() {
         return genericReturnType;
     }

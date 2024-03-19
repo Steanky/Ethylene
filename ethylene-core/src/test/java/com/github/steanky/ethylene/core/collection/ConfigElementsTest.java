@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
+import com.github.steanky.ethylene.core.path.ConfigPath;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -284,7 +285,7 @@ class ConfigElementsTest {
     @Test
     void wtf() {
         ConfigNode node = ConfigNode.of("pain", ConfigList.of());
-        node.getElement("pain").asList().add(node);
+        node.get(ConfigPath.of("pain")).asList().add(node);
         node.put("self", node);
         node.putNumber("value", 100);
         ConfigList selfReferential = ConfigList.of();

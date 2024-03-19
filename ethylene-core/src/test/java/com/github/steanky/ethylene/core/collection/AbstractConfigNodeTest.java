@@ -37,14 +37,6 @@ class AbstractConfigNodeTest {
     }
 
     @Test
-    void noDefaultOnValidPath() {
-        assertEquals(10, populatedNode.getNumberOrDefault(1000, "int"));
-        assertEquals("string", populatedNode.getStringOrDefault("default", "string"));
-        assertSame(innerList, populatedNode.getListOrDefault((ConfigList) null, "list"));
-        assertSame(populatedNode, populatedNode.getNodeOrDefault((ConfigNode) null, "list", 1, "circular_reference"));
-    }
-
-    @Test
     void copy() {
         ConfigNode node = ConfigNode.of("a", 10, "b", ConfigList.of("a"));
         node.put("self", node);

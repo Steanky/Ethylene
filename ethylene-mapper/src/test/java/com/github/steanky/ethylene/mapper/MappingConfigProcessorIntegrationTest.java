@@ -5,6 +5,7 @@ import com.github.steanky.ethylene.core.ConfigPrimitive;
 import com.github.steanky.ethylene.core.collection.ConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigNode;
 import com.github.steanky.ethylene.core.collection.Entry;
+import com.github.steanky.ethylene.core.path.ConfigPath;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.mapper.annotation.*;
@@ -225,6 +226,14 @@ class MappingConfigProcessorIntegrationTest {
         }
 
         @Test
+        void errorHandling() {
+            ConfigProcessor<Data> processor = new MappingConfigProcessor<>(new Token<>() {
+            }, source, typeHinter, typeResolver, scalarSource, false);
+
+            assertThrows(ConfigProcessException.class, () -> processor.dataFromElement(ConfigElement.of("{x=10}")));
+        }
+
+        @Test
         void intArray() throws ConfigProcessException {
             ConfigProcessor<IntArrayContaining> processor = new MappingConfigProcessor<>(new Token<>() {
             }, source, typeHinter, typeResolver, scalarSource, false);
@@ -283,8 +292,8 @@ class MappingConfigProcessorIntegrationTest {
             ConfigElement element = processor.elementFromData(Map.entry(10, "vegetals"));
             assertTrue(element.isNode());
 
-            assertEquals(10, element.getNumberOrThrow("key").intValue());
-            assertEquals("vegetals", element.getStringOrThrow("value"));
+            assertEquals(10, element.getOrThrow(ConfigPath.of("key")).asNumberOrThrow().intValue());
+            assertEquals("vegetals", element.getOrThrow(ConfigPath.of("value")).asStringOrThrow());
         }
 
         @Test
@@ -501,7 +510,7 @@ class MappingConfigProcessorIntegrationTest {
         }
 
         @Test
-        void wrongSetImpl() throws ConfigProcessException {
+        void wrongSetImpl() {
             MappingProcessorSource source = MappingProcessorSource.builder()
                 .withStandardSignatures()
                 .withTypeImplementation(SetImpl.class, Set.class).ignoringLengths().build();

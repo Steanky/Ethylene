@@ -1,9 +1,7 @@
 package com.github.steanky.ethylene.core;
 
-import com.github.steanky.ethylene.core.collection.ConfigList;
-import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.path.ConfigPath;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,44 +33,8 @@ class ConfigElementTest {
     }
 
     @Test
-    void defaultAccessNoSupplier() {
-        ConfigNode mockNode = Mockito.mock(ConfigNode.class);
-        ConfigList mockList = Mockito.mock(ConfigList.class);
-        String pathstring = "invalid path";
-        Object object = new Object();
-
-        assertNull(defaultElement.getElementOrDefault((ConfigElement) null, pathstring));
-        assertTrue(defaultElement.getBooleanOrDefault(true, pathstring));
-        assertEquals(69, defaultElement.getNumberOrDefault(69, pathstring));
-        assertEquals("succ", defaultElement.getStringOrDefault("succ", pathstring));
-        assertSame(mockNode, defaultElement.getNodeOrDefault(mockNode, pathstring));
-        assertSame(mockList, defaultElement.getListOrDefault(mockList, pathstring));
-        assertSame(object, defaultElement.getObjectOrDefault(object, pathstring));
-    }
-
-    @Test
-    void defaultAccessWithSupplier() {
-        ConfigNode mockNode = Mockito.mock(ConfigNode.class);
-        ConfigList mockList = Mockito.mock(ConfigList.class);
-        Object object = new Object();
-
-        String pathstring = "invalid path";
-
-        assertNull(defaultElement.getElementOrDefault(() -> null, pathstring));
-        assertTrue(defaultElement.getBooleanOrDefault(() -> true, pathstring));
-        assertEquals(69, defaultElement.getNumberOrDefault(() -> 69, pathstring));
-        assertEquals("succ", defaultElement.getStringOrDefault(() -> "succ", pathstring));
-        assertSame(mockNode, defaultElement.getNodeOrDefault(() -> mockNode, pathstring));
-        assertSame(mockList, defaultElement.getListOrDefault(() -> mockList, pathstring));
-        assertSame(object, defaultElement.getObjectOrDefault(() -> object, pathstring));
-    }
-
-    @Test
     void getElementSpec() {
-        assertSame(defaultElement, defaultElement.getElement());
-        assertNull(defaultElement.getElement("invalid", "path", 420, "that doesn't exist"));
-        assertNull(defaultElement.getElement(""));
-        assertNull(defaultElement.getElement(0));
-        assertNull(defaultElement.getElement(0, "110"));
+        assertSame(defaultElement, defaultElement.get(ConfigPath.EMPTY));
+        assertNull(defaultElement.get(ConfigPath.of("invalid/path/that/doesn't/exist")));
     }
 }
