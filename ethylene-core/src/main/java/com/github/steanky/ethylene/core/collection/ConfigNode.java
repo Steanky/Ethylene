@@ -121,11 +121,6 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     }
 
     @Override
-    default boolean isNode() {
-        return true;
-    }
-
-    @Override
     default @NotNull ConfigNode asNode() {
         return this;
     }

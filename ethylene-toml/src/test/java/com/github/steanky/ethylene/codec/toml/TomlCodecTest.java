@@ -48,14 +48,14 @@ class TomlCodecTest {
     @Test
     void readsSimpleToml() throws IOException {
         ConfigElement element = codec.decode(new ByteArrayInputStream(SIMPLE_TOML.getBytes(Charset.defaultCharset())));
-        assertEquals("this is a string", element.getOrThrow(ConfigPath.of("value")).asStringOrThrow());
+        assertEquals("this is a string", element.atOrThrow(ConfigPath.of("value")).asStringOrThrow());
     }
 
     @Test
     void readsComplexToml() throws IOException {
         ConfigElement element = codec.decode(new ByteArrayInputStream(COMPLEX_TOML.getBytes(Charset.defaultCharset())));
-        ConfigList list = element.getOrThrow(ConfigPath.of("object_array")).asListOrThrow();
-        assertEquals("topLevel", element.getOrThrow(ConfigPath.of("topLevelString")).asStringOrThrow());
+        ConfigList list = element.atOrThrow(ConfigPath.of("object_array")).asListOrThrow();
+        assertEquals("topLevel", element.atOrThrow(ConfigPath.of("topLevelString")).asStringOrThrow());
         assertEquals(3, list.size());
     }
 }

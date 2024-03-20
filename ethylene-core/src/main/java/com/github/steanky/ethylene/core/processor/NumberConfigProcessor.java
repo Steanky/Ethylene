@@ -35,7 +35,7 @@ class NumberConfigProcessor<TNumber extends Number> implements ConfigProcessor<T
             throw new ConfigProcessException("Element must be a number");
         }
 
-        return converter.apply(element.asNumber());
+        return converter.apply(element.asNumberOrThrow());
     }
 
     @Override

@@ -292,8 +292,8 @@ class MappingConfigProcessorIntegrationTest {
             ConfigElement element = processor.elementFromData(Map.entry(10, "vegetals"));
             assertTrue(element.isNode());
 
-            assertEquals(10, element.getOrThrow(ConfigPath.of("key")).asNumberOrThrow().intValue());
-            assertEquals("vegetals", element.getOrThrow(ConfigPath.of("value")).asStringOrThrow());
+            assertEquals(10, element.atOrThrow(ConfigPath.of("key")).asNumberOrThrow().intValue());
+            assertEquals("vegetals", element.atOrThrow(ConfigPath.of("value")).asStringOrThrow());
         }
 
         @Test

@@ -67,11 +67,6 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
     }
 
     @Override
-    default boolean isList() {
-        return true;
-    }
-
-    @Override
     default @NotNull ConfigList asList() {
         return this;
     }

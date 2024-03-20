@@ -285,7 +285,7 @@ class ConfigElementsTest {
     @Test
     void wtf() {
         ConfigNode node = ConfigNode.of("pain", ConfigList.of());
-        node.get(ConfigPath.of("pain")).asList().add(node);
+        node.at(ConfigPath.of("pain")).asList().add(node);
         node.put("self", node);
         node.putNumber("value", 100);
         ConfigList selfReferential = ConfigList.of();

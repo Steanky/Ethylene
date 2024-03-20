@@ -324,7 +324,7 @@ class MappingProcessorSourceIntegrationTest {
             assertEquals("test", record.value);
 
             ConfigNode newNode = processor.elementFromData(record).asNode();
-            assertEquals("test", newNode.getOrThrow(ConfigPath.of("value")).asStringOrThrow());
+            assertEquals("test", newNode.atOrThrow(ConfigPath.of("value")).asStringOrThrow());
         }
 
         @Test

@@ -16,9 +16,9 @@ import java.util.function.Supplier;
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 
 /**
- * Represents a particular value from a configuration file. Specialized sub-interfaces include {@link ConfigNode} and
+ * Represents a particular value from configuration. Specialized sub-interfaces include {@link ConfigNode} and
  * {@link ConfigList}. A direct implementation is {@link ConfigPrimitive}. This interface specifies methods to easily
- * convert to implementations as needed, which will all throw {@link IllegalStateException} by default.
+ * convert to implementations as needed.
  * <p>
  * Instances can be directly obtained using {@link ConfigElement#of(String)}. Specialized subclasses will often have
  * their own constructors or static methods for creating instances.
@@ -59,22 +59,34 @@ public interface ConfigElement {
     }
 
     /**
-     * Returns the type of this ConfigElement. The default implementation throws an {@link IllegalStateException}.
+     * Returns the type of this ConfigElement. The value of this method must correspond to the results of
+     * {@link ConfigElement#isScalar()}, {@link ConfigElement#isList()}, and {@link ConfigElement#isNode()}:
+     *
+     * <ul>
+     *     <li>{@link ElementType#SCALAR} iff {@link ConfigElement#isScalar()}</li>
+     *     <li>{@link ElementType#NODE} iff {@link ConfigElement#isNode()}</li>
+     *      <li>{@link ElementType#LIST} iff {@link ConfigElement#isList()}</li>
+     * </ul>
+     * <p>
+     * The corresponding conversion methods (and their {@code asXOrThrow} variants) must follow these rules:
+     * <ul>
+     *     <li>{@link ConfigElement#asScalar()} does not throw iff {@link ConfigElement#isScalar()}</li>
+     *     <li>{@link ConfigElement#asNode()} does not throw iff {@link ConfigElement#isNode()}</li>
+     *     <li>{@link ConfigElement#asList()} does not throw iff {@link ConfigElement#isList()}</li>
+     * </ul>
      *
      * @return the type of this ConfigElement
      */
-    default ElementType type() {
-        throw new IllegalStateException("Element does not specify an ElementType");
-    }
+    @NotNull ElementType type();
 
     /**
-     * Convenience method; equivalent to {@code get(ConfigPath.of(path))}.
+     * Convenience method; equivalent to {@code at(ConfigPath.of(path))}.
      *
      * @param path the path string, interpreted as if by {@link ConfigPath#of(String)}
      * @return the ConfigElement at the path, or null if it does not exist
      */
     default ConfigElement at(@NotNull String path) {
-        return get(ConfigPath.of(path));
+        return at(ConfigPath.of(path));
     }
 
     /**
@@ -92,7 +104,7 @@ public interface ConfigElement {
      * @return the ConfigElement at the path, or null if no such element exists
      * @see ConfigPath#of(String)
      */
-    default ConfigElement get(@NotNull ConfigPath path) {
+    default ConfigElement at(@NotNull ConfigPath path) {
         Objects.requireNonNull(path);
 
         if (path.equals(ConfigPath.EMPTY) || path.equals(ConfigPath.CURRENT)) {
@@ -145,7 +157,19 @@ public interface ConfigElement {
     }
 
     /**
-     * Works identically to {@link ConfigElement#get(ConfigPath)}, but throws a {@link ConfigProcessException} if the
+     * Convenience method, equivalent to {@link ConfigElement#atOrThrow(ConfigPath)} but parses the given string as if
+     * by calling {@link ConfigPath#of(String)}.
+     *
+     * @param path the path string
+     * @return the element at the given path
+     * @throws ConfigProcessException if the element does not exist
+     */
+    default @NotNull ConfigElement atOrThrow(@NotNull String path) throws ConfigProcessException {
+        return atOrThrow(ConfigPath.of(path));
+    }
+
+    /**
+     * Works identically to {@link ConfigElement#at(ConfigPath)}, but throws a {@link ConfigProcessException} if the
      * path does not exist. Useful when writing {@link ConfigProcessor} implementations, when it is desirable to fail if
      * some entry cannot be found.
      *
@@ -153,8 +177,8 @@ public interface ConfigElement {
      * @return the ConfigElement at the path
      * @throws ConfigProcessException if there is no element at the given path
      */
-    default @NotNull ConfigElement getOrThrow(@NotNull ConfigPath path) throws ConfigProcessException {
-        ConfigElement element = get(path);
+    default @NotNull ConfigElement atOrThrow(@NotNull ConfigPath path) throws ConfigProcessException {
+        ConfigElement element = at(path);
         if (element == null) {
             throw new ConfigProcessException("No element at " + path);
         }
@@ -163,28 +187,53 @@ public interface ConfigElement {
     }
 
     /**
-     * Equivalent to {@link ConfigElement#getOrDefault(ConfigPath, ConfigElement)}, but calls the given {@link Supplier}
+     * Convenience method, equivalent to {@link ConfigElement#atOrDefault(ConfigPath, Supplier)} but parses the given
+     * string as if by calling {@link ConfigPath#of(String)}.
+     *
+     * @param path the path string
+     * @param defaultElementSupplier the supplier of default values
+     * @return the element at the given path, or the default value
+     */
+    default @NotNull ConfigElement atOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends @NotNull ConfigElement> defaultElementSupplier) {
+        return atOrDefault(ConfigPath.of(path), defaultElementSupplier);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#atOrDefault(ConfigPath, ConfigElement)}, but calls the given {@link Supplier}
      * to generate the default value.
      *
      * @param path the path
      * @param defaultElementSupplier the default value supplier; must return a non-null value
      * @return the ConfigElement present at the path, or the generated non-null default if it does not exist
      */
-    default @NotNull ConfigElement getOrDefault(@NotNull ConfigPath path,
-        @NotNull Supplier<? extends ConfigElement> defaultElementSupplier) {
-        return Objects.requireNonNullElseGet(get(path), defaultElementSupplier);
+    default @NotNull ConfigElement atOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends @NotNull ConfigElement> defaultElementSupplier) {
+        return Objects.requireNonNullElseGet(at(path), defaultElementSupplier);
     }
 
     /**
-     * Equivalent to {@link ConfigElement#get(ConfigPath)}, but returns {@code defaultElement} iff there is no element
+     * Convenience method, equivalent to {@link ConfigElement#atOrDefault(ConfigPath, ConfigElement)} but parses the
+     * given string as if by calling {@link ConfigPath#of(String)}.
+     *
+     * @param path the path string
+     * @param defaultElement the default element
+     * @return the element at the given path, or the default value if it does not exist
+     */
+    default @NotNull ConfigElement atOrDefault(@NotNull String path, @NotNull ConfigElement defaultElement) {
+        return atOrDefault(ConfigPath.of(path), defaultElement);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but returns {@code defaultElement} iff there is no element
      * at the path.
      *
      * @param path the path
      * @param defaultElement the default element
      * @return the ConfigElement present at the path, or the non-null default if it does not exist
      */
-    default @NotNull ConfigElement getOrDefault(@NotNull ConfigPath path, @NotNull ConfigElement defaultElement) {
-        return Objects.requireNonNullElse(get(path), defaultElement);
+    default @NotNull ConfigElement atOrDefault(@NotNull ConfigPath path, @NotNull ConfigElement defaultElement) {
+        return Objects.requireNonNullElse(at(path), defaultElement);
     }
 
     /**
@@ -227,7 +276,7 @@ public interface ConfigElement {
      * @return true if {@link ConfigElement#asNode()} will succeed without throwing an exception; false otherwise
      */
     default boolean isNode() {
-        return false;
+        return type().isNode();
     }
 
     /**
@@ -261,7 +310,7 @@ public interface ConfigElement {
      * @return true if {@link ConfigElement#asList()} will succeed without throwing an exception; false otherwise
      */
     default boolean isList() {
-        return false;
+        return type().isList();
     }
 
     /**
@@ -399,7 +448,7 @@ public interface ConfigElement {
      * @return true if {@link ConfigElement#asScalar()} will succeed without throwing an exception; false otherwise
      */
     default boolean isScalar() {
-        return false;
+        return type().isScalar();
     }
 
     /**

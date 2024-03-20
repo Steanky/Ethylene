@@ -151,10 +151,17 @@ public interface ConfigPath {
     /**
      * Checks if this path starts with the same entries as the given path.
      *
-     * @param startsWith the other path
+     * @param otherPath the other path
      * @return true if this path starts with the same entries as {@code startsWith}, false otherwise
      */
-    boolean startsWith(@NotNull ConfigPath startsWith);
+    boolean startsWith(@NotNull ConfigPath otherPath);
+
+    /**
+     * Equivalent of {@link ConfigPath#startsWith(ConfigPath)}, but interprets the given string as a path.
+     * @param otherPath the other path as a string
+     * @return true if this path starts with the same entries as {@code startsWith}, false otherwise
+     */
+    boolean startsWith(@NotNull String otherPath);
 
     /**
      * Determines if this path is empty.

@@ -6,6 +6,9 @@ import com.github.steanky.ethylene.core.path.ConfigPath;
  * A general exception thrown to indicate any invalid condition during object mapping.
  */
 public class MapperException extends RuntimeException {
+    /**
+     * The path of this exception, if present; null otherwise
+     */
     private ConfigPath configPath;
 
     /**

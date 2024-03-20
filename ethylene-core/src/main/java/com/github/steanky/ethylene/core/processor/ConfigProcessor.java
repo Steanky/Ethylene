@@ -245,8 +245,8 @@ public interface ConfigProcessor<TData> {
                     }
 
                     ConfigNode entryNode = entry.asNode();
-                    map.put(keyProcessor.dataFromElement(entryNode.getOrThrow(KEY)),
-                        valueProcessor.dataFromElement(entryNode.getOrThrow(VALUE)));
+                    map.put(keyProcessor.dataFromElement(entryNode.atOrThrow(KEY)),
+                        valueProcessor.dataFromElement(entryNode.atOrThrow(VALUE)));
                 }
 
                 return map;

@@ -105,16 +105,16 @@ class AbstractConfigCodecTest {
 
     @Test
     void validTopLevelPrimitives() {
-        assertEquals(INTEGER_VALUE, resultingElement.get(ConfigPath.of(INTEGER_KEY)).asNumber().intValue());
-        assertEquals(FLOAT_VALUE, resultingElement.get(ConfigPath.of(FLOAT_KEY)).asNumber().floatValue());
-        assertEquals(DOUBLE_VALUE, resultingElement.get(ConfigPath.of(DOUBLE_KEY)).asNumber().doubleValue());
-        assertEquals(BOOLEAN_VALUE, resultingElement.get(ConfigPath.of(BOOLEAN_KEY)).asBoolean());
-        assertEquals(STRING_VALUE, resultingElement.get(ConfigPath.of(STRING_KEY)).asString());
+        assertEquals(INTEGER_VALUE, resultingElement.at(ConfigPath.of(INTEGER_KEY)).asNumber().intValue());
+        assertEquals(FLOAT_VALUE, resultingElement.at(ConfigPath.of(FLOAT_KEY)).asNumber().floatValue());
+        assertEquals(DOUBLE_VALUE, resultingElement.at(ConfigPath.of(DOUBLE_KEY)).asNumber().doubleValue());
+        assertEquals(BOOLEAN_VALUE, resultingElement.at(ConfigPath.of(BOOLEAN_KEY)).asBoolean());
+        assertEquals(STRING_VALUE, resultingElement.at(ConfigPath.of(STRING_KEY)).asString());
     }
 
     @Test
     void validTopLevelFlatStringList() {
-        ConfigList array = resultingElement.get(ConfigPath.of(LIST_KEY)).asList();
+        ConfigList array = resultingElement.at(ConfigPath.of(LIST_KEY)).asList();
         List<String> equivalent = new ArrayList<>();
         for (ConfigElement element : array) {
             equivalent.add(element.asString());
@@ -125,7 +125,7 @@ class AbstractConfigCodecTest {
 
     @Test
     void validNestedFlatStringList() {
-        ConfigList array = resultingElement.get(ConfigPath.of(SUB_ROOT_KEY)).asNode().get(ConfigPath.of(SUB_LIST_KEY)).asList();
+        ConfigList array = resultingElement.at(ConfigPath.of(SUB_ROOT_KEY)).asNode().at(ConfigPath.of(SUB_LIST_KEY)).asList();
         List<String> equivalent = new ArrayList<>();
         for (ConfigElement element : array) {
             equivalent.add(element.asString());
@@ -137,28 +137,28 @@ class AbstractConfigCodecTest {
     @Test
     void validNestedPrimitives() {
         assertEquals(SUB_STRING_VALUE,
-            resultingElement.get(ConfigPath.of(SUB_ROOT_KEY)).asNode().get(ConfigPath.of(SUB_STRING_KEY)).asString());
+            resultingElement.at(ConfigPath.of(SUB_ROOT_KEY)).asNode().at(ConfigPath.of(SUB_STRING_KEY)).asString());
     }
 
     @Test
     void validNestedArrayNodes() {
         ConfigList subNodes =
-            resultingElement.get(ConfigPath.of(SUB_ROOT_KEY)).asNode().get(ConfigPath.of(SUB_LIST_NODES_KEY)).asList();
+            resultingElement.at(ConfigPath.of(SUB_ROOT_KEY)).asNode().at(ConfigPath.of(SUB_LIST_NODES_KEY)).asList();
 
         for (int i = 0; i < SUB_NODE_COUNT; i++) {
             ConfigNode element = subNodes.get(i).asNode();
-            assertEquals(i, element.get(ConfigPath.of(SUB_NODE_KEY_PREFIX + i)).asNumber().intValue());
+            assertEquals(i, element.at(ConfigPath.of(SUB_NODE_KEY_PREFIX + i)).asNumber().intValue());
         }
     }
 
     @Test
     void pathNestedAccess() {
-        assertEquals(SUB_STRING_VALUE, resultingElement.get(ConfigPath.of("sub_root/sub_string")).asString());
+        assertEquals(SUB_STRING_VALUE, resultingElement.at(ConfigPath.of("sub_root/sub_string")).asString());
     }
 
     @Test
     void sameWhenEmpty() {
-        assertSame(resultingElement, resultingElement.get(ConfigPath.EMPTY));
+        assertSame(resultingElement, resultingElement.at(ConfigPath.EMPTY));
     }
 
     @Test
@@ -188,12 +188,12 @@ class AbstractConfigCodecTest {
     @Test
     void missingTopLevelNode() {
         assertNull(resultingElement.get("not found"));
-        assertNull(resultingElement.get(ConfigPath.of("not found")));
+        assertNull(resultingElement.at(ConfigPath.of("not found")));
     }
 
     @Test
     void missingNestedNode() {
-        assertNull(resultingElement.get(ConfigPath.of("sub_root/not found")));
+        assertNull(resultingElement.at(ConfigPath.of("sub_root/not found")));
     }
 
     @Test
@@ -218,11 +218,11 @@ class AbstractConfigCodecTest {
         ConfigNode root = element.asNode();
 
 
-        assertSame(root, element.get(ConfigPath.of("sub_root/parent_ref")));
+        assertSame(root, element.at(ConfigPath.of("sub_root/parent_ref")));
     }
 
     @Test
     void pathAccess() {
-        assertSame(SUB_LIST_VALUE.get(2), resultingElement.get(ConfigPath.of("sub_root/sub_list/2")).asString());
+        assertSame(SUB_LIST_VALUE.get(2), resultingElement.at(ConfigPath.of("sub_root/sub_list/2")).asString());
     }
 }

@@ -33,12 +33,9 @@ final class ConfigContainers {
                 return Graph.node(Graph.iterator(entryCollection.iterator()), Graph.output(configContainer, Graph.emptyAccumulator()));
             }
 
-            ConfigContainer result;
-            try {
-                //use the implementation's copy method...
-                result = configContainer.emptyCopy();
-            } catch (UnsupportedOperationException e) {
-                //...unless we can't due to it not being supported, in which case use reasonable defaults
+
+            ConfigContainer result = configContainer.emptyCopy();
+            if (result == null) {
                 int size = entryCollection.size();
                 result = configContainer.isNode() ? new LinkedConfigNode(size) : new ArrayConfigList(size);
             }

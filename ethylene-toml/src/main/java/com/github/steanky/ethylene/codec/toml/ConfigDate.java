@@ -29,7 +29,7 @@ public class ConfigDate implements ConfigElement {
     }
 
     @Override
-    public ElementType type() {
+    public @NotNull ElementType type() {
         return ElementType.SCALAR;
     }
 
@@ -42,11 +42,6 @@ public class ConfigDate implements ConfigElement {
     public @NotNull String asString() {
         //override asString to avoid requiring the user to handle Date objects directly
         return temporal.toString();
-    }
-
-    @Override
-    public boolean isScalar() {
-        return true;
     }
 
     @Override

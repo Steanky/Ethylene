@@ -50,7 +50,7 @@ class BasicConfigPath implements ConfigPath {
      * @return a normalized BasicElementPath
      */
     static @NotNull BasicConfigPath parse(@NotNull String path) {
-        if (path.isEmpty()) {
+        if (path.isEmpty() || path.equals("/")) {
             return EMPTY_PATH;
         }
 
@@ -180,12 +180,12 @@ class BasicConfigPath implements ConfigPath {
             return relativePath;
         }
 
-        List<Node> ourNodes = nodes();
-        List<Node> relativeNodes = relativePath.nodes();
-
-        if (relativeNodes.isEmpty()) {
+        if (relativePath.equals(ConfigPath.CURRENT)) {
             return this;
         }
+
+        List<Node> ourNodes = nodes();
+        List<Node> relativeNodes = relativePath.nodes();
 
         Deque<Node> newNodes = new ArrayDeque<>(ourNodes.size() + relativeNodes.size());
 
@@ -390,6 +390,11 @@ class BasicConfigPath implements ConfigPath {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean startsWith(@NotNull String otherPath) {
+        return startsWith(parse(otherPath));
     }
 
     @Override

@@ -337,11 +337,6 @@ public final class ConfigPrimitive implements ConfigElement {
     }
 
     @Override
-    public boolean isScalar() {
-        return true;
-    }
-
-    @Override
     public Object asScalar() {
         return object;
     }

@@ -2,6 +2,7 @@ package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
@@ -9,22 +10,18 @@ import java.util.Map;
 
 /**
  * Represents a {@link ConfigElement} capable of holding other ConfigElements. ConfigContainer objects are generally
- * also either {@link Map} or {@link Collection} implementations, but this is not required.
+ * also either {@link Map} or {@link Collection} implementations, but this is not required. However,
+ * {@link ConfigElement#isList()} || {@link ConfigElement#isNode()} must be true for all implementations.
  * <p>
  * ConfigContainer implementations may be immutable or mutable. Immutable implementations do not support mutating
  * methods like {@link Collection#add(Object)}, but their contents may still change over their lifetime through other
  * means, for example if they have a backing collection and the backing collection changes. Immutable implementations
- * may be identified by checking {@code instanceof Immutable}.
+ * may be identified by checking if this object is an instance of {@link Immutable}.
  */
 public interface ConfigContainer extends ConfigElement {
     @Override
     default @NotNull ConfigContainer asContainer() {
         return this;
-    }
-
-    @Override
-    default boolean isContainer() {
-        return true;
     }
 
     /**
@@ -48,14 +45,14 @@ public interface ConfigContainer extends ConfigElement {
      * other applicable characteristics as this one. Implementations may choose not to implement this method. If it is
      * supported, the returned container must be of the same class.
      * <p>
-     * Implementations that do not implement this method will not be correctly copied using
-     * {@link ConfigContainer#copy()}; they will be replaced by a default type instead.
+     * Mutable implementations that do not implement this method will not be correctly copied using
+     * {@link ConfigContainer#copy()}; they will be replaced by a default type instead. {@link Immutable}
+     * implementations need not override this method, as they will not be copied.
      *
-     * @return a new, empty ConfigContainer
-     * @throws UnsupportedOperationException if this ConfigContainer implementation does not support this functionality
+     * @return a new, empty ConfigContainer, or {@code null} if this type does not support copying
      */
-    default @NotNull ConfigContainer emptyCopy() {
-        throw new UnsupportedOperationException("This ConfigContainer does not support copying");
+    default @Nullable ConfigContainer emptyCopy() {
+        return null;
     }
 
     /**
@@ -92,7 +89,8 @@ public interface ConfigContainer extends ConfigElement {
      * {@link ConfigContainer#copy()}, only scalar types and immutable collection types are left unchanged between the
      * input and output graph.
      *
-     * @return an immutable copy of this ConfigContainer, whose contents will change if this container changes
+     * @return an immutable copy of this ConfigContainer, whose contents will change if this container changes, but
+     * that cannot itself be directly modified
      */
     default @NotNull ConfigContainer immutableView() {
         return ConfigContainers.immutableView(this);

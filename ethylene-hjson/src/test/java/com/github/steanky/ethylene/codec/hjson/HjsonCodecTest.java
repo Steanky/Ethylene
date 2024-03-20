@@ -33,9 +33,9 @@ class HjsonCodecTest {
     void parsesHjson() throws IOException {
         ConfigElement element = codec.decode(new ByteArrayInputStream(TEST_HJSON.getBytes(StandardCharsets.UTF_8)));
         assertTrue(element.isNode());
-        assertEquals("this is a value", element.get(ConfigPath.of("test_value")).asString());
-        assertEquals("test", element.get(ConfigPath.of("sub/sub_string")).asString());
-        assertSame(69, element.get(ConfigPath.of("another_value")).asNumber().intValue());
+        assertEquals("this is a value", element.at(ConfigPath.of("test_value")).asString());
+        assertEquals("test", element.at(ConfigPath.of("sub/sub_string")).asString());
+        assertSame(69, element.at(ConfigPath.of("another_value")).asNumber().intValue());
     }
 
     @Test
