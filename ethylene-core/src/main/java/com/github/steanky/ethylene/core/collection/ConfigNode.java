@@ -8,6 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 /**
  * <p>Represents some arbitrary configuration data in a tree-like structure. ConfigNode objects are mutable data
@@ -167,6 +169,215 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      */
     default void putBoolean(@NotNull String key, boolean value) {
         put(key, ConfigPrimitive.of(value));
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type; else the default value
+     */
+    default @NotNull ConfigContainer getContainerOrDefault(@NotNull String key, @NotNull ConfigContainer defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        ConfigElement element = get(key);
+        if (element == null || !element.isContainer()) {
+            return defaultValue;
+        }
+
+        return element.asContainer();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else computes and returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type; else the non-null computed default value
+     */
+    default @NotNull ConfigContainer getContainerOrDefault(@NotNull String key,
+        @NotNull Supplier<? extends @NotNull ConfigContainer> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        ConfigElement element = get(key);
+        if (element == null || !element.isContainer()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asContainer();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type; else the default value
+     */
+    default @NotNull ConfigNode getNodeOrDefault(@NotNull String key, @NotNull ConfigNode defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        ConfigElement element = get(key);
+        if (element == null || !element.isNode()) {
+            return defaultValue;
+        }
+
+        return element.asNode();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else computes and returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type; else the non-null computed default value
+     */
+    default @NotNull ConfigNode getNodeOrDefault(@NotNull String key,
+        @NotNull Supplier<? extends @NotNull ConfigNode> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        ConfigElement element = get(key);
+        if (element == null || !element.isNode()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asNode();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type; else the default value
+     */
+    default @NotNull ConfigList getListOrDefault(@NotNull String key, @NotNull ConfigList defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        ConfigElement element = get(key);
+        if (element == null || !element.isList()) {
+            return defaultValue;
+        }
+
+        return element.asList();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else computes and returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type; else the non-null computed default value
+     */
+    default @NotNull ConfigList getListOrDefault(@NotNull String key,
+        @NotNull Supplier<? extends @NotNull ConfigList> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        ConfigElement element = get(key);
+        if (element == null || !element.isList()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asList();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type; else the default value
+     */
+    default boolean getBooleanOrDefault(@NotNull String key, boolean defaultValue) {
+        ConfigElement element = get(key);
+        if (element == null || !element.isBoolean()) {
+            return defaultValue;
+        }
+
+        return element.asBoolean();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else computes and returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type; else the non-null computed default value
+     */
+    default boolean getBooleanOrDefault(@NotNull String key,
+        @NotNull BooleanSupplier defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        ConfigElement element = get(key);
+        if (element == null || !element.isBoolean()) {
+            return defaultValueSupplier.getAsBoolean();
+        }
+
+        return element.asBoolean();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type; else the default value
+     */
+    default @NotNull Number getNumberOrDefault(@NotNull String key, @NotNull Number defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        ConfigElement element = get(key);
+        if (element == null || !element.isNumber()) {
+            return defaultValue;
+        }
+
+        return element.asNumber();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else computes and returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type; else the non-null computed default value
+     */
+    default @NotNull Number getNumberOrDefault(@NotNull String key,
+        @NotNull Supplier<? extends @NotNull Number> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        ConfigElement element = get(key);
+        if (element == null || !element.isNumber()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asNumber();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type; else the default value
+     */
+    default @NotNull String getStringOrDefault(@NotNull String key, @NotNull String defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        ConfigElement element = get(key);
+        if (element == null || !element.isString()) {
+            return defaultValue;
+        }
+
+        return element.asString();
+    }
+
+    /**
+     * Gets a value if it is present and the expected type; else computes and returns the non-null default value.
+     *
+     * @param key the key
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type; else the non-null computed default value
+     */
+    default @NotNull String getStringOrDefault(@NotNull String key,
+        @NotNull Supplier<? extends @NotNull String> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        ConfigElement element = get(key);
+        if (element == null || !element.isString()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asString();
     }
 
     @Override

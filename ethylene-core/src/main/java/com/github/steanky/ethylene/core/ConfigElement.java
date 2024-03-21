@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import com.github.steanky.ethylene.core.processor.ConfigProcessor;
@@ -234,6 +235,388 @@ public interface ConfigElement {
      */
     default @NotNull ConfigElement atOrDefault(@NotNull ConfigPath path, @NotNull ConfigElement defaultElement) {
         return Objects.requireNonNullElse(at(path), defaultElement);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a container.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull ConfigContainer containerAtOrDefault(@NotNull ConfigPath path, @NotNull ConfigContainer defaultValue) {
+        Objects.requireNonNull(defaultValue);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isContainer()) {
+            return defaultValue;
+        }
+
+        return element.asContainer();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a container.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull ConfigContainer containerAtOrDefault(@NotNull String path, @NotNull ConfigContainer defaultValue) {
+        return containerAtOrDefault(ConfigPath.of(path), defaultValue);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a container.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull ConfigContainer containerAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends @NotNull ConfigContainer> defaultSupplier) {
+        Objects.requireNonNull(defaultSupplier);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isContainer()) {
+            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+        }
+
+        return element.asContainer();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a container.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull ConfigContainer containerAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends @NotNull ConfigContainer> defaultSupplier) {
+        return containerAtOrDefault(ConfigPath.of(path), defaultSupplier);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a node.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull ConfigNode nodeAtOrDefault(@NotNull ConfigPath path, @NotNull ConfigNode defaultValue) {
+        Objects.requireNonNull(defaultValue);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isNode()) {
+            return defaultValue;
+        }
+
+        return element.asNode();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a node.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull ConfigNode nodeAtOrDefault(@NotNull String path, @NotNull ConfigNode defaultValue) {
+        return nodeAtOrDefault(ConfigPath.of(path), defaultValue);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a node.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull ConfigNode nodeAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends @NotNull ConfigNode> defaultSupplier) {
+        Objects.requireNonNull(defaultSupplier);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isNode()) {
+            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+        }
+
+        return element.asNode();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a node.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull ConfigNode nodeAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends @NotNull ConfigNode> defaultSupplier) {
+        return nodeAtOrDefault(ConfigPath.of(path), defaultSupplier);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a list.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull ConfigList listAtOrDefault(@NotNull ConfigPath path, @NotNull ConfigList defaultValue) {
+        Objects.requireNonNull(defaultValue);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isList()) {
+            return defaultValue;
+        }
+
+        return element.asList();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a list.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull ConfigList listAtOrDefault(@NotNull String path, @NotNull ConfigList defaultValue) {
+        return listAtOrDefault(ConfigPath.of(path), defaultValue);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a list.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull ConfigList listAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends @NotNull ConfigList> defaultSupplier) {
+        Objects.requireNonNull(defaultSupplier);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isList()) {
+            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+        }
+
+        return element.asList();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a list.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull ConfigList listAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends @NotNull ConfigList> defaultSupplier) {
+        return listAtOrDefault(ConfigPath.of(path), defaultSupplier);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a boolean.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default boolean booleanAtOrDefault(@NotNull ConfigPath path, boolean defaultValue) {
+        ConfigElement element = at(path);
+        if (element == null || !element.isBoolean()) {
+            return defaultValue;
+        }
+
+        return element.asBoolean();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a boolean.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default boolean booleanAtOrDefault(@NotNull String path, boolean defaultValue) {
+        return booleanAtOrDefault(ConfigPath.of(path), defaultValue);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a boolean.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier
+     * @return the object at the path, else the computed default value
+     */
+    default boolean booleanAtOrDefault(@NotNull ConfigPath path,
+        @NotNull BooleanSupplier defaultSupplier) {
+        Objects.requireNonNull(defaultSupplier);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isBoolean()) {
+            return defaultSupplier.getAsBoolean();
+        }
+
+        return element.asBoolean();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a boolean.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier
+     * @return the object at the path, else the computed default value
+     */
+    default boolean booleanAtOrDefault(@NotNull String path,
+        @NotNull BooleanSupplier defaultSupplier) {
+        return booleanAtOrDefault(ConfigPath.of(path), defaultSupplier);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a number.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull Number numberAtOrDefault(@NotNull ConfigPath path, @NotNull Number defaultValue) {
+        Objects.requireNonNull(defaultValue);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isNumber()) {
+            return defaultValue;
+        }
+
+        return element.asNumber();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a number.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull Number numberAtOrDefault(@NotNull String path, @NotNull Number defaultValue) {
+        return numberAtOrDefault(ConfigPath.of(path), defaultValue);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a number.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull Number numberAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends @NotNull Number> defaultSupplier) {
+        Objects.requireNonNull(defaultSupplier);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isNumber()) {
+            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+        }
+
+        return element.asNumber();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a number.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull Number numberAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends @NotNull Number> defaultSupplier) {
+        return numberAtOrDefault(ConfigPath.of(path), defaultSupplier);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a string.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull String stringAtOrDefault(@NotNull ConfigPath path, @NotNull String defaultValue) {
+        Objects.requireNonNull(defaultValue);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isString()) {
+            return defaultValue;
+        }
+
+        return element.asString();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but returns {@code defaultValue} iff the element at the path
+     * does not exist or is not a string.
+     *
+     * @param path the path to search along
+     * @param defaultValue the default value
+     * @return the object at the path, else the default value
+     */
+    default @NotNull String stringAtOrDefault(@NotNull String path, @NotNull String defaultValue) {
+        return stringAtOrDefault(ConfigPath.of(path), defaultValue);
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(ConfigPath)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a string.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull String stringAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends @NotNull String> defaultSupplier) {
+        Objects.requireNonNull(defaultSupplier);
+
+        ConfigElement element = at(path);
+        if (element == null || !element.isString()) {
+            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+        }
+
+        return element.asString();
+    }
+
+    /**
+     * Equivalent to {@link ConfigElement#at(String)}, but calls {@code defaultSupplier} to compute a default value
+     * iff the element at the path does not exist or is not a string.
+     *
+     * @param path the path to search along
+     * @param defaultSupplier the default value supplier, which must return a non-null value
+     * @return the object at the path, else the computed default value
+     */
+    default @NotNull String stringAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends @NotNull String> defaultSupplier) {
+        return stringAtOrDefault(ConfigPath.of(path), defaultSupplier);
     }
 
     /**

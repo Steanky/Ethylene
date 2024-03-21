@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 /**
  * Represents an ordered collection of {@link ConfigElement} objects. ConfigList does not support null values.
@@ -109,6 +111,269 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
      */
     default void addBoolean(boolean value) {
         add(ConfigPrimitive.of(value));
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type and in-bounds; else the default value
+     */
+    default @NotNull ConfigContainer getContainerOrDefault(int index, @NotNull ConfigContainer defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        if (index < 0 || index >= size()) {
+            return defaultValue;
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isContainer()) {
+            return defaultValue;
+        }
+
+        return element.asContainer();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else computes and returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type and in-bounds; else the non-null computed default
+     * value
+     */
+    default @NotNull ConfigContainer getContainerOrDefault(int index,
+        @NotNull Supplier<? extends @NotNull ConfigContainer> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        if (index < 0 || index >= size()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isContainer()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asContainer();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type and in-bounds; else the default value
+     */
+    default @NotNull ConfigNode getNodeOrDefault(int index, @NotNull ConfigNode defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        if (index < 0 || index >= size()) {
+            return defaultValue;
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isNode()) {
+            return defaultValue;
+        }
+
+        return element.asNode();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else computes and returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type and in-bounds; else the non-null computed default
+     * value
+     */
+    default @NotNull ConfigNode getNodeOrDefault(int index,
+        @NotNull Supplier<? extends @NotNull ConfigNode> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        if (index < 0 || index >= size()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isNode()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asNode();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type and in-bounds; else the default value
+     */
+    default @NotNull ConfigList getListOrDefault(int index, @NotNull ConfigList defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        if (index < 0 || index >= size()) {
+            return defaultValue;
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isList()) {
+            return defaultValue;
+        }
+
+        return element.asList();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else computes and returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type and in-bounds; else the non-null computed default
+     * value
+     */
+    default @NotNull ConfigList getListOrDefault(int index,
+        @NotNull Supplier<? extends @NotNull ConfigList> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        if (index < 0 || index >= size()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isList()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asList();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else returns the default value.
+     *
+     * @param index the index
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type and in-bounds; else the default value
+     */
+    default boolean getBooleanOrDefault(int index, boolean defaultValue) {
+        if (index < 0 || index >= size()) {
+            return defaultValue;
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isBoolean()) {
+            return defaultValue;
+        }
+
+        return element.asBoolean();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else computes and returns the default value.
+     *
+     * @param index the index
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type and in-bounds; else the non-null computed default
+     * value
+     */
+    default boolean getBooleanOrDefault(int index,
+        @NotNull BooleanSupplier defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        if (index < 0 || index >= size()) {
+            return defaultValueSupplier.getAsBoolean();
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isBoolean()) {
+            return defaultValueSupplier.getAsBoolean();
+        }
+
+        return element.asBoolean();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type and in-bounds; else the default value
+     */
+    default @NotNull Number getNumberOrDefault(int index, @NotNull Number defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        if (index < 0 || index >= size()) {
+            return defaultValue;
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isNumber()) {
+            return defaultValue;
+        }
+
+        return element.asNumber();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else computes and returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type and in-bounds; else the non-null computed default
+     * value
+     */
+    default @NotNull Number getNumberOrDefault(int index,
+        @NotNull Supplier<? extends @NotNull Number> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        if (index < 0 || index >= size()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isNumber()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asNumber();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValue the default value
+     * @return the value present in this node if it is the right type and in-bounds; else the default value
+     */
+    default @NotNull String getStringOrDefault(int index, @NotNull String defaultValue) {
+        Objects.requireNonNull(defaultValue);
+        if (index < 0 || index >= size()) {
+            return defaultValue;
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isString()) {
+            return defaultValue;
+        }
+
+        return element.asString();
+    }
+
+    /**
+     * Gets a value if it is in-bounds and the expected type; else computes and returns the non-null default value.
+     *
+     * @param index the index
+     * @param defaultValueSupplier the default value supplier
+     * @return the value present in this node if it is the right type and in-bounds; else the non-null computed default
+     * value
+     */
+    default @NotNull String getStringOrDefault(int index,
+        @NotNull Supplier<? extends @NotNull String> defaultValueSupplier) {
+        Objects.requireNonNull(defaultValueSupplier);
+        if (index < 0 || index >= size()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        ConfigElement element = get(index);
+        if (!element.isString()) {
+            return Objects.requireNonNull(defaultValueSupplier.get(), "default value supplier");
+        }
+
+        return element.asString();
     }
 
     @Override
