@@ -3,10 +3,11 @@ package com.github.steanky.ethylene.core.collection;
 /**
  * Marker interface indicating a {@link ConfigContainer} implementation is immutable; i.e. its mutating methods, like
  * {@link ConfigList#add(Object)} or {@link ConfigNode#put(Object, Object)}, will throw an exception if called, and
- * cannot change the container itself. However, the contents may still change if there is an underlying container
- * that is mutable.
+ * cannot change the container itself. Similarly, the reported contents of the container may <i>not</i> change over its
+ * lifetime.
  * <p>
- * Additionally, implementations must ensure that any sub-containers are also immutable.
+ * Implementations must ensure that any sub-containers are also immutable in this way.
+ * @see ImmutableView
  */
-public interface Immutable {
+public interface Immutable extends ImmutableView {
 }

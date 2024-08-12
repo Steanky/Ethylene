@@ -58,6 +58,10 @@ final class ConfigContainers {
      * @return an immutable copy of the original
      */
     static @NotNull ConfigContainer immutableCopy(@NotNull ConfigContainer original) {
+        if (original instanceof Immutable) {
+            return original;
+        }
+
         return Graph.process(original, (ConfigElement node) -> {
             ConfigContainer configContainer = node.asContainer();
             Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
@@ -111,11 +115,16 @@ final class ConfigContainers {
      * @return an immutable view of the provided container
      */
     static @NotNull ConfigContainer immutableView(@NotNull ConfigContainer container) {
+        if (container instanceof ImmutableView) {
+            return container;
+        }
+
         return Graph.process(container, (ConfigElement node) -> {
             ConfigContainer configContainer = node.asContainer();
             Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
 
-            if (configContainer instanceof Immutable) {
+            // all Immutable are also ImmutableView, so we don't explore those either!
+            if (configContainer instanceof ImmutableView) {
                 return Graph.node(Iterators.iterator(), Graph.output(configContainer, Graph.emptyAccumulator()));
             }
 
@@ -130,7 +139,7 @@ final class ConfigContainers {
         }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES).asContainer();
     }
 
-    private static class ConfigNodeView extends AbstractConfigNode implements Immutable {
+    private static class ConfigNodeView extends AbstractConfigNode implements ImmutableView {
         private final ConfigNode underlying;
 
         private ConfigNodeView(ConfigNode underlying) {
@@ -191,7 +200,7 @@ final class ConfigContainers {
         }
     }
 
-    static final class ConfigListView extends AbstractConfigList implements Immutable, RandomAccess {
+    static final class ConfigListView extends AbstractConfigList implements RandomAccess, ImmutableView {
         private final ConfigList underlying;
 
         private ConfigListView(ConfigList underlying) {

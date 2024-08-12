@@ -12,7 +12,7 @@ import java.util.*;
  *
  * @see ConfigNode#defaulting(ConfigNode, ConfigNode)
  */
-class DefaultingConfigNode extends AbstractConfigNode implements Immutable {
+class DefaultingConfigNode extends AbstractConfigNode {
     private final ConfigNode base;
     private final ConfigNode defaults;
 
