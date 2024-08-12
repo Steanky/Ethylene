@@ -1,6 +1,5 @@
 plugins {
     id 'ethylene.library-conventions'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 dependencies {
@@ -15,28 +14,4 @@ dependencies {
     //in practice these are sourced transitively from ethylene-core, but we don't provide them to users
     implementation 'com.github.steanky:toolkit-function:0.3.0'
     implementation 'com.github.steanky:toolkit-collection:0.3.0'
-}
-
-shadowJar {
-    //caffeine is another fairly small dependency so we bundle it
-    relocate 'com.github.benmanes.caffeine', 'relocated.com.github.benmanes.caffeine'
-
-    //relocate our toolkit dependency so we use the same one as provided by ethylene-core
-    relocate 'com.github.steanky.toolkit', 'relocated.com.github.steanky.toolkit'
-
-    //relocate other dependencies
-    relocate 'org.apache.commons', 'relocated.org.apache.commons'
-    relocate 'org.checkerframework', 'relocated.org.checkerframework'
-    relocate 'com.google.errorprone', 'relocated.com.google.errorprone'
-
-    //don't actually jar core
-    exclude '**/ethylene-core-*.jar'
-
-    //don't jar toolkit either, user should have core on the classpath, which has toolkit already
-    exclude '**/toolkit-*.jar'
-
-    minimize {
-        //don't minimize caffeine because it loads a bunch of classes through reflection
-        exclude(dependency('com.github.ben-manes.caffeine:caffeine:.*'))
-    }
 }

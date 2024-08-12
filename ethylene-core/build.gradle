@@ -1,6 +1,5 @@
 plugins {
     id 'ethylene.library-conventions'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 dependencies {
@@ -8,16 +7,4 @@ dependencies {
     implementation 'com.github.steanky:toolkit-collection:0.3.0'
 
     testImplementation project(':ethylene-json')
-}
-
-shadowJar {
-    //these dependencies are tiny - fatjar and relocate them so they can't cause downstream conflict
-    relocate 'com.github.steanky.toolkit', 'relocated.com.github.steanky.toolkit'
-
-    minimize {
-        //don't minimize toolkit-function or toolkit-collection
-        //we may depend on some of its classes from ethylene-mapper
-        exclude(dependency('com.github.steanky:toolkit-function:.*'))
-        exclude(dependency('com.github.steanky:toolkit-collection:.*'))
-    }
 }
