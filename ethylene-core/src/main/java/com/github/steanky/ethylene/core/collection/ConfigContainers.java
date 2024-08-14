@@ -9,6 +9,7 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 /**
  * Internal utilities for containers. Not part of the public API.
@@ -25,29 +26,50 @@ final class ConfigContainers {
      * @return an exact copy of the input
      */
     static @NotNull ConfigContainer copy(@NotNull ConfigContainer original) {
+        if (original instanceof ImmutableView) {
+            return original;
+        }
+
         return (ConfigContainer) Graph.process(original, (ConfigElement node) -> {
+            if (node instanceof ImmutableView) {
+                //don't write anything to this accumulator
+                return Graph.node(Iterators.iterator(), Graph.output(node, Graph.emptyAccumulator()));
+            }
+
             ConfigContainer configContainer = node.asContainer();
             Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
-            if (configContainer instanceof Immutable) {
-                //don't write anything to this accumulator
-                return Graph.node(Graph.iterator(entryCollection.iterator()), Graph.output(configContainer, Graph.emptyAccumulator()));
-            }
-
-
-            ConfigContainer result = configContainer.emptyCopy();
-            if (result == null) {
+            ConfigContainer emptyCopy = configContainer.emptyCopy();
+            if (emptyCopy == null) {
                 int size = entryCollection.size();
-                result = configContainer.isNode() ? new LinkedConfigNode(size) : new ArrayConfigList(size);
+                emptyCopy = configContainer.isNode() ? new LinkedConfigNode(size) : new ArrayConfigList(size);
             }
 
-            ConfigContainer out = result;
-            return Graph.node(Graph.iterator(entryCollection.iterator()), Graph.output(out, (key, element, circular) -> {
-                if (out.isNode()) {
-                    out.asNode().put(key, element);
-                } else {
-                    out.asList().add(element);
-                }
-            }));
+            return constructMutableNode(entryCollection, emptyCopy);
+        }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES);
+    }
+
+    /**
+     * Creates a mutable copy of the provided {@link ConfigContainer}. All nodes/lists will be reconstructed as new,
+     * mutable variants, recursively.
+     *
+     * @param original the original container
+     * @param configListCreator the function used to supply a mutable {@link ConfigList}
+     * @param configNodeCreator the function used to supply a mutable {@link ConfigNode}
+     * @return a mutable copy created from the original
+     */
+    static @NotNull ConfigContainer mutableCopy(@NotNull ConfigContainer original,
+        @NotNull IntFunction<? extends ConfigNode> configNodeCreator,
+        @NotNull IntFunction<? extends ConfigList> configListCreator) {
+        return (ConfigContainer) Graph.process(original, (ConfigElement node) -> {
+            Collection<ConfigEntry> entryCollection = node.asContainer().entryCollection();
+
+            int size = entryCollection.size();
+            ConfigContainer result = node.isNode() ? configNodeCreator.apply(size) : configListCreator.apply(size);
+            if (result == null) {
+                throw new NullPointerException("Container function returned null");
+            }
+
+            return constructMutableNode(entryCollection, result);
         }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES);
     }
 
@@ -63,6 +85,11 @@ final class ConfigContainers {
         }
 
         return Graph.process(original, (ConfigElement node) -> {
+            if (node instanceof Immutable) {
+                //don't go deeper into this node, its children are obligated to be immutable
+                return Graph.node(Iterators.iterator(), Graph.output(node, Graph.emptyAccumulator()));
+            }
+
             ConfigContainer configContainer = node.asContainer();
             Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
 
@@ -72,16 +99,55 @@ final class ConfigContainers {
                 return Graph.node(Iterators.iterator(), Graph.output(emptyContainer, Graph.emptyAccumulator()));
             }
 
-            if (configContainer instanceof Immutable) {
-                //don't go deeper into this node, its children are obligated to be immutable
-                return Graph.node(Iterators.iterator(), Graph.output(configContainer, Graph.emptyAccumulator()));
-            }
-
             int size = entryCollection.size();
             Graph.Output<ConfigElement, String> output = constructOutput(configContainer, size);
 
             return Graph.node(Graph.iterator(entryCollection.iterator()), output);
         }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES).asContainer();
+    }
+
+    /**
+     * Produces an immutable view of the entire provided {@link ConfigContainer}. This view is read-only, but will
+     * change to reflect modifications performed on the underlying container. The exact structure of the input tree will
+     * be preserved.
+     *
+     * @param container the container to create an immutable view from
+     * @return an immutable view of the provided container
+     */
+    static @NotNull ConfigContainer immutableView(@NotNull ConfigContainer container) {
+        if (container instanceof ImmutableView) {
+            return container;
+        }
+
+        return Graph.process(container, (ConfigElement node) -> {
+            // all Immutable are also ImmutableView, so we don't explore those either!
+            if (node instanceof ImmutableView) {
+                return Graph.node(Iterators.iterator(), Graph.output(node, Graph.emptyAccumulator()));
+            }
+
+            ConfigContainer configContainer = node.asContainer();
+
+            ConfigContainer view;
+            if (configContainer.isNode()) {
+                view = new ConfigNodeView(configContainer.asNode());
+            } else {
+                view = new ConfigListView(configContainer.asList());
+            }
+
+            return Graph.node(Graph.iterator(configContainer.entryCollection().iterator()), Graph.output(view, Graph.emptyAccumulator()));
+        }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES).asContainer();
+    }
+
+    private static Graph.Node<ConfigElement, ConfigElement, String> constructMutableNode(Collection<ConfigEntry> entryCollection, ConfigContainer result) {
+        ConfigNode outNode = result.isNode() ? result.asNode() : null;
+        ConfigList outList = result.isList() ? result.asList() : null;
+        return Graph.node(Graph.iterator(entryCollection.iterator()), Graph.output(result, (key, element, circular) -> {
+            if (outNode != null) {
+                outNode.put(key, element);
+            } else if (outList != null) {
+                outList.add(element);
+            }
+        }));
     }
 
     private static Graph.Output<ConfigElement, String> constructOutput(ConfigContainer configContainer, int size) {
@@ -104,39 +170,6 @@ final class ConfigContainers {
         }
 
         return output;
-    }
-
-    /**
-     * Produces an immutable view of the entire provided {@link ConfigContainer}. This view is read-only, but will
-     * change to reflect modifications performed on the underlying container. The exact structure of the input tree will
-     * be preserved.
-     *
-     * @param container the container to create an immutable view from
-     * @return an immutable view of the provided container
-     */
-    static @NotNull ConfigContainer immutableView(@NotNull ConfigContainer container) {
-        if (container instanceof ImmutableView) {
-            return container;
-        }
-
-        return Graph.process(container, (ConfigElement node) -> {
-            ConfigContainer configContainer = node.asContainer();
-            Collection<ConfigEntry> entryCollection = configContainer.entryCollection();
-
-            // all Immutable are also ImmutableView, so we don't explore those either!
-            if (configContainer instanceof ImmutableView) {
-                return Graph.node(Iterators.iterator(), Graph.output(configContainer, Graph.emptyAccumulator()));
-            }
-
-            ConfigContainer view;
-            if (configContainer.isNode()) {
-                view = new ConfigNodeView(configContainer.asNode());
-            } else {
-                view = new ConfigListView(configContainer.asList());
-            }
-
-            return Graph.node(Graph.iterator(entryCollection.iterator()), Graph.output(view, Graph.emptyAccumulator()));
-        }, ConfigElement::isContainer, Function.identity(), Graph.Options.TRACK_REFERENCES).asContainer();
     }
 
     private static class ConfigNodeView extends AbstractConfigNode implements ImmutableView {

@@ -7,6 +7,8 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.IntFunction;
 
 /**
  * Represents a {@link ConfigElement} capable of holding other ConfigElements. ConfigContainer objects are generally
@@ -47,7 +49,7 @@ public interface ConfigContainer extends ConfigElement {
      * <p>
      * Mutable implementations that do not implement this method will not be correctly copied using
      * {@link ConfigContainer#copy()}; they will be replaced by a default type instead. {@link Immutable}
-     * implementations need not override this method, as they will not be copied.
+     * implementations need not override this method, as they will not be copied in this way.
      *
      * @return a new, empty ConfigContainer, or {@code null} if this type does not support copying
      */
@@ -57,8 +59,8 @@ public interface ConfigContainer extends ConfigElement {
 
     /**
      * Creates an exact, deep copy of this {@link ConfigContainer}, preserving the entire configuration tree, including
-     * circular references. Each container present in the new tree is guaranteed to be a different object than its
-     * equivalent in the original tree, except when:
+     * circular references, and attempts to preserve the type of each container. Each container present in the new tree
+     * is guaranteed to be a different object than its equivalent in the original tree, except when:
      *
      * <ol>
      *     <li>the element is a scalar type, or</li>
@@ -81,6 +83,36 @@ public interface ConfigContainer extends ConfigElement {
      */
     default @NotNull ConfigContainer immutableCopy() {
         return ConfigContainers.immutableCopy(this);
+    }
+
+    /**
+     * Creates a mutable copy of this ConfigContainer, preserving the entire configuration tree, including circular
+     * references. All sub-containers are recreated as mutable variants {@link LinkedConfigNode} and
+     * {@link ArrayConfigList}, respectively. Only scalar types are left unchanged between the input and output, as
+     * those cannot be made mutable.
+     *
+     * @return a mutable copy of this ConfigContainer
+     */
+    default @NotNull ConfigContainer mutableCopy() {
+        return ConfigContainers.mutableCopy(this, LinkedConfigNode::new, ArrayConfigList::new);
+    }
+
+    /**
+     * Creates a mutable copy of this ConfigContainer, preserving the entire configuration tree, including circular
+     * references. All sub-containers are recreated as mutable variants supplied by the provided {@link IntFunction}s.
+     * Only scalar types are left unchanged between the input and output, as those cannot be made mutable.
+     *
+     * @param configNodeCreator the function responsible for creating new, empty {@link ConfigNode} implementations;
+     *                          cannot return {@code null}
+     * @param configListCreator the function responsible for creating new, empty {@link ConfigList} implementations;
+     *                          cannot return {@code null}
+     * @return a mutable copy of this ConfigContainer
+     */
+    default @NotNull ConfigContainer mutableCopy(@NotNull IntFunction<? extends @NotNull ConfigNode> configNodeCreator,
+        @NotNull IntFunction<? extends @NotNull ConfigList> configListCreator) {
+        Objects.requireNonNull(configNodeCreator);
+        Objects.requireNonNull(configListCreator);
+        return ConfigContainers.mutableCopy(this, configNodeCreator, configListCreator);
     }
 
     /**

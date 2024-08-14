@@ -15,7 +15,7 @@ import java.util.RandomAccess;
  *
  * @see ConfigList#defaulting(ConfigList, ConfigList)
  */
-class DefaultingConfigList extends AbstractConfigList implements RandomAccess {
+class DefaultingConfigList extends AbstractConfigList implements RandomAccess, ImmutableView {
     private final ConfigList base;
     private final ConfigList defaults;
 

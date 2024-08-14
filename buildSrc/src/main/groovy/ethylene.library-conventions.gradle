@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.github.steanky'
-version '0.26.1'
+version '0.27.0'
 
 publishing {
     publications {
