@@ -2,12 +2,17 @@ package com.github.steanky.ethylene.core.propylene;
 
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
-import com.github.steanky.ethylene.core.collection.*;
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
+import com.github.steanky.ethylene.core.collection.ConfigList;
+import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.*;
+import java.util.function.IntFunction;
 
 /**
  * Parser for the Propylene configuration language. Propylene is an extremely simple format, which is meant to be used
@@ -132,14 +137,21 @@ public final class Parser {
         private final ContainerType type;
         private final Container parent;
 
+        private final IntFunction<? extends ConfigNode> nodeFunction;
+        private final IntFunction<? extends ConfigList> listFunction;
+
         private ConfigContainer container;
         private List<Token> children;
 
         private boolean defer;
 
-        private Container(ContainerType type, Container parent) {
+        private Container(ContainerType type, Container parent, IntFunction<? extends ConfigNode> nodeFunction,
+            IntFunction<? extends ConfigList> listFunction) {
             this.type = type;
             this.parent = parent;
+
+            this.nodeFunction = nodeFunction;
+            this.listFunction = listFunction;
         }
 
         @Override
@@ -170,13 +182,13 @@ public final class Parser {
             }
 
             if (children == null) {
-                container = type == ContainerType.LIST ? new ArrayConfigList(0) : new LinkedConfigNode(0);
+                container = type == ContainerType.LIST ? listFunction.apply(0) : nodeFunction.apply(0);
                 return;
             }
 
             switch (type) {
                 case LIST -> {
-                    ConfigList list = new ArrayConfigList(children.size());
+                    ConfigList list = listFunction.apply(children.size());
                     this.container = list;
 
                     for (Token token : children) {
@@ -184,7 +196,7 @@ public final class Parser {
                     }
                 }
                 case NODE -> {
-                    ConfigNode node = new LinkedConfigNode(children.size());
+                    ConfigNode node = nodeFunction.apply(children.size());
                     this.container = node;
 
                     for (int i = 0; i < children.size(); i += 2) {
@@ -251,6 +263,9 @@ public final class Parser {
         private final Reader reader;
         private final StringBuilder sharedBuffer;
 
+        private final IntFunction<? extends ConfigNode> nodeFunction;
+        private final IntFunction<? extends ConfigList> listFunction;
+
         private TokenizerState state;
         private ContainerType containerType;
 
@@ -270,9 +285,13 @@ public final class Parser {
 
         private List<Container> deferred;
 
-        private Tokenizer(Reader reader) {
+        private Tokenizer(Reader reader, IntFunction<? extends ConfigNode> nodeFunction, IntFunction<? extends ConfigList> listFunction) {
             this.reader = reader;
             this.sharedBuffer = new StringBuilder();
+
+            this.nodeFunction = nodeFunction;
+            this.listFunction = listFunction;
+
             this.state = TokenizerState.SELECT;
             this.containerType = ContainerType.ROOT;
             this.referenceTargetType = ContainerType.ROOT;
@@ -371,7 +390,7 @@ public final class Parser {
         }
 
         private Scalar initializeNewContainer(ContainerType type, int referenceTag) {
-            Container newContainer = new Container(type, currentContainer);
+            Container newContainer = new Container(type, currentContainer, nodeFunction, listFunction);
             if (referenceTag > -1 && referenceMap().putIfAbsent(referenceTag, newContainer) != null) {
                 return DUPLICATE_REFERENCE_TAG;
             }
@@ -666,23 +685,30 @@ public final class Parser {
     }
 
     /**
-     * Convenience overload of {@link Parser#fromReader(Reader)} that reads from the provided string.
+     * Convenience overload of {@link Parser#fromReader(Reader, IntFunction, IntFunction)} that reads from the provided string.
      * @param string the string from which to read from
+     * @param nodeFunction a function used to construct mutable, empty {@link ConfigNode}s given a size hint
+     * @param listFunction  a function used to construct mutable, empty {@link ConfigList}s given a size hint
      * @return a ConfigElement created from parsing the string, which must contain valid Propylene configuration data
      * @throws IOException if there is a syntax error
      */
-    public static @NotNull ConfigElement fromString(@NotNull String string) throws IOException {
-        return fromReader(new StringReader(string));
+    public static @NotNull ConfigElement fromString(@NotNull String string, @NotNull IntFunction<? extends ConfigNode> nodeFunction,
+        @NotNull IntFunction<? extends ConfigList> listFunction) throws IOException {
+        return fromReader(new StringReader(string), nodeFunction, listFunction);
     }
 
     /**
      * Extracts a single {@link ConfigElement} from the reader. Does not close it.
+     *
      * @param reader the reader from which to read Propylene configuration data
+     * @param nodeFunction a function used to construct mutable, empty {@link ConfigNode}s given a size hint
+     * @param listFunction  a function used to construct mutable, empty {@link ConfigList}s given a size hint
      * @return a ConfigElement
      * @throws IOException if an IOException was thrown by the underlying reader while reading, or there is a syntax error
      */
-    public static @NotNull ConfigElement fromReader(@NotNull Reader reader) throws IOException {
-        Tokenizer tokenizer = new Tokenizer(reader);
+    public static @NotNull ConfigElement fromReader(@NotNull Reader reader, @NotNull IntFunction<? extends ConfigNode> nodeFunction,
+        @NotNull IntFunction<? extends ConfigList> listFunction) throws IOException {
+        Tokenizer tokenizer = new Tokenizer(reader, nodeFunction, listFunction);
         Scalar token;
         do {
             token = parseScalar(tokenizer.next(), tokenizer);

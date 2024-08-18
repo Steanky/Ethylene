@@ -1,9 +1,9 @@
 package com.github.steanky.ethylene.mapper.annotation;
 
+import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.*;
-import com.github.steanky.ethylene.core.ConfigElement;
 
 /**
  * This annotation may be used to define default values for serializable classes. This annotation may be placed three

@@ -3,9 +3,9 @@ package com.github.steanky.ethylene.core.collection;
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * An implementation of {@link ConfigNode} based off of {@link LinkedHashMap}, sometimes preferred over {@link HashMap}

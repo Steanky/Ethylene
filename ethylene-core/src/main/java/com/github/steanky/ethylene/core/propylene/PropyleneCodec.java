@@ -1,17 +1,16 @@
 package com.github.steanky.ethylene.core.propylene;
 
+import com.github.steanky.ethylene.core.AbstractConfigCodec;
 import com.github.steanky.ethylene.core.ConfigCodec;
 import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.ElementType;
-import com.github.steanky.ethylene.core.collection.ConfigElements;
+import com.github.steanky.ethylene.core.collection.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.io.*;
 import java.util.EnumSet;
 import java.util.Set;
-
-import com.github.steanky.ethylene.core.AbstractConfigCodec;
 
 /**
  * A basic {@link ConfigCodec} implementation for Propylene. The singleton instance can be obtained by referencing
@@ -45,7 +44,7 @@ public class PropyleneCodec implements ConfigCodec {
     @Override
     public @NotNull ConfigElement decode(@NotNull InputStream input) throws IOException {
         try (Reader reader = new BufferedReader(new InputStreamReader(input))) {
-            return Parser.fromReader(reader);
+            return Parser.fromReader(reader, this::makeNode, this::makeList);
         }
     }
 
@@ -67,5 +66,27 @@ public class PropyleneCodec implements ConfigCodec {
     @Override
     public @NotNull Set<ElementType> supportedTopLevelTypes() {
         return EnumSet.allOf(ElementType.class);
+    }
+
+    /**
+     * Creates a node, given a size hint. Can be overridden by subclasses to customize the {@link ConfigNode}
+     * implementation used. The default is {@link LinkedConfigNode}.
+     *
+     * @param sizeHint the size hint
+     * @return a new empty, mutable node
+     */
+    public @NotNull ConfigNode makeNode(int sizeHint) {
+        return new LinkedConfigNode(sizeHint);
+    }
+
+    /**
+     * Creates a list, given a size hint. Can be overridden by subclasses to customize the {@link ConfigList}
+     * implementation used. The default is {@link ArrayConfigList}.
+     *
+     * @param sizeHint the size hint
+     * @return a new empty, mutable list
+     */
+    public @NotNull ConfigList makeList(int sizeHint) {
+        return new ArrayConfigList(sizeHint);
     }
 }

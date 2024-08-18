@@ -3,7 +3,8 @@ package com.github.steanky.ethylene.core.processor;
 import com.github.steanky.ethylene.core.ConfigPrimitive;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EnumConfigProcessorTest {
     public enum TestEnum {

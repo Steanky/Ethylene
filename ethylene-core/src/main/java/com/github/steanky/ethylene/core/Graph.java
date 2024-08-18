@@ -1,10 +1,9 @@
 package com.github.steanky.ethylene.core;
 
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
 import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import com.github.steanky.ethylene.core.collection.ConfigContainer;
 
 import java.util.*;
 import java.util.function.Function;

@@ -3,7 +3,7 @@ package com.github.steanky.ethylene.core.collection;
 import com.github.steanky.ethylene.core.ConfigElement;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.RandomAccess;
 
 /**
  * An implementation of a "defaulting" ConfigList.

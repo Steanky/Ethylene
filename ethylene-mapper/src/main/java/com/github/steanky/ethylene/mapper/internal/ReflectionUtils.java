@@ -1,7 +1,9 @@
 package com.github.steanky.ethylene.mapper.internal;
 
 import com.github.steanky.ethylene.core.ConfigElement;
+import com.github.steanky.ethylene.core.collection.ArrayConfigList;
 import com.github.steanky.ethylene.core.collection.ConfigEntry;
+import com.github.steanky.ethylene.core.collection.LinkedConfigNode;
 import com.github.steanky.ethylene.core.propylene.Parser;
 import com.github.steanky.ethylene.mapper.MapperException;
 import com.github.steanky.ethylene.mapper.annotation.Default;
@@ -211,7 +213,7 @@ public class ReflectionUtils {
         if (classDefault != null) {
             ConfigElement defaultSpec;
             try {
-                defaultSpec = Parser.fromString(classDefault.value());
+                defaultSpec = Parser.fromString(classDefault.value(), LinkedConfigNode::new, ArrayConfigList::new);
             }
             catch (IOException e) {
                 throw new MapperException("Invalid Propylene in class @Default annotation", e);
@@ -241,7 +243,8 @@ public class ReflectionUtils {
 
                 ConfigElement defaultValue;
                 try {
-                    defaultValue = Parser.fromString(defaultAnnotation.value());
+                    defaultValue = Parser.fromString(defaultAnnotation.value(), LinkedConfigNode::new,
+                        ArrayConfigList::new);
                 }
                 catch (IOException e) {
                     throw new MapperException("Invalid Propylene in @Default annotation", e);

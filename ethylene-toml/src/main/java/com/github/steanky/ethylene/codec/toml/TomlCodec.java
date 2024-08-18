@@ -18,7 +18,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.temporal.Temporal;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Provides support for the TOML format. This class overrides

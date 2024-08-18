@@ -1,10 +1,9 @@
 package com.github.steanky.ethylene.core;
 
-import com.github.steanky.ethylene.core.collection.ConfigContainer;
-import com.github.steanky.ethylene.core.collection.ConfigList;
-import com.github.steanky.ethylene.core.collection.ConfigNode;
+import com.github.steanky.ethylene.core.collection.*;
 import com.github.steanky.ethylene.core.path.ConfigPath;
 import com.github.steanky.ethylene.core.processor.ConfigProcessException;
+import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 import com.github.steanky.ethylene.core.propylene.Parser;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,9 +11,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
-
-import com.github.steanky.ethylene.core.processor.ConfigProcessor;
 
 /**
  * Represents a particular value from configuration. Specialized sub-interfaces include {@link ConfigNode} and
@@ -39,15 +37,32 @@ public interface ConfigElement {
      * Although Propylene is lightweight and parses fairly quickly, creating ConfigElement instances this way will never
      * be as fast as directly instantiating them.
      * @param input the Propylene-formatted string to convert into a ConfigElement
+     * @param nodeFunction a function used to create new, empty, mutable {@link ConfigNode} implementations given an
+     *                     initial capacity hint
+     * @param listFunction a function used to create new, empty, mutable {@link ConfigList} implementations given an
+     *                     initial capacity hint
+     * @return a ConfigElement representing the string
+     * @throws RuntimeException wrapping an {@link IOException} containing details of the syntax error
+     */
+    static @NotNull ConfigElement of(@NotNull String input, @NotNull IntFunction<? extends ConfigNode> nodeFunction,
+        @NotNull IntFunction<? extends ConfigList> listFunction) {
+        try {
+            return Parser.fromString(input, Objects.requireNonNull(nodeFunction), Objects.requireNonNull(listFunction));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Convenience overload of {@link ConfigElement#of(String, IntFunction, IntFunction)} that will use
+     * {@link LinkedConfigNode#LinkedConfigNode(int)} and {@link ArrayConfigList#ArrayConfigList(int)} for
+     * {@code nodeFunction} and {@code listFunction}, respectively.
+     * @param input the input string
      * @return a ConfigElement representing the string
      * @throws RuntimeException wrapping an {@link IOException} containing details of the syntax error
      */
     static @NotNull ConfigElement of(@NotNull String input) {
-        try {
-            return Parser.fromString(input);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return of(input, LinkedConfigNode::new, ArrayConfigList::new);
     }
 
     /**
