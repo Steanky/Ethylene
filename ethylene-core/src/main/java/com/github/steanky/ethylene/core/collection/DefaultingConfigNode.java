@@ -16,6 +16,8 @@ class DefaultingConfigNode extends AbstractConfigNode implements ImmutableView {
     private final ConfigNode base;
     private final ConfigNode defaults;
 
+    private Set<Entry<String, ConfigElement>> entrySetView;
+
     /**
      * Constructs a new defaulting ConfigNode.
      *
@@ -27,20 +29,15 @@ class DefaultingConfigNode extends AbstractConfigNode implements ImmutableView {
         this.defaults = defaults;
     }
 
-    @Override
-    public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-        return Containers.mappedView(entry -> (ConfigEntry)entry, entrySet());
-    }
-
-    @Override
-    public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        return Containers.mappedView(Entry::getValue, entrySet());
-    }
-
     @NotNull
     @Override
     public Set<Entry<String, ConfigElement>> entrySet() {
-        return new AbstractSet<>() {
+        Set<Entry<String, ConfigElement>> entrySet = this.entrySetView;
+        if (entrySet != null) {
+            return entrySet;
+        }
+
+        this.entrySetView = entrySet = new AbstractSet<>() {
             @Override
             public @NotNull Iterator<Map.Entry<String, ConfigElement>> iterator() {
                 return new Iterator<>() {
@@ -55,7 +52,7 @@ class DefaultingConfigNode extends AbstractConfigNode implements ImmutableView {
                     }
 
                     @Override
-                    public ConfigEntry next() {
+                    public Map.Entry<String, ConfigElement> next() {
                         if (baseIterator.hasNext()) {
                             return baseIterator.next();
                         }
@@ -100,6 +97,8 @@ class DefaultingConfigNode extends AbstractConfigNode implements ImmutableView {
                 return base.entrySet().contains(o) || defaults.entrySet().contains(o);
             }
         };
+
+        return entrySet;
     }
 
     @Override

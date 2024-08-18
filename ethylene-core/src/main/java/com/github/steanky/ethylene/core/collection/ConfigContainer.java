@@ -7,6 +7,7 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.IntFunction;
 
@@ -17,8 +18,15 @@ import java.util.function.IntFunction;
  * <p>
  * ConfigContainer implementations may be immutable or mutable. Immutable implementations do not support mutating
  * methods like {@link Collection#add(Object)}, but their contents may still change over their lifetime through other
- * means, for example if they have a backing collection and the backing collection changes. Immutable implementations
- * may be identified by checking if this object is an instance of {@link Immutable}.
+ * means, for example if they have a backing collection and the backing collection changes.
+ * <p>
+ * There are two kinds of immutable containers: {@link Immutable} and {@link ImmutableView}. {@code ImmutableView}
+ * instances cannot be modified directly through e.g. {@link Map#put(Object, Object)} or {@link List#add(Object)}.
+ * However, they might represent a <i>view</i> of another container object, that is itself mutable and may change.
+ * Therefore, the objects contained within an {@code ImmutableView} may indirectly change.
+ * <p>
+ * {@link Immutable} instances likewise cannot be modified; they are not backed by a mutable list. Their contents are
+ * guaranteed to never change. {@code Immutable} is a subset of {@code ImmutableView}.
  */
 public interface ConfigContainer extends ConfigElement {
     @Override
@@ -29,6 +37,10 @@ public interface ConfigContainer extends ConfigElement {
     /**
      * Returns the <i>entry collection</i> maintained by this ConfigContainer. The collection must be immutable and
      * read-through, so changes in the underlying container are reflected in the entry collection.
+     * <p>
+     * <b>Important note</b>: The returned collection might not actually store distinct {@link ConfigEntry} objects. It
+     * is permissible for an implementation to return a collection whose iterator continually mutates and returns the
+     * same entry.
      *
      * @return an immutable, read-through collection representing the entries contained in this object
      */
@@ -48,8 +60,9 @@ public interface ConfigContainer extends ConfigElement {
      * supported, the returned container must be of the same class.
      * <p>
      * Mutable implementations that do not implement this method will not be correctly copied using
-     * {@link ConfigContainer#copy()}; they will be replaced by a default type instead. {@link Immutable}
-     * implementations need not override this method, as they will not be copied in this way.
+     * {@link ConfigContainer#copy()}; they will be replaced by a default type instead. Therefore, overriding this is
+     * highly recommended in most cases. However, {@link ImmutableView} implementations should never need to override
+     * this method.
      *
      * @return a new, empty ConfigContainer, or {@code null} if this type does not support copying
      */
@@ -66,6 +79,10 @@ public interface ConfigContainer extends ConfigElement {
      *     <li>the element is a scalar type, or</li>
      *     <li>the element is an immutable collection type</li>
      * </ol>
+     * <p>
+     * This method will use the {@link ConfigContainer#emptyCopy()} method to construct new instances of each mutable
+     * container present in the configuration tree. If {@code emptyCopy} returns {@code null}, the default
+     * {@link ConfigNode} is {@link LinkedConfigNode}, and the default {@link ConfigList} is {@link ArrayConfigList}.
      *
      * @return an exact, deep copy of this ConfigContainer
      */

@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
@@ -393,5 +394,18 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
     @Override
     default @NotNull ConfigNode immutableView() {
         return (ConfigNode) ConfigContainer.super.immutableView();
+    }
+
+    @Override
+    @NotNull
+    default ConfigNode mutableCopy() {
+        return (ConfigNode) ConfigContainer.super.mutableCopy();
+    }
+
+    @Override
+    @NotNull
+    default ConfigNode mutableCopy(@NotNull IntFunction<? extends @NotNull ConfigNode> configNodeCreator,
+        @NotNull IntFunction<? extends @NotNull ConfigList> configListCreator) {
+        return (ConfigNode) ConfigContainer.super.mutableCopy(configNodeCreator, configListCreator);
     }
 }

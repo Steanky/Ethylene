@@ -4,6 +4,8 @@ import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.github.steanky.ethylene.core.collection.ConfigContainer;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -68,6 +70,15 @@ public final class Graph {
     /**
      * Processes the given input graph, starting at the root object {@code rootInput}. The exact behavior is dependent
      * on the {@code flags} parameter (see {@link Graph.Options} for details).
+     * <p>
+     * This method (or its overloads) are used in several places throughout Ethylene:
+     * <ul>
+     *     <li>Object mapping ({@code ethylene-mapper})</li>
+     *     <li>{@link AbstractConfigCodec} and subclasses</li>
+     *     <li>When copying {@link ConfigContainer} implementations</li>
+     * </ul>
+     * <p>
+     * The processing algorithm used cannot under normal conditions cause a stack overflow, as no recursion is used.
      *
      * @param rootInput          the input object; this is the root of the input graph
      * @param nodeFunction       the function used to create new {@link Node}s
@@ -456,7 +467,9 @@ public final class Graph {
     }
 
     /**
-     * Creates a new InputEntry that will cause graph traversal to fast-exit.
+     * Creates a new InputEntry that will cause graph traversal to fast-exit. That is, all further processing of the
+     * graph will be cancelled and the provided value will be returned instead.
+     *
      * @param result the fast exit result
      * @return a new InputEntry
      * @param <TKey> the key type

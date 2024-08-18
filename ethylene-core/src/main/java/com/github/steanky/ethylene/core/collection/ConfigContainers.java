@@ -7,6 +7,7 @@ import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import java.lang.invoke.VarHandle;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -175,6 +176,8 @@ final class ConfigContainers {
     private static class ConfigNodeView extends AbstractConfigNode implements ImmutableView {
         private final ConfigNode underlying;
 
+        private Set<Entry<String, ConfigElement>> entrySetView;
+
         private ConfigNodeView(ConfigNode underlying) {
             this.underlying = underlying;
         }
@@ -216,20 +219,14 @@ final class ConfigContainers {
 
         @NotNull
         @Override
-        public Set<String> keySet() {
-            return Collections.unmodifiableSet(underlying.keySet());
-        }
-
-        @NotNull
-        @Override
-        public Collection<ConfigElement> values() {
-            return Collections.unmodifiableCollection(underlying.values());
-        }
-
-        @NotNull
-        @Override
         public Set<Entry<String, ConfigElement>> entrySet() {
-            return Collections.unmodifiableSet(underlying.entrySet());
+            Set<Entry<String, ConfigElement>> entrySet = this.entrySetView;
+            if (entrySet != null) {
+                return entrySet;
+            }
+
+            this.entrySetView = entrySet = Collections.unmodifiableSet(underlying.entrySet());
+            return entrySet;
         }
     }
 
@@ -307,6 +304,11 @@ final class ConfigContainers {
         public int size() {
             return 0;
         }
+
+        @Override
+        public int hashCode() {
+            return 1;
+        }
     }
 
     static final class EmptyImmutableConfigNode extends AbstractConfigNode implements Immutable {
@@ -367,23 +369,22 @@ final class ConfigContainers {
         public Set<Entry<String, ConfigElement>> entrySet() {
             return Set.of();
         }
+
+        @Override
+        public int hashCode() {
+            return 1;
+        }
     }
 
     static final class ImmutableConfigNode extends AbstractConfigNode implements Immutable {
         private final Map<String, ConfigElement> map;
+        private Set<Entry<String, ConfigElement>> entrySetView;
+
+        private boolean hashed;
+        private int hashCode;
 
         private ImmutableConfigNode(Map<String, ConfigElement> trusted) {
             this.map = trusted;
-        }
-
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return Containers.mappedView(entry -> ConfigEntry.of(entry.getKey(), entry.getValue()), map.entrySet());
-        }
-
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-            return map.values();
         }
 
         @Override
@@ -408,32 +409,40 @@ final class ConfigContainers {
 
         @NotNull
         @Override
-        public Set<String> keySet() {
-            return map.keySet();
+        public Set<Entry<String, ConfigElement>> entrySet() {
+            Set<Entry<String, ConfigElement>> entrySet = this.entrySetView;
+            if (entrySet != null) {
+                return entrySet;
+            }
+
+            this.entrySetView = entrySet = Collections.unmodifiableSet(map.entrySet());
+            return entrySet;
         }
 
-        @NotNull
         @Override
-        public Set<Entry<String, ConfigElement>> entrySet() {
-            return map.entrySet();
+        public int hashCode() {
+            if (this.hashed) {
+                return this.hashCode;
+            }
+
+            int hashCode = super.hashCode();
+
+            this.hashCode = hashCode;
+            VarHandle.storeStoreFence();
+            this.hashed = true;
+
+            return hashCode;
         }
     }
 
     static final class ImmutableConfigList extends AbstractConfigList implements Immutable, RandomAccess {
         private final ConfigElement[] elements;
 
+        private boolean hashed;
+        private int hashCode;
+
         private ImmutableConfigList(ConfigElement[] elements) {
             this.elements = elements;
-        }
-
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-            return Containers.mappedView(ConfigEntry::of, elements);
-        }
-
-        @Override
-        public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-            return Containers.arrayView(elements);
         }
 
         @Override
@@ -444,6 +453,21 @@ final class ConfigContainers {
         @Override
         public int size() {
             return elements.length;
+        }
+
+        @Override
+        public int hashCode() {
+            if (this.hashed) {
+                return this.hashCode;
+            }
+
+            int hashCode = super.hashCode();
+
+            this.hashCode = hashCode;
+            VarHandle.storeStoreFence();
+            this.hashed = true;
+
+            return hashCode;
         }
     }
 }

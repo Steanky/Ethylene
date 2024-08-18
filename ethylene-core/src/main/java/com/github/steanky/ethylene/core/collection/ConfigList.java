@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
@@ -384,6 +385,19 @@ public interface ConfigList extends ConfigElement, List<ConfigElement>, ConfigCo
     @Override
     default @NotNull ConfigList immutableCopy() {
         return (ConfigList) ConfigContainer.super.immutableCopy();
+    }
+
+    @Override
+    @NotNull
+    default ConfigList mutableCopy() {
+        return (ConfigList) ConfigContainer.super.mutableCopy();
+    }
+
+    @Override
+    @NotNull
+    default ConfigList mutableCopy(@NotNull IntFunction<? extends @NotNull ConfigNode> configNodeCreator,
+        @NotNull IntFunction<? extends @NotNull ConfigList> configListCreator) {
+        return (ConfigList) ConfigContainer.super.mutableCopy(configNodeCreator, configListCreator);
     }
 
     @Override

@@ -5,11 +5,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
- * An implementation of {@link ConfigNode} based off of {@link LinkedHashMap}.
+ * An implementation of {@link ConfigNode} based off of {@link LinkedHashMap}, sometimes preferred over {@link HashMap}
+ * because it maintains insertion order when iterating, and has better iteration performance.
  *
  * @see LinkedHashMap
+ * @see HashConfigNode
  */
 public class LinkedConfigNode extends BackedConfigNode {
     /**
@@ -30,7 +33,7 @@ public class LinkedConfigNode extends BackedConfigNode {
     }
 
     /**
-     * Constructs a new ArrayConfigList backed by an empty {@link LinkedHashMap} with the given initial capacity.
+     * Constructs a new HashConfigNode backed by an empty {@link LinkedHashMap} with the given initial capacity.
      *
      * @param initialCapacity the initial capacity
      */
@@ -39,7 +42,7 @@ public class LinkedConfigNode extends BackedConfigNode {
     }
 
     /**
-     * Constructs a new ArrayConfigList backed by an empty {@link LinkedHashMap} with the given initial capacity and
+     * Constructs a new HashConfigNode backed by an empty {@link LinkedHashMap} with the given initial capacity and
      * load factor.
      *
      * @param initialCapacity the initial capacity
@@ -50,8 +53,9 @@ public class LinkedConfigNode extends BackedConfigNode {
     }
 
     /**
-     * Constructs a new ArrayConfigList backed by an empty {@link LinkedHashMap} with the given initial capacity and
-     * load factor.
+     * Constructs a new HashConfigNode backed by an empty {@link LinkedHashMap} with the given initial capacity,load
+     * factor, and access order characteristics. Corresponds to
+     * {@link LinkedHashMap#LinkedHashMap(int, float, boolean)}.
      *
      * @param initialCapacity the initial capacity
      * @param loadFactor      the load factor

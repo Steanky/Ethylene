@@ -8,12 +8,15 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Represents an immutable key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is like a list,
- * the key will be null.
+ * Represents a mutable key-value pair stored in a {@link ConfigContainer}. If the ConfigContainer is a
+ * {@link ConfigList}, the key will be null. Otherwise, the key is guaranteed to be non-null.
+ * <p>
+ * While instances of this class are conceptually representative of an entry in a map or list, they will <i>never</i>
+ * write-through to an underlying collection.
  */
 public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
-    private final String key;
-    private final ConfigElement element;
+    private String key;
+    private ConfigElement element;
 
     private ConfigEntry(@Nullable String key, @NotNull ConfigElement element) {
         this.key = key;
@@ -69,12 +72,28 @@ public final class ConfigEntry implements Map.Entry<String, ConfigElement> {
     }
 
     @Override
-    public ConfigElement getValue() {
+    public @NotNull ConfigElement getValue() {
         return element;
     }
 
+    /**
+     * Sets the key of this entry. This will not modify any underlying collection.
+     *
+     * @param key the new key
+     * @return the old key
+     */
+    public String setKey(@Nullable String key) {
+        String old = this.key;
+        this.key = key;
+        return old;
+    }
+
     @Override
-    public ConfigElement setValue(ConfigElement value) {
-        throw new UnsupportedOperationException();
+    public ConfigElement setValue(@NotNull ConfigElement value) {
+        Objects.requireNonNull(value);
+
+        ConfigElement old = element;
+        this.element = value;
+        return old;
     }
 }

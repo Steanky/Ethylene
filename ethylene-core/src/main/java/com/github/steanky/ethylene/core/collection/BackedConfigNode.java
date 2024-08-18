@@ -1,9 +1,7 @@
 package com.github.steanky.ethylene.core.collection;
 
 import com.github.steanky.ethylene.core.ConfigElement;
-import com.github.steanky.toolkit.collection.Containers;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 import java.util.function.IntFunction;
@@ -92,15 +90,5 @@ public abstract class BackedConfigNode extends AbstractConfigNode {
     @Override
     public Set<Entry<String, ConfigElement>> entrySet() {
         return mappings.entrySet();
-    }
-
-    @Override
-    public @UnmodifiableView @NotNull Collection<ConfigEntry> entryCollection() {
-        return Containers.mappedView(entry -> ConfigEntry.of(entry.getKey(), entry.getValue()), mappings.entrySet());
-    }
-
-    @Override
-    public @UnmodifiableView @NotNull Collection<ConfigElement> elementCollection() {
-        return Collections.unmodifiableCollection(mappings.values());
     }
 }
