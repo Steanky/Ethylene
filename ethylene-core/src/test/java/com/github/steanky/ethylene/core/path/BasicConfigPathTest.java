@@ -369,4 +369,37 @@ class BasicConfigPathTest {
 
         assertEquals(List.of(".."), result.nodes().stream().map(ConfigPath.Node::name).toList());
     }
+
+    @Test
+    void simpleIndices() {
+        BasicConfigPath absolutePath = BasicConfigPath.parse("/0/1/2");
+
+        List<ConfigPath.Node> nodes = absolutePath.nodes();
+
+        for (ConfigPath.Node node : nodes) {
+            assertSame(ConfigPath.NodeType.INDEX, node.nodeType());
+        }
+    }
+
+    @Test
+    void complexIndices() {
+        BasicConfigPath absolutePath = BasicConfigPath.parse("/+0/+1/+2/123456/" + Integer.MAX_VALUE);
+
+        List<ConfigPath.Node> nodes = absolutePath.nodes();
+
+        for (ConfigPath.Node node : nodes) {
+            assertSame(ConfigPath.NodeType.INDEX, node.nodeType());
+        }
+    }
+
+    @Test
+    void badIndices() {
+        BasicConfigPath absolutePath = BasicConfigPath.parse("/-1/89784564879655689/++2/123456_/" + Integer.MAX_VALUE + "0");
+
+        List<ConfigPath.Node> nodes = absolutePath.nodes();
+
+        for (ConfigPath.Node node : nodes) {
+            assertSame(ConfigPath.NodeType.NAME, node.nodeType());
+        }
+    }
 }

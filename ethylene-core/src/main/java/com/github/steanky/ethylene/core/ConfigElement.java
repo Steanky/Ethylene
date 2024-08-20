@@ -145,31 +145,25 @@ public interface ConfigElement {
                 continue;
             }
 
-            String name = node.name();
             if (current.isNode()) {
-                current = current.asNode().get(name);
+                current = current.asNode().get(node.name());
+                continue;
             }
             else if (current.isList()) {
-                int value;
-                try {
-                    value = Integer.parseInt(name);
+                if (node.nodeType() != ConfigPath.NodeType.INDEX) {
+                    return null;
                 }
-                catch (NumberFormatException ignored) {
-                    current = null;
-                    continue;
-                }
+
+                int value = node.index();
 
                 ConfigList list = current.asList();
                 if (value >= 0 && value < list.size()) {
                     current = list.get(value);
                     continue;
                 }
+            }
 
-                current = null;
-            }
-            else {
-                current = null;
-            }
+            return null;
         }
 
         return current;

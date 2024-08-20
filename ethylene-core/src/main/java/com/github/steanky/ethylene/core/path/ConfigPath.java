@@ -93,6 +93,16 @@ public interface ConfigPath {
     @NotNull ConfigPath append(@NotNull String node);
 
     /**
+     * Appends a number to this path as a <i>single</i>, new node. Commands will not be interpreted; the value is used
+     * as-is for the name of the node only.
+     *
+     * @param node the index to append
+     * @return a new path
+     * @throws IllegalArgumentException if {@code node < 0}
+     */
+    @NotNull ConfigPath append(int node);
+
+    /**
      * Converts this path into an absolute path. Path commands will be removed.
      *
      * @return a new path
@@ -171,30 +181,94 @@ public interface ConfigPath {
     boolean isEmpty();
 
     /**
+     * The identifier of {@link NodeType#CURRENT}.
+     */
+    int CURRENT_ID = 0;
+
+    /**
+     * The identifier of {@link NodeType#PREVIOUS}.
+     */
+    int PREVIOUS_ID = 1;
+
+    /**
+     * The identifier of {@link NodeType#NAME} and {@link NodeType#INDEX}.
+     */
+    int NODE_OR_NAME_ID = 2;
+
+    /**
      * Indicates various types of nodes.
      */
     enum NodeType {
         /**
          * A node representing the "current" command.
          */
-        CURRENT,
+        CURRENT(CURRENT_ID),
 
         /**
          * A node representing the "previous" command.
          */
-        PREVIOUS,
+        PREVIOUS(PREVIOUS_ID),
 
         /**
          * A node representing the name of a particular point along a path.
          */
-        NAME
+        NAME(NODE_OR_NAME_ID),
+
+        /**
+         * A node representing an index into an array.
+         */
+        INDEX(NODE_OR_NAME_ID);
+
+        private final int id;
+
+        NodeType(int id) {
+            this.id = id;
+        }
+
+        /**
+         * Checks if this NodeType is {@link NodeType#NAME} or {@link NodeType#INDEX}.
+         *
+         * @return true if this type is {@code NAME} or {@code INDEX}, false otherwise
+         */
+        public boolean isNameOrIndex() {
+            return this.id == NODE_OR_NAME_ID;
+        }
+
+        /**
+         * The identifier of this node type. Should be used in place of the ordinal for equality comparisons.
+         * {@link NodeType#NAME} and {@link NodeType#INDEX} have the same identifier.
+         *
+         * @return the id
+         */
+        public int id() {
+            return id;
+        }
     }
 
     /**
      * A record representing an individual node in a path.
      *
      * @param name     the name of the node
+     * @param index    the index of the node
      * @param nodeType the kind of node this is
      */
-    record Node(@NotNull String name, @NotNull NodeType nodeType) {}
+    record Node(@NotNull String name, int index, @NotNull NodeType nodeType) {
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+
+            if (!(obj instanceof Node node)) {
+                return false;
+            }
+
+            return nodeType.id == node.nodeType.id && name.equals(node.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * (31 + name.hashCode()) + Integer.hashCode(nodeType.id);
+        }
+    }
 }

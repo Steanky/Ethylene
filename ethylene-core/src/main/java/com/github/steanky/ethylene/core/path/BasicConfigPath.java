@@ -4,17 +4,20 @@ import com.github.steanky.toolkit.collection.Containers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.lang.invoke.VarHandle;
 import java.util.*;
 
 /**
  * Basic ConfigPath implementation with UNIX-like semantics.
  */
 class BasicConfigPath implements ConfigPath {
+    private static final int MAX_DIGIT_LENGTH = Integer.toString(Integer.MAX_VALUE).length();
+
     private static final String CURRENT_COMMAND = ".";
     private static final String PREVIOUS_COMMAND = "..";
 
-    private static final Node CURRENT_NODE = new Node(CURRENT_COMMAND, NodeType.CURRENT);
-    private static final Node PREVIOUS_NODE = new Node(PREVIOUS_COMMAND, NodeType.PREVIOUS);
+    private static final Node CURRENT_NODE = new Node(CURRENT_COMMAND, -1, NodeType.CURRENT);
+    private static final Node PREVIOUS_NODE = new Node(PREVIOUS_COMMAND, -1, NodeType.PREVIOUS);
 
     private static final Node[] EMPTY_NODE_ARRAY = new Node[0];
 
@@ -119,7 +122,7 @@ class BasicConfigPath implements ConfigPath {
             //the current PREVIOUS command erased the previous node
             nodes.remove(previousIndex);
 
-            if (previousType == NodeType.NAME) {
+            if (previousType.isNameOrIndex()) {
                 //strip out redundant PREVIOUS commands, otherwise leave them alone
                 nodes.remove(previousIndex);
             }
@@ -136,28 +139,85 @@ class BasicConfigPath implements ConfigPath {
         return new BasicConfigPath(nodes.toArray(Node[]::new));
     }
 
+    /**
+     * A fast check to validate if a string is parseable to a positive number using {@link Integer#parseInt(String)}.
+     * If this method returns {@code false}, the number is definitely not parseable using
+     * {@link Integer#parseUnsignedInt(String)}. If it returns {@code true}, the number may still (but is unlikely to
+     * be) not parseable.
+     * <p>
+     * This should be substantially faster than checking with a regex, or catching a {@link NumberFormatException}. This
+     * is generally worthwhile since it is expected that the vast majority of strings we encounter are <i>not</i> valid
+     * integers!
+     *
+     * @param string the string to check
+     * @return true if the string is possibly parseable, false if the string is definitely not parseable
+     */
+    private static boolean fastValidateNumber(String string) {
+        int unusedLeadingCharacters = 0;
+
+        boolean foundNonLeadingCharacter = false;
+        int len = string.length();
+        for (int i = 0; i < len; i++) {
+            char c = string.charAt(i);
+            if ((i == 0 && c == '+') || (!foundNonLeadingCharacter && c == '0')) {
+                unusedLeadingCharacters++;
+                continue;
+
+            }
+
+            if (c >= '0' && c <= '9') {
+                if (!foundNonLeadingCharacter && len - unusedLeadingCharacters > MAX_DIGIT_LENGTH) {
+                    // fast exit, we just found too many digits
+                    return false;
+                }
+
+                foundNonLeadingCharacter = true;
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private static OptionalInt tryParseNumber(String string) {
+        if (!fastValidateNumber(string)) {
+            return OptionalInt.empty();
+        }
+
+        try {
+            return OptionalInt.of(Integer.parseUnsignedInt(string));
+        }
+        catch (NumberFormatException ignored) {
+            return OptionalInt.empty();
+        }
+    }
+
     private static void tryAddNode(List<Node> nodes, StringBuilder builder, boolean escape) {
         if (builder.isEmpty()) {
             return;
         }
 
         String string = builder.toString();
-        boolean empty = nodes.isEmpty();
-        if (!empty && !escape && string.length() <= 1 && string.charAt(0) == CURRENT) {
+        if (!nodes.isEmpty() && !escape && string.length() <= 1 && string.charAt(0) == CURRENT) {
             builder.setLength(0);
             return;
         }
 
-        NodeType type = escape ? NodeType.NAME : switch (string) {
+        OptionalInt parseResult = OptionalInt.empty();
+        NodeType type = escape ? ((parseResult = tryParseNumber(string)).isPresent() ? NodeType.INDEX : NodeType.NAME) :
+            switch (string) {
             case PREVIOUS_COMMAND -> NodeType.PREVIOUS;
             case CURRENT_COMMAND -> NodeType.CURRENT;
-            default -> NodeType.NAME;
+            default -> (parseResult = tryParseNumber(string)).isPresent() ? NodeType.INDEX : NodeType.NAME;
         };
 
         nodes.add(switch (type) {
             case CURRENT -> CURRENT_NODE;
             case PREVIOUS -> PREVIOUS_NODE;
-            case NAME -> new Node(string, NodeType.NAME);
+            case INDEX -> new Node(string, parseResult.getAsInt(), NodeType.INDEX);
+            case NAME -> new Node(string, -1, NodeType.NAME);
         });
 
         builder.setLength(0);
@@ -170,7 +230,7 @@ class BasicConfigPath implements ConfigPath {
 
     @Override
     public boolean isAbsolute() {
-        return nodes.length == 0 || nodes[0].nodeType() == NodeType.NAME;
+        return nodes.length == 0 || nodes[0].nodeType().isNameOrIndex();
     }
 
     @Override
@@ -195,7 +255,7 @@ class BasicConfigPath implements ConfigPath {
 
         for (Node node : relativeNodes) {
             switch (node.nodeType()) {
-                case NAME -> newNodes.addLast(node);
+                case NAME, INDEX -> newNodes.addLast(node);
                 case CURRENT -> {
                 } //no-op
                 case PREVIOUS -> { //resolve previous command
@@ -224,9 +284,31 @@ class BasicConfigPath implements ConfigPath {
     @Override
     public @NotNull ConfigPath append(@NotNull String node) {
         Objects.requireNonNull(node);
+        OptionalInt parseResult = tryParseNumber(node);
+
+        Node newNode;
+        if (parseResult.isEmpty()) {
+            newNode = new Node(node, -1, NodeType.NAME);
+        }
+        else {
+            newNode = new Node(node, parseResult.getAsInt(), NodeType.INDEX);
+        }
+
         Node[] newNodes = new Node[nodes.length + 1];
         System.arraycopy(nodes, 0, newNodes, 0, nodes.length);
-        newNodes[newNodes.length - 1] = new Node(node, NodeType.NAME);
+        newNodes[newNodes.length - 1] = newNode;
+        return new BasicConfigPath(newNodes);
+    }
+
+    @Override
+    public @NotNull ConfigPath append(int node) {
+        if (node < 0) {
+            throw new IllegalArgumentException("node index is negative");
+        }
+
+        Node[] newNodes = new Node[nodes.length + 1];
+        System.arraycopy(nodes, 0, newNodes, 0, nodes.length);
+        newNodes[newNodes.length - 1] = new Node(Integer.toString(node), node, NodeType.INDEX);
         return new BasicConfigPath(newNodes);
     }
 
@@ -238,7 +320,7 @@ class BasicConfigPath implements ConfigPath {
 
         int i;
         for (i = 0; i < nodes.length; i++) {
-            if (nodes[i].nodeType() == NodeType.NAME) {
+            if (nodes[i].nodeType().isNameOrIndex()) {
                 break;
             }
         }
@@ -360,7 +442,7 @@ class BasicConfigPath implements ConfigPath {
         }
 
         int length = endIndex - beginIndex;
-        if (nodes[beginIndex].nodeType() != NodeType.NAME) {
+        if (!nodes[beginIndex].nodeType().isNameOrIndex()) {
             Node[] newNodes = new Node[length];
             System.arraycopy(nodes, beginIndex, newNodes, 0, length);
             return new BasicConfigPath(newNodes);
@@ -416,7 +498,9 @@ class BasicConfigPath implements ConfigPath {
             return hash;
         }
 
-        int hash = this.hash = Arrays.hashCode(nodes);
+        int hash = Arrays.hashCode(nodes);
+        this.hash = hash;
+        VarHandle.storeStoreFence();
         hashed = true;
         return hash;
     }
