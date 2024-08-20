@@ -21,6 +21,9 @@ import java.util.function.Supplier;
  * <p>
  * Instances can be directly obtained using {@link ConfigElement#of(String)}. Specialized subclasses will often have
  * their own constructors or static methods for creating instances.
+ * <p>
+ * All implementations of ConfigElement that are <i>not</i> {@link ConfigContainer} must be effectively immutable. This
+ * makes it possible to trivially copy them.
  */
 public interface ConfigElement {
     /**

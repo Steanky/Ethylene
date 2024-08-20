@@ -6,6 +6,7 @@ import com.github.steanky.ethylene.core.ElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
@@ -92,30 +93,86 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
             return new LinkedConfigNode(0);
         }
 
-        if (objects.length % 2 != 0) {
-            throw new IllegalArgumentException("Must have an even number of arguments");
-        }
-
         ConfigNode output = new LinkedConfigNode(objects.length / 2);
-        for (int i = 0; i < objects.length; i += 2) {
-            Object keyObject = objects[i];
-            if (!(keyObject instanceof String keyString)) {
-                throw new IllegalArgumentException(
-                    "Key object must be string, was " + (keyObject == null ? "null" : keyObject.getClass().getName()));
+        ConfigContainers.iterateArrayPairs(objects, (key, value) -> {
+            if (value instanceof ConfigElement element) {
+                output.put(key, element);
             }
-
-            Object valueObject = objects[i + 1];
-            ConfigElement element;
-            if (valueObject instanceof ConfigElement valueElement) {
-                element = valueElement;
-            } else {
-                element = ConfigPrimitive.of(valueObject);
+            else {
+                output.put(key, ConfigPrimitive.of(value));
             }
-
-            output.put(keyString, element);
-        }
+        });
 
         return output;
+    }
+
+    /**
+     * Overload of {@link ConfigNode#immutable(Object...)}. Returns the shared empty immutable node.
+     *
+     * @return the empty immutable node {@link ConfigNode#EMPTY}
+     */
+    static @NotNull ConfigNode immutable() {
+        return EMPTY;
+    }
+
+    /**
+     * Overload of {@link ConfigNode#immutable(Object...)}. Returns an immutable node with only a single entry.
+     *
+     * @param key the key
+     * @param value the value associated with the key
+     * @return a new immutable node with one element
+     */
+    static @NotNull ConfigNode immutable(@NotNull String key, @Nullable Object value) {
+        Objects.requireNonNull(key);
+
+        Map<String, ConfigElement> trusted;
+        if (value instanceof ConfigContainer container) {
+            trusted = Map.of(key, container.immutableCopy());
+        }
+        else if (value instanceof ConfigElement configElement) {
+            trusted = Map.of(key, configElement);
+        }
+        else {
+            trusted = Map.of(key, ConfigPrimitive.of(value));
+        }
+
+        return new ConfigContainers.ImmutableConfigNode(trusted);
+    }
+
+    /**
+     * Creates a new immutable, ordered ConfigNode implementation from the given object array. The array must be
+     * even-length, with all even indices interpreted as keys, and all odd indices interpreted as the value
+     * corresponding to the prior key. The value, if it is a ConfigElement, will be directly associated with the key,
+     * otherwise, it will be used in an attempt to construct a {@link ConfigPrimitive} which will be associated with the
+     * key. Therefore, the value must either be assignable to ConfigElement, or a valid type for the ConfigPrimitive
+     * constructor. All {@link ConfigContainer} values within the array will be copied immutably.
+     *
+     * @param objects the object array to read
+     * @return a new, immutable, ordered ConfigNode implementation containing the objects present in the array,
+     * formatted as specified above
+     * @throws IllegalArgumentException if the array length is uneven, or if one of the even indices is not a string
+     */
+    static @NotNull ConfigNode immutable(Object @NotNull ... objects) {
+        Objects.requireNonNull(objects);
+
+        if (objects.length == 0) {
+            return EMPTY;
+        }
+
+        Map<String, ConfigElement> trusted = new LinkedHashMap<>(objects.length / 2, 1F);
+        ConfigContainers.iterateArrayPairs(objects, (key, value) -> {
+            if (value instanceof ConfigContainer container) {
+                trusted.put(key, container.immutableCopy());
+            }
+            else if (value instanceof ConfigElement element) {
+                trusted.put(key, element);
+            }
+            else {
+                trusted.put(key, ConfigPrimitive.of(value));
+            }
+        });
+
+        return new ConfigContainers.ImmutableConfigNode(trusted);
     }
 
     @Override
@@ -135,7 +192,7 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      * @param key   the key to be associated with this value
      * @param value the value to add to the node
      */
-    default void putString(@NotNull String key, String value) {
+    default void putString(@NotNull String key, @Nullable String value) {
         put(key, ConfigPrimitive.of(value));
     }
 
@@ -146,7 +203,7 @@ public interface ConfigNode extends ConfigElement, Map<String, ConfigElement>, C
      * @param key   the key to be associated with this value
      * @param value the value to add to the node
      */
-    default void putNumber(@NotNull String key, Number value) {
+    default void putNumber(@NotNull String key, @Nullable Number value) {
         put(key, ConfigPrimitive.of(value));
     }
 

@@ -4,10 +4,12 @@ import com.github.steanky.ethylene.core.ConfigElement;
 import com.github.steanky.ethylene.core.Graph;
 import com.github.steanky.toolkit.collection.Iterators;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.lang.invoke.VarHandle;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
@@ -170,6 +172,30 @@ final class ConfigContainers {
         }
 
         return output;
+    }
+
+    /**
+     * A utility method used internally by {@link ConfigNode#immutable(Object...)} and {@link ConfigNode#of(Object...)}.
+     * Checks that the array length is even, iterates the array,two elements at a time, checking that the first is a
+     * string, and calls the provided consumer.
+     *
+     * @param array the array to iterate
+     * @param consumer the consumer to call with each pair
+     */
+    static void iterateArrayPairs(Object @NotNull [] array, @NotNull BiConsumer<@NotNull String, @Nullable Object> consumer) {
+        if (array.length % 2 != 0) {
+            throw new IllegalArgumentException("Must have an even number of arguments");
+        }
+
+        for (int i = 0; i < array.length; i += 2) {
+            Object keyObject = array[i];
+            if (!(keyObject instanceof String keyString)) {
+                throw new IllegalArgumentException(
+                    "Key object must be string, was " + (keyObject == null ? "null" : keyObject.getClass().getName()));
+            }
+
+            consumer.accept(keyString, array[i + 1]);
+        }
     }
 
     private static class ConfigNodeView extends AbstractConfigNode implements ImmutableView {
@@ -382,7 +408,7 @@ final class ConfigContainers {
         private boolean hashed;
         private int hashCode;
 
-        private ImmutableConfigNode(Map<String, ConfigElement> trusted) {
+        ImmutableConfigNode(Map<String, ConfigElement> trusted) {
             this.map = trusted;
         }
 
@@ -440,7 +466,7 @@ final class ConfigContainers {
         private boolean hashed;
         private int hashCode;
 
-        private ImmutableConfigList(ConfigElement[] elements) {
+        ImmutableConfigList(ConfigElement[] elements) {
             this.elements = elements;
         }
 
