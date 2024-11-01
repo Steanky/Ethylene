@@ -57,9 +57,10 @@ public class HjsonCodec extends AbstractConfigCodec {
     @Override
     protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof JsonObject object) {
+            Graph.InputEntry<String, Object, ConfigElement> inputEntry = INPUT_ENTRY.get();
+
             return Graph.node(new Iterator<>() {
                 private final Iterator<JsonObject.Member> iterator = object.iterator();
-                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {
@@ -75,9 +76,10 @@ public class HjsonCodec extends AbstractConfigCodec {
                 }
             }, makeDecodeMap(object.size()));
         } else if (target instanceof JsonArray array) {
+            Graph.InputEntry<String, Object, ConfigElement> inputEntry = INPUT_ENTRY.get();
+
             return Graph.node(new Iterator<>() {
                 private final Iterator<JsonValue> backing = array.iterator();
-                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {

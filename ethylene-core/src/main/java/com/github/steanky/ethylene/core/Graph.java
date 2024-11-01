@@ -36,6 +36,9 @@ public final class Graph {
     //shared empty Node with an empty iterator and the empty output
     private static final Node<?, ?, ?> EMPTY_NODE = new Node<>(Iterators.iterator(), emptyOutput());
 
+    // sentinel value to indicate no parent object was found during lookup
+    private static final Object NO_PARENT = new Object();
+
     private Graph() {
         throw new UnsupportedOperationException();
     }
@@ -119,7 +122,6 @@ public final class Graph {
         boolean lazyAccumulation = depthFirst && Options.hasOption(flags, Options.LAZY_ACCUMULATION);
 
         //don't track node identity if we are not supporting circular references
-        //make sure usages of this map check circularRefSupport to avoid NPE
         if (circularRefSupport) {
             rootNode.identity = visitKeyMapper.apply(rootInput);
         }
@@ -130,7 +132,6 @@ public final class Graph {
             //guaranteed to be non-empty (empty nodes are never added to the stack)
             Node<TIn, TOut, TKey> node = depthFirst ? stack.peek() : stack.pop();
 
-            boolean hasOutput = hasOutput(node);
             boolean finished = true;
             while (node.inputIterator.hasNext()) {
                 InputEntry<? extends TKey, ? extends TIn, ? extends TOut> entry = node.inputIterator.next();
@@ -146,10 +147,7 @@ public final class Graph {
                 //if not a container, then we have a scalar
                 if (!containerPredicate.test(entryInput)) {
                     //nodes that aren't containers have no children, so we can immediately add them to the accumulator
-                    if (hasOutput) {
-                        node.output.accumulator.accept(entryKey, scalarMapper.apply(entryInput), false);
-                    }
-
+                    node.output.accumulator.accept(entryKey, scalarMapper.apply(entryInput), false);
                     continue;
                 }
 
@@ -158,18 +156,15 @@ public final class Graph {
                     //handle already-visited non-scalar nodes, to allow proper handling of circular references
                     visit = visitKeyMapper.apply(entryInput);
 
-                    //check containsKey, null values are allowed in the map
-                    if (node.hasParent(visit)) {
+                    TOut parent = node.parentWithKey(visit);
+                    if (parent != NO_PARENT) {
                         /*
                         already-visited references are immediately added to the accumulator. if these references are
                         nodes, their output might not have been fully constructed yet. it might not even be possible to
                         ensure that it is constructed, in the case of circular references. therefore, immediately add
                         them to the accumulator, and let it know the reference is circular
                          */
-                        if (hasOutput) {
-                            node.output.accumulator.accept(entryKey, node.getParent(visit), true);
-                        }
-
+                        node.output.accumulator.accept(entryKey, parent, true);
                         continue;
                     }
                 }
@@ -181,10 +176,8 @@ public final class Graph {
                 }
 
                 if (isEmpty(newNode)) {
-                    if (hasOutput) {
-                        //call the accumulator right away, empty nodes cannot have children
-                        node.output.accumulator.accept(entryKey, newNode.output.data, false);
-                    }
+                    //call the accumulator right away, empty nodes cannot have children
+                    node.output.accumulator.accept(entryKey, newNode.output.data, false);
 
                     //don't bother pushing empty nodes to the stack, they cannot be explored
                     continue;
@@ -194,14 +187,12 @@ public final class Graph {
                 //if breadth-first, nodes further to the end of this node's iterator will be processed first
                 stack.push(newNode);
 
-                if (hasOutput) {
-                    if (lazyAccumulation) {
-                        //set the current node's result key and out fields
-                        node.setResult(entryKey, newNode.output.data);
-                    } else {
-                        //no lazy accumulation, immediately add this node
-                        node.output.accumulator.accept(entryKey, newNode.output.data, false);
-                    }
+                if (lazyAccumulation) {
+                    //set the current node's result key and out fields
+                    node.setResult(entryKey, newNode.output.data);
+                } else {
+                    //no lazy accumulation, immediately add this node
+                    node.output.accumulator.accept(entryKey, newNode.output.data, false);
                 }
 
                 //depthFirst also means we've only peeked the top node!
@@ -222,7 +213,7 @@ public final class Graph {
                     //when lazily accumulating depth-first, the parent node is at the top of the stack
                     //we will never lazily accumulate when breadth-first
                     Node<TIn, TOut, TKey> old = stack.peek();
-                    if (old != null && hasOutput(old) && old.hasResult()) {
+                    if (old != null && old.hasResult()) {
                         old.output.accumulator.accept(old.result.key, old.result.out, false);
                     }
                 }
@@ -233,11 +224,7 @@ public final class Graph {
     }
 
     private static boolean isEmpty(Node<?, ?, ?> node) {
-        return node == EMPTY_NODE || !node.inputIterator.hasNext();
-    }
-
-    private static boolean hasOutput(Node<?, ?, ?> node) {
-        return node.output != EMPTY_OUTPUT && node.output.accumulator != EMPTY_ACCUMULATOR;
+        return !node.inputIterator.hasNext();
     }
 
     /**
@@ -349,6 +336,10 @@ public final class Graph {
     @SuppressWarnings("unchecked")
     public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> emptyNode() {
         return (Node<TIn, TOut, TKey>) EMPTY_NODE;
+    }
+
+    public static <TIn, TOut, TKey> @NotNull Node<TIn, TOut, TKey> emptyNode(@NotNull Graph.Output<TOut, ? super TKey> output) {
+        return new Node<>(Iterators.iterator(), output);
     }
 
     /**
@@ -533,6 +524,17 @@ public final class Graph {
             this.fastExitValue = out;
             this.control = Control.FAST_EXIT;
         }
+
+        /**
+         * Resets this entry, setting both the key and value to {@code null}, and clearing the fast exit status. Returns
+         * the entry to a state similar to that of one freshly created by {@link Graph#nullEntry()}.
+         */
+        public void clear() {
+            this.key = null;
+            this.in = null;
+            this.fastExitValue = null;
+            this.control = Control.CONTINUE;
+        }
     }
 
     //used internally for lazy accumulation of results
@@ -565,7 +567,7 @@ public final class Graph {
             this.output = output;
         }
 
-        private TOut getParent(@Nullable Object identity) {
+        private TOut parentWithKey(@Nullable Object identity) {
             Node<TIn, TOut, TKey> current = this;
             while (current != null) {
                 if (current.identity == identity) {
@@ -575,20 +577,8 @@ public final class Graph {
                 current = current.parent;
             }
 
-            return null;
-        }
-
-        private boolean hasParent(@Nullable Object identity) {
-            Node<TIn, TOut, TKey> current = this;
-            while (current != null) {
-                if (current.identity == identity) {
-                    return true;
-                }
-
-                current = current.parent;
-            }
-
-            return false;
+            //noinspection unchecked
+            return (TOut) NO_PARENT;
         }
 
         private boolean hasResult() {

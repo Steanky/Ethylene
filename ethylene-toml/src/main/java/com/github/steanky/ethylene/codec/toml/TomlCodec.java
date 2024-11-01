@@ -70,9 +70,10 @@ public class TomlCodec extends AbstractConfigCodec {
     @Override
     protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
         if (target instanceof UnmodifiableConfig config) {
+            Graph.InputEntry<String, Object, ConfigElement> inputEntry = INPUT_ENTRY.get();
+
             return Graph.node(new Iterator<>() {
                 private final Iterator<? extends UnmodifiableConfig.Entry> backing = config.entrySet().iterator();
-                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {

@@ -153,16 +153,28 @@ class BasicConfigPath implements ConfigPath {
      * @return true if the string is possibly parseable, false if the string is definitely not parseable
      */
     private static boolean fastValidateNumber(String string) {
+        if (string.isEmpty()) {
+            return false;
+        }
+
         int unusedLeadingCharacters = 0;
 
         boolean foundNonLeadingCharacter = false;
         int len = string.length();
         for (int i = 0; i < len; i++) {
             char c = string.charAt(i);
-            if ((i == 0 && c == '+') || (!foundNonLeadingCharacter && c == '0')) {
+            if (i == 0 && c == '+') {
+                if (len == 1) {
+                    return false;
+                }
+
                 unusedLeadingCharacters++;
                 continue;
+            }
 
+            if (!foundNonLeadingCharacter && c == '0') {
+                unusedLeadingCharacters++;
+                continue;
             }
 
             if (c >= '0' && c <= '9') {
@@ -181,16 +193,16 @@ class BasicConfigPath implements ConfigPath {
         return true;
     }
 
-    private static OptionalInt tryParseNumber(String string) {
+    private static int tryParseNumber(String string) {
         if (!fastValidateNumber(string)) {
-            return OptionalInt.empty();
+            return -1;
         }
 
         try {
-            return OptionalInt.of(Integer.parseUnsignedInt(string));
+            return Integer.parseUnsignedInt(string);
         }
         catch (NumberFormatException ignored) {
-            return OptionalInt.empty();
+            return -1;
         }
     }
 
@@ -205,18 +217,18 @@ class BasicConfigPath implements ConfigPath {
             return;
         }
 
-        OptionalInt parseResult = OptionalInt.empty();
-        NodeType type = escape ? ((parseResult = tryParseNumber(string)).isPresent() ? NodeType.INDEX : NodeType.NAME) :
+        int parseResult = -1;
+        NodeType type = escape ? ((parseResult = tryParseNumber(string)) != -1 ? NodeType.INDEX : NodeType.NAME) :
             switch (string) {
             case PREVIOUS_COMMAND -> NodeType.PREVIOUS;
             case CURRENT_COMMAND -> NodeType.CURRENT;
-            default -> (parseResult = tryParseNumber(string)).isPresent() ? NodeType.INDEX : NodeType.NAME;
+            default -> (parseResult = tryParseNumber(string)) != -1 ? NodeType.INDEX : NodeType.NAME;
         };
 
         nodes.add(switch (type) {
             case CURRENT -> CURRENT_NODE;
             case PREVIOUS -> PREVIOUS_NODE;
-            case INDEX -> new Node(string, parseResult.getAsInt(), NodeType.INDEX);
+            case INDEX -> new Node(string, parseResult, NodeType.INDEX);
             case NAME -> new Node(string, -1, NodeType.NAME);
         });
 
@@ -284,14 +296,14 @@ class BasicConfigPath implements ConfigPath {
     @Override
     public @NotNull ConfigPath append(@NotNull String node) {
         Objects.requireNonNull(node);
-        OptionalInt parseResult = tryParseNumber(node);
+        int parseResult = tryParseNumber(node);
 
         Node newNode;
-        if (parseResult.isEmpty()) {
+        if (parseResult == -1) {
             newNode = new Node(node, -1, NodeType.NAME);
         }
         else {
-            newNode = new Node(node, parseResult.getAsInt(), NodeType.INDEX);
+            newNode = new Node(node, parseResult, NodeType.INDEX);
         }
 
         Node[] newNodes = new Node[nodes.length + 1];
@@ -500,7 +512,7 @@ class BasicConfigPath implements ConfigPath {
 
         int hash = Arrays.hashCode(nodes);
         this.hash = hash;
-        VarHandle.storeStoreFence();
+        VarHandle.fullFence();
         hashed = true;
         return hash;
     }

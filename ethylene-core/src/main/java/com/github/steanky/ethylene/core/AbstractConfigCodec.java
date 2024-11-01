@@ -21,11 +21,25 @@ import java.util.*;
  * subclassed by implementations. In particular, specialized codecs may enable processing of custom objects that are not
  * natively supported by this class.</p>
  *
+ * <p>Implementations of this class should guarantee thread safety: multiple threads must be able to safely call methods
+ * of this class concurrently, without risk of data corruption or deadlock. Since multithreaded usage is common,
+ * implementations are strongly encouraged to ensure that they are well optimized in this case.</p>
+ *
  * <p>Many of the methods make use of functionality exposed by the static utility class {@link Graph}.</p>
  */
 public abstract class AbstractConfigCodec implements ConfigCodec {
     private final int graphEncodeOptions;
     private final int graphDecodeOptions;
+
+    /**
+     * The shared {@link Graph.InputEntry}, used to reduce object allocation during graph traversal. The value is
+     * thread-local to ensure consistent behavior in multithreaded environments, and must be cleared after every call
+     * to {@link ConfigCodec#encode(ConfigElement, OutputStream)} or {@link ConfigCodec#decode(InputStream)}. Subclasses
+     * implementing their own {@link AbstractConfigCodec#makeDecodeNode(Object)} or similar should consider using this
+     * field instead of creating their own ad hoc InputEntry instances.
+     */
+    protected static final ThreadLocal<Graph.InputEntry<String, Object, ConfigElement>> INPUT_ENTRY =
+        ThreadLocal.withInitial(Graph::nullEntry);
 
     /**
      * Constructor, for use by implementing subclasses.
@@ -40,6 +54,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
     @Override
     public void encode(@NotNull ConfigElement element, @NotNull OutputStream output) throws IOException {
+        Graph.InputEntry<String, Object, ConfigElement> localEntry = INPUT_ENTRY.get();
+
         try (output) {
             Objects.requireNonNull(element);
             Objects.requireNonNull(output);
@@ -53,23 +69,34 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
             writeObject(Graph.process(element, this::makeEncodeNode, this::isContainer, this::serializeElement,
                 graphEncodeOptions), output);
         }
+        finally {
+            // always clear the entry after use: old data would never be accessed, but wouldn't get GC'd as long as the
+            // thread lives, which may be problematic for large configuration
+            localEntry.clear();
+        }
     }
 
     @Override
     public @NotNull ConfigElement decode(@NotNull InputStream input) throws IOException {
+        Graph.InputEntry<String, Object, ConfigElement> localEntry = INPUT_ENTRY.get();
+
         try (input) {
             Objects.requireNonNull(input);
 
             return Graph.process(readObject(input), this::makeDecodeNode, this::isContainer, this::deserializeObject,
                 graphDecodeOptions);
         }
+        finally {
+            localEntry.clear();
+        }
     }
 
     /**
      * Reads an object from the given {@link InputStream}, which should contain configuration data in a particular
      * format.
-     * <p>
-     * This method must not close the InputStream.
+     *
+     * <p>This method may or may not close the input stream. Callers should therefore defensively close the stream, to
+     * ensure consistent behavior across different serialization formats.</p>
      *
      * @param input the InputStream to read from
      * @return an object
@@ -86,10 +113,15 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * @return a new graph node
      */
     protected @NotNull Graph.Node<Object, ConfigElement, String> makeDecodeNode(@NotNull Object target) {
+        Graph.InputEntry<String, Object, ConfigElement> localEntry = INPUT_ENTRY.get();
+
         if (target instanceof Map<?, ?> map) {
+            if (map.isEmpty()) {
+                return Graph.emptyNode(makeDecodeMap(0));
+            }
+
             return Graph.node(new Iterator<>() {
                 private final Iterator<? extends Map.Entry<?, ?>> iterator = map.entrySet().iterator();
-                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {
@@ -99,16 +131,19 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
                 @Override
                 public Graph.InputEntry<String, Object, ConfigElement> next() {
                     Map.Entry<?, ?> next = iterator.next();
-                    inputEntry.setKey(next.getKey().toString());
-                    inputEntry.setValue(next.getValue());
+                    localEntry.setKey(next.getKey().toString());
+                    localEntry.setValue(next.getValue());
 
-                    return inputEntry;
+                    return localEntry;
                 }
             }, makeDecodeMap(map.size()));
         } else if (target instanceof Collection<?> collection) {
+            if (collection.isEmpty()) {
+                return Graph.emptyNode(makeDecodeCollection(0));
+            }
+
             return Graph.node(new Iterator<>() {
                 private final Iterator<?> backing = collection.iterator();
-                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {
@@ -117,16 +152,18 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
                 @Override
                 public Graph.InputEntry<String, Object, ConfigElement> next() {
-                    inputEntry.setValue(backing.next());
-                    return inputEntry;
+                    localEntry.setValue(backing.next());
+                    return localEntry;
                 }
             }, makeDecodeCollection(collection.size()));
         } else if (target.getClass().isArray()) {
             Object[] array = (Object[]) target;
+            if (array.length == 0) {
+                return Graph.emptyNode(makeDecodeCollection(0));
+            }
 
             return Graph.node(new Iterator<>() {
                 private int i = 0;
-                private final Graph.InputEntry<String, Object, ConfigElement> inputEntry = Graph.nullEntry();
 
                 @Override
                 public boolean hasNext() {
@@ -135,8 +172,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
 
                 @Override
                 public Graph.InputEntry<String, Object, ConfigElement> next() {
-                    inputEntry.setValue(array[i++]);
-                    return inputEntry;
+                    localEntry.setValue(array[i++]);
+                    return localEntry;
                 }
             }, makeDecodeCollection(array.length));
         }
@@ -183,7 +220,8 @@ public abstract class AbstractConfigCodec implements ConfigCodec {
      * Writes an object to the given {@link OutputStream}, which will then contain configuration data in some particular
      * format.
      * <p>
-     * This method must not close the OutputStream.
+     * This method may or may not close the OutputStream. Callers should therefore defensively close the stream
+     * themselves, to ensure consistent behavior across different formats.
      *
      * @param object the object to write
      * @param output the OutputStream to write to

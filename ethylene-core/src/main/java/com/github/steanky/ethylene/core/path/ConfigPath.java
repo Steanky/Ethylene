@@ -193,7 +193,7 @@ public interface ConfigPath {
     /**
      * The identifier of {@link NodeType#NAME} and {@link NodeType#INDEX}.
      */
-    int NODE_OR_NAME_ID = 2;
+    int NODE_OR_INDEX_ID = 2;
 
     /**
      * Indicates various types of nodes.
@@ -212,12 +212,12 @@ public interface ConfigPath {
         /**
          * A node representing the name of a particular point along a path.
          */
-        NAME(NODE_OR_NAME_ID),
+        NAME(NODE_OR_INDEX_ID),
 
         /**
          * A node representing an index into an array.
          */
-        INDEX(NODE_OR_NAME_ID);
+        INDEX(NODE_OR_INDEX_ID);
 
         private final int id;
 
@@ -231,7 +231,7 @@ public interface ConfigPath {
          * @return true if this type is {@code NAME} or {@code INDEX}, false otherwise
          */
         public boolean isNameOrIndex() {
-            return this.id == NODE_OR_NAME_ID;
+            return this.id == NODE_OR_INDEX_ID;
         }
 
         /**

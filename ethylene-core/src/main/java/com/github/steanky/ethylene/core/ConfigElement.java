@@ -111,7 +111,7 @@ public interface ConfigElement {
     /**
      * Gets a ConfigElement by following the given {@link ConfigPath}. If one or more path elements are not present,
      * {@code null} is returned. If any elements along the path are lists, they are indexed into by converting the
-     * corresponding path elements to a list.
+     * corresponding path elements to an integer.
      * <p>
      * This element is considered the root of the path. Therefore, if the path contains any PREVIOUS commands
      * ({@code ..}), {@code null} will be returned.
