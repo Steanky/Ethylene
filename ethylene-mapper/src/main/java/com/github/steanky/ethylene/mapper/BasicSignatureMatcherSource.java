@@ -55,7 +55,8 @@ public class BasicSignatureMatcherSource implements SignatureMatcher.Source {
 
     private void registerCustomSignatures(Collection<? extends Signature<?>> signatures) {
         for (Signature<?> signature : signatures) {
-            customSignatureCache.get(signature.returnType().rawType(), ignored -> new HashSet<>(1)).add(signature);
+            Objects.requireNonNull(customSignatureCache.get(signature.returnType().rawType(),
+                ignored -> new HashSet<>(1))).add(signature);
         }
     }
 

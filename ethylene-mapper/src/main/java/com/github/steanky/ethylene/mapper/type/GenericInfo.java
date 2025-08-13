@@ -148,8 +148,8 @@ class GenericInfo {
             return bootstrapTypes.computeIfAbsent(type, Function.identity());
         }
 
-        return store.get(loader, ignored -> new GenericInfo()).canonicalTypes.computeIfAbsent(type,
-            Function.identity());
+        return Objects.requireNonNull(store.get(loader, ignored -> new GenericInfo()))
+            .canonicalTypes.computeIfAbsent(type, Function.identity());
     }
 
     /**

@@ -5,10 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.IntFunction;
 
 /**
@@ -143,5 +140,17 @@ public interface ConfigContainer extends ConfigElement {
      */
     default @NotNull ConfigContainer immutableView() {
         return ConfigContainers.immutableView(this);
+    }
+
+    /**
+     * Call to minimize the memory used by this container. This is analogous to e.g. {@link ArrayList#trimToSize()}. It
+     * should be called only once no new elements are likely to be added, and is likely to be an expensive operation
+     * (typically, the entire backing data storage needs to be re-allocated at once).
+     * <p>
+     * Implementations that can meaningfully perform this operation should override this method. The default
+     * implementation is a no-op.
+     */
+    default void minimizeStorage() {
+        // no-op
     }
 }

@@ -5,4 +5,4 @@ include 'ethylene-json'
 include 'ethylene-yaml'
 include 'ethylene-hjson'
 include 'ethylene-mapper'
-
+include 'ethylene-butylene'

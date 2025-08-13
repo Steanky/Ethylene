@@ -42,8 +42,17 @@ public class ArrayConfigList extends BackedConfigList implements RandomAccess {
 
     /**
      * Calls {@link ArrayList#trimToSize()} on the internal ArrayList.
+     *
+     * @deprecated this method's functionality is replaced by {@link ConfigContainer#minimizeStorage()}, and will be
+     * removed in 1.0.0.
      */
+    @Deprecated(forRemoval = true)
     public void trimToSize() {
+        minimizeStorage();
+    }
+
+    @Override
+    public void minimizeStorage() {
         ((ArrayList<?>) list).trimToSize();
     }
 

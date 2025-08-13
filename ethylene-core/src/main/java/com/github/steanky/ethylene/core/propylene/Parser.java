@@ -19,7 +19,8 @@ import java.util.function.IntFunction;
  * to elegantly and unambiguously describe {@link ConfigElement} instances.
  * <p>
  * This class is public to enable cross-package access, but is not to be considered part of the public API. It is
- * liable to change at any time.
+ * liable to change at any time. For a stable public API that can serialize/deserialize Propylene, see
+ * {@link PropyleneCodec}.
  */
 @ApiStatus.Internal
 public final class Parser {
@@ -699,6 +700,8 @@ public final class Parser {
 
     /**
      * Extracts a single {@link ConfigElement} from the reader. Does not close it.
+     * <p>
+     * The returned ConfigElement, if it is a {@link ConfigContainer}, will be mutable.
      *
      * @param reader the reader from which to read Propylene configuration data
      * @param nodeFunction a function used to construct mutable, empty {@link ConfigNode}s given a size hint

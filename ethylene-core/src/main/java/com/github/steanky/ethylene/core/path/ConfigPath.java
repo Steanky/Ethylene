@@ -196,7 +196,7 @@ public interface ConfigPath {
     int NODE_OR_INDEX_ID = 2;
 
     /**
-     * Indicates various types of nodes.
+     * Indicates various types of nodes along a path.
      */
     enum NodeType {
         /**
