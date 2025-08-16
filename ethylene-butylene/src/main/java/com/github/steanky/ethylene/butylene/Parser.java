@@ -237,8 +237,8 @@ public class Parser {
         EXP
     }
 
-    private static @NotNull ButyleneParseException invalidCharacterInNumber(@NotNull Tokenizer tokenizer, int i) {
-        return new ButyleneParseException("invalid character in number", tokenizer.buffer.toString(), i,
+    private static @NotNull ButyleneParseException invalidCharacterInUnquotedLiteral(@NotNull Tokenizer tokenizer, int i) {
+        return new ButyleneParseException("invalid character in unquoted literal", tokenizer.buffer.toString(), i,
             tokenizer.tokenLine, tokenizer.tokenColumn);
     }
 
@@ -262,39 +262,39 @@ public class Parser {
                         continue;
                     }
 
-                    if (nonDigit(sample)) throw invalidCharacterInNumber(tokenizer, i);
+                    if (nonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
                     state = sample == '0' ? NumberParseState.LEADING_ZERO : NumberParseState.INT;
                 }
 
                 case POST_NEG -> {
-                    if (nonDigit(sample)) throw invalidCharacterInNumber(tokenizer, i);
+                    if (nonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
                     state = sample == '0' ? NumberParseState.LEADING_ZERO : NumberParseState.INT;
                 }
 
                 case LEADING_ZERO -> state = switch (sample) {
                     case '.' -> NumberParseState.LEADING_FRAC_DIGIT;
                     case 'e', 'E' -> NumberParseState.EXP_SIGN;
-                    default -> throw invalidCharacterInNumber(tokenizer, i);
+                    default -> throw invalidCharacterInUnquotedLiteral(tokenizer, i);
                 };
 
                 case INT -> state = switch (sample) {
                     case '.' -> NumberParseState.LEADING_FRAC_DIGIT;
                     case 'e', 'E' -> NumberParseState.EXP_SIGN;
                     default -> {
-                        if (nonDigit(sample)) throw invalidCharacterInNumber(tokenizer, i);
+                        if (nonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
                         yield NumberParseState.INT;
                     }
                 };
 
                 case LEADING_FRAC_DIGIT -> {
-                    if (nonDigit(sample)) throw invalidCharacterInNumber(tokenizer, i);
+                    if (nonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
                     state = NumberParseState.FRAC;
                 }
 
                 case FRAC -> state = switch (sample) {
                     case 'e', 'E' -> NumberParseState.EXP_SIGN;
                     default -> {
-                        if (nonDigit(sample)) throw invalidCharacterInNumber(tokenizer, i);
+                        if (nonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
                         yield NumberParseState.FRAC;
                     }
                 };
@@ -302,13 +302,13 @@ public class Parser {
                 case EXP_SIGN -> state = switch (sample) {
                     case '-', '+' -> NumberParseState.EXP_START;
                     default -> {
-                        if (nonDigit(sample)) throw invalidCharacterInNumber(tokenizer, i);
+                        if (nonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
                         yield NumberParseState.EXP;
                     }
                 };
 
                 case EXP_START, EXP -> {
-                    if (nonDigit(sample)) throw invalidCharacterInNumber(tokenizer, i);
+                    if (nonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
                     state = NumberParseState.EXP;
                 }
             }
@@ -325,7 +325,7 @@ public class Parser {
     }
 
     private static final class Tokenizer {
-        private final PeekingReader reader;
+        private final ButyleneReader reader;
         private final StringBuilder buffer;
 
         private TokenizerState state;
@@ -333,7 +333,7 @@ public class Parser {
         private int tokenLine;
         private int tokenColumn;
 
-        private Tokenizer(@NotNull PeekingReader reader) {
+        private Tokenizer(@NotNull ButyleneReader reader) {
             this.reader = Objects.requireNonNull(reader);
             this.buffer = new StringBuilder();
 
@@ -652,7 +652,7 @@ public class Parser {
 
     @VisibleForTesting
     public static List<TokenData> tokenize(@NotNull Reader reader) throws IOException {
-        Tokenizer tokenizer = new Tokenizer(new PeekingReader(reader));
+        Tokenizer tokenizer = new Tokenizer(new ButyleneReader(reader));
 
         List<TokenData> data = new ArrayList<>();
         Token token;
@@ -700,7 +700,12 @@ public class Parser {
     public static @NotNull ConfigElement fromReader(@NotNull Reader reader,
         @NotNull IntFunction<? extends ConfigNode> nodeFunction,
         @NotNull IntFunction<? extends ConfigList> listFunction) throws IOException {
-        Tokenizer tokenizer = new Tokenizer(new PeekingReader(reader));
+        ButyleneReader butyleneReader = new ButyleneReader(reader);
+
+        // consume a BOM at the beginning of the stream
+        if (butyleneReader.peekNext() == 0xFEFF) butyleneReader.next();
+
+        Tokenizer tokenizer = new Tokenizer(butyleneReader);
 
         int listDepth = 0;
         int mapDepth = 0;
@@ -723,15 +728,33 @@ public class Parser {
             token = tokenizer.next();
 
             if (isFirst) {
+                String rootAnchor = null;
+
+                // special case for
+                if (token == Token.ANCHOR) {
+                    Token anchorName = tokenizer.next();
+                    if (anchorName != Token.UNQUOTED_TEXT) throw invalidToken(anchorName, tokenizer);
+
+                    rootAnchor = tokenizer.buffer.toString();
+                    token = tokenizer.next();
+
+                    if (token != Token.LIST_START && token != Token.MAP_START) throw invalidToken(token, tokenizer);
+                }
+
                 topLevelMap = token != Token.LIST_START;
-                eofClosesTopLevelMap = token != Token.LIST_START && token != Token.MAP_START;
-                maybeTopLevelScalar = token == Token.QUOTED_TEXT || token == Token.UNQUOTED_TEXT;
+                eofClosesTopLevelMap = rootAnchor == null && token != Token.LIST_START && token != Token.MAP_START;
+                maybeTopLevelScalar = rootAnchor == null && token == Token.QUOTED_TEXT || token == Token.UNQUOTED_TEXT;
 
                 topLevel = topLevelMap
                     ? nodeFunction.apply(INITIAL_CAPACITY)
                     : listFunction.apply(INITIAL_CAPACITY);
 
                 containerStack.addLast(topLevel);
+
+                if (rootAnchor != null) {
+                    anchorMap = new HashMap<>();
+                    anchorMap.put(rootAnchor, topLevel);
+                }
 
                 switch (token) {
                     case LIST_START -> {
@@ -756,7 +779,7 @@ public class Parser {
 
             // iterate through container entries
             entryLoop:
-            for (;;) {
+            while (true) {
                 if (!context.elementCollection().isEmpty() && token == Token.VALUE_SEPARATOR) token = tokenizer.next();
 
                 String anchorName = null;

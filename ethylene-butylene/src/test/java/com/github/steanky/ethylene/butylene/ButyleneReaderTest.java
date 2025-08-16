@@ -7,10 +7,10 @@ import java.io.StringReader;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PeekingReaderTest {
+class ButyleneReaderTest {
     @Test
     void test() throws IOException {
-        PeekingReader reader = new PeekingReader(new StringReader("abc"));
+        ButyleneReader reader = new ButyleneReader(new StringReader("abc"));
 
         assertEquals('a', reader.peekNext());
         assertEquals('a', reader.peekNext());

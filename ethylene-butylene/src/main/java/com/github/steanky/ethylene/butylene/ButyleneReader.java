@@ -9,11 +9,14 @@ import java.util.Objects;
 
 /**
  * A wrapper for a {@link Reader} that supports "looking ahead" a single character through its
- * {@link PeekingReader#peekNext()} method.
+ * {@link ButyleneReader#peekNext()} method. It also yields Unicode code points rather than Java characters, and keeps
+ * track of row/column number.
  * <p>
  * This class is not thread-safe, even if the underlying reader is.
  */
-class PeekingReader implements Closeable {
+class ButyleneReader implements Closeable {
+    private static final int REPLACEMENT_CHARACTER = 0xFFFD;
+
     private final Reader inner;
 
     private boolean closed;
@@ -28,7 +31,7 @@ class PeekingReader implements Closeable {
      *
      * @param inner the inner reader
      */
-    public PeekingReader(@NotNull Reader inner) {
+    public ButyleneReader(@NotNull Reader inner) {
         this.inner = Objects.requireNonNull(inner);
     }
 
@@ -39,11 +42,24 @@ class PeekingReader implements Closeable {
         } else if (character != -1) this.column++;
     }
 
+    private int decodeNext() throws IOException {
+        int high = this.inner.read();
+        if (high < 0) return high;
+
+        if (!Character.isHighSurrogate((char) high)) return high;
+
+        int low = this.inner.read();
+        if (low < 0 || !Character.isLowSurrogate((char) low)) return REPLACEMENT_CHARACTER;
+
+        return Character.toCodePoint((char) high, (char) low);
+    }
+
     /**
-     * Advances the reader and returns the current value.
+     * Advances the reader and returns the current value, as a Unicode code point.
      *
-     * @return the current character, or -1 to indicate end-of-stream
-     * @throws IOException if {@link Reader#read()} throws an exception
+     * @return the current codepoint, or -1 to indicate end-of-stream
+     * @throws IOException if {@link Reader#read()} throws an exception, or the inner reader produces an invalid
+     * surrogate pair.
      */
     public int next() throws IOException {
         if (hasPeeked) {
@@ -52,14 +68,14 @@ class PeekingReader implements Closeable {
             return peekedValue;
         }
 
-        int next = inner.read();
+        int next = decodeNext();
         updatePos(next);
         return next;
     }
 
     /**
      * Returns the next value <i>without</i> advancing the reader. Calling this method multiple times will return the
-     * same value, until the reader is actually advanced using {@link PeekingReader#next()}.
+     * same value, until the reader is actually advanced using {@link ButyleneReader#next()}.
      * <p>
      * Note that this may need to call {@link Reader#read()} on the inner reader.
      *
@@ -69,7 +85,7 @@ class PeekingReader implements Closeable {
     public int peekNext() throws IOException {
         if (hasPeeked) return this.peekedValue;
         this.hasPeeked = true;
-        this.peekedValue = inner.read();
+        this.peekedValue = decodeNext();
 
         return this.peekedValue;
     }
