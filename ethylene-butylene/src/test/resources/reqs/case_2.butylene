@@ -1,4 +1,4 @@
-&root [
-  10
+&root /* comments can go most places */ [
+  /* comment */10
   *root
 ]

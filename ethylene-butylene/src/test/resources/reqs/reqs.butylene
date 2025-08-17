@@ -3,3 +3,7 @@
 3: "42.0"
 4: "true"
 5: "'top-level scalar'"
+6: "{inner=&0{key=false, inner=&0}}"
+7: "{list=[0.0, 1.0, 2.0], override=[-1.0, 0.0, 1.0, 2.0]}"
+8: "[0.0, 1.0, true, false, 0.0, 'string']"
+9: "[0.0, 1.0, 'value', 'value', {key='value', suffer=[0.0, 1.0]}]"

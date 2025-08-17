@@ -138,7 +138,15 @@ public class Parser {
         /**
          * Parsing a multiline comment.
          */
-        MULTILINE_COMMENT
+        MULTILINE_COMMENT,
+
+        LINE_COMMENT_UNQUOTED_NORMAL,
+
+        LINE_COMMENT_UNQUOTED_REFERENCE,
+
+        MULTILINE_COMMENT_UNQUOTED_NORMAL,
+
+        MULTILINE_COMMENT_UNQUOTED_REFERENCE,
     }
 
     /**
@@ -415,8 +423,12 @@ public class Parser {
                     case ANCHOR_OR_OVERRIDE -> doUnquotedText(UnquotedTextMode.ANCHOR_OR_OVERRIDE);
                     case REFERENCE -> doUnquotedText(UnquotedTextMode.REFERENCE);
                     case QUOTED_TEXT -> doQuotedText(reader.next());
-                    case LINE_COMMENT -> doLineComment(reader.next());
-                    case MULTILINE_COMMENT -> doMultilineComment(reader.next());
+                    case LINE_COMMENT -> doLineComment(reader.next(), TokenizerState.SEEK);
+                    case MULTILINE_COMMENT -> doMultilineComment(reader.next(), TokenizerState.SEEK);
+                    case LINE_COMMENT_UNQUOTED_NORMAL -> doLineComment(reader.next(), TokenizerState.UNQUOTED_TEXT_TERMINATOR);
+                    case LINE_COMMENT_UNQUOTED_REFERENCE -> doLineComment(reader.next(), TokenizerState.UNQUOTED_TEXT_TERMINATOR_REFERENCE);
+                    case MULTILINE_COMMENT_UNQUOTED_NORMAL -> doMultilineComment(reader.next(), TokenizerState.UNQUOTED_TEXT_TERMINATOR);
+                    case MULTILINE_COMMENT_UNQUOTED_REFERENCE -> doMultilineComment(reader.next(), TokenizerState.UNQUOTED_TEXT_TERMINATOR_REFERENCE);
                 };
 
                 if (nextToken != null) {
@@ -541,7 +553,7 @@ public class Parser {
             int lookahead = reader.peekNext();
 
             return switch (lookahead) {
-                case SPACE, TAB, LINE_FEED, CARRIAGE_RETURN -> {
+                case SPACE, TAB -> {
                     reader.next();
                     yield null;
                 }
@@ -555,8 +567,27 @@ public class Parser {
                         yield Token.UNQUOTED_TEXT;
                     }
 
-                    throw new ButyleneParseException("missing comma", buffer + " ", buffer.length(), reader.getLine(),
-                        reader.getColumn());
+                    if (lookahead == COMMENT_START) {
+                        reader.next();
+
+                        int comment = reader.next();
+                        switch (comment) {
+                            case COMMENT_START -> this.state = (mode == UnquotedTextMode.NORMAL)
+                                ? TokenizerState.LINE_COMMENT_UNQUOTED_NORMAL
+                                : TokenizerState.LINE_COMMENT_UNQUOTED_REFERENCE;
+
+                            case MULTILINE_COMMENT_SIGNIFIER -> this.state = (mode == UnquotedTextMode.NORMAL)
+                                ? TokenizerState.MULTILINE_COMMENT_UNQUOTED_NORMAL
+                                : TokenizerState.MULTILINE_COMMENT_UNQUOTED_REFERENCE;
+
+                            default -> throw new ButyleneParseException("invalid character",
+                                new String(new int[] { comment }, 0, 1), buffer.length(), reader.getLine(),
+                                reader.getColumn());
+                        }
+
+                        yield null;
+                    } else throw new ButyleneParseException("missing separator", buffer + " ", buffer.length(),
+                        reader.getLine(), reader.getColumn());
                 }
             };
         }
@@ -618,13 +649,13 @@ public class Parser {
             return null;
         }
 
-        private @Nullable Token doLineComment(int character) {
+        private @Nullable Token doLineComment(int character, @NotNull TokenizerState revertState) {
             if (character == -1) {
-                this.state = TokenizerState.SEEK;
+                this.state = revertState;
                 return Token.EOF;
             }
 
-            if (character == LINE_FEED) this.state = TokenizerState.SEEK;
+            if (character == LINE_FEED) this.state = revertState;
             return null;
         }
 
@@ -633,14 +664,14 @@ public class Parser {
                 reader.getColumn());
         }
 
-        private @Nullable Token doMultilineComment(int character) throws IOException {
+        private @Nullable Token doMultilineComment(int character, @NotNull TokenizerState revertState) throws IOException {
             if (character == -1) throw multilineCommentException();
 
             if (character == MULTILINE_COMMENT_SIGNIFIER) {
                 int next = reader.next();
 
                 if (next == -1) throw multilineCommentException();
-                if (next == COMMENT_START) this.state = TokenizerState.SEEK;
+                if (next == COMMENT_START) this.state = revertState;
             }
 
             return null;
@@ -700,12 +731,7 @@ public class Parser {
     public static @NotNull ConfigElement fromReader(@NotNull Reader reader,
         @NotNull IntFunction<? extends ConfigNode> nodeFunction,
         @NotNull IntFunction<? extends ConfigList> listFunction) throws IOException {
-        ButyleneReader butyleneReader = new ButyleneReader(reader);
-
-        // consume a BOM at the beginning of the stream
-        if (butyleneReader.peekNext() == 0xFEFF) butyleneReader.next();
-
-        Tokenizer tokenizer = new Tokenizer(butyleneReader);
+        Tokenizer tokenizer = new Tokenizer(new ButyleneReader(reader));
 
         int listDepth = 0;
         int mapDepth = 0;
