@@ -1,0 +1,2 @@
+non_bmp: "😂"
+non_bmp_encoded_with_surrogate_pair: "\ud83D\uDe02"

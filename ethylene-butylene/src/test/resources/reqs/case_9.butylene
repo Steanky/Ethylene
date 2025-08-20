@@ -16,7 +16,7 @@
 
   /* test */ { // test
     /* test */ key /* test */ : /* test */ "value" // test
-    suffer /* test */ : /* test */ [ 0 /* test */, 1 /* test */ ] // AAAAAA
+    suffer /* test */ : /* test */ [ 0 /* test */, /* test */ 1 /* test */ ] // AAAAAA
   }
 ] // trailing
 /* comment

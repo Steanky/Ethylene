@@ -34,6 +34,21 @@ public final class ConfigPrimitive implements ConfigElement {
      */
     public static final ConfigPrimitive EMPTY_STRING = new ConfigPrimitive("");
 
+    /**
+     * Positive infinity.
+     */
+    public static final ConfigPrimitive POSITIVE_INFINITY = new ConfigPrimitive(Float.POSITIVE_INFINITY);
+
+    /**
+     * Negative infinity.
+     */
+    public static final ConfigPrimitive NEGATIVE_INFINITY = new ConfigPrimitive(Float.NEGATIVE_INFINITY);
+
+    /**
+     * Floating-point NaN (Not A Number).
+     */
+    public static final ConfigPrimitive NaN = new ConfigPrimitive(Float.NaN);
+
     private static final class LongCache {
         private static final long LOW = -128;
         private static final long HIGH = 127;

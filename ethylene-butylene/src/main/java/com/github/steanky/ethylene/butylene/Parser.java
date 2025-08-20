@@ -202,8 +202,8 @@ public class Parser {
                  VALUE_ASSIGN, VALUE_SEPARATOR,
                  MAP_START, MAP_END,
                  LIST_START, LIST_END,
-                 ANCHOR, REFERENCE,
-                 COMMENT_START, ESCAPE, OVERRIDE -> false;
+                 ANCHOR, REFERENCE, OVERRIDE,
+                 COMMENT_START, ESCAPE, '<' -> false;
             default -> true;
         };
     }
@@ -258,6 +258,26 @@ public class Parser {
         if ("true".contentEquals(buffer)) return ConfigPrimitive.TRUE;
         else if ("false".contentEquals(buffer)) return ConfigPrimitive.FALSE;
         else if ("null".contentEquals(buffer)) return ConfigPrimitive.NULL;
+
+        // check for other special values: [+|-]?(NaN|Infinity)
+        if (!buffer.isEmpty()) {
+            char first = buffer.charAt(0);
+            boolean positive = true;
+
+            int start = switch (first) {
+                case '-' -> {
+                    positive = false;
+                    yield 1;
+                }
+                case '+' -> 1;
+                default -> 0;
+            };
+
+            CharSequence remaining = buffer.subSequence(start, buffer.length());
+            if ("NaN".contentEquals(remaining)) return ConfigPrimitive.NaN;
+            else if ("Infinity".contentEquals(remaining)) return positive ? ConfigPrimitive.POSITIVE_INFINITY :
+                ConfigPrimitive.NEGATIVE_INFINITY;
+        }
 
         NumberParseState state = NumberParseState.NEG;
         for (int i = 0; i < buffer.length(); i++) {
@@ -329,7 +349,22 @@ public class Parser {
         }
 
         // this should never throw an exception as we validate the number above
-        return ConfigPrimitive.of(Double.valueOf(buffer.toString()));
+        double value = Double.parseDouble(buffer.toString());
+
+        // for integers: use the smallest data type that can hold the value without data loss
+        if (value == Math.rint(value)) {
+            if (value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE) return ConfigPrimitive.of((byte) value);
+            else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) return ConfigPrimitive.of((short) value);
+            else if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) return ConfigPrimitive.of((int) value);
+            else if (value >= Long.MIN_VALUE && value <= Long.MAX_VALUE) return ConfigPrimitive.of((long) value);
+        }
+
+        float floatValue = (float) value;
+
+        // we may be able to store the value in a float without data loss
+        if (value == floatValue || Double.isNaN(value)) return ConfigPrimitive.of(floatValue);
+
+        return ConfigPrimitive.of(value);
     }
 
     private static final class Tokenizer {
@@ -340,6 +375,10 @@ public class Parser {
 
         private int tokenLine;
         private int tokenColumn;
+
+        private boolean expectLowSurrogate;
+        private String highSurrogateChars;
+        private char highSurrogate;
 
         private Tokenizer(@NotNull ButyleneReader reader) {
             this.reader = Objects.requireNonNull(reader);
@@ -376,7 +415,7 @@ public class Parser {
                     token, idx, reader.getLine(), reader.getColumn());
             }
 
-            if (next >= 0x61 && next <= 0x66) next -= 47;
+            if (next >= 0x61 && next <= 0x66) next -= 39;
             else if (next >= 0x41 && next <= 0x46) next -= 7;
 
             // 0-F becomes 0-15
@@ -393,10 +432,7 @@ public class Parser {
             return next;
         }
 
-        private char readHexdigits() throws IOException {
-            char[] ctx = new char[6];
-            ctx[0] = '\\';
-            ctx[1] = 'u';
+        private char readHexdigits(char[] ctx) throws IOException {
 
             int one = nextHexDigit(ctx, 2); // MSB
             int two = nextHexDigit(ctx, 3);
@@ -605,6 +641,15 @@ public class Parser {
                     reader.getLine(), reader.getColumn());
             }
 
+            if (expectLowSurrogate && (character != ESCAPE || reader.peekNext() != 'u')) {
+                int next = reader.peekNext();
+                String message = "\"" + buffer.subSequence(0, buffer.length() - 1) + highSurrogateChars +
+                    new String(new int[] { character, next == -1 ? ' ' : next }, 0, 1);
+
+                throw new ButyleneParseException("expected low surrogate", message, message.length() - 1,
+                    reader.getLine(), reader.getColumn() - 1);
+            }
+
             switch (character) {
                 case STRING_DELIMITER -> {
                     this.state = TokenizerState.SEEK;
@@ -627,7 +672,41 @@ public class Parser {
 
                         // as per https://www.rfc-editor.org/rfc/rfc8259, we may encode arbitrary Unicode characters
                         // with 4 hex digits
-                        case 'u' -> buffer.append(readHexdigits());
+                        case 'u' -> {
+                            char[] ctx = new char[6];
+                            ctx[0] = '\\';
+                            ctx[1] = 'u';
+
+                            char decoded = readHexdigits(ctx);
+
+                            boolean high = Character.isHighSurrogate(decoded);
+                            boolean low = Character.isLowSurrogate(decoded);
+
+                            if ((expectLowSurrogate && !low) || (!expectLowSurrogate && low)) {
+                                String token = new String(ctx, 0, 6);
+                                throw new ButyleneParseException("invalid surrogate pair",
+                                    token, -1, reader.getLine(), reader.getColumn() - 6);
+                            }
+
+                            if (high) {
+                                expectLowSurrogate = true;
+                                highSurrogateChars = new String(ctx, 0, 6);
+                                highSurrogate = decoded;
+                            }
+                            else if (low) {
+                                if (!Character.isValidCodePoint(Character.toCodePoint(highSurrogate, decoded))) {
+                                    String message = highSurrogateChars + new String(ctx, 0, 6);
+                                    throw new ButyleneParseException("surrogate pair encodes invalid codepoint",
+                                        message, -1, reader.getLine(), reader.getColumn() - 6);
+                                }
+
+                                expectLowSurrogate = false;
+                                highSurrogateChars = null;
+                                highSurrogate = 0;
+                            }
+
+                            buffer.append(decoded);
+                        }
 
                         case -1 -> {
                             String message = "\"" + buffer + '\\' + ' ';
@@ -756,7 +835,7 @@ public class Parser {
             if (isFirst) {
                 String rootAnchor = null;
 
-                // special case for
+                // special case for root node with anchor
                 if (token == Token.ANCHOR) {
                     Token anchorName = tokenizer.next();
                     if (anchorName != Token.UNQUOTED_TEXT) throw invalidToken(anchorName, tokenizer);

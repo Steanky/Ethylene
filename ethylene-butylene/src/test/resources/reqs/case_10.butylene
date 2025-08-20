@@ -1,0 +1,5 @@
+nan: NaN
+other_nan: -NaN
+pos_nan: +NaN
+infinity: +Infinity
+neg_infinity: -Infinity
