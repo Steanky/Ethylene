@@ -2,6 +2,9 @@ package com.github.steanky.ethylene.butylene;
 
 import java.io.IOException;
 
+/**
+ * An exception thrown when invalid Butylene is encountered during parsing or tokenization.
+ */
 public class ButyleneParseException extends IOException {
     private final String reason;
     private final String token;

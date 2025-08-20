@@ -1,5 +1,5 @@
 // The root object can also be referenced, as long as explicit braces are used
-&root {
+&root{
   key: 10
 
   // Circular references are fine (a list or map may contain itself).

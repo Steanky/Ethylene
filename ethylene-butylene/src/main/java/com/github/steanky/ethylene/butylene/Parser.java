@@ -209,8 +209,11 @@ public class Parser {
     }
 
     private static boolean mayTerminateUnquotedText(int character, @NotNull UnquotedTextMode mode) {
-        // anchors MUST be terminated by a space
-        if (mode == UnquotedTextMode.ANCHOR_OR_OVERRIDE) return character == SPACE;
+        // anchors are terminated by a space, a {, or a [
+        if (mode == UnquotedTextMode.ANCHOR_OR_OVERRIDE) return switch (character) {
+            case SPACE, MAP_START, LIST_START -> true;
+            default -> false;
+        };
 
         if (mode == UnquotedTextMode.REFERENCE) {
             return switch (character) {
