@@ -1,0 +1,4 @@
+unpaired_surrogate: "\uD800"
+invalid_surrogate: "\uD800\uD800"
+unpaired_surrogate_then_normal_char: "test\uD800test"
+low_then_high: "\uDC00\uD800"

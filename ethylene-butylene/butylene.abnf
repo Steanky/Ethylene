@@ -1,0 +1,56 @@
+; Butylene grammar specification (ABNF) 
+
+value = number / true / false / null / quoted-string / object / list
+true = %x74.72.75.65
+false = %x66.61.6C.73.65
+null = %x6E.75.6C.6D
+
+number = ( [ minus ] int [ frac ] [ exp ] ) / 
+	[ minus / plus ] ( infinity / nan )
+decimal-point = %x2E
+nonzero-digit = %x31-%x39
+e = %x65 / %x45
+exp = e [ minus / plus ] 1*DIGIT
+int = zero / ( nonzero-digit *DIGIT )
+minus = %x2D
+plus = %x2B
+zero = %x30
+infinity = %x49.6E.66.69.6E.69.74.79
+nan = %x4E.61.4E
+
+quoted-string = quotation-mark *char quotation-mark
+char = unescaped / 
+	escape (
+		%x22 /
+		%x5C /
+		%x2F /
+		%x62 /
+		%x66 /
+		%x6E /
+		%x72 /
+		%x74 /
+		%x75 4HEXDIG )
+escape = %x5C
+quotation-mark = %x22
+unescaped %x20-21 / %x23-5B / %x5D-10FFFF
+
+object = begin-object [ pair / 1*( pair separator pair ) [ separator ] ] end-object
+list = begin-list [ value / 1*( value separator value ) [ separator ] ] end-list
+
+pair = key ws key-assign ws value
+key = quoted-string / unquoted-string
+separator = insignificant-ws line-feed ws / ws explicit-separator ws
+line-feed = %x0A
+explicit-separator = %x2C
+begin-object = ws %x7B ws
+end-object = ws %x7D ws
+begin-list = ws %x5B ws
+end-list = ws %x5D ws
+
+insignificant-ws = *(
+	%x20 /
+	%x09 )
+
+ws = insignificant-ws / *(
+	%x0A /
+	%x0D )

@@ -15,12 +15,6 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ParserTest {
-    private ConfigElement fromString(String string) throws IOException {
-        try (Reader reader = new StringReader(string)) {
-            return Parser.fromReader(reader, LinkedConfigNode::new, ArrayConfigList::new);
-        }
-    }
-
     private ConfigElement fromInputStream(InputStream is) throws IOException {
         try (InputStreamReader reader = new InputStreamReader(is,
             StandardCharsets.UTF_8.newDecoder()
@@ -32,39 +26,16 @@ class ParserTest {
     }
 
     @Test
-    void unpairedHighSurrogate() {
-        String data = """
-            value: "\\uD800"
-            """;
-
-        ButyleneParseException exception = assertThrows(ButyleneParseException.class, () -> fromString(data));
-
-        assertEquals(1, exception.getLine(), exception.getMessage());
-        assertEquals(15, exception.getColumn(), exception.getMessage());
-    }
-
-    @Test
-    void invalidSurrogatePair() {
-        String data = """
-            value: "\\uD800\\uD800"
-            """;
-
-        ButyleneParseException exception = assertThrows(ButyleneParseException.class, () -> fromString(data));
-
-        assertEquals(1, exception.getLine(), exception.getMessage());
-        assertEquals(15, exception.getColumn(), exception.getMessage());
-    }
-
-    @Test
     void valueCases() {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
-        ConfigElement reqs = assertDoesNotThrow(() -> fromInputStream(classloader.getResourceAsStream("reqs/reqs.butylene")));
+        ConfigElement reqs = assertDoesNotThrow(() ->
+            fromInputStream(classloader.getResourceAsStream("reqs/reqs.butylene")), "reqs/reqs.butylene");
         assertTrue(reqs.isNode());
 
         ConfigNode reqNode = reqs.asNode();
 
-        for (int i = 1; i <= 12; i++) {
+        for (int i = 1; i <= 16; i++) {
             String caseName = "reqs/case_" + i + ".butylene";
 
             InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);
@@ -76,7 +47,7 @@ class ParserTest {
 
     @Test
     // test cases adapted from https://github.com/nst/JSONTestSuite/
-    void nstJsonSuite() {
+    void nstJsonSuitePass() {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         // all pass_*.json must validate
@@ -86,6 +57,11 @@ class ParserTest {
 
             assertDoesNotThrow(() -> fromInputStream(is), name);
         }
+    }
+
+    @Test
+    void nstJsonSuiteFail() {
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         Set<Integer> failExcludes = Set.of(
             37, 58, 63, 69, // NaN and Infinity are valid values in Butylene
@@ -104,11 +80,15 @@ class ParserTest {
             String name = "nst_suite/fail_" + i + ".json";
             InputStream is = Objects.requireNonNull(classloader.getResourceAsStream(name), name);
 
-            assertThrows(IOException.class, () -> fromInputStream(is), name);
+            assertThrows(ButyleneParseException.class, () -> fromInputStream(is), name);
         }
+    }
+
+    @Test
+    void nstJsonSuiteOpt() {
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         Set<Integer> optExcludes = Set.of(
-            11, 12, 13, 17, 18, 19, 20, 21, 23, 25, // invalid surrogate pairs in strings aren't valid Butylene
             14, // replacement characters aren't valid whitespace
             32, 33, 35// null bytes aren't either
         );
@@ -125,15 +105,20 @@ class ParserTest {
 
     @Test
     // uses the test files found at https://www.json.org/JSON_checker/, with some added cases
-    void jsonNetSuite() {
+    void jsonNetSuitePass() {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         for (int i = 1; i <= 3; i++) {
             String name = "json_net/pass" + i + ".json";
             InputStream is = Objects.requireNonNull(classloader.getResourceAsStream(name), name);
 
-            assertDoesNotThrow(() -> fromInputStream(is));
+            assertDoesNotThrow(() -> fromInputStream(is), name);
         }
+    }
+
+    @Test
+    void jsonNetSuiteFail() {
+        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
         // we need to ignore a few of the "fail" tests, because although they contain invalid json, they actually
         // contain valid Butylene
@@ -149,7 +134,8 @@ class ParserTest {
 
             String name = "json_net/fail" + i + ".json";
             InputStream is = Objects.requireNonNull(classloader.getResourceAsStream(name), name);
-            assertThrows(IOException.class, () -> fromInputStream(is));
+
+            assertThrows(ButyleneParseException.class, () -> fromInputStream(is), name);
         }
     }
 }

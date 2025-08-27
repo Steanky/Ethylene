@@ -3,3 +3,4 @@ other_nan: -NaN
 pos_nan: +NaN
 infinity: +Infinity
 neg_infinity: -Infinity
+unsigned_infinity: Infinity
