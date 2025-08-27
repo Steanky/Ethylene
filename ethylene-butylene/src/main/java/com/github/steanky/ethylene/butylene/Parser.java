@@ -118,12 +118,12 @@ public class Parser {
         /**
          * Parsing an unquoted ANCHOR token.
          */
-        ANCHOR_OR_OVERRIDE,
+        ANCHOR,
 
         /**
          * Parsing an unquoted REFERENCE token.
          */
-        REFERENCE,
+        REFERENCE_OR_OVERRIDE,
 
         /**
          * Parsing a quoted TEXT token.
@@ -162,7 +162,7 @@ public class Parser {
         /**
          * Anchor unquoted text.
          */
-        ANCHOR_OR_OVERRIDE,
+        ANCHOR,
 
         /**
          * Reference unquoted text.
@@ -211,8 +211,8 @@ public class Parser {
 
     private static boolean mayTerminateUnquotedText(int character, @NotNull UnquotedTextMode mode) {
         // anchors are terminated by a space, a {, or a [
-        if (mode == UnquotedTextMode.ANCHOR_OR_OVERRIDE) return switch (character) {
-            case SPACE, MAP_START, LIST_START, MAP_END, LIST_END, LINE_FEED, CARRIAGE_RETURN -> true;
+        if (mode == UnquotedTextMode.ANCHOR) return switch (character) {
+            case SPACE, TAB, MAP_START, LIST_START, LINE_FEED, CARRIAGE_RETURN -> true;
             default -> false;
         };
 
@@ -458,8 +458,8 @@ public class Parser {
                     case UNQUOTED_TEXT -> doUnquotedText(UnquotedTextMode.NORMAL);
                     case UNQUOTED_TEXT_TERMINATOR -> doUnquotedTextTerminatorLookahead(UnquotedTextMode.NORMAL);
                     case UNQUOTED_TEXT_TERMINATOR_REFERENCE -> doUnquotedTextTerminatorLookahead(UnquotedTextMode.REFERENCE);
-                    case ANCHOR_OR_OVERRIDE -> doUnquotedText(UnquotedTextMode.ANCHOR_OR_OVERRIDE);
-                    case REFERENCE -> doUnquotedText(UnquotedTextMode.REFERENCE);
+                    case ANCHOR -> doUnquotedText(UnquotedTextMode.ANCHOR);
+                    case REFERENCE_OR_OVERRIDE -> doUnquotedText(UnquotedTextMode.REFERENCE);
                     case QUOTED_TEXT -> doQuotedText(reader.next());
                     case LINE_COMMENT -> doLineComment(reader.next(), TokenizerState.SEEK);
                     case MULTILINE_COMMENT -> doMultilineComment(reader.next(), TokenizerState.SEEK);
@@ -502,17 +502,17 @@ public class Parser {
                 case LIST_END -> Token.LIST_END;
 
                 case ANCHOR -> {
-                    state = TokenizerState.ANCHOR_OR_OVERRIDE;
+                    state = TokenizerState.ANCHOR;
                     yield Token.ANCHOR;
                 }
 
                 case REFERENCE -> {
-                    state = TokenizerState.REFERENCE;
+                    state = TokenizerState.REFERENCE_OR_OVERRIDE;
                     yield Token.REFERENCE;
                 }
 
                 case OVERRIDE -> {
-                    state = TokenizerState.ANCHOR_OR_OVERRIDE;
+                    state = TokenizerState.REFERENCE_OR_OVERRIDE;
                     yield Token.OVERRIDE;
                 }
 
@@ -552,7 +552,7 @@ public class Parser {
             // a separate token)
             int preview = reader.peekNext();
 
-            if (mode != UnquotedTextMode.ANCHOR_OR_OVERRIDE) {
+            if (mode != UnquotedTextMode.ANCHOR) {
                 switch (preview) {
                     // spaces and tabs MAY terminate unquoted text, but only if it is proceeded by non-text
                     case SPACE, TAB -> {

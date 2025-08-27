@@ -4,7 +4,7 @@
 4: "true"
 5: "'top-level scalar'"
 6: "{inner=&0{key=false, inner=&0}}"
-7: "{list=[0B, 1B, 2B], override=[-1B, 0B, 1B, 2B]}"
+7: "{list=[0B, 1B, 2B], override=[-1B, 0B, 1B, 2B, 3B, 4B, 5B]}"
 8: "[0B, 1B, true, false, 0B, 'string']"
 9: "[0B, 1B, 'value', 'value', {key='value', suffer=[0B, 1B]}]"
 10: "{nan=NaNF, other_nan=NaNF, pos_nan=NaNF, infinity=InfinityF, neg_infinity=-InfinityF, unsigned_infinity=InfinityF}"
