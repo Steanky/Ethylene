@@ -17,6 +17,7 @@
 17: "{first_list=[0B, 1B, 2B, 3B], first_override=[1B, 2B, 5B], second_override=[5B], composite=[1B, 2B, 5B, 5B]}"
 18: "{override_map={first=0B, second=42B}, override_map_2={first=0B}, override_map_3={first=1B}, test={first=42B, third=4B, second=42B}, test_1={first=0B}}"
 19: "{first=['The overwriting list'], reference_overwritten=['The overwritten list'], reference_overwritten_2=['The overwritten list'], overwriting_list=['The overwriting list']}"
+20: "{list=[0B, 1B, 2B, 3B, 4B, 5B, 6B, 7B, 8B, 9B, 10B], a=[1B, 2B], b=[4B, 5B, 6B], c=[9B, 10B]}"
 fails: {
   1: {
     message: "duplicate anchor name"
@@ -29,5 +30,25 @@ fails: {
     token: "*bad_reference"
     line: 1
     column: 46
+  }
+  3: {
+    message: "type referenced by override must match the container"
+    token: ">override"
+    line: 4
+    column: 13
+  }
+  4: {
+    message: "invalid character in unquoted literal"
+    token: ".000"
+    tokenIndex: 0
+    line: 9
+    column: 4
+  }
+  5: {
+    message: "invalid character in unquoted literal"
+    token: "0x.00043"
+    tokenIndex: 1
+    line: 12
+    column: 6
   }
 }

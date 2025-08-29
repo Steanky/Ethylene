@@ -1,0 +1,4 @@
+target: &override [ 0 ]
+
+// referencing wrong type for override
+mismatch: { >override }

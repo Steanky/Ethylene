@@ -776,7 +776,7 @@ public class Parser {
 
     private static @NotNull ButyleneParseException missingAnchor(@NotNull DeferredResolve deferredResolve) {
         return missingAnchor((deferredResolve.isReference ? "*" : ">") + deferredResolve.name,
-            deferredResolve.tokenLine, deferredResolve.tokenColumn - 1);
+            deferredResolve.tokenLine, deferredResolve.tokenColumn);
     }
 
     public static @NotNull ConfigElement fromReader(@NotNull Reader reader,
@@ -928,6 +928,9 @@ public class Parser {
                     }
 
                     case REFERENCE, OVERRIDE -> {
+                        int tokenLine = tokenizer.tokenLine;
+                        int tokenColumn = tokenizer.tokenColumn;
+
                         if (tokenizer.next() != Token.UNQUOTED_TEXT) throw invalidToken(token, tokenizer);
                         if (anchorName != null)
                             throw invalidToken("anchor before reference or override", token, tokenizer);
@@ -947,11 +950,11 @@ public class Parser {
 
                             DeferredResolve resolve;
                             if (contextNode != null)
-                                resolve = new DeferredResolve(name, key, -1, context, tokenizer.tokenLine,
-                                    tokenizer.tokenColumn, isReference);
+                                resolve = new DeferredResolve(name, key, -1, context, tokenLine, tokenColumn,
+                                    isReference);
                             else {
-                                resolve = new DeferredResolve(name, null, contextList.size(), context,
-                                    tokenizer.tokenLine, tokenizer.tokenColumn, isReference);
+                                resolve = new DeferredResolve(name, null, contextList.size(), context, tokenLine,
+                                    tokenColumn, isReference);
 
                                 // temporary value to occupy this index
                                 if (isReference) contextList.add(ConfigPrimitive.NULL);
@@ -1024,8 +1027,8 @@ public class Parser {
             }
 
             if ((referenced.isNode() && !container.isNode()) || (referenced.isList() && !container.isList()))
-                throw new ButyleneParseException("type referenced by override must match the container", deferred.name,
-                    -1, deferred.tokenLine, deferred.tokenColumn);
+                throw new ButyleneParseException("type referenced by override must match the container",
+                    ">" + deferred.name, -1, deferred.tokenLine, deferred.tokenColumn);
 
             // because of how items are added to the deferred list, overrides come after all references
             if (container.isNode()) {

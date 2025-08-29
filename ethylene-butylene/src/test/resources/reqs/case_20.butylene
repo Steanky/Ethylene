@@ -1,0 +1,4 @@
+list: [ 0, >one_two, 3, >four_five_six, 7, 8, >nine_ten ]
+a: &one_two [ 1, 2 ]
+b: &four_five_six [ 4, 5, 6 ]
+c: &nine_ten [ 9, 10 ]

@@ -36,7 +36,7 @@ class ParserTest {
         ConfigNode reqNode = reqs.asNode();
         ConfigNode fails = reqs.at("fails").asNode();
 
-        for (int i = 1; i <= 19; i++) {
+        for (int i = 1; i <= 20; i++) {
             String caseName = "reqs/case_" + i + ".butylene";
 
             InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);
@@ -45,7 +45,7 @@ class ParserTest {
             assertEquals(reqNode.at(String.valueOf(i)).asString(), element.toString(), caseName);
         }
 
-        for (int i = 1; i <= 2; i++) {
+        for (int i = 1; i <= 5; i++) {
             String caseName = "reqs/fail_" + i + ".butylene";
 
             InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);
@@ -53,10 +53,11 @@ class ParserTest {
 
             ConfigNode failData = fails.at(String.valueOf(i)).asNode();
 
-            assertEquals(failData.stringAtOrDefault("message", ""), e.getDescription(), "error description");
-            assertEquals(failData.stringAtOrDefault("token", (String) null), e.getToken(), "error token");
-            assertEquals(failData.numberAtOrDefault("line", -1).intValue(), e.getLine(), "error line");
-            assertEquals(failData.numberAtOrDefault("column", -1).intValue(), e.getColumn(), "error column");
+            assertEquals(failData.stringAtOrDefault("message", ""), e.getDescription(), caseName + ": error description");
+            assertEquals(failData.stringAtOrDefault("token", (String) null), e.getToken(), caseName + ": error token");
+            assertEquals(failData.numberAtOrDefault("line", -1).intValue(), e.getLine(), caseName + ": error line");
+            assertEquals(failData.numberAtOrDefault("column", -1).intValue(), e.getColumn(), caseName + ": error column");
+            assertEquals(failData.numberAtOrDefault("tokenIndex", -1).intValue(), e.getTokenIndex(), caseName + ": token index");
         }
     }
 
