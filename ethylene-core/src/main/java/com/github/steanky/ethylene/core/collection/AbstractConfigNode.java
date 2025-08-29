@@ -75,4 +75,9 @@ public abstract class AbstractConfigNode extends AbstractMap<String, ConfigEleme
         this.elementCollectionView = elementCollection = Collections.unmodifiableCollection(this.values());
         return elementCollection;
     }
+
+    @Override
+    public int length() {
+        return size();
+    }
 }

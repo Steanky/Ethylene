@@ -207,8 +207,8 @@ public interface ConfigElement {
      * @param defaultElementSupplier the supplier of default values
      * @return the element at the given path, or the default value
      */
-    default @NotNull ConfigElement atOrDefault(@NotNull String path,
-        @NotNull Supplier<? extends @NotNull ConfigElement> defaultElementSupplier) {
+    default ConfigElement atOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends ConfigElement> defaultElementSupplier) {
         return atOrDefault(ConfigPath.of(path), defaultElementSupplier);
     }
 
@@ -220,9 +220,12 @@ public interface ConfigElement {
      * @param defaultElementSupplier the default value supplier; must return a non-null value
      * @return the ConfigElement present at the path, or the generated non-null default if it does not exist
      */
-    default @NotNull ConfigElement atOrDefault(@NotNull ConfigPath path,
-        @NotNull Supplier<? extends @NotNull ConfigElement> defaultElementSupplier) {
-        return Objects.requireNonNullElseGet(at(path), defaultElementSupplier);
+    default ConfigElement atOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends ConfigElement> defaultElementSupplier) {
+        ConfigElement e = at(path);
+        if (e == null) return defaultElementSupplier.get();
+
+        return e;
     }
 
     /**
@@ -233,7 +236,7 @@ public interface ConfigElement {
      * @param defaultElement the default element
      * @return the element at the given path, or the default value if it does not exist
      */
-    default @NotNull ConfigElement atOrDefault(@NotNull String path, @NotNull ConfigElement defaultElement) {
+    default ConfigElement atOrDefault(@NotNull String path, ConfigElement defaultElement) {
         return atOrDefault(ConfigPath.of(path), defaultElement);
     }
 
@@ -245,8 +248,11 @@ public interface ConfigElement {
      * @param defaultElement the default element
      * @return the ConfigElement present at the path, or the non-null default if it does not exist
      */
-    default @NotNull ConfigElement atOrDefault(@NotNull ConfigPath path, @NotNull ConfigElement defaultElement) {
-        return Objects.requireNonNullElse(at(path), defaultElement);
+    default ConfigElement atOrDefault(@NotNull ConfigPath path, ConfigElement defaultElement) {
+        ConfigElement e = at(path);
+        if (e != null) return e;
+
+        return defaultElement;
     }
 
     /**
@@ -257,9 +263,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull ConfigContainer containerAtOrDefault(@NotNull ConfigPath path, @NotNull ConfigContainer defaultValue) {
-        Objects.requireNonNull(defaultValue);
-
+    default ConfigContainer containerAtOrDefault(@NotNull ConfigPath path, ConfigContainer defaultValue) {
         ConfigElement element = at(path);
         if (element == null || !element.isContainer()) {
             return defaultValue;
@@ -276,7 +280,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull ConfigContainer containerAtOrDefault(@NotNull String path, @NotNull ConfigContainer defaultValue) {
+    default ConfigContainer containerAtOrDefault(@NotNull String path, ConfigContainer defaultValue) {
         return containerAtOrDefault(ConfigPath.of(path), defaultValue);
     }
 
@@ -288,13 +292,13 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull ConfigContainer containerAtOrDefault(@NotNull ConfigPath path,
-        @NotNull Supplier<? extends @NotNull ConfigContainer> defaultSupplier) {
+    default ConfigContainer containerAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends ConfigContainer> defaultSupplier) {
         Objects.requireNonNull(defaultSupplier);
 
         ConfigElement element = at(path);
         if (element == null || !element.isContainer()) {
-            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+            return defaultSupplier.get();
         }
 
         return element.asContainer();
@@ -308,8 +312,8 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull ConfigContainer containerAtOrDefault(@NotNull String path,
-        @NotNull Supplier<? extends @NotNull ConfigContainer> defaultSupplier) {
+    default ConfigContainer containerAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends ConfigContainer> defaultSupplier) {
         return containerAtOrDefault(ConfigPath.of(path), defaultSupplier);
     }
 
@@ -321,9 +325,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull ConfigNode nodeAtOrDefault(@NotNull ConfigPath path, @NotNull ConfigNode defaultValue) {
-        Objects.requireNonNull(defaultValue);
-
+    default ConfigNode nodeAtOrDefault(@NotNull ConfigPath path, ConfigNode defaultValue) {
         ConfigElement element = at(path);
         if (element == null || !element.isNode()) {
             return defaultValue;
@@ -340,7 +342,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull ConfigNode nodeAtOrDefault(@NotNull String path, @NotNull ConfigNode defaultValue) {
+    default ConfigNode nodeAtOrDefault(@NotNull String path, ConfigNode defaultValue) {
         return nodeAtOrDefault(ConfigPath.of(path), defaultValue);
     }
 
@@ -352,13 +354,13 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull ConfigNode nodeAtOrDefault(@NotNull ConfigPath path,
-        @NotNull Supplier<? extends @NotNull ConfigNode> defaultSupplier) {
+    default ConfigNode nodeAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends ConfigNode> defaultSupplier) {
         Objects.requireNonNull(defaultSupplier);
 
         ConfigElement element = at(path);
         if (element == null || !element.isNode()) {
-            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+            return defaultSupplier.get();
         }
 
         return element.asNode();
@@ -372,8 +374,8 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull ConfigNode nodeAtOrDefault(@NotNull String path,
-        @NotNull Supplier<? extends @NotNull ConfigNode> defaultSupplier) {
+    default ConfigNode nodeAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends ConfigNode> defaultSupplier) {
         return nodeAtOrDefault(ConfigPath.of(path), defaultSupplier);
     }
 
@@ -385,9 +387,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull ConfigList listAtOrDefault(@NotNull ConfigPath path, @NotNull ConfigList defaultValue) {
-        Objects.requireNonNull(defaultValue);
-
+    default ConfigList listAtOrDefault(@NotNull ConfigPath path, ConfigList defaultValue) {
         ConfigElement element = at(path);
         if (element == null || !element.isList()) {
             return defaultValue;
@@ -404,7 +404,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull ConfigList listAtOrDefault(@NotNull String path, @NotNull ConfigList defaultValue) {
+    default ConfigList listAtOrDefault(@NotNull String path, ConfigList defaultValue) {
         return listAtOrDefault(ConfigPath.of(path), defaultValue);
     }
 
@@ -416,13 +416,13 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull ConfigList listAtOrDefault(@NotNull ConfigPath path,
-        @NotNull Supplier<? extends @NotNull ConfigList> defaultSupplier) {
+    default ConfigList listAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends ConfigList> defaultSupplier) {
         Objects.requireNonNull(defaultSupplier);
 
         ConfigElement element = at(path);
         if (element == null || !element.isList()) {
-            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+            return defaultSupplier.get();
         }
 
         return element.asList();
@@ -436,8 +436,8 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull ConfigList listAtOrDefault(@NotNull String path,
-        @NotNull Supplier<? extends @NotNull ConfigList> defaultSupplier) {
+    default ConfigList listAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends ConfigList> defaultSupplier) {
         return listAtOrDefault(ConfigPath.of(path), defaultSupplier);
     }
 
@@ -511,9 +511,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull Number numberAtOrDefault(@NotNull ConfigPath path, @NotNull Number defaultValue) {
-        Objects.requireNonNull(defaultValue);
-
+    default Number numberAtOrDefault(@NotNull ConfigPath path, Number defaultValue) {
         ConfigElement element = at(path);
         if (element == null || !element.isNumber()) {
             return defaultValue;
@@ -530,7 +528,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull Number numberAtOrDefault(@NotNull String path, @NotNull Number defaultValue) {
+    default Number numberAtOrDefault(@NotNull String path, Number defaultValue) {
         return numberAtOrDefault(ConfigPath.of(path), defaultValue);
     }
 
@@ -542,13 +540,13 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull Number numberAtOrDefault(@NotNull ConfigPath path,
-        @NotNull Supplier<? extends @NotNull Number> defaultSupplier) {
+    default Number numberAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends Number> defaultSupplier) {
         Objects.requireNonNull(defaultSupplier);
 
         ConfigElement element = at(path);
         if (element == null || !element.isNumber()) {
-            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+            return defaultSupplier.get();
         }
 
         return element.asNumber();
@@ -562,8 +560,8 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull Number numberAtOrDefault(@NotNull String path,
-        @NotNull Supplier<? extends @NotNull Number> defaultSupplier) {
+    default Number numberAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends Number> defaultSupplier) {
         return numberAtOrDefault(ConfigPath.of(path), defaultSupplier);
     }
 
@@ -575,9 +573,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull String stringAtOrDefault(@NotNull ConfigPath path, @NotNull String defaultValue) {
-        Objects.requireNonNull(defaultValue);
-
+    default String stringAtOrDefault(@NotNull ConfigPath path, String defaultValue) {
         ConfigElement element = at(path);
         if (element == null || !element.isString()) {
             return defaultValue;
@@ -594,7 +590,7 @@ public interface ConfigElement {
      * @param defaultValue the default value
      * @return the object at the path, else the default value
      */
-    default @NotNull String stringAtOrDefault(@NotNull String path, @NotNull String defaultValue) {
+    default String stringAtOrDefault(@NotNull String path, String defaultValue) {
         return stringAtOrDefault(ConfigPath.of(path), defaultValue);
     }
 
@@ -606,13 +602,13 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull String stringAtOrDefault(@NotNull ConfigPath path,
-        @NotNull Supplier<? extends @NotNull String> defaultSupplier) {
+    default String stringAtOrDefault(@NotNull ConfigPath path,
+        @NotNull Supplier<? extends String> defaultSupplier) {
         Objects.requireNonNull(defaultSupplier);
 
         ConfigElement element = at(path);
         if (element == null || !element.isString()) {
-            return Objects.requireNonNull(defaultSupplier.get(), "default value supplier");
+            return defaultSupplier.get();
         }
 
         return element.asString();
@@ -626,8 +622,8 @@ public interface ConfigElement {
      * @param defaultSupplier the default value supplier, which must return a non-null value
      * @return the object at the path, else the computed default value
      */
-    default @NotNull String stringAtOrDefault(@NotNull String path,
-        @NotNull Supplier<? extends @NotNull String> defaultSupplier) {
+    default String stringAtOrDefault(@NotNull String path,
+        @NotNull Supplier<? extends String> defaultSupplier) {
         return stringAtOrDefault(ConfigPath.of(path), defaultSupplier);
     }
 

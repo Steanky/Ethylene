@@ -34,14 +34,29 @@ class ParserTest {
         assertTrue(reqs.isNode());
 
         ConfigNode reqNode = reqs.asNode();
+        ConfigNode fails = reqs.at("fails").asNode();
 
-        for (int i = 1; i <= 16; i++) {
+        for (int i = 1; i <= 19; i++) {
             String caseName = "reqs/case_" + i + ".butylene";
 
             InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);
             ConfigElement element = assertDoesNotThrow(() -> fromInputStream(caseStream), caseName);
 
             assertEquals(reqNode.at(String.valueOf(i)).asString(), element.toString(), caseName);
+        }
+
+        for (int i = 1; i <= 2; i++) {
+            String caseName = "reqs/fail_" + i + ".butylene";
+
+            InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);
+            ButyleneParseException e = assertThrows(ButyleneParseException.class, () -> fromInputStream(caseStream), caseName);
+
+            ConfigNode failData = fails.at(String.valueOf(i)).asNode();
+
+            assertEquals(failData.stringAtOrDefault("message", ""), e.getDescription(), "error description");
+            assertEquals(failData.stringAtOrDefault("token", (String) null), e.getToken(), "error token");
+            assertEquals(failData.numberAtOrDefault("line", -1).intValue(), e.getLine(), "error line");
+            assertEquals(failData.numberAtOrDefault("column", -1).intValue(), e.getColumn(), "error column");
         }
     }
 

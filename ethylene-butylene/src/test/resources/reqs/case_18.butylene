@@ -1,0 +1,29 @@
+// test overrides for maps
+
+override_map: &source {
+  first: 0
+  second: 42
+}
+
+override_map_2: &source_2 {
+  first: 0
+}
+
+override_map_3: &source_3 {
+  first: 1
+}
+
+test: {
+  first: 42
+  third: 4
+
+  // the override shouldn't replace the value of 'first' with 0, because it's already defined explicitly
+  >source
+}
+
+test_1: {
+  // overrides are always evaluated top-down, but won't replace values ever
+  // so, first: 0
+  >source_2
+  >source_3
+}

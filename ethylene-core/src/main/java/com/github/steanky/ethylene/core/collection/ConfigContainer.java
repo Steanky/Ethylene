@@ -153,4 +153,14 @@ public interface ConfigContainer extends ConfigElement {
     default void minimizeStorage() {
         // no-op
     }
+
+    /**
+     * The size of this container. By default, just calls {@code elementCollection().size()}. Implementations are
+     * encouraged to override this method.
+     *
+     * @return the size of this container
+     */
+    default int length() {
+        return elementCollection().size();
+    }
 }

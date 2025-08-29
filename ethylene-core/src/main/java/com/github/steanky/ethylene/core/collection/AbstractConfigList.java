@@ -74,4 +74,9 @@ public abstract class AbstractConfigList extends AbstractList<ConfigElement> imp
         this.elementCollectionView = elementCollection = Collections.unmodifiableCollection(this);
         return elementCollection;
     }
+
+    @Override
+    public int length() {
+        return size();
+    }
 }

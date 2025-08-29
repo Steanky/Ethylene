@@ -1,0 +1,2 @@
+duplicate_anchor: &test ""
+anchor_used_again: &test 42

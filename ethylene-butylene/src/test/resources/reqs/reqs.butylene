@@ -14,3 +14,20 @@
 14: "{}"
 15: "'this top-level value has a useless anchor, but that\\'s actually allowed'"
 16: "[0B, 1B, 2B, 3B, 4B, 5B, 5B]"
+17: "{first_list=[0B, 1B, 2B, 3B], first_override=[1B, 2B, 5B], second_override=[5B], composite=[1B, 2B, 5B, 5B]}"
+18: "{override_map={first=0B, second=42B}, override_map_2={first=0B}, override_map_3={first=1B}, test={first=42B, third=4B, second=42B}, test_1={first=0B}}"
+19: "{first=['The overwriting list'], reference_overwritten=['The overwritten list'], reference_overwritten_2=['The overwritten list'], overwriting_list=['The overwriting list']}"
+fails: {
+  1: {
+    message: "duplicate anchor name"
+    token: "&test"
+    line: 2
+    column: 20
+  }
+  2: {
+    message: "missing anchor"
+    token: "*bad_reference"
+    line: 1
+    column: 46
+  }
+}

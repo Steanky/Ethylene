@@ -1,0 +1,6 @@
+first: &overwritten [ "The overwritten list" ]
+first: &second [ "The overwriting list" ]
+
+reference_overwritten: [ >overwritten ]
+reference_overwritten_2: *overwritten
+overwriting_list: [ >second ]

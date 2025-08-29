@@ -8,7 +8,6 @@ import com.github.steanky.ethylene.core.collection.ConfigNode;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -111,42 +110,14 @@ public class Parser {
         UNQUOTED_TEXT_TERMINATOR,
 
         /**
-         * Same as UNQUOTED_TEXT_TERMINATOR, but for references instead of text.
-         */
-        UNQUOTED_TEXT_TERMINATOR_REFERENCE,
-
-        /**
          * Parsing an unquoted ANCHOR token.
          */
         ANCHOR,
 
         /**
-         * Parsing an unquoted REFERENCE token.
-         */
-        REFERENCE_OR_OVERRIDE,
-
-        /**
          * Parsing a quoted TEXT token.
          */
         QUOTED_TEXT,
-
-        /**
-         * Parsing a single-line comment.
-         */
-        LINE_COMMENT,
-
-        /**
-         * Parsing a multiline comment.
-         */
-        MULTILINE_COMMENT,
-
-        LINE_COMMENT_UNQUOTED_NORMAL,
-
-        LINE_COMMENT_UNQUOTED_REFERENCE,
-
-        MULTILINE_COMMENT_UNQUOTED_NORMAL,
-
-        MULTILINE_COMMENT_UNQUOTED_REFERENCE,
     }
 
     /**
@@ -154,8 +125,8 @@ public class Parser {
      */
     private enum UnquotedTextMode {
         /**
-         * "Normal" unquoted text, that is not an anchor or reference. This may be the key part of a key-value pair, or
-         * an unquoted string.
+         * "Normal" unquoted text, that is not an anchor. This is the key part of a key:value pair, an unquoted literal
+         * like {@code true}, {@code null} or {@code 42}, or an override/reference.
          */
         NORMAL,
 
@@ -163,11 +134,6 @@ public class Parser {
          * Anchor unquoted text.
          */
         ANCHOR,
-
-        /**
-         * Reference unquoted text.
-         */
-        REFERENCE
     }
 
     private static final int SPACE = ' ';
@@ -215,15 +181,6 @@ public class Parser {
             case SPACE, TAB, MAP_START, LIST_START, LINE_FEED, CARRIAGE_RETURN -> true;
             default -> false;
         };
-
-        if (mode == UnquotedTextMode.REFERENCE) {
-            return switch (character) {
-                case VALUE_SEPARATOR, MAP_END,
-                     LIST_END, LINE_FEED, CARRIAGE_RETURN -> true;
-
-                default -> false;
-            };
-        }
 
         return switch (character) {
             // carriage return may terminate as well, which conveniently lets us work with CRLF endings
@@ -373,7 +330,7 @@ public class Parser {
 
     private static final class Tokenizer {
         private final ButyleneReader reader;
-        private final StringBuilder buffer;
+        private StringBuilder buffer;
 
         private TokenizerState state;
 
@@ -383,9 +340,15 @@ public class Parser {
         private boolean expectLowSurrogate;
         private char highSurrogate;
 
+        private Token nextToken;
+        private int nextTokenLine;
+        private int nextTokenColumn;
+        private StringBuilder nextBuffer;
+
         private Tokenizer(@NotNull ButyleneReader reader) {
             this.reader = Objects.requireNonNull(reader);
             this.buffer = new StringBuilder();
+            this.nextBuffer = new StringBuilder();
 
             this.state = TokenizerState.SEEK;
         }
@@ -444,9 +407,48 @@ public class Parser {
             return (char) ((one << 12) | (two << 8) | (three << 4) | four);
         }
 
-        private @NotNull Token next() throws IOException {
-            buffer.setLength(0);
+        private void swapBuffers() {
+            StringBuilder saved = nextBuffer;
 
+            nextBuffer = buffer;
+            buffer = saved;
+        }
+
+        private @NotNull Token peekNext() throws IOException {
+            if (nextToken != null) return nextToken;
+
+            swapBuffers();
+            int lineSave = tokenLine;
+            int columnSave = tokenColumn;
+
+            nextToken = next();
+
+            nextTokenLine = tokenLine;
+            nextTokenColumn = tokenColumn;
+
+            tokenLine = lineSave;
+            tokenColumn = columnSave;
+            swapBuffers();
+
+            return nextToken;
+        }
+
+        private @NotNull Token next() throws IOException {
+            if (nextToken != null) {
+                Token nextSave = nextToken;
+                nextToken = null;
+
+                tokenLine = nextTokenLine;
+                tokenColumn = nextTokenColumn;
+
+                nextTokenLine = 0;
+                nextTokenColumn = 0;
+
+                nextBuffer.setLength(0);
+                return nextSave;
+            }
+
+            buffer.setLength(0);
             Token nextToken;
 
             do {
@@ -456,17 +458,9 @@ public class Parser {
                 nextToken = switch (state) {
                     case SEEK -> doSeek(reader.next());
                     case UNQUOTED_TEXT -> doUnquotedText(UnquotedTextMode.NORMAL);
-                    case UNQUOTED_TEXT_TERMINATOR -> doUnquotedTextTerminatorLookahead(UnquotedTextMode.NORMAL);
-                    case UNQUOTED_TEXT_TERMINATOR_REFERENCE -> doUnquotedTextTerminatorLookahead(UnquotedTextMode.REFERENCE);
+                    case UNQUOTED_TEXT_TERMINATOR -> doUnquotedTextTerminator();
                     case ANCHOR -> doUnquotedText(UnquotedTextMode.ANCHOR);
-                    case REFERENCE_OR_OVERRIDE -> doUnquotedText(UnquotedTextMode.REFERENCE);
                     case QUOTED_TEXT -> doQuotedText(reader.next());
-                    case LINE_COMMENT -> doLineComment(reader.next(), TokenizerState.SEEK);
-                    case MULTILINE_COMMENT -> doMultilineComment(reader.next(), TokenizerState.SEEK);
-                    case LINE_COMMENT_UNQUOTED_NORMAL -> doLineComment(reader.next(), TokenizerState.UNQUOTED_TEXT_TERMINATOR);
-                    case LINE_COMMENT_UNQUOTED_REFERENCE -> doLineComment(reader.next(), TokenizerState.UNQUOTED_TEXT_TERMINATOR_REFERENCE);
-                    case MULTILINE_COMMENT_UNQUOTED_NORMAL -> doMultilineComment(reader.next(), TokenizerState.UNQUOTED_TEXT_TERMINATOR);
-                    case MULTILINE_COMMENT_UNQUOTED_REFERENCE -> doMultilineComment(reader.next(), TokenizerState.UNQUOTED_TEXT_TERMINATOR_REFERENCE);
                 };
 
                 if (nextToken != null) {
@@ -507,12 +501,12 @@ public class Parser {
                 }
 
                 case REFERENCE -> {
-                    state = TokenizerState.REFERENCE_OR_OVERRIDE;
+                    state = TokenizerState.UNQUOTED_TEXT;
                     yield Token.REFERENCE;
                 }
 
                 case OVERRIDE -> {
-                    state = TokenizerState.REFERENCE_OR_OVERRIDE;
+                    state = TokenizerState.UNQUOTED_TEXT;
                     yield Token.OVERRIDE;
                 }
 
@@ -522,16 +516,13 @@ public class Parser {
                     if (next == -1)
                         throw new ButyleneParseException("unexpected EOF", "/ ", 1, reader.getLine(), reader.getColumn());
 
-                    state = switch (next) {
-                        // single-line comment
-                        case COMMENT_START -> TokenizerState.LINE_COMMENT;
-
-                        // multi-line comment
-                        case MULTILINE_COMMENT_SIGNIFIER -> TokenizerState.MULTILINE_COMMENT;
+                    switch (next) {
+                        case COMMENT_START -> drainLineComment();
+                        case MULTILINE_COMMENT_SIGNIFIER -> drainMultilineComment();
 
                         default -> throw new ButyleneParseException("invalid character",
                             "/" + Character.toString(next), 1, reader.getLine(), reader.getColumn());
-                    };
+                    }
 
                     yield null;
                 }
@@ -558,10 +549,7 @@ public class Parser {
                     case SPACE, TAB -> {
                         // consume the peeked character
                         reader.next();
-
-                        if (mode == UnquotedTextMode.NORMAL) state = TokenizerState.UNQUOTED_TEXT_TERMINATOR;
-                        else state = TokenizerState.UNQUOTED_TEXT_TERMINATOR_REFERENCE;
-
+                        state = TokenizerState.UNQUOTED_TEXT_TERMINATOR;
                         return null;
                     }
                 }
@@ -587,7 +575,7 @@ public class Parser {
             return null;
         }
 
-        private @Nullable Token doUnquotedTextTerminatorLookahead(@NotNull UnquotedTextMode mode) throws IOException {
+        private @Nullable Token doUnquotedTextTerminator() throws IOException {
             int lookahead = reader.peekNext();
 
             return switch (lookahead) {
@@ -597,7 +585,7 @@ public class Parser {
                 }
 
                 default -> {
-                    if (lookahead == -1 || mayTerminateUnquotedText(lookahead, mode)) {
+                    if (lookahead == -1 || mayTerminateUnquotedText(lookahead, UnquotedTextMode.NORMAL)) {
                         state = TokenizerState.SEEK;
 
                         tokenLine = reader.getLine();
@@ -610,13 +598,8 @@ public class Parser {
 
                         int comment = reader.next();
                         switch (comment) {
-                            case COMMENT_START -> state = (mode == UnquotedTextMode.NORMAL)
-                                ? TokenizerState.LINE_COMMENT_UNQUOTED_NORMAL
-                                : TokenizerState.LINE_COMMENT_UNQUOTED_REFERENCE;
-
-                            case MULTILINE_COMMENT_SIGNIFIER -> state = (mode == UnquotedTextMode.NORMAL)
-                                ? TokenizerState.MULTILINE_COMMENT_UNQUOTED_NORMAL
-                                : TokenizerState.MULTILINE_COMMENT_UNQUOTED_REFERENCE;
+                            case COMMENT_START -> drainLineComment();
+                            case MULTILINE_COMMENT_SIGNIFIER -> drainMultilineComment();
 
                             default -> throw new ButyleneParseException("invalid character",
                                 new String(new int[] { comment }, 0, 1), buffer.length(), reader.getLine(),
@@ -717,41 +700,54 @@ public class Parser {
             return null;
         }
 
-        private @Nullable Token doLineComment(int character, @NotNull TokenizerState revertState) {
-            if (character == -1) {
-                state = revertState;
-                return Token.EOF;
-            }
+        private void drainLineComment() throws IOException {
+            while (true) {
+                int peek = reader.peekNext();
 
-            if (character == LINE_FEED) state = revertState;
-            return null;
+                // don't drain the EOF
+                if (peek == -1) return;
+
+                reader.next();
+                if (peek == LINE_FEED) return;
+            }
+        }
+
+        private void drainMultilineComment() throws IOException {
+            while (true) {
+                int peek = reader.peekNext();
+
+                // EOF in multiline comment is an error
+                if (peek == -1) throw multilineCommentException();
+
+                if (peek != MULTILINE_COMMENT_SIGNIFIER) {
+                    reader.next();
+                    continue;
+                }
+
+                // this is the *
+                reader.next();
+
+                // only exit if we found the terminating */
+                if (reader.next() == COMMENT_START) return;
+            }
         }
 
         private ButyleneParseException multilineCommentException() {
             return new ButyleneParseException("unexpected EOF in multiline comment", null, -1, reader.getLine(),
                 reader.getColumn());
         }
-
-        private @Nullable Token doMultilineComment(int character, @NotNull TokenizerState revertState) throws IOException {
-            if (character == -1) throw multilineCommentException();
-
-            if (character == MULTILINE_COMMENT_SIGNIFIER) {
-                int next = reader.next();
-
-                if (next == -1) throw multilineCommentException();
-                if (next == COMMENT_START) state = revertState;
-            }
-
-            return null;
-        }
     }
 
     private static final class ContainerContext {
         private final ConfigContainer container;
+
+        private boolean foundAny;
         private boolean minimize;
+        private int offset;
 
         private ContainerContext(ConfigContainer container) {
             this.container = container;
+            this.minimize = true;
         }
 
         private void maybeMinimize() {
@@ -759,24 +755,7 @@ public class Parser {
         }
     }
 
-    @VisibleForTesting
-    public record TokenData(Token token, String value) {}
-
-    @VisibleForTesting
-    public static List<TokenData> tokenize(@NotNull Reader reader) throws IOException {
-        Tokenizer tokenizer = new Tokenizer(new ButyleneReader(reader));
-
-        List<TokenData> data = new ArrayList<>();
-        Token token;
-        do {
-            token = tokenizer.next();
-            data.add(new TokenData(token, tokenizer.buffer.toString()));
-        } while (token != Token.EOF);
-
-        return data;
-    }
-
-    private record DeferredResolve(String name, String key, int idx, ConfigList list, ConfigNode map, int tokenLine, int tokenColumn, boolean isReference) { }
+    private record DeferredResolve(String name, String key, int idx, ContainerContext context, int tokenLine, int tokenColumn, boolean isReference) { }
 
     private static @NotNull ButyleneParseException invalidToken(@NotNull String string, @NotNull Token token, @NotNull Tokenizer tokenizer) {
         return new ButyleneParseException(string, tokenizer.display(token), -1, tokenizer.tokenLine,
@@ -792,11 +771,12 @@ public class Parser {
     }
 
     private static @NotNull ButyleneParseException missingAnchor(@NotNull String name, int tokenLine, int tokenColumn) {
-        return new ButyleneParseException("missing corresponding anchor", name, -1, tokenLine, tokenColumn);
+        return new ButyleneParseException("missing anchor", name, -1, tokenLine, tokenColumn);
     }
 
     private static @NotNull ButyleneParseException missingAnchor(@NotNull DeferredResolve deferredResolve) {
-        return missingAnchor(deferredResolve.name, deferredResolve.tokenLine, deferredResolve.tokenColumn);
+        return missingAnchor((deferredResolve.isReference ? "*" : ">") + deferredResolve.name,
+            deferredResolve.tokenLine, deferredResolve.tokenColumn - 1);
     }
 
     public static @NotNull ConfigElement fromReader(@NotNull Reader reader,
@@ -806,8 +786,6 @@ public class Parser {
 
         int listDepth = 0;
         int mapDepth = 0;
-
-        Deque<ContainerContext> contextStack = new ArrayDeque<>();
 
         Map<String, ConfigElement> anchorMap = null;
         Deque<DeferredResolve> resolves = null;
@@ -830,7 +808,22 @@ public class Parser {
 
         boolean topLevelMap = token != Token.LIST_START;
         boolean eofClosesTopLevelMap = rootAnchor == null && token != Token.LIST_START && token != Token.MAP_START;
-        boolean maybeTopLevelScalar = token == Token.QUOTED_TEXT || token == Token.UNQUOTED_TEXT;
+
+        if (token == Token.LIST_START || token == Token.MAP_START) {
+            if (token == Token.LIST_START) listDepth ++;
+            else mapDepth++;
+
+            token = tokenizer.next();
+        }
+        else if ((token == Token.UNQUOTED_TEXT || token == Token.QUOTED_TEXT) && tokenizer.peekNext() == Token.EOF) {
+            String value = tokenizer.buffer.toString();
+
+            // handle top-level primitives
+            if (token == Token.QUOTED_TEXT) return ConfigPrimitive.of(value);
+            else return parseUnquotedText(tokenizer, value);
+        }
+
+        Deque<ContainerContext> contextStack = new ArrayDeque<>();
 
         ConfigContainer topLevel = topLevelMap
             ? nodeFunction.apply(INITIAL_CAPACITY)
@@ -841,13 +834,6 @@ public class Parser {
         if (rootAnchor != null) {
             anchorMap = new HashMap<>();
             anchorMap.put(rootAnchor, topLevel);
-        }
-
-        if (token == Token.LIST_START || token == Token.MAP_START) {
-            if (token == Token.LIST_START) listDepth ++;
-            else mapDepth++;
-
-            token = tokenizer.next();
         }
 
         do {
@@ -863,17 +849,16 @@ public class Parser {
             // iterate through container entries
             entryLoop:
             while (true) {
-                if (!context.container.elementCollection().isEmpty() && token == Token.VALUE_SEPARATOR)
-                    token = tokenizer.next();
+                if (context.foundAny && token == Token.VALUE_SEPARATOR) token = tokenizer.next();
+                context.foundAny = true;
 
                 String anchorName = null;
                 String key = null;
-                boolean isTopLevelScalar = false;
 
                 if (contextNode != null && token != Token.OVERRIDE) {
                     // the key part of a key: value pair, or EOF, or a closing curly bracket
                     switch (token) {
-                        case QUOTED_TEXT, UNQUOTED_TEXT -> {}
+                        case QUOTED_TEXT, UNQUOTED_TEXT -> { }
                         case MAP_END -> {
                             if (--mapDepth < 0) throw invalidToken("missing opening brace", token, tokenizer);
                             contextStack.removeLast().maybeMinimize();
@@ -888,35 +873,16 @@ public class Parser {
                         default -> throw invalidToken(token, tokenizer);
                     }
 
-                    // this can also be a plain value, in the case of top-level scalars
                     key = tokenizer.buffer.toString();
-                    switch (tokenizer.next()) {
-                        case VALUE_ASSIGN -> token = tokenizer.next();
-                        case EOF -> {
-                            if (!maybeTopLevelScalar)
-                                throw new ButyleneParseException("expected a value but got EOF instead", null, -1, -1, -1);
-                            isTopLevelScalar = true;
-                        }
 
-                        default -> throw invalidToken(token, tokenizer);
-                    }
+                    Token next = tokenizer.next();
+                    if (next != Token.VALUE_ASSIGN) throw invalidToken(next, tokenizer);
+
+                    token = tokenizer.next();
+
+                    if (token == Token.OVERRIDE)
+                        throw invalidToken("invalid position for override", Token.OVERRIDE, tokenizer);
                 }
-
-                // maybeTopLevelScalar must be true if isTopLevelScalar, so token is QUOTED_TEXT or UNQUOTED_TEXT
-                if (isTopLevelScalar) {
-                    if (token == Token.QUOTED_TEXT) return ConfigPrimitive.of(key);
-                    else return parseUnquotedText(tokenizer, key);
-                }
-
-                // this is never again true for the rest of the document
-                maybeTopLevelScalar = false;
-
-                /*
-                Note: we don't check for duplicate keys! I'd like to disallow it, but doing so breaks JSON compliance
-                (JSON can contain duplicate keys).
-
-                Thus, the duplicate key behavior is to just go with the value of whatever entry comes latest.
-                 */
 
                 // anchors can appear before any value
                 if (token == Token.ANCHOR) {
@@ -926,7 +892,8 @@ public class Parser {
                     anchorName = tokenizer.buffer.toString();
 
                     if (anchorMap != null && anchorMap.containsKey(anchorName))
-                        throw invalidToken("duplicate anchor name", token, tokenizer);
+                        throw new ButyleneParseException("duplicate anchor name", "&" + anchorName, -1,
+                            tokenizer.tokenLine, tokenizer.tokenColumn - 1);
 
                     token = tokenizer.next();
                 }
@@ -969,24 +936,10 @@ public class Parser {
 
                         String name = tokenizer.buffer.toString();
                         ConfigElement referenced;
-                        if (anchorMap != null && (referenced = anchorMap.get(name)) != null) {
-                            if (isReference) {
-                                // no need to defer, we already have the anchor
-                                if (contextNode != null) contextNode.put(key, referenced);
-                                else contextList.add(referenced);
-                            } else {
-                                if (contextNode != null && !referenced.isNode())
-                                    throw invalidToken("referenced data is not a node", token, tokenizer);
-
-                                if (contextList != null && !referenced.isList())
-                                    throw invalidToken("referenced data is not a list", token, tokenizer);
-
-                                if (referenced == contextList || referenced == contextNode)
-                                    throw invalidToken("cannot reference self with override", token, tokenizer);
-
-                                if (contextNode != null) contextNode.putAll(referenced.asNode());
-                                else contextList.addAll(referenced.asList());
-                            }
+                        if (isReference && anchorMap != null && (referenced = anchorMap.get(name)) != null) {
+                            // no need to defer, we already have the anchor
+                            if (contextNode != null) contextNode.put(key, referenced);
+                            else contextList.add(referenced);
                         } else {
                             // references are allowed to refer to anchors that appear later in the config file
                             // so, we defer resolving until later
@@ -994,11 +947,11 @@ public class Parser {
 
                             DeferredResolve resolve;
                             if (contextNode != null)
-                                resolve = new DeferredResolve(name, key, -1, null, contextNode,
-                                    tokenizer.tokenLine, tokenizer.tokenColumn, isReference);
+                                resolve = new DeferredResolve(name, key, -1, context, tokenizer.tokenLine,
+                                    tokenizer.tokenColumn, isReference);
                             else {
-                                resolve = new DeferredResolve(name, null, contextList.size(), contextList,
-                                    null, tokenizer.tokenLine, tokenizer.tokenColumn, isReference);
+                                resolve = new DeferredResolve(name, null, contextList.size(), context,
+                                    tokenizer.tokenLine, tokenizer.tokenColumn, isReference);
 
                                 // temporary value to occupy this index
                                 if (isReference) contextList.add(ConfigPrimitive.NULL);
@@ -1055,30 +1008,40 @@ public class Parser {
         if (token != Token.EOF) throw invalidToken("expected EOF", token, tokenizer);
         if ((resolves != null) && anchorMap == null) throw missingAnchor(resolves.getFirst());
 
-        if (resolves != null) {
-            for (DeferredResolve deferred : resolves) {
-                if (!deferred.isReference) break;
+        if (resolves == null) return topLevel;
 
-                ConfigElement referenced = anchorMap.get(deferred.name);
-                if (referenced == null) throw missingAnchor(deferred);
+        for (DeferredResolve deferred : resolves) {
+            ConfigElement referenced = anchorMap.get(deferred.name);
+            if (referenced == null) throw missingAnchor(deferred);
 
-                if (deferred.map != null) deferred.map.put(deferred.key, referenced);
-                else deferred.list.set(deferred.idx, referenced);
+            ContainerContext context = deferred.context;
+            ConfigContainer container = context.container;
+
+            if (deferred.isReference) {
+                if (container.isNode()) container.asNode().put(deferred.key, referenced);
+                else container.asList().set(deferred.idx, referenced);
+                continue;
             }
 
-            Iterator<DeferredResolve> reverseIterator = resolves.descendingIterator();
-            while (reverseIterator.hasNext()) {
-                DeferredResolve deferred = reverseIterator.next();
-                if (deferred.isReference) break;
+            if ((referenced.isNode() && !container.isNode()) || (referenced.isList() && !container.isList()))
+                throw new ButyleneParseException("type referenced by override must match the container", deferred.name,
+                    -1, deferred.tokenLine, deferred.tokenColumn);
 
-                ConfigElement referenced = anchorMap.get(deferred.name);
-                if (referenced == null) throw missingAnchor(deferred);
-
-                if (deferred.map != null) deferred.map.putAll(referenced.asNode());
-                else {
-                    ConfigList referencedList = referenced.asList();
-                    deferred.list.addAll(deferred.idx, referencedList);
+            // because of how items are added to the deferred list, overrides come after all references
+            if (container.isNode()) {
+                for (Map.Entry<String, ConfigElement> entry : referenced.asNode().entrySet()) {
+                    container.asNode().putIfAbsent(entry.getKey(), entry.getValue());
                 }
+
+                container.asNode().minimizeStorage();
+            }
+            else {
+                ConfigList referencedList = referenced.asList();
+                container.asList().addAll(deferred.idx + context.offset, referencedList);
+                container.asList().minimizeStorage();
+
+                // further indices in the same scope will be
+                context.offset += referencedList.size();
             }
         }
 

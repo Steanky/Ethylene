@@ -62,6 +62,14 @@ public class ButyleneParseException extends IOException {
     }
 
     /**
+     * The error reason.
+     * @return the error reason, or null if non was provided
+     */
+    public String getDescription() {
+        return reason;
+    }
+
+    /**
      * The offending token. May be null if there is no particular malformed token.
      *
      * @return the out of place or otherwise invalid token; or null if there is no such token associated with this

@@ -1,0 +1,9 @@
+plugins {
+    id 'ethylene.library-conventions'
+}
+
+dependencies {
+    compileOnly project(':ethylene-core')
+
+    testImplementation project(':ethylene-core')
+}

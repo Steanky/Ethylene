@@ -1,0 +1,13 @@
+// test override order
+// overrides are evaluated top-down after all references
+// therefore, first_override should insert [ 1, 2 ] at index 1
+
+first_list: [
+  0
+  >first
+  3
+]
+
+first_override: &first [ 1, 2, >second ]
+second_override: &second [ 5 ]
+composite: [ >first, >second  ]
