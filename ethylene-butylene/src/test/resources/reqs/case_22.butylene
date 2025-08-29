@@ -1,0 +1,2 @@
+test: 'single-quoted text can contain nonsense like
+newlines and tabs:	'

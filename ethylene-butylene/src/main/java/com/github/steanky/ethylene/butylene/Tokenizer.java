@@ -40,9 +40,14 @@ class Tokenizer {
         ANCHOR,
 
         /**
-         * Parsing a quoted TEXT token.
+         * Parsing a quoted text token.
          */
         QUOTED_TEXT,
+
+        /**
+         * Parsing a single-quoted text token.
+         */
+        SINGLE_QUOTED_TEXT
     }
 
     /**
@@ -151,15 +156,20 @@ class Tokenizer {
         if (character < 0x20) return false;
 
         return switch (character) {
-            case STRING_DELIMITER, SPACE, VALUE_ASSIGN_CHAR, VALUE_SEPARATOR_CHAR, MAP_START_CHAR, MAP_END_CHAR,
-                 LIST_START_CHAR, LIST_END_CHAR, ANCHOR_CHAR, REFERENCE_CHAR, OVERRIDE_CHAR, COMMENT_START, ESCAPE, '<' -> false;
+            case STRING_DELIMITER, MULTILINE_STRING_DELIMITER,
+                 SPACE, VALUE_ASSIGN_CHAR,
+                 VALUE_SEPARATOR_CHAR, MAP_START_CHAR,
+                 MAP_END_CHAR, LIST_START_CHAR,
+                 LIST_END_CHAR, ANCHOR_CHAR,
+                 REFERENCE_CHAR, OVERRIDE_CHAR,
+                 COMMENT_START, ESCAPE, '<' -> false;
             default -> Character.isValidCodePoint(character);
         };
     }
 
     private static boolean mayTerminateUnquotedText(int character, @NotNull UnquotedTextMode mode) {
         // anchors are terminated by a space, a {, or a [
-        if (mode == Tokenizer.UnquotedTextMode.ANCHOR) return switch (character) {
+        if (mode == UnquotedTextMode.ANCHOR) return switch (character) {
             case SPACE, TAB, MAP_START_CHAR, LIST_START_CHAR, LINE_FEED, CARRIAGE_RETURN -> true;
             default -> false;
         };
@@ -273,7 +283,8 @@ class Tokenizer {
                 case UNQUOTED_TEXT -> doUnquotedText(UnquotedTextMode.NORMAL);
                 case UNQUOTED_TEXT_TERMINATOR -> doUnquotedTextTerminator();
                 case ANCHOR -> doUnquotedText(UnquotedTextMode.ANCHOR);
-                case QUOTED_TEXT -> doQuotedText(reader.next());
+                case QUOTED_TEXT -> doQuotedText(reader.next(), false);
+                case SINGLE_QUOTED_TEXT -> doQuotedText(reader.next(), true);
             };
 
             if (nextToken != null) {
@@ -297,6 +308,12 @@ class Tokenizer {
             // start a quoted text sequence
             case STRING_DELIMITER -> {
                 state = TokenizerState.QUOTED_TEXT;
+                yield null;
+            }
+
+            // multiline string
+            case MULTILINE_STRING_DELIMITER -> {
+                state = TokenizerState.SINGLE_QUOTED_TEXT;
                 yield null;
             }
 
@@ -428,7 +445,7 @@ class Tokenizer {
 
     private void appendIfValid(int codepoint) {
         if (Character.isValidCodePoint(codepoint)) buffer.appendCodePoint(codepoint);
-        else buffer.appendCodePoint(Util.REPLACEMENT_CHARACTER);
+        else buffer.appendCodePoint(REPLACEMENT_CHARACTER);
     }
 
     private void resetWith(int codepoint) {
@@ -437,11 +454,47 @@ class Tokenizer {
         highSurrogate = 0;
     }
 
-    private @Nullable Token doQuotedText(int character) throws IOException {
+    private @NotNull ButyleneParseException unexpectedEofInEscapeCode(String quote) {
+        String token = quote + buffer + '\\' + ' ';
+        return new ButyleneParseException("unexpected EOF when parsing escape code", token, token.length() - 1,
+            reader.getLine(), reader.getColumn());
+    }
+
+    private @NotNull ButyleneParseException invalidEscapeCode(String quote, int next) {
+        String message = quote + buffer + '\\' + Character.toString(next);
+        return new ButyleneParseException("invalid escape code", message, message.length() - 1, reader.getLine(),
+            reader.getColumn());
+    }
+
+    private @Nullable Token doQuotedText(int character, boolean singleQuote) throws IOException {
         if (character == -1) {
-            String message = "\"" + buffer + ' ';
+            String message = (singleQuote ? "'" : "\"") + buffer + ' ';
             throw new ButyleneParseException("unexpected EOF when parsing quoted string", message,
                 message.length() - 1, reader.getLine(), reader.getColumn());
+        }
+
+        if (singleQuote) {
+            switch (character) {
+                case MULTILINE_STRING_DELIMITER -> {
+                    state = TokenizerState.SEEK;
+                    return QUOTED_TEXT;
+                }
+
+                case ESCAPE -> {
+                    int next = reader.next();
+
+                    switch (next) {
+                        case -1 -> throw unexpectedEofInEscapeCode("'");
+                        case MULTILINE_STRING_DELIMITER -> buffer.append((char) MULTILINE_STRING_DELIMITER);
+                        case ESCAPE -> buffer.append((char) ESCAPE);
+                        default -> throw invalidEscapeCode("'", next);
+                    }
+                }
+
+                default -> appendIfValid(character);
+            }
+
+            return null;
         }
 
         if (character < 0x20) {
@@ -450,7 +503,8 @@ class Tokenizer {
                 reader.getLine(), reader.getColumn());
         }
 
-        if (expectLowSurrogate && (character != ESCAPE || reader.peekNext() != 'u')) resetWith(Util.REPLACEMENT_CHARACTER);
+        if (expectLowSurrogate && (character != ESCAPE || reader.peekNext() != 'u'))
+            resetWith(REPLACEMENT_CHARACTER);
 
         switch (character) {
             case STRING_DELIMITER -> {
@@ -466,11 +520,11 @@ class Tokenizer {
                     case '"', '\\', '/' -> buffer.append((char) next);
 
                     // escape sequences that are shorthand for special characters
-                    case 'b' -> buffer.append(BACKSPACE);
-                    case 'f' -> buffer.append(FORM_FEED);
-                    case 'n' -> buffer.append(LINE_FEED);
-                    case 'r' -> buffer.append(CARRIAGE_RETURN);
-                    case 't' -> buffer.append(TAB);
+                    case 'b' -> buffer.append((char) BACKSPACE);
+                    case 'f' -> buffer.append((char) FORM_FEED);
+                    case 'n' -> buffer.append((char) LINE_FEED);
+                    case 'r' -> buffer.append((char) CARRIAGE_RETURN);
+                    case 't' -> buffer.append((char) TAB);
 
                     // as per https://www.rfc-editor.org/rfc/rfc8259, we may encode arbitrary Unicode characters
                     // with 4 hex digits
@@ -484,7 +538,8 @@ class Tokenizer {
                         boolean high = Character.isHighSurrogate(decoded);
                         boolean low = Character.isLowSurrogate(decoded);
 
-                        if ((expectLowSurrogate && !low) || (!expectLowSurrogate && low)) resetWith(Util.REPLACEMENT_CHARACTER);
+                        if ((expectLowSurrogate && !low) || (!expectLowSurrogate && low))
+                            resetWith(REPLACEMENT_CHARACTER);
                         else if (high) {
                             expectLowSurrogate = true;
                             highSurrogate = decoded;
@@ -493,17 +548,8 @@ class Tokenizer {
                         else buffer.append(decoded);
                     }
 
-                    case -1 -> {
-                        String message = "\"" + buffer + '\\' + ' ';
-                        throw new ButyleneParseException("unexpected EOF when parsing escape code", message,
-                            message.length() - 1, reader.getLine(), reader.getColumn());
-                    }
-
-                    default -> {
-                        String message = "\"" + buffer + '\\' + Character.toString(next);
-                        throw new ButyleneParseException("invalid escape code", message, message.length() - 1,
-                            reader.getLine(), reader.getColumn());
-                    }
+                    case -1 -> throw unexpectedEofInEscapeCode("\"");
+                    default -> throw invalidEscapeCode("\"", next);
                 }
             }
 

@@ -36,7 +36,7 @@ class ParserTest {
         ConfigNode reqNode = reqs.asNode();
         ConfigNode fails = reqs.at("fails").asNode();
 
-        for (int i = 1; i <= 21; i++) {
+        for (int i = 1; i <= 22; i++) {
             String caseName = "reqs/case_" + i + ".butylene";
 
             InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);
@@ -81,9 +81,9 @@ class ParserTest {
 
         Set<Integer> failExcludes = Set.of(
             37, 58, 63, 69, // NaN and Infinity are valid values in Butylene
+            88, 99, 132, // single-quoted strings are valid Butylene
             9, 19, 89, 100, // Butylene accepts a single trailing comma
             95, 96, 97, // unquoted key is valid Butylene, even if the key appears to be a non-string literal
-            99, // Butylene doesn't care about singlequotes appearing in a non-quoted key
             101, 103, // comments can appear even after the last closing bracket
             106, // non-quoted key is valid Butylene
             110, 142, 157, // entirely empty file is valid Butylene
@@ -142,7 +142,8 @@ class ParserTest {
             1, // top-level strings are valid Butylene
             3, // ignored because unquoted keys are valid Butylene
             4, 9, // ignored because exactly one trailing comma is valid Butylene
-            18 // Butylene doesn't have a defined depth limit
+            18, // Butylene doesn't have a defined depth limit
+            24 // strings can be single-quoted
         );
 
         for (int i = 1; i <= 34; i++) {

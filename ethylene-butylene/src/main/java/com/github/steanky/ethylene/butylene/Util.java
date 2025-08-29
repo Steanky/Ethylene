@@ -13,6 +13,7 @@ class Util {
 
     static final int SPACE = ' ';
     static final int STRING_DELIMITER = '"';
+    static final int MULTILINE_STRING_DELIMITER = '\'';
     static final int VALUE_ASSIGN_CHAR = ':';
     static final int VALUE_SEPARATOR_CHAR = ',';
     static final int MAP_START_CHAR = '{';
