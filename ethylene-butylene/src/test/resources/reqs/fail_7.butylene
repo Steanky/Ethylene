@@ -1,0 +1,3 @@
+&anchor {
+  /* this is not allowed */ >anchor // because it references itself
+}

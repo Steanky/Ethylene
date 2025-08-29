@@ -18,6 +18,7 @@
 18: "{override_map={first=0B, second=42B}, override_map_2={first=0B}, override_map_3={first=1B}, test={first=42B, third=4B, second=42B}, test_1={first=0B}}"
 19: "{first=['The overwriting list'], reference_overwritten=['The overwritten list'], reference_overwritten_2=['The overwritten list'], overwriting_list=['The overwriting list']}"
 20: "{list=[0B, 1B, 2B, 3B, 4B, 5B, 6B, 7B, 8B, 9B, 10B], a=[1B, 2B], b=[4B, 5B, 6B], c=[9B, 10B]}"
+21: "{first=20B, second=21B, third=22B, fourth='test'}"
 fails: {
   1: {
     message: "duplicate anchor name"
@@ -32,7 +33,7 @@ fails: {
     column: 46
   }
   3: {
-    message: "type referenced by override must match the container"
+    message: "type referenced by override must match its container's type"
     token: ">override"
     line: 4
     column: 13
@@ -50,5 +51,42 @@ fails: {
     tokenIndex: 1
     line: 12
     column: 6
+  }
+  6: {
+    message: "anchor before reference or override"
+    token: "&anchor"
+    line: 3
+    column: 17
+  }
+  7: {
+    message: "override cannot reference its own container"
+    token: ">anchor"
+    line: 2
+    column: 29
+  }
+  8: {
+    message: "wrong closing brace type"
+    token: "}"
+    line: 4
+    column: 5
+  }
+  9: {
+    message: "invalid character for unquoted text"
+    token: "\""
+    tokenIndex: 0
+    line: 1
+    column: 6
+  }
+  10: {
+    message: "invalid token at this position"
+    token: ","
+    line: 9
+    column: 6
+  }
+  11: {
+    message: "expected EOF"
+    token: "\"hello\""
+    line: 8
+    column: 3
   }
 }

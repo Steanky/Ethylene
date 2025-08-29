@@ -15,8 +15,6 @@ import java.util.Objects;
  * This class is not thread-safe, even if the underlying reader is.
  */
 class ButyleneReader implements Closeable {
-    private static final int REPLACEMENT_CHARACTER = 0xFFFD;
-
     private final Reader inner;
 
     private boolean closed;
@@ -49,7 +47,7 @@ class ButyleneReader implements Closeable {
         if (!Character.isHighSurrogate((char) high)) return high;
 
         int low = this.inner.read();
-        if (low < 0 || !Character.isLowSurrogate((char) low)) return REPLACEMENT_CHARACTER;
+        if (low < 0 || !Character.isLowSurrogate((char) low)) return Util.REPLACEMENT_CHARACTER;
 
         return Character.toCodePoint((char) high, (char) low);
     }

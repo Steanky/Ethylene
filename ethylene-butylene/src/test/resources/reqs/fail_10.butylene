@@ -1,0 +1,10 @@
+/*
+ * too many commas between list elements
+ *
+ */
+list: [
+  0
+  1
+  2
+  42,, 39
+]

@@ -1,0 +1,8 @@
+{
+  "key": "value"
+  test: false
+}
+
+
+// dangling value
+  "hello"

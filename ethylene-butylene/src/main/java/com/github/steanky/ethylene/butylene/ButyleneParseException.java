@@ -1,5 +1,7 @@
 package com.github.steanky.ethylene.butylene;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 
 /**
@@ -12,12 +14,41 @@ public class ButyleneParseException extends IOException {
     private final int line;
     private final int column;
 
-    public ButyleneParseException(String reason, String token, int tokenIndex, int line, int column) {
+    /**
+     * Creates a new instance of this exception.
+     *
+     * @param reason the reason why the Butylene data is invalid; may be null if no reason is given
+     * @param token the particular malformed token; null if no specific token is incorrect
+     * @param tokenIndex the index within {@code token} that is invalid; negative indicates no specific invalid index
+     * @param line the line at which the error occurred; negative if no specific line is invalid
+     * @param column the column of the start of the invalid token; negative if no specific column is invalid
+     */
+    ButyleneParseException(@Nullable String reason, @Nullable String token, int tokenIndex, int line, int column) {
         this.reason = reason;
         this.token = token;
-        this.tokenIndex = token == null ? -1 : tokenIndex;
+        this.tokenIndex = (token == null || tokenIndex < 0 || tokenIndex > token.length()) ? -1 : tokenIndex;
         this.line = line;
         this.column = column;
+    }
+
+    /**
+     * Convenience override for {@link ButyleneParseException#ButyleneParseException(String, String, int, int, int)}.
+     *
+     * @param reason the reason why the Butylene data is invalid; may be null if no reason is given
+     * @param line the line at which the error occurred; negative if no specific line is invalid
+     * @param column the column of the start of the invalid token; negative if no specific column is invalid
+     */
+    ButyleneParseException(String reason, int line, int column) {
+        this(reason, null, -1, line, column);
+    }
+
+    /**
+     * Convenience override for {@link ButyleneParseException#ButyleneParseException(String, String, int, int, int)}.
+     *
+     * @param reason the reason why the Butylene data is invalid; may be null if no reason is given
+     */
+    ButyleneParseException(String reason) {
+        this(reason, null, -1, -1, -1);
     }
 
     @Override
@@ -56,11 +87,6 @@ public class ButyleneParseException extends IOException {
         return builder.toString();
     }
 
-    @Override
-    public String toString() {
-        return "";
-    }
-
     /**
      * The error reason.
      * @return the error reason, or null if non was provided
@@ -90,7 +116,7 @@ public class ButyleneParseException extends IOException {
     }
 
     /**
-     * The line where the problem occurred. -1 if there is no specific line. Lines start at 1.
+     * The line where the problem occurred. Negative if there is no specific line. Lines start at 1.
      * @return the line where the parsing exception occurred
      */
     public int getLine() {
@@ -98,7 +124,7 @@ public class ButyleneParseException extends IOException {
     }
 
     /**
-     * The colum where the problem occurred. -1 if there is no specific column. Columns start at 1.
+     * The colum where the problem occurred. Negative if there is no specific column. Columns start at 1.
      * @return the column where the parsing exception occurred
      */
     public int getColumn() {

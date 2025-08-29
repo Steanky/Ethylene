@@ -36,7 +36,7 @@ class ParserTest {
         ConfigNode reqNode = reqs.asNode();
         ConfigNode fails = reqs.at("fails").asNode();
 
-        for (int i = 1; i <= 20; i++) {
+        for (int i = 1; i <= 21; i++) {
             String caseName = "reqs/case_" + i + ".butylene";
 
             InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);
@@ -45,7 +45,7 @@ class ParserTest {
             assertEquals(reqNode.at(String.valueOf(i)).asString(), element.toString(), caseName);
         }
 
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 11; i++) {
             String caseName = "reqs/fail_" + i + ".butylene";
 
             InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);
@@ -106,7 +106,7 @@ class ParserTest {
 
         Set<Integer> optExcludes = Set.of(
             14, // replacement characters aren't valid whitespace
-            32, 33, 35// null bytes aren't either
+            32, 33, 35 // null bytes aren't either
         );
 
         for (int i = 1; i <= 35; i++) {

@@ -43,6 +43,10 @@ public class ButyleneCodec implements ConfigCodec {
 
     @Override
     public @NotNull Set<ElementType> supportedTopLevelTypes() {
-        return EnumSet.of(ElementType.NODE, ElementType.LIST);
+        return EnumSet.allOf(ElementType.class);
+    }
+
+    public static class Builder {
+
     }
 }

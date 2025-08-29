@@ -1,0 +1,7 @@
+test: &reference false
+test: [
+                &anchor
+
+
+                *reference
+]
