@@ -443,13 +443,10 @@ class Tokenizer {
         };
     }
 
-    private void appendIfValid(int codepoint) {
+    private void resetWith(int codepoint) {
         if (Character.isValidCodePoint(codepoint)) buffer.appendCodePoint(codepoint);
         else buffer.appendCodePoint(REPLACEMENT_CHARACTER);
-    }
 
-    private void resetWith(int codepoint) {
-        appendIfValid(codepoint);
         expectLowSurrogate = false;
         highSurrogate = 0;
     }
@@ -463,7 +460,7 @@ class Tokenizer {
     private @NotNull ButyleneParseException invalidEscapeCode(String quote, int next) {
         String message = quote + buffer + '\\' + Character.toString(next);
         return new ButyleneParseException("invalid escape code", message, message.length() - 1, reader.getLine(),
-            reader.getColumn());
+            reader.getColumn() - 1);
     }
 
     private @Nullable Token doQuotedText(int character, boolean singleQuote) throws IOException {
@@ -491,7 +488,7 @@ class Tokenizer {
                     }
                 }
 
-                default -> appendIfValid(character);
+                default -> buffer.appendCodePoint(character);
             }
 
             return null;
@@ -516,6 +513,8 @@ class Tokenizer {
                 int next = reader.next();
 
                 switch (next) {
+                    case -1 -> throw unexpectedEofInEscapeCode("\"");
+
                     // common sequences that just escape the next character
                     case '"', '\\', '/' -> buffer.append((char) next);
 
@@ -548,12 +547,11 @@ class Tokenizer {
                         else buffer.append(decoded);
                     }
 
-                    case -1 -> throw unexpectedEofInEscapeCode("\"");
                     default -> throw invalidEscapeCode("\"", next);
                 }
             }
 
-            default -> appendIfValid(character);
+            default -> buffer.appendCodePoint(character);
         }
 
         return null;

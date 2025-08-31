@@ -1,0 +1,5 @@
+tab: "\t"
+newline: "\n"
+carriage_return: "\r"
+form_feed: "\f"
+backspace: "\b"
