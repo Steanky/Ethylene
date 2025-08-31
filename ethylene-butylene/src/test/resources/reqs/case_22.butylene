@@ -1,2 +1,5 @@
-test: 'single-quoted "text" can contain nonsense like
-newlines and tabs:	'
+tab: "\t"
+newline: "\n"
+carriage_return: "\r"
+form_feed: "\f"
+backspace: "\b"

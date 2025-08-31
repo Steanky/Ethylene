@@ -47,7 +47,7 @@ class Tokenizer {
         /**
          * Parsing a single-quoted text token.
          */
-        SINGLE_QUOTED_TEXT
+        MULTILINE_QUOTED_TEXT
     }
 
     /**
@@ -137,19 +137,13 @@ class Tokenizer {
     private final ButyleneReader reader;
 
     StringBuilder buffer;
-
-    private TokenizerState state;
+    StringBuilder swap;
 
     int tokenLine;
     int tokenColumn;
 
-    private boolean expectLowSurrogate;
+    private TokenizerState state;
     private char highSurrogate;
-
-    private Token nextToken;
-    private int nextTokenLine;
-    private int nextTokenColumn;
-    private StringBuilder nextBuffer;
 
     private static boolean validInUnquotedText(int character) {
         // excludes LINE_FEED and CARRIAGE_RETURN, too
@@ -187,8 +181,6 @@ class Tokenizer {
     Tokenizer(@NotNull ButyleneReader reader) {
         this.reader = Objects.requireNonNull(reader);
         this.buffer = new StringBuilder();
-        this.nextBuffer = new StringBuilder();
-
         this.state = TokenizerState.SEEK;
     }
 
@@ -230,47 +222,7 @@ class Tokenizer {
         return (char) ((one << 12) | (two << 8) | (three << 4) | four);
     }
 
-    private void swapBuffers() {
-        StringBuilder saved = nextBuffer;
-
-        nextBuffer = buffer;
-        buffer = saved;
-    }
-
-    @NotNull Token peekNext() throws IOException {
-        if (nextToken != null) return nextToken;
-
-        swapBuffers();
-        int lineSave = tokenLine;
-        int columnSave = tokenColumn;
-
-        nextToken = next();
-
-        nextTokenLine = tokenLine;
-        nextTokenColumn = tokenColumn;
-
-        tokenLine = lineSave;
-        tokenColumn = columnSave;
-        swapBuffers();
-
-        return nextToken;
-    }
-
     @NotNull Token next() throws IOException {
-        if (nextToken != null) {
-            Token nextSave = nextToken;
-            nextToken = null;
-
-            tokenLine = nextTokenLine;
-            tokenColumn = nextTokenColumn;
-
-            nextTokenLine = 0;
-            nextTokenColumn = 0;
-
-            nextBuffer.setLength(0);
-            return nextSave;
-        }
-
         buffer.setLength(0);
         Token nextToken;
 
@@ -284,7 +236,7 @@ class Tokenizer {
                 case UNQUOTED_TEXT_TERMINATOR -> doUnquotedTextTerminator();
                 case ANCHOR -> doUnquotedText(UnquotedTextMode.ANCHOR);
                 case QUOTED_TEXT -> doQuotedText(reader.next(), false);
-                case SINGLE_QUOTED_TEXT -> doQuotedText(reader.next(), true);
+                case MULTILINE_QUOTED_TEXT -> doQuotedText(reader.next(), true);
             };
 
             if (nextToken != null) {
@@ -313,7 +265,8 @@ class Tokenizer {
 
             // multiline string
             case MULTILINE_STRING_DELIMITER -> {
-                state = TokenizerState.SINGLE_QUOTED_TEXT;
+                drainMultilinePrefix();
+                state = TokenizerState.MULTILINE_QUOTED_TEXT;
                 yield null;
             }
 
@@ -373,7 +326,7 @@ class Tokenizer {
         // a separate token)
         int preview = reader.peekNext();
 
-        if (mode != UnquotedTextMode.ANCHOR) {
+        if (mode == UnquotedTextMode.NORMAL) {
             switch (preview) {
                 // spaces and tabs MAY terminate unquoted text, but only if it is proceeded by non-text
                 case SPACE, TAB -> {
@@ -444,76 +397,98 @@ class Tokenizer {
     }
 
     private void resetWith(int codepoint) {
-        if (Character.isValidCodePoint(codepoint)) buffer.appendCodePoint(codepoint);
-        else buffer.appendCodePoint(REPLACEMENT_CHARACTER);
-
-        expectLowSurrogate = false;
+        buffer.appendCodePoint(codepoint);
         highSurrogate = 0;
     }
 
-    private @NotNull ButyleneParseException unexpectedEofInEscapeCode(String quote) {
-        String token = quote + buffer + '\\' + ' ';
+    private @NotNull ButyleneParseException unexpectedEofInEscapeCode() {
+        String token = "\"" + buffer + '\\' + ' ';
         return new ButyleneParseException("unexpected EOF when parsing escape code", token, token.length() - 1,
             reader.getLine(), reader.getColumn());
     }
 
-    private @NotNull ButyleneParseException invalidEscapeCode(String quote, int next) {
-        String message = quote + buffer + '\\' + Character.toString(next);
+    private @NotNull ButyleneParseException invalidEscapeCode(int next) {
+        String message = "\"" + buffer + '\\' + Character.toString(next);
         return new ButyleneParseException("invalid escape code", message, message.length() - 1, reader.getLine(),
             reader.getColumn() - 1);
     }
 
-    private @Nullable Token doQuotedText(int character, boolean singleQuote) throws IOException {
+    private void readUnicodeEscape() throws IOException {
+        char[] ctx = new char[6];
+        ctx[0] = '\\';
+        ctx[1] = 'u';
+
+        char decoded = readHexdigits(ctx);
+
+        boolean high = Character.isHighSurrogate(decoded);
+        boolean low = Character.isLowSurrogate(decoded);
+
+        boolean expectLowSurrogate = highSurrogate != 0;
+
+        if ((expectLowSurrogate && !low) || (!expectLowSurrogate && low)) resetWith(REPLACEMENT);
+        else if (high) highSurrogate = decoded;
+        else if (low) resetWith(Character.toCodePoint(highSurrogate, decoded));
+        else buffer.append(decoded);
+    }
+
+    private @Nullable Token doQuotedText(int character, boolean multiline) throws IOException {
         if (character == -1) {
-            String message = (singleQuote ? "'" : "\"") + buffer + ' ';
-            throw new ButyleneParseException("unexpected EOF when parsing quoted string", message,
-                message.length() - 1, reader.getLine(), reader.getColumn());
+            // TODO: better error message for multiline token
+            String message = "\"" + buffer + ' ';
+            throw new ButyleneParseException("unexpected EOF when parsing quoted string", message, message.length() - 1,
+                reader.getLine(), reader.getColumn());
         }
 
-        if (singleQuote) {
-            switch (character) {
-                case MULTILINE_STRING_DELIMITER -> {
-                    state = TokenizerState.SEEK;
-                    return QUOTED_TEXT;
-                }
-
-                case ESCAPE -> {
-                    int next = reader.next();
-
-                    switch (next) {
-                        case -1 -> throw unexpectedEofInEscapeCode("'");
-                        case MULTILINE_STRING_DELIMITER -> buffer.append((char) MULTILINE_STRING_DELIMITER);
-                        case ESCAPE -> buffer.append((char) ESCAPE);
-                        default -> throw invalidEscapeCode("'", next);
-                    }
-                }
-
-                default -> buffer.appendCodePoint(character);
-            }
-
-            return null;
-        }
-
-        if (character < 0x20) {
+        if (!multiline && character < 0x20) {
             String message = "\"" + buffer + ((char) character);
             throw new ButyleneParseException("invalid character in quoted string", message, message.length() - 1,
                 reader.getLine(), reader.getColumn());
         }
 
-        if (expectLowSurrogate && (character != ESCAPE || reader.peekNext() != 'u'))
-            resetWith(REPLACEMENT_CHARACTER);
+        if (highSurrogate != 0 && (character != ESCAPE || reader.peekNext() != 'u')) resetWith(REPLACEMENT);
 
         switch (character) {
             case STRING_DELIMITER -> {
+                if (multiline) {
+                    buffer.append((char) STRING_DELIMITER);
+                    return null;
+                }
+
                 state = TokenizerState.SEEK;
                 return QUOTED_TEXT;
+            }
+
+            case MULTILINE_STRING_DELIMITER -> {
+                if (!multiline) {
+                    buffer.append((char) MULTILINE_STRING_DELIMITER);
+                    return null;
+                }
+
+                if (reader.peekNext() != MULTILINE_STRING_DELIMITER) buffer.append((char) MULTILINE_STRING_DELIMITER);
+                else {
+                    // this is the second apostrophe
+                    reader.next();
+
+                    if (reader.peekNext() != MULTILINE_STRING_DELIMITER) {
+                        buffer.append((char) MULTILINE_STRING_DELIMITER);
+                        buffer.append((char) MULTILINE_STRING_DELIMITER);
+                        return null;
+                    }
+
+                    // third apostrophe
+                    reader.next();
+
+                    processMultilineString();
+                    state = TokenizerState.SEEK;
+                    return QUOTED_TEXT;
+                }
             }
 
             case ESCAPE -> {
                 int next = reader.next();
 
                 switch (next) {
-                    case -1 -> throw unexpectedEofInEscapeCode("\"");
+                    case -1 -> throw unexpectedEofInEscapeCode();
 
                     // common sequences that just escape the next character
                     case '"', '\\', '/' -> buffer.append((char) next);
@@ -527,27 +502,8 @@ class Tokenizer {
 
                     // as per https://www.rfc-editor.org/rfc/rfc8259, we may encode arbitrary Unicode characters
                     // with 4 hex digits
-                    case 'u' -> {
-                        char[] ctx = new char[6];
-                        ctx[0] = '\\';
-                        ctx[1] = 'u';
-
-                        char decoded = readHexdigits(ctx);
-
-                        boolean high = Character.isHighSurrogate(decoded);
-                        boolean low = Character.isLowSurrogate(decoded);
-
-                        if ((expectLowSurrogate && !low) || (!expectLowSurrogate && low))
-                            resetWith(REPLACEMENT_CHARACTER);
-                        else if (high) {
-                            expectLowSurrogate = true;
-                            highSurrogate = decoded;
-                        }
-                        else if (low) resetWith(Character.toCodePoint(highSurrogate, decoded));
-                        else buffer.append(decoded);
-                    }
-
-                    default -> throw invalidEscapeCode("\"", next);
+                    case 'u' -> readUnicodeEscape();
+                    default -> throw invalidEscapeCode(next);
                 }
             }
 
@@ -555,6 +511,90 @@ class Tokenizer {
         }
 
         return null;
+    }
+
+    private void processMultilineString() throws IOException {
+        if (swap == null) swap = new StringBuilder(buffer.length());
+
+        int whitespace = 0;
+        int end = 0;
+
+        outer:
+        for (int i = buffer.length() - 1; i >= 0; i--) {
+            switch (buffer.charAt(i)) {
+                case SPACE, TAB -> whitespace++;
+                case LINE_FEED -> {
+                    end = i;
+                    break outer;
+                }
+
+                // TODO: malformed multiline string
+                default -> throw new ButyleneParseException("");
+            }
+        }
+
+        int whitespaceFound = 0;
+        boolean override = false;
+        for (int i = 0; i < end; i++) {
+            char sample = buffer.charAt(i);
+
+            switch (sample) {
+                case SPACE, TAB -> {
+                    if (override || ++whitespaceFound > whitespace) swap.append(sample);
+                }
+                case LINE_FEED -> {
+                    whitespaceFound = 0;
+                    override = false;
+                    swap.append(sample);
+                }
+                default -> {
+                    override = true;
+                    swap.append(sample);
+                }
+            }
+        }
+
+        StringBuilder bufferSave = buffer;
+        buffer = swap;
+        swap = bufferSave;
+
+        swap.setLength(0);
+    }
+
+    private void drainMultilinePrefix() throws IOException {
+        int second = reader.next();
+        int third = reader.next();
+
+        if (second == -1 || third == -1)
+            throw new ButyleneParseException("unexpected EOF when parsing multiline string", reader.getLine(),
+                reader.getColumn());
+
+        if (second != MULTILINE_STRING_DELIMITER || third != MULTILINE_STRING_DELIMITER) {
+            StringBuilder message = new StringBuilder(3);
+            message.append((char) MULTILINE_STRING_DELIMITER);
+            message.appendCodePoint(second);
+            message.appendCodePoint(third);
+
+            int idx = second != MULTILINE_STRING_DELIMITER ? 1 : 2;
+            throw new ButyleneParseException("invalid character in multiline string prefix", message.toString(), idx,
+                reader.getLine(), reader.getColumn() - (3 - idx));
+        }
+
+        outer:
+        while (true) {
+            switch (reader.next()) {
+                case SPACE, TAB, CARRIAGE_RETURN -> {}
+                case LINE_FEED -> {
+                    break outer;
+                }
+
+                case -1 -> throw new ButyleneParseException("unexpected EOF when parsing multiline string",
+                    reader.getLine(), reader.getColumn());
+
+                default -> throw new ButyleneParseException("non-whitespace character in multiline comment prefix",
+                    reader.getLine(), reader.getColumn());
+            }
+        }
     }
 
     private void drainLineComment() throws IOException {

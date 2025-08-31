@@ -44,11 +44,11 @@ class ButyleneReader implements Closeable {
         int high = this.inner.read();
         if (high < 0) return high;
 
-        if (Character.isLowSurrogate((char) high)) return Util.REPLACEMENT_CHARACTER;
+        if (Character.isLowSurrogate((char) high)) return Util.REPLACEMENT;
         else if (!Character.isHighSurrogate((char) high)) return high;
 
         int low = this.inner.read();
-        if (low < 0 || !Character.isLowSurrogate((char) low)) return Util.REPLACEMENT_CHARACTER;
+        if (low < 0 || !Character.isLowSurrogate((char) low)) return Util.REPLACEMENT;
 
         return Character.toCodePoint((char) high, (char) low);
     }

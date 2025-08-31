@@ -1,5 +1,5 @@
-tab: "\t"
-newline: "\n"
-carriage_return: "\r"
-form_feed: "\f"
-backspace: "\b"
+multiline: '''
+  this is a test
+  test 2
+  test 3
+  '''

@@ -19,8 +19,8 @@
 19: "{first=['The overwriting list'], reference_overwritten=['The overwritten list'], reference_overwritten_2=['The overwritten list'], overwriting_list=['The overwriting list']}"
 20: "{list=[0B, 1B, 2B, 3B, 4B, 5B, 6B, 7B, 8B, 9B, 10B], a=[1B, 2B], b=[4B, 5B, 6B], c=[9B, 10B]}"
 21: "{first=20B, second=21B, third=22B, fourth='test'}"
-22: "{test='single-quoted \"text\" can contain nonsense like\nnewlines and tabs:\t'}"
-23: "{tab='\u0009', newline='\u000A', carriage_return='\u000D', form_feed='\u000C', backspace='\u0008'}"
+22: "{tab='\u0009', newline='\u000A', carriage_return='\u000D', form_feed='\u000C', backspace='\u0008'}"
+23: "{multiline='this is a test\ntest 2\ntest 3'}"
 fails: {
   1: {
     message: "duplicate anchor name"

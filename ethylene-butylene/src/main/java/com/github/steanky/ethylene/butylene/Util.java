@@ -9,7 +9,7 @@ class Util {
     /**
      * The Unicode replacement character, '�'.
      */
-    static final int REPLACEMENT_CHARACTER = 0xFFFD;
+    static final int REPLACEMENT = 0xFFFD;
 
     static final int SPACE = ' ';
     static final int STRING_DELIMITER = '"';

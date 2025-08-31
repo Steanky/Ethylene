@@ -78,6 +78,7 @@ public class Parser {
 
         boolean topLevelMap = token != LIST_START;
         boolean eofClosesTopLevelMap = rootAnchor == null && token != LIST_START && token != MAP_START;
+        boolean maybeTopLevelScalar = false;
 
         if (token == LIST_START || token == MAP_START) {
             if (token == LIST_START) listDepth ++;
@@ -85,13 +86,7 @@ public class Parser {
 
             token = tokenizer.next();
         }
-        else if ((token == UNQUOTED_TEXT || token == QUOTED_TEXT) && tokenizer.peekNext() == EOF) {
-            String value = tokenizer.buffer.toString();
-
-            // handle top-level primitives
-            if (token == QUOTED_TEXT) return ConfigPrimitive.of(value);
-            else return parseUnquotedText(tokenizer, value);
-        }
+        else if (token == UNQUOTED_TEXT || token == QUOTED_TEXT) maybeTopLevelScalar = true;
 
         Deque<ContainerContext> contextStack = new ArrayDeque<>();
 
@@ -147,12 +142,19 @@ public class Parser {
                     key = tokenizer.buffer.toString();
 
                     Tokenizer.Token next = tokenizer.next();
-                    if (next != VALUE_ASSIGN) throw invalidToken(next, tokenizer);
+                    if (maybeTopLevelScalar && next == EOF) {
+                        // handle top-level primitives
+                        if (token == QUOTED_TEXT) return ConfigPrimitive.of(key);
+                        else return parseUnquotedText(tokenizer, key);
+                    }
+                    else if (next != VALUE_ASSIGN) throw invalidToken(next, tokenizer);
 
                     token = tokenizer.next();
 
                     if (token == OVERRIDE)
                         throw invalidToken("invalid position for override", OVERRIDE, tokenizer);
+
+                    maybeTopLevelScalar = false;
                 }
 
                 int anchorLine = -1;
