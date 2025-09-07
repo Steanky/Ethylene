@@ -1,0 +1,4 @@
+key: "value"
+key2: 42
+other: false
+"this isn't valid"

@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
+import static com.github.steanky.ethylene.butylene.ButyleneParseException.builder;
+
 class Util {
     /**
      * The Unicode replacement character, '�'.
@@ -33,6 +35,43 @@ class Util {
     static final int CARRIAGE_RETURN = '\r';
     static final int TAB = '\t';
 
+    // generic invalid token position
+    static final String E_INVALID_TOKEN_POSITION = "invalid token at this position";
+    static final String E_WRONG_CLOSING_BRACE = "wrong closing brace type";
+    static final String E_MISSING_CLOSING_BRACE = "missing closing brace";
+    static final String E_MISSING_OPENING_BRACE = "missing opening brace";
+    static final String E_MISSING_SEPARATOR = "missing separator";
+
+    // relating to EOFs
+    static final String E_EOF = "unexpected EOF";
+    static final String E_EOF_EXPECTED = "expected EOF";
+    static final String E_EOF_IN_QUOTED_STRING = "unexpected EOF in quoted string";
+    static final String E_EOF_IN_MULTILINE_STRING = "unexpected EOF in multiline string";
+    static final String E_EOF_IN_MULTILINE_COMMENT = "unexpected EOF in multiline comment";
+    static final String E_EOF_IN_ANCHOR_NAME = "unexpected EOF in token name";
+    static final String E_EOF_IN_ESCAPE = "unexpected EOF in escape code";
+
+    static final String E_INVALID_HEX_DIGIT_IN_UNICODE_ESCAPE = "invalid hex digit in Unicode escape sequence";
+
+    // invalid specific character(s)
+    static final String E_INVALID_CHARACTER = "invalid character";
+    static final String E_INVALID_ESCAPE = "invalid escape code";
+    static final String E_INVALID_CHARACTER_IN_QUOTED_STRING = "invalid character in quoted string";
+    static final String E_INVALID_CHARACTER_IN_MULTILINE_STRING = "invalid character in multiline string";
+    static final String E_NON_WHITESPACE_IN_MULTILINE_POSTFIX = "non-whitespace character in multiline postfix";
+
+    // anchors/references
+    static final String E_INVALID_REFERENCE_NAME = "invalid reference name";
+    static final String E_MISSING_ANCHOR = "missing anchor";
+    static final String E_DUPLICATE_ANCHOR_NAME = "duplicate anchor name";
+    static final String E_ANCHOR_BEFORE_REFERENCE = "anchor before reference or override";
+    static final String E_SELF_REFERENTIAL_OVERRIDE = "self referential override";
+    static final String E_INVALID_REFERENCED_TYPE = "referenced type mismatch";
+
+    // literals
+    static final String E_INVALID_LITERAL = "invalid literal";
+    static final String E_INVALID_CHARACTER_IN_UNQUOTED_LITERAL = "invalid character in unquoted literal";
+
     /**
      * Checks if a character is not a digit.
      *
@@ -43,61 +82,30 @@ class Util {
         return c < '0' || c > '9';
     }
 
-    static @NotNull ButyleneParseException invalidToken(@NotNull String string, @NotNull Tokenizer.Token token, @NotNull Tokenizer tokenizer) {
-        int offset = 0;
-        String display = switch (token) {
-            case UNQUOTED_TEXT -> tokenizer.buffer.toString();
-            case QUOTED_TEXT -> {
-                offset = 1;
-                yield "\"" + tokenizer.buffer.toString() + "\"";
-            }
-            case VALUE_SEPARATOR -> ",";
-            case VALUE_ASSIGN -> ":";
-            case MAP_START -> "{";
-            case MAP_END -> "}";
-            case LIST_START -> "[";
-            case LIST_END -> "]";
-            case ANCHOR -> "&";
-            case REFERENCE -> "*";
-            case OVERRIDE -> ">";
-            case EOF -> " ";
-        };
-
-        return new ButyleneParseException(string, display, -1, tokenizer.tokenLine, tokenizer.tokenColumn - offset);
+    private static void appendOrEscape(StringBuilder buffer, char c) {
+        switch (c) {
+            case BACKSPACE -> buffer.append("\\b");
+            case FORM_FEED -> buffer.append("\\f");
+            case LINE_FEED -> buffer.append("\\n");
+            case CARRIAGE_RETURN -> buffer.append("\\r");
+            case TAB -> buffer.append("\\t");
+            default -> buffer.append(c);
+        }
     }
 
-    static @NotNull ButyleneParseException wrongBraceType(@NotNull Tokenizer.Token token, @NotNull Tokenizer tokenizer) {
-        return invalidToken("wrong closing brace type", token, tokenizer);
-    }
+    static @NotNull String aroundEnd(@NotNull StringBuilder buffer, boolean prependQuote, int append) {
+        int start = Math.max(0, buffer.length() - 20);
+        String substring = buffer.substring(start, buffer.length());
 
-    static @NotNull ButyleneParseException eofInAnchorName(int line, int column) {
-        return new ButyleneParseException("EOF when token name was expected", "& ", 1, line, column);
-    }
+        StringBuilder cleaned = new StringBuilder(substring.length() + 2);
+        if (start == 0) {
+            if (prependQuote) cleaned.append('"');
+        }
+        else cleaned.append("...");
 
-    static @NotNull ButyleneParseException invalidAnchorOrOverrideName(@NotNull Tokenizer.Token token, @NotNull Tokenizer tokenizer) {
-        return invalidToken("invalid anchor or override name", token, tokenizer);
-    }
-
-    static @NotNull ButyleneParseException invalidToken(@NotNull Tokenizer.Token token, @NotNull Tokenizer tokenizer) {
-        return invalidToken("invalid token at this position", token, tokenizer);
-    }
-
-    static @NotNull ButyleneParseException unclosedCurlyBraces() {
-        return new ButyleneParseException("missing one or more closing curly braces");
-    }
-
-    static @NotNull ButyleneParseException missingAnchor(@NotNull String name, int tokenLine, int tokenColumn) {
-        return new ButyleneParseException("missing anchor", name, -1, tokenLine, tokenColumn);
-    }
-
-    static @NotNull ButyleneParseException missingAnchor(@NotNull Parser.DeferredResolve deferredResolve) {
-        return missingAnchor((deferredResolve.isReference() ? "*" : ">") + deferredResolve.name(),
-            deferredResolve.tokenLine(), deferredResolve.tokenColumn());
-    }
-
-    static @NotNull ButyleneParseException invalidCharacterInUnquotedLiteral(@NotNull Tokenizer tokenizer, int i) {
-        return new ButyleneParseException("invalid character in unquoted literal", tokenizer.buffer.toString(), i,
-            tokenizer.tokenLine, tokenizer.tokenColumn);
+        for (int i = 0; i < substring.length(); i++) appendOrEscape(cleaned, substring.charAt(i));
+        if (append >= 0) appendOrEscape(cleaned, (char) append);
+        return cleaned.toString();
     }
 
     private enum NumberParseState {
@@ -110,6 +118,15 @@ class Util {
         EXP_SIGN,
         EXP_START,
         EXP
+    }
+
+    private static void requireDigit(char sample, Tokenizer tokenizer, int i) throws ButyleneParseException {
+        if (Util.isNonDigit(sample)) builder()
+            .reason(E_INVALID_CHARACTER_IN_UNQUOTED_LITERAL)
+            .token(tokenizer.buffer)
+            .tokenIndex(i)
+            .locationFrom(tokenizer)
+            .raise();
     }
 
     static @NotNull ConfigPrimitive parseUnquotedText(@NotNull Tokenizer tokenizer, @NotNull CharSequence buffer) throws IOException {
@@ -148,53 +165,51 @@ class Util {
                         continue;
                     }
 
-                    if (Util.isNonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
+                    requireDigit(sample, tokenizer, i);
                     state = sample == '0' ? NumberParseState.LEADING_ZERO : NumberParseState.INT;
                 }
-
                 case POST_NEG -> {
-                    if (Util.isNonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
+                    requireDigit(sample, tokenizer, i);
                     state = sample == '0' ? NumberParseState.LEADING_ZERO : NumberParseState.INT;
                 }
-
                 case LEADING_ZERO -> state = switch (sample) {
                     case '.' -> NumberParseState.LEADING_FRAC_DIGIT;
                     case 'e', 'E' -> NumberParseState.EXP_SIGN;
-                    default -> throw invalidCharacterInUnquotedLiteral(tokenizer, i);
+                    default -> throw builder()
+                        .reason(E_INVALID_CHARACTER_IN_UNQUOTED_LITERAL)
+                        .token(buffer)
+                        .tokenIndex(i)
+                        .locationFrom(tokenizer)
+                        .build();
                 };
-
                 case INT -> state = switch (sample) {
                     case '.' -> NumberParseState.LEADING_FRAC_DIGIT;
                     case 'e', 'E' -> NumberParseState.EXP_SIGN;
                     default -> {
-                        if (Util.isNonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
+                        requireDigit(sample, tokenizer, i);
                         yield NumberParseState.INT;
                     }
                 };
-
                 case LEADING_FRAC_DIGIT -> {
-                    if (Util.isNonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
+                    requireDigit(sample, tokenizer, i);
                     state = NumberParseState.FRAC;
                 }
-
                 case FRAC -> state = switch (sample) {
                     case 'e', 'E' -> NumberParseState.EXP_SIGN;
                     default -> {
-                        if (Util.isNonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
+                        requireDigit(sample, tokenizer, i);
                         yield NumberParseState.FRAC;
                     }
                 };
-
                 case EXP_SIGN -> state = switch (sample) {
                     case '-', '+' -> NumberParseState.EXP_START;
                     default -> {
-                        if (Util.isNonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
+                        requireDigit(sample, tokenizer, i);
                         yield NumberParseState.EXP;
                     }
                 };
-
                 case EXP_START, EXP -> {
-                    if (Util.isNonDigit(sample)) throw invalidCharacterInUnquotedLiteral(tokenizer, i);
+                    requireDigit(sample, tokenizer, i);
                     state = NumberParseState.EXP;
                 }
             }
@@ -202,8 +217,11 @@ class Util {
 
         switch (state) {
             case INT, FRAC, EXP, LEADING_ZERO -> {}
-            default -> throw new ButyleneParseException("malformed number", buffer.toString(), -1, tokenizer.tokenLine,
-                tokenizer.tokenColumn);
+            default -> builder()
+                .reason(E_INVALID_LITERAL)
+                .token(buffer)
+                .locationFrom(tokenizer)
+                .raise();
         }
 
         // this should never throw an exception as we validate the number above

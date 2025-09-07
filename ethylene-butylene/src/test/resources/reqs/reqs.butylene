@@ -35,7 +35,7 @@ fails: {
     column: 46
   }
   3: {
-    message: "type referenced by override must match its container's type"
+    message: "referenced type mismatch"
     token: ">override"
     line: 4
     column: 13
@@ -61,7 +61,7 @@ fails: {
     column: 17
   }
   7: {
-    message: "override cannot reference its own container"
+    message: "self referential override"
     token: ">anchor"
     line: 2
     column: 29
@@ -73,7 +73,7 @@ fails: {
     column: 5
   }
   9: {
-    message: "invalid character for unquoted text"
+    message: "invalid character"
     token: "\""
     tokenIndex: 0
     line: 1
@@ -93,9 +93,15 @@ fails: {
   }
   12: {
     message: "invalid escape code"
-    token: "\"this is a bad escape code: \\x"
-    tokenIndex: 29
+    token: "... a bad escape code: \\x"
+    tokenIndex: 24
     line: 1
     column: 45
+  }
+  13: {
+    message: "invalid token at this position"
+    token: "\"this isn't valid\""
+    line: 4
+    column: 1
   }
 }

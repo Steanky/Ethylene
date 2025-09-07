@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import static com.github.steanky.ethylene.butylene.Util.*;
 import static com.github.steanky.ethylene.butylene.Tokenizer.Token.*;
+import static com.github.steanky.ethylene.butylene.ButyleneParseException.builder;
 
 /**
  * Tokenizes Butylene data.
@@ -157,7 +158,7 @@ class Tokenizer {
                  LIST_END_CHAR, ANCHOR_CHAR,
                  REFERENCE_CHAR, OVERRIDE_CHAR,
                  COMMENT_START, ESCAPE, '<' -> false;
-            default -> Character.isValidCodePoint(character);
+            default -> true;
         };
     }
 
@@ -190,10 +191,12 @@ class Tokenizer {
 
         if (next == -1) {
             ctx[idx] = ' ';
-            String token = new String(ctx, 0, idx + 1);
-
-            throw new ButyleneParseException("unexpected EOF when parsing Unicode escape sequence",
-                token, idx, reader.getLine(), reader.getColumn());
+            builder()
+                .reason(E_EOF_IN_ESCAPE)
+                .token(new String(ctx, 0, idx + 1))
+                .tokenIndex(idx)
+                .locationFrom(reader)
+                .raise();
         }
 
         if (next >= 0x61 && next <= 0x66) next -= 39;
@@ -202,11 +205,12 @@ class Tokenizer {
         // 0-F becomes 0-15
         next -= 0x30;
 
-        if (next < 0 || next > 15) {
-            String token = new String(ctx, 0, idx) + Character.toString(nextSave);
-            throw new ButyleneParseException("invalid hexadecimal digit when parsing Unicode escape sequence",
-                token, idx, reader.getLine(), reader.getColumn());
-        }
+        if (next < 0 || next > 15) builder()
+            .reason(E_INVALID_HEX_DIGIT_IN_UNICODE_ESCAPE)
+            .token(new String(ctx, 0, idx) + Character.toString(nextSave))
+            .tokenIndex(idx)
+            .locationFrom(reader)
+            .raise();
 
         // safe to cast to char: nextSave is guaranteed to be in [a-fA-F0-9]
         ctx[idx] = (char) nextSave;
@@ -296,23 +300,33 @@ class Tokenizer {
             case COMMENT_START -> {
                 int next = reader.next();
 
-                if (next == -1)
-                    throw new ButyleneParseException("unexpected EOF", "/ ", 1, reader.getLine(), reader.getColumn());
+                if (next == -1) builder()
+                    .reason(E_EOF)
+                    .token("/ ")
+                    .tokenIndex(1)
+                    .locationFrom(reader)
+                    .raise();
 
                 switch (next) {
                     case COMMENT_START -> drainLineComment();
                     case MULTILINE_COMMENT_SIGNIFIER -> drainMultilineComment();
-
-                    default -> throw new ButyleneParseException("invalid character",
-                        "/" + Character.toString(next), 1, reader.getLine(), reader.getColumn());
+                    default -> builder()
+                        .reason(E_INVALID_CHARACTER)
+                        .token("/" + Character.toString(next))
+                        .tokenIndex(1)
+                        .locationFrom(reader)
+                        .raise();
                 }
 
                 yield null;
             }
 
             default -> {
-                if (!validInUnquotedText(character)) throw new ButyleneParseException("invalid character",
-                    Character.toString(character), 0, reader.getLine(), reader.getColumn());
+                if (!validInUnquotedText(character)) builder()
+                    .reason(E_INVALID_CHARACTER)
+                    .tokenEnd(buffer + Character.toString(character))
+                    .locationFrom(reader)
+                    .raise();
 
                 buffer.appendCodePoint(character);
                 state = TokenizerState.UNQUOTED_TEXT;
@@ -344,12 +358,11 @@ class Tokenizer {
             return UNQUOTED_TEXT;
         }
 
-        if (!validInUnquotedText(preview)) {
-            String copy = buffer + Character.toString(preview);
-
-            throw new ButyleneParseException("invalid character for unquoted text",
-                copy, buffer.length(), reader.getLine(), reader.getColumn());
-        }
+        if (!validInUnquotedText(preview)) builder()
+            .reason(E_INVALID_CHARACTER)
+            .tokenEnd(buffer + Character.toString(preview))
+            .locationFrom(reader)
+            .raise();
 
         // actually advance the reader since our next is valid in unquoted text
         reader.next();
@@ -383,15 +396,20 @@ class Tokenizer {
                     switch (comment) {
                         case COMMENT_START -> drainLineComment();
                         case MULTILINE_COMMENT_SIGNIFIER -> drainMultilineComment();
-
-                        default -> throw new ButyleneParseException("invalid character",
-                            new String(new int[] { comment }, 0, 1), buffer.length(), reader.getLine(),
-                            reader.getColumn());
+                        default -> builder()
+                            .reason(E_INVALID_CHARACTER)
+                            .tokenEnd(buffer + Character.toString(comment))
+                            .locationFrom(reader)
+                            .raise();
                     }
 
                     yield null;
-                } else throw new ButyleneParseException("missing separator", buffer + " ", buffer.length(),
-                    reader.getLine(), reader.getColumn());
+                }
+                else throw builder()
+                    .reason(E_MISSING_SEPARATOR)
+                    .tokenEnd(buffer + " ")
+                    .locationFrom(reader)
+                    .build();
             }
         };
     }
@@ -399,18 +417,6 @@ class Tokenizer {
     private void resetWith(int codepoint) {
         buffer.appendCodePoint(codepoint);
         highSurrogate = 0;
-    }
-
-    private @NotNull ButyleneParseException unexpectedEofInEscapeCode() {
-        String token = "\"" + buffer + '\\' + ' ';
-        return new ButyleneParseException("unexpected EOF when parsing escape code", token, token.length() - 1,
-            reader.getLine(), reader.getColumn());
-    }
-
-    private @NotNull ButyleneParseException invalidEscapeCode(int next) {
-        String message = "\"" + buffer + '\\' + Character.toString(next);
-        return new ButyleneParseException("invalid escape code", message, message.length() - 1, reader.getLine(),
-            reader.getColumn() - 1);
     }
 
     private void readUnicodeEscape() throws IOException {
@@ -432,18 +438,17 @@ class Tokenizer {
     }
 
     private @Nullable Token doQuotedText(int character, boolean multiline) throws IOException {
-        if (character == -1) {
-            // TODO: better error message for multiline token
-            String message = "\"" + buffer + ' ';
-            throw new ButyleneParseException("unexpected EOF when parsing quoted string", message, message.length() - 1,
-                reader.getLine(), reader.getColumn());
-        }
+        if (character == -1) builder()
+            .reason(E_EOF_IN_QUOTED_STRING)
+            .tokenEnd(aroundEnd(buffer, !multiline, ' '))
+            .locationFrom(reader)
+            .raise();
 
-        if (!multiline && character < 0x20) {
-            String message = "\"" + buffer + ((char) character);
-            throw new ButyleneParseException("invalid character in quoted string", message, message.length() - 1,
-                reader.getLine(), reader.getColumn());
-        }
+        if (!multiline && character < 0x20) builder()
+            .reason(E_INVALID_CHARACTER_IN_QUOTED_STRING)
+            .tokenEnd(aroundEnd(buffer, true, (char) character))
+            .locationFrom(reader)
+            .raise();
 
         if (highSurrogate != 0 && (character != ESCAPE || reader.peekNext() != 'u')) resetWith(REPLACEMENT);
 
@@ -488,7 +493,11 @@ class Tokenizer {
                 int next = reader.next();
 
                 switch (next) {
-                    case -1 -> throw unexpectedEofInEscapeCode();
+                    case -1 -> builder()
+                        .reason(E_EOF_IN_ESCAPE)
+                        .tokenEnd(aroundEnd(buffer, !multiline, '\\') + ' ')
+                        .locationFrom(reader)
+                        .raise();
 
                     // common sequences that just escape the next character
                     case '"', '\\', '/' -> buffer.append((char) next);
@@ -503,7 +512,13 @@ class Tokenizer {
                     // as per https://www.rfc-editor.org/rfc/rfc8259, we may encode arbitrary Unicode characters
                     // with 4 hex digits
                     case 'u' -> readUnicodeEscape();
-                    default -> throw invalidEscapeCode(next);
+
+                    default -> builder()
+                        .reason(E_INVALID_ESCAPE)
+                        .tokenEnd(aroundEnd(buffer, !multiline, '\\') + Character.toString(next))
+                        .line(reader.getLine())
+                        .column(reader.getColumn() - 1)
+                        .raise();
                 }
             }
 
@@ -521,15 +536,18 @@ class Tokenizer {
 
         outer:
         for (int i = buffer.length() - 1; i >= 0; i--) {
-            switch (buffer.charAt(i)) {
+            char sample = buffer.charAt(i);
+
+            switch (sample) {
                 case SPACE, TAB -> whitespace++;
-                case LINE_FEED -> {
+                case LINE_FEED, CARRIAGE_RETURN -> {
                     end = i;
                     break outer;
                 }
-
-                // TODO: malformed multiline string
-                default -> throw new ButyleneParseException("");
+                default -> builder()
+                    .reason(E_INVALID_CHARACTER_IN_MULTILINE_STRING)
+                    .tokenEnd(aroundEnd(buffer, false, sample))
+                    .raise();
             }
         }
 
@@ -542,14 +560,14 @@ class Tokenizer {
                 case SPACE, TAB -> {
                     if (override || ++whitespaceFound > whitespace) swap.append(sample);
                 }
-                case LINE_FEED -> {
+                case LINE_FEED, CARRIAGE_RETURN -> {
+                    swap.append(sample);
                     whitespaceFound = 0;
                     override = false;
-                    swap.append(sample);
                 }
                 default -> {
-                    override = true;
                     swap.append(sample);
+                    override = true;
                 }
             }
         }
@@ -565,34 +583,42 @@ class Tokenizer {
         int second = reader.next();
         int third = reader.next();
 
-        if (second == -1 || third == -1)
-            throw new ButyleneParseException("unexpected EOF when parsing multiline string", reader.getLine(),
-                reader.getColumn());
+        if (second == -1 || third == -1) builder()
+            .reason(E_EOF_IN_MULTILINE_STRING)
+            .tokenEnd(second == -1 ? "' " : '\'' + Character.toString(second) + " ")
+            .locationFrom(reader)
+            .raise();
 
         if (second != MULTILINE_STRING_DELIMITER || third != MULTILINE_STRING_DELIMITER) {
-            StringBuilder message = new StringBuilder(3);
-            message.append((char) MULTILINE_STRING_DELIMITER);
-            message.appendCodePoint(second);
-            message.appendCodePoint(third);
-
             int idx = second != MULTILINE_STRING_DELIMITER ? 1 : 2;
-            throw new ButyleneParseException("invalid character in multiline string prefix", message.toString(), idx,
-                reader.getLine(), reader.getColumn() - (3 - idx));
+            builder()
+                .reason(E_INVALID_CHARACTER_IN_MULTILINE_STRING)
+                .token('\'' + Character.toString(second) + Character.toString(third))
+                .tokenIndex(idx)
+                .line(reader.getLine())
+                .column(reader.getColumn() - (3 - idx))
+                .raise();
         }
 
         outer:
         while (true) {
-            switch (reader.next()) {
+            int next = reader.next();
+
+            switch (next) {
                 case SPACE, TAB, CARRIAGE_RETURN -> {}
                 case LINE_FEED -> {
                     break outer;
                 }
-
-                case -1 -> throw new ButyleneParseException("unexpected EOF when parsing multiline string",
-                    reader.getLine(), reader.getColumn());
-
-                default -> throw new ButyleneParseException("non-whitespace character in multiline comment prefix",
-                    reader.getLine(), reader.getColumn());
+                case -1 -> builder()
+                    .reason(E_EOF_IN_MULTILINE_STRING)
+                    .tokenEnd(aroundEnd(buffer, false, ' '))
+                    .locationFrom(reader)
+                    .raise();
+                default -> builder()
+                    .reason(E_NON_WHITESPACE_IN_MULTILINE_POSTFIX)
+                    .tokenEnd(aroundEnd(buffer, false, next))
+                    .locationFrom(reader)
+                    .raise();
             }
         }
     }
@@ -614,9 +640,10 @@ class Tokenizer {
             int peek = reader.peekNext();
 
             // EOF in multiline comment is an error
-            if (peek == -1)
-                throw new ButyleneParseException("unexpected EOF in multiline comment", reader.getLine(),
-                    reader.getColumn());
+            if (peek == -1) builder()
+                .reason(E_EOF_IN_MULTILINE_COMMENT)
+                .locationFrom(reader)
+                .raise();
 
             if (peek != MULTILINE_COMMENT_SIGNIFIER) {
                 reader.next();

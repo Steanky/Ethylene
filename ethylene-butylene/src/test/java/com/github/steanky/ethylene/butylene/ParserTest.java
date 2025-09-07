@@ -45,7 +45,7 @@ class ParserTest {
             assertEquals(reqNode.at(String.valueOf(i)).asString(), element.toString(), caseName);
         }
 
-        for (int i = 1; i <= 12; i++) {
+        for (int i = 1; i <= 13; i++) {
             String caseName = "reqs/fail_" + i + ".butylene";
 
             InputStream caseStream = Objects.requireNonNull(classloader.getResourceAsStream(caseName), caseName);

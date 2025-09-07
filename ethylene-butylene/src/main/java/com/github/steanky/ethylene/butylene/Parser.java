@@ -15,6 +15,7 @@ import java.util.function.IntFunction;
 
 import static com.github.steanky.ethylene.butylene.Util.*;
 import static com.github.steanky.ethylene.butylene.Tokenizer.Token.*;
+import static com.github.steanky.ethylene.butylene.ButyleneParseException.builder;
 
 /**
  * Utilities for parsing out Butylene configuration data.
@@ -48,7 +49,7 @@ public class Parser {
     public static @NotNull ConfigElement fromReader(@NotNull Reader reader,
         @NotNull IntFunction<? extends ConfigNode> nodeFunction,
         @NotNull IntFunction<? extends ConfigList> listFunction) throws IOException {
-        Tokenizer tokenizer = new Tokenizer(new ButyleneReader(reader));
+        Tokenizer t = new Tokenizer(new ButyleneReader(reader));
 
         int listDepth = 0;
         int mapDepth = 0;
@@ -56,23 +57,34 @@ public class Parser {
         Map<String, ConfigElement> anchorMap = null;
         Deque<DeferredResolve> resolves = null;
 
-        Tokenizer.Token token = tokenizer.next();
+        Tokenizer.Token token = t.next();
         String rootAnchor = null;
 
         // special case for root node or value with anchor
         if (token == ANCHOR) {
-            int line = tokenizer.tokenLine;
-            int column = tokenizer.tokenColumn;
+            int line = t.tokenLine;
+            int column = t.tokenColumn;
 
-            Tokenizer.Token next = tokenizer.next();
-            if (next == EOF) throw eofInAnchorName(line, column);
-            if (next != UNQUOTED_TEXT) throw invalidAnchorOrOverrideName(next, tokenizer);
+            Tokenizer.Token next = t.next();
+            if (next == EOF) builder()
+                .reason(E_EOF_IN_ANCHOR_NAME)
+                .line(line)
+                .column(column)
+                .raise();
 
-            rootAnchor = tokenizer.buffer.toString();
+            if (next != UNQUOTED_TEXT) builder()
+                .reason(E_INVALID_REFERENCE_NAME)
+                .from(t, token)
+                .raise();
 
-            switch (token = tokenizer.next()) {
+            rootAnchor = t.buffer.toString();
+
+            switch (token = t.next()) {
                 case LIST_START, MAP_START, QUOTED_TEXT, UNQUOTED_TEXT -> { }
-                default -> throw invalidToken(token, tokenizer);
+                default -> builder()
+                    .reason(E_INVALID_TOKEN_POSITION)
+                    .from(t, token)
+                    .raise();
             }
         }
 
@@ -84,7 +96,7 @@ public class Parser {
             if (token == LIST_START) listDepth ++;
             else mapDepth++;
 
-            token = tokenizer.next();
+            token = t.next();
         }
         else if (token == UNQUOTED_TEXT || token == QUOTED_TEXT) maybeTopLevelScalar = true;
 
@@ -114,18 +126,24 @@ public class Parser {
             // iterate through container entries
             entryLoop:
             while (true) {
-                if (context.foundAny && token == VALUE_SEPARATOR) token = tokenizer.next();
+                if (context.foundAny && token == VALUE_SEPARATOR) token = t.next();
                 context.foundAny = true;
 
                 String anchorName = null;
                 String key = null;
 
                 if (contextNode != null && token != OVERRIDE) {
+                    int keyColumn;
                     // the key part of a key: value pair, or EOF, or a closing curly bracket
                     switch (token) {
-                        case QUOTED_TEXT, UNQUOTED_TEXT -> { }
+                        case QUOTED_TEXT -> keyColumn = t.tokenColumn - 1;
+                        case UNQUOTED_TEXT -> keyColumn = t.tokenColumn;
                         case MAP_END -> {
-                            if (--mapDepth < 0) throw invalidToken("missing opening brace", token, tokenizer);
+                            if (--mapDepth < 0) builder()
+                                .reason(E_MISSING_OPENING_BRACE)
+                                .from(t, token)
+                                .raise();
+
                             contextStack.removeLast().maybeMinimize();
                             break entryLoop;
                         }
@@ -134,25 +152,38 @@ public class Parser {
                                 contextStack.removeLast().maybeMinimize();
                                 break entryLoop;
                             }
-                            else throw unclosedCurlyBraces();
+                            else throw builder()
+                                .reason(E_MISSING_CLOSING_BRACE)
+                                .from(t, token)
+                                .build();
                         }
-                        default -> throw invalidToken(token, tokenizer);
+                        default -> throw builder()
+                            .reason(E_INVALID_TOKEN_POSITION)
+                            .from(t, token)
+                            .build();
                     }
 
-                    key = tokenizer.buffer.toString();
+                    key = t.buffer.toString();
 
-                    Tokenizer.Token next = tokenizer.next();
+                    Tokenizer.Token next = t.next();
                     if (maybeTopLevelScalar && next == EOF) {
                         // handle top-level primitives
                         if (token == QUOTED_TEXT) return ConfigPrimitive.of(key);
-                        else return parseUnquotedText(tokenizer, key);
+                        else return parseUnquotedText(t, key);
                     }
-                    else if (next != VALUE_ASSIGN) throw invalidToken(next, tokenizer);
+                    else if (next != VALUE_ASSIGN) builder()
+                        .reason(E_INVALID_TOKEN_POSITION)
+                        .token(token, key)
+                        .line(t.tokenLine)
+                        .column(keyColumn)
+                        .raise();
 
-                    token = tokenizer.next();
+                    token = t.next();
 
-                    if (token == OVERRIDE)
-                        throw invalidToken("invalid position for override", OVERRIDE, tokenizer);
+                    if (token == OVERRIDE) builder()
+                        .reason(E_INVALID_TOKEN_POSITION)
+                        .from(t, token)
+                        .raise();
 
                     maybeTopLevelScalar = false;
                 }
@@ -162,27 +193,38 @@ public class Parser {
 
                 // anchors can appear before any value
                 if (token == ANCHOR) {
-                    anchorLine = tokenizer.tokenLine;
-                    anchorColumn = tokenizer.tokenColumn;
+                    anchorLine = t.tokenLine;
+                    anchorColumn = t.tokenColumn;
 
-                    Tokenizer.Token next = tokenizer.next();
-                    if (next == EOF) throw eofInAnchorName(anchorLine, anchorColumn);
-                    if (next != UNQUOTED_TEXT) throw invalidAnchorOrOverrideName(next, tokenizer);
+                    Tokenizer.Token next = t.next();
+                    if (next == EOF) builder()
+                        .reason(E_EOF_IN_ANCHOR_NAME)
+                        .line(anchorLine)
+                        .column(anchorColumn)
+                        .raise();
 
-                    anchorName = tokenizer.buffer.toString();
+                    if (next != UNQUOTED_TEXT) builder()
+                        .reason(E_INVALID_REFERENCE_NAME)
+                        .from(t, next)
+                        .raise();
 
-                    if (anchorMap != null && anchorMap.containsKey(anchorName))
-                        throw new ButyleneParseException("duplicate anchor name", "&" + anchorName, -1,
-                            tokenizer.tokenLine, tokenizer.tokenColumn - 1);
+                    anchorName = t.buffer.toString();
 
-                    token = tokenizer.next();
+                    if (anchorMap != null && anchorMap.containsKey(anchorName)) builder()
+                        .reason(E_DUPLICATE_ANCHOR_NAME)
+                        .token("&" + anchorName)
+                        .line(t.tokenLine)
+                        .column(t.tokenColumn - 1)
+                        .raise();
+
+                    token = t.next();
                 }
 
                 // value part
                 switch (token) {
                     // quoted text here is always a string
                     case QUOTED_TEXT -> {
-                        String bufferValue = tokenizer.buffer.toString();
+                        String bufferValue = t.buffer.toString();
                         ConfigPrimitive stringValue = ConfigPrimitive.of(bufferValue);
 
                         if (contextNode != null) contextNode.put(key, stringValue);
@@ -196,7 +238,7 @@ public class Parser {
 
                     // could be a number, a boolean, or null
                     case UNQUOTED_TEXT -> {
-                        ConfigPrimitive primitive = parseUnquotedText(tokenizer, tokenizer.buffer);
+                        ConfigPrimitive primitive = parseUnquotedText(t, t.buffer);
 
                         if (contextNode != null) contextNode.put(key, primitive);
                         else contextList.add(primitive);
@@ -208,27 +250,37 @@ public class Parser {
                     }
 
                     case REFERENCE, OVERRIDE -> {
-                        int tokenLine = tokenizer.tokenLine;
-                        int tokenColumn = tokenizer.tokenColumn;
+                        int tokenLine = t.tokenLine;
+                        int tokenColumn = t.tokenColumn;
 
-                        if (tokenizer.next() != UNQUOTED_TEXT) throw invalidToken(token, tokenizer);
+                        if (t.next() != UNQUOTED_TEXT) builder()
+                            .reason(E_INVALID_TOKEN_POSITION)
+                            .token(token, t.buffer)
+                            .locationFrom(t)
+                            .raise();
 
                         boolean isReference = token == REFERENCE;
 
-                        if (anchorName != null)
-                            throw new ButyleneParseException("anchor before reference or override",
-                                "&" + anchorName, -1, anchorLine, anchorColumn);
+                        if (anchorName != null) builder()
+                            .reason(E_ANCHOR_BEFORE_REFERENCE)
+                            .token("&" + anchorName)
+                            .line(anchorLine)
+                            .column(anchorColumn)
+                            .raise();
 
-                        String name = tokenizer.buffer.toString();
+                        String name = t.buffer.toString();
                         ConfigElement referenced = anchorMap == null ? null : anchorMap.get(name);
                         if (isReference && referenced != null) {
                             // no need to defer, we already have the anchor
                             if (contextNode != null) contextNode.put(key, referenced);
                             else contextList.add(referenced);
                         } else {
-                            if (!isReference && referenced == context.container)
-                                throw new ButyleneParseException("override cannot reference its own container",
-                                    ">" + name, -1, tokenLine, tokenColumn);
+                            if (!isReference && referenced == context.container) builder()
+                                .reason(E_SELF_REFERENTIAL_OVERRIDE)
+                                .token(">" + name)
+                                .line(tokenLine)
+                                .column(tokenColumn)
+                                .raise();
 
                             // references are allowed to refer to anchors that appear later in the config file
                             // so, we defer resolving until later
@@ -278,30 +330,56 @@ public class Parser {
                     }
 
                     case LIST_END -> {
-                        if (contextNode != null) throw wrongBraceType(token, tokenizer);
-                        if (--listDepth < 0) throw invalidToken("missing opening brace", token, tokenizer);
+                        if (contextNode != null) builder()
+                            .reason(E_WRONG_CLOSING_BRACE)
+                            .from(t, token)
+                            .raise();
+
+                        if (--listDepth < 0) builder()
+                            .reason(E_MISSING_OPENING_BRACE)
+                            .from(t, token)
+                            .raise();
 
                         contextStack.removeLast().maybeMinimize();
                         break entryLoop;
                     }
 
-                    case MAP_END -> throw wrongBraceType(token, tokenizer);
-                    default -> throw invalidToken(token, tokenizer);
+                    case MAP_END -> throw builder()
+                        .reason(E_WRONG_CLOSING_BRACE)
+                        .from(t, token)
+                        .build();
+
+                    default -> throw builder()
+                        .reason(E_INVALID_TOKEN_POSITION)
+                        .from(t, token)
+                        .build();
                 }
 
-                token = tokenizer.next();
+                token = t.next();
             }
 
-            token = tokenizer.next();
+            token = t.next();
         } while (!contextStack.isEmpty());
 
-        if (token != EOF) throw invalidToken("expected EOF", token, tokenizer);
-        if ((resolves != null) && anchorMap == null) throw missingAnchor(resolves.getFirst());
+        if (token != EOF) builder()
+            .reason(E_EOF_EXPECTED)
+            .from(t, token)
+            .column(t.tokenColumn - 1)
+            .raise();
+
         if (resolves == null) return topLevel;
+
+        if (anchorMap == null) builder()
+            .reason(E_MISSING_ANCHOR)
+            .from(resolves.getFirst())
+            .raise();
 
         for (DeferredResolve deferred : resolves) {
             ConfigElement referenced = anchorMap.get(deferred.name);
-            if (referenced == null) throw missingAnchor(deferred);
+            if (referenced == null) builder()
+                .reason(E_MISSING_ANCHOR)
+                .from(deferred)
+                .raise();
 
             ContainerContext context = deferred.context;
             ConfigContainer container = context.container;
@@ -312,9 +390,10 @@ public class Parser {
                 continue;
             }
 
-            if ((referenced.isNode() && !container.isNode()) || (referenced.isList() && !container.isList()))
-                throw new ButyleneParseException("type referenced by override must match its container's type",
-                    ">" + deferred.name, -1, deferred.tokenLine, deferred.tokenColumn);
+            if ((referenced.isNode() && !container.isNode()) || (referenced.isList() && !container.isList())) builder()
+                .reason(E_INVALID_REFERENCED_TYPE)
+                .from(deferred)
+                .raise();
 
             // because of how items are added to the deferred list, overrides come after all references
             if (container.isNode()) {
